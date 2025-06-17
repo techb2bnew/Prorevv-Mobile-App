@@ -1,0 +1,146 @@
+import React from "react";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import ProfileStack from "./ProfileStack";
+import HomeStack from "./HomeStack";
+import SettingsStack from "./SettingsStack";
+import { heightPercentageToDP as hp, widthPercentageToDP as wp } from "../utils";
+import { blackColor, blueColor, grayColor, lightBlueColor, orangeColor, whiteColor } from "../constans/Color";
+import { HOME_FOCUSED_IMAGE, HOME_IMAGE, JOB_FOCUSED_IMAGE, JOB_IMAGE, PROFILE_FOCUSED_IMAGE, PROFILE_IMAGE, SETTING_FOCUSED_IMAGE, SETTING_IMAGE } from "../assests/images";
+import { Dimensions, Image, Platform, View } from "react-native";
+import { getFocusedRouteNameFromRoute } from "@react-navigation/native";
+import JobHistoryStack from "./JobHistoryStack";
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import Feather from 'react-native-vector-icons/Feather';
+import { useTabBar } from "../TabBarContext";
+
+const Tab = createBottomTabNavigator();
+const { width, height } = Dimensions.get("window");
+
+// Function to check if the device is a tablet
+const isTablet = width >= 668 && height >= 1024;
+export default function MainNavigator() {
+    const { isTabBarHidden } = useTabBar();
+    const shouldHideTabBar = (route) => {
+        const routeName = getFocusedRouteNameFromRoute(route) ?? "";
+        return routeName === "CustomerInfo"
+            || routeName === "AuthStack"
+            || routeName === "JobDetails"
+            || routeName === "ScannerScreen"
+            || routeName === "HowToPlay"
+            || routeName === "FeedBackScreen"
+            || routeName === "AddVehicle"
+            || routeName === "WorkOrderScreen"
+            || routeName === "WorkOrderScreenTwo"
+            || isTabBarHidden;
+    };
+
+    return (
+        <Tab.Navigator
+            screenOptions={({ route }) => ({
+                headerShown: false,
+                tabBarLabelPosition: "below-icon",
+                tabBarIcon: ({ focused, color }) => {
+                    let iconName;
+                    let IconComponent = Ionicons;
+
+                    if (route.name === "Home") {
+                        IconComponent = Feather;
+                        iconName = focused ? "home" : "home";
+                    } else if (route.name === "History") {
+                        IconComponent = Ionicons;
+                        iconName = "bag-add-outline";
+                    } else if (route.name === "Menu") {
+                        IconComponent = Ionicons;
+                        iconName = focused ? "menu" : "menu";
+                    }
+
+                    return (
+                        <IconComponent
+                            name={iconName}
+                            size={24}
+                            color={focused ? blueColor : grayColor}
+                        />
+                    );
+                },
+                tabBarActiveTintColor: blueColor,
+                tabBarInactiveTintColor: grayColor,
+                tabBarStyle: shouldHideTabBar(route)
+                    ? { display: "none" }
+                    : {
+                        position: "absolute",
+                        bottom: Platform.OS === "android" ? 0 : 20,
+                        height: isTablet ? 90 : 70,
+                        backgroundColor: lightBlueColor,
+                        borderRadius: 50,
+                        borderWidth: 1,
+                        borderTopWidth: 1,
+                        borderColor: blueColor,
+                        // shadowColor: "#000",
+                        // shadowOffset: { width: 0, height: 4 },
+                        // shadowOpacity: 0.05,
+                        // shadowRadius: 8,
+                        elevation: 0,
+                        paddingTop: isTablet ? 15 : 7,
+                        paddingBottom: 10,
+                        marginHorizontal: 20,
+                        zIndex: 9999
+                    },
+                tabBarLabelStyle: {
+                    fontSize: isTablet ? 16 : 12,
+                    fontWeight: "600",
+                    marginTop: 4,
+                },
+            })}
+        >
+            <Tab.Screen
+                name="Home"
+                component={HomeStack}
+                listeners={({ navigation, route }) => ({
+                    tabPress: e => {
+                        const state = navigation.getState();
+                        const currentRoute = state.routes.find(r => r.name === "Home");
+                        if (currentRoute?.state?.index > 0) {
+                            // Reset stack if not on first screen
+                            navigation.navigate("Home", {
+                                screen: "Home", // 👈 your initial screen name in HomeStack
+                            });
+                        }
+                    },
+                })}
+            />
+
+            <Tab.Screen
+                name="History"
+                component={JobHistoryStack}
+                listeners={({ navigation }) => ({
+                    tabPress: e => {
+                        const state = navigation.getState();
+                        const currentRoute = state.routes.find(r => r.name === "History");
+                        if (currentRoute?.state?.index > 0) {
+                            navigation.navigate("History", {
+                                screen: "JobHistory", // 👈 initial screen of your JobHistoryStack
+                            });
+                        }
+                    },
+                })}
+            />
+
+            <Tab.Screen
+                name="Menu"
+                component={ProfileStack}
+                listeners={({ navigation }) => ({
+                    tabPress: e => {
+                        const state = navigation.getState();
+                        const currentRoute = state.routes.find(r => r.name === "Menu");
+                        if (currentRoute?.state?.index > 0) {
+                            navigation.navigate("Menu", {
+                                screen: "Profile", // 👈 initial screen of your ProfileStack
+                            });
+                        }
+                    },
+                })}
+            />
+
+        </Tab.Navigator>
+    )
+}
