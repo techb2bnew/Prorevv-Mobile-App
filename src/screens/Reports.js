@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, Text, TextInput, FlatList, Pressable, StyleSheet, TouchableOpacity, ActivityIndicator, Image, Platform, Modal, Dimensions, TouchableWithoutFeedback } from 'react-native';
+import { View, Text, TextInput, FlatList, Pressable, StyleSheet, TouchableOpacity, ActivityIndicator, Image, Platform, Modal, Dimensions, TouchableWithoutFeedback, ScrollView } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Fontisto from 'react-native-vector-icons/Fontisto';
 import Feather from 'react-native-vector-icons/Feather';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from '../utils';
-import { blackColor, whiteColor, grayColor, mediumGray, orangeColor, greenColor, redColor, lightGrayColor, blueColor, lightBlueColor } from '../constans/Color';
+import { blackColor, whiteColor, grayColor, mediumGray, orangeColor, greenColor, redColor, lightGrayColor, blueColor, lightBlueColor, verylightGrayColor, goldColor } from '../constans/Color';
 import { BaseStyle } from '../constans/Style';
 import { spacings, style } from '../constans/Fonts';
 import DatePicker from "react-native-date-picker";
@@ -40,20 +40,175 @@ const Reports = ({ navigation }) => {
     const [loadingMore, setLoadingMore] = useState(false);
     const { width, height } = Dimensions.get("window");
     const isTablet = width >= 668 && height >= 1024;
-    const [jobFilter, setJobFilter] = useState('active'); // 'all', 'active', 'completed'
-    const [isFilterModalVisible, setFilterModalVisible] = useState(false);
+    const [activeTab, setActiveTab] = useState("WorkOrders");
+    const [activeStatus, setActiveStatus] = useState("Completed");
+    const [filteredJobs, setFilteredJobs] = useState([]);
+    const [filteredWorkOrders, setFilteredWorkOrders] = useState([]);
+    const [viewType, setViewType] = useState('list');
 
+
+    const [jobsRawData, setJobsRawData] = useState([
+        { jobName: "Ron’s Chevvy (2020)", workOrderCount: 10, status: true },
+        { jobName: "Ron’s Dodge (2022)", workOrderCount: 20, status: false },
+        { jobName: "Ron’s Dodge (2022)", workOrderCount: 20, status: true },
+        { jobName: "Ron’s Dodge (2022)", workOrderCount: 20, status: true },
+        { jobName: "Ron’s Dodge (2022)", workOrderCount: 20, status: true },
+        { jobName: "Ron’s Chevvy (2020)", workOrderCount: 10, status: true },
+        { jobName: "Ron’s Dodge (2022)", workOrderCount: 20, status: false },
+        { jobName: "Ron’s Chevvy (2020)", workOrderCount: 10, status: true },
+        { jobName: "Ron’s Dodge (2022)", workOrderCount: 20, status: false },
+        { jobName: "Ron’s Chevvy (2020)", workOrderCount: 10, status: true },
+        { jobName: "Ron’s Dodge (2022)", workOrderCount: 20, status: true },
+        { jobName: "Ron’s Chevvy (2020)", workOrderCount: 10, status: true },
+        { jobName: "Ron’s Dodge (2022)", workOrderCount: 20, status: false },
+        { jobName: "Ron’s Chevvy (2020)", workOrderCount: 10, status: true },
+        { jobName: "Ron’s Dodge (2022)", workOrderCount: 20, status: true },
+        { jobName: "Ron’s Chevvy (2020)", workOrderCount: 10, status: true },
+        { jobName: "Ron’s Dodge (2022)", workOrderCount: 20, status: false },
+        { jobName: "Ron’s Chevvy (2020)", workOrderCount: 10, status: true },
+        { jobName: "Ron’s Dodge (2022)", workOrderCount: 20, status: false },
+    ]);
+
+    const [workOrdersRawData, setWorkOrdersRawData] = useState([
+        {
+            vin: "1FAHP2E81DG123456",
+            make: "AUDI",
+            model: "Q5",
+            technician: "Ravi Kumar",
+            price: 2500,
+            date: "2024-08-01",
+            status: true
+        },
+        {
+            vin: "2FTRX18W1XCA12345",
+            make: "RAM",
+            model: "1500",
+            technician: "Amit Verma",
+            price: 3200,
+            date: "2024-08-02",
+            status: true
+        },
+        {
+            vin: "3HGCM56497G123456",
+            make: "TOYOTA",
+            model: "Corolla",
+            technician: "Suman Joshi",
+            price: 1800,
+            date: "2024-08-03",
+            status: true
+        },
+        {
+            vin: "4T1BE46KX7U123456",
+            make: "AUDI",
+            model: "A4",
+            technician: "Ravi Kumar",
+            price: 2800,
+            date: "2024-08-04",
+            status: true
+        },
+        {
+            vin: "5NPEB4AC8BH123456",
+            make: "RAM",
+            model: "2500",
+            technician: "Neha Yadav",
+            price: 3500,
+            date: "2024-08-05",
+            status: "pending"
+        },
+        {
+            vin: "1FAHP2E81DG654321",
+            make: "TOYOTA",
+            model: "Camry",
+            technician: "Suman Joshi",
+            price: 2100,
+            date: "2024-08-06",
+            status: true
+        },
+        {
+            vin: "2C3KA53G56H123456",
+            make: "AUDI",
+            model: "Q7",
+            technician: "Ravi Kumar",
+            price: 4000,
+            date: "2024-08-07",
+            status: false
+        },
+        {
+            vin: "3VWFE21C04M123456",
+            make: "RAM",
+            model: "Rebel",
+            technician: "Amit Verma",
+            price: 2900,
+            date: "2024-08-08",
+            status: true
+        },
+        {
+            vin: "1HGCM82633A765432",
+            make: "TOYOTA",
+            model: "Fortuner",
+            technician: "Neha Yadav",
+            price: 3300,
+            date: "2024-08-09",
+            status: false
+        },
+        {
+            vin: "1FAHP2E81DG123456",
+            make: "AUDI",
+            model: "Q5",
+            technician: "Ravi Kumar",
+            price: 2500,
+            date: "2024-08-01",
+            status: false
+        },
+        {
+            vin: "2FTRX18W1XCA12345",
+            make: "RAM",
+            model: "1500",
+            technician: "Amit Verma",
+            price: 3200,
+            date: "2024-08-02",
+            status: true
+        },
+        {
+            vin: "3HGCM56497G123456",
+            make: "TOYOTA",
+            model: "Corolla",
+            technician: "Suman Joshi",
+            price: 1800,
+            date: "2024-08-03",
+            status: false
+        },
+        {
+            vin: "4T1BE46KX7U123456",
+            make: "AUDI",
+            model: "A4",
+            technician: "Ravi Kumar",
+            price: 2800,
+            date: "2024-08-04",
+            status: "pending"
+        },
+        {
+            vin: "5NPEB4AC8BH123456",
+            make: "RAM",
+            model: "2500",
+            technician: "Neha Yadav",
+            price: 3500,
+            date: "2024-08-05",
+            status: "pending"
+        },
+        {
+            vin: "1FAHP2E81DG654321",
+            make: "TOYOTA",
+            model: "Camry",
+            technician: "Suman Joshi",
+            price: 2100,
+            date: "2024-08-06",
+            status: true
+        },
+    ]);
 
     const toggleModal = () => {
         setModalVisible(!isModalVisible);
-    };
-    const toggleFilterModal = () => {
-        setFilterModalVisible(!isFilterModalVisible);
-    };
-
-    const handleFilterSelect = (filter) => {
-        setJobFilter(filter);
-        setFilterModalVisible(false);
     };
 
     const handleSort = (order, type) => {
@@ -234,26 +389,6 @@ const Reports = ({ navigation }) => {
         }
     };
 
-    const handleRefresh = async () => {
-        const today = new Date();
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(today.getDate() - 7);
-
-        setStartDate(sevenDaysAgo);
-        setEndDate(today);
-
-        setPage(1);
-        setHasMore(true);
-        await fetchJobHistory(1, false);
-    };
-
-    // Load More (fetch next page)
-    const handleLoadMore = async () => {
-        if (hasMore && !loadingMore) {
-            await fetchJobHistory(page + 1, true);
-        }
-    };
-
     const fetchFilteredJobHistory = async (start, end) => {
         if (!technicianId) return;
 
@@ -295,101 +430,108 @@ const Reports = ({ navigation }) => {
         }
     };
 
+    const filterByStatus = useCallback((data, status) => {
+        if (status === "Completed") return data.filter(item => item.status === true || item.status === "completed");
+        if (status === "InProgress") return data.filter(item => item.status === false || item.status === "inprogress");
+        if (status === "Pending") return data.filter(item => item.status === "pending");
+        return data;
+    }, []);
 
-    const filteredData = jobHistoryData?.filter(item => {
-        // First filter by status
-        const statusMatch =
-            jobFilter === 'all' ||
-            (jobFilter === 'active' && item.jobStatus === false) ||
-            (jobFilter === 'completed' && item.jobStatus === true);
+    useEffect(() => {
+        const filteredJob = filterByStatus(jobsRawData, activeStatus);
+        const filteredWork = filterByStatus(workOrdersRawData, activeStatus);
+        setFilteredJobs(filteredJob);
+        setFilteredWorkOrders(filteredWork);
+    }, [activeStatus, jobsRawData, workOrdersRawData]);
 
-        // Then filter by search text
-        const matchesSearch =
-            item?.customer?.firstName.toLowerCase().includes(search.toLowerCase()) ||
-            item?.vin.includes(search) ||
-            item?.customer?.email?.toLowerCase().includes(search.toLowerCase()) ||
-            item?.customer?.phoneNumber?.includes(search);
-
-        return statusMatch && matchesSearch;
-    });
-
-    const renderItem = ({ item }) => {
-        // console.log("Item:", item.jobStatus);
-        const Status = item.jobStatus === false ? "In Progress" : "Complete";
-
-        return (
-            <Pressable
-                style={[
-                    styles.listItem,
-                    justifyContentSpaceBetween,
-                    { flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: isTablet ? 20 : 10 },
-                ]}
-                onPress={() => navigation.navigate("JobDetails", { jobId: item.id })}
-            >
-                <View style={{ width: "25%" }}>
-                    <Text style={styles.value}>
-                        {item?.customer?.firstName.charAt(0).toUpperCase() + item?.customer?.firstName.slice(1) + " " +
-                            item?.customer?.lastName.charAt(0).toUpperCase() + item?.customer?.lastName.slice(1)}
-                    </Text>
-                </View>
-
-                <View style={{ width: "45%" }}>
-                    <Text style={styles.value}>{item?.vin}</Text>
-                </View>
-
-                <View style={{ flexDirection: "row", alignItems: "center" }} >
-                    <Text style={styles.viewText}>View</Text>
-                </View>
-            </Pressable>
-        );
+    const getStatusStyle = (status) => {
+        if (status === true || status === "completed") return [styles.statusPill, styles.statusCompleted];
+        if (status === false || status === "inprogress") return [styles.statusPill, styles.statusInProgress];
+        return [styles.statusPill, styles.statusPending];
     };
 
+    const getStatusText = (status) => {
+        if (status === true || status === "completed") return 'Complete';
+        if (status === false || status === "inprogress") return 'In Progress';
+        return 'Pending';
+    };
+
+    useEffect(() => {
+        const jobFiltered = filterByStatus(jobsRawData, activeStatus);
+        const workOrderFiltered = filterByStatus(workOrdersRawData, activeStatus);
+
+        const searchLower = search.toLowerCase();
+
+        const filteredJob = jobFiltered.filter(item =>
+            item?.jobName?.toLowerCase().includes(searchLower)
+        );
+
+        const filteredWork = workOrderFiltered.filter(item =>
+            item?.vin?.toLowerCase().includes(searchLower) ||
+            item?.make?.toLowerCase().includes(searchLower)
+        );
+
+        setFilteredJobs(filteredJob);
+        setFilteredWorkOrders(filteredWork);
+    }, [activeStatus, jobsRawData, workOrdersRawData, search]);
 
     return (
         <View style={[flex, styles.container]}>
             {/* Header */}
-            <Header title={"Job History"} onBack={() => navigation.navigate("Home")} />
-            <TouchableOpacity
-                onPress={handleRefresh}
-                disabled={loading}
-                style={{
-                    position: "absolute",
-                    top: Platform.OS === "android" ? isTablet ? 20 : 13 : isTablet ? 20 : 13,
-                    right: 15,
-                    backgroundColor: blueColor,
-                    width: isTablet ? wp(8) : wp(9),
-                    height: isTablet ? wp(6) : wp(8),
-                    borderRadius: 5,
-                    borderWidth: 1,
+            <Header title={"Reports"} onBack={() => navigation.navigate("Home")} />
+
+            {activeTab === 'WorkOrders' &&
+                <View style={{
+                    flexDirection: 'row', position: "absolute",
+                    top: Platform.OS === "android" ? isTablet ? 20 : 10 : isTablet ? 20 : 13,
+                    right: -10,
                     justifyContent: "center",
                     alignItems: "center",
-                }}
-            >
-                {loading ? (
-                    <ActivityIndicator size={isTablet ? 30 : 18} color={whiteColor} />
-                ) : (
-                    <Ionicons name="refresh-sharp" size={isTablet ? 30 : 20} color={whiteColor} />
-                )}
-            </TouchableOpacity>
+                }}>
+                    <TouchableOpacity
+                        onPress={() => setViewType('grid')}
+                        style={[styles.tabButton, { backgroundColor: viewType === 'grid' ? blueColor : whiteColor, marginRight: 10 }]}>
+                        <Ionicons name="list" size={20} color={viewType === 'grid' ? whiteColor : blackColor} />
+                    </TouchableOpacity>
 
-            <View style={{ padding: spacings.large, }}>
+                    <TouchableOpacity
+                        onPress={() => setViewType('list')}
+                        style={[styles.tabButton, { backgroundColor: viewType === 'list' ? blueColor : whiteColor, margin: 0 }]}>
+                        <Ionicons name="grid-sharp" size={20} color={viewType === 'list' ? whiteColor : blackColor} />
+                    </TouchableOpacity>
+                </View>
+            }
+
+            <View style={{ paddingHorizontal: spacings.large, paddingTop: spacings.large }}>
                 {/* Filter & Date Picker */}
                 <View style={styles.datePickerContainer}>
                     <View style={{ width: wp(38) }}>
-                        <Text style={styles.dateText}>From*</Text>
+                        <Text style={styles.dateText}>From</Text>
                     </View>
                     <View style={{ width: wp(38) }}>
-                        <Text style={styles.dateText}>To*</Text>
+                        <Text style={styles.dateText}>To</Text>
                     </View>
                 </View>
                 <View style={[styles.datePickerContainer, { marginBottom: 15 }]}>
                     <TouchableOpacity onPress={() => setIsStartPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter]}>
-                        <Text style={styles.dateText}>{startDate.toLocaleDateString("en-GB")}</Text>
+                        <Text style={styles.dateText}>
+                            {startDate.toLocaleDateString("en-US", {
+                                month: "long",
+                                day: "numeric",
+                                year: "numeric",
+                            })}
+                        </Text>
                         <Feather name="calendar" size={20} color={blackColor} />
 
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => setIsEndPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter]}>
-                        <Text style={styles.dateText}>{endDate.toLocaleDateString("en-GB")}</Text>
+                        <Text style={styles.dateText}>
+                            {endDate.toLocaleDateString("en-US", {
+                                month: "long",
+                                day: "numeric",
+                                year: "numeric",
+                            })}
+                        </Text>
                         <Feather name="calendar" size={20} color={blackColor} />
                     </TouchableOpacity>
                 </View>
@@ -448,77 +590,250 @@ const Reports = ({ navigation }) => {
                     </TouchableOpacity>
                 </View>
 
+                {/* Tabs */}
+                <View style={styles.tabContainer}>
+                    <TouchableOpacity onPress={() => setActiveTab("WorkOrders")} style={[styles.tabButton, activeTab === 'WorkOrders' && styles.activeTab]}>
+                        <Text style={[styles.tabText, activeTab === 'WorkOrders' && styles.activeTabText]}>Work Orders</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => { setActiveTab("Jobs"), setActiveStatus("Completed") }} style={[styles.tabButton, activeTab === 'Jobs' && styles.activeTab]}>
+                        <Text style={[styles.tabText, activeTab === 'Jobs' && styles.activeTabText]}>Jobs</Text>
+                    </TouchableOpacity>
+                </View>
 
-                {/* Sorting Modal */}
-                <Modal animationType="slide" transparent={true} visible={isModalVisible} onRequestClose={toggleModal}>
-                    <TouchableWithoutFeedback onPress={toggleModal}>
-                        <View style={styles.modalOverlay}>
-                            <Feather name="chevron-down" size={55} color={blackColor} />
+                {/* Status Filters */}
+                <View style={styles.statusFilterContainer}>
+                    {['Completed', 'InProgress'].map(status => {
+                        if (activeTab === 'Jobs' && status === 'Pending') return null;
 
-                            <View style={styles.modalContainer}>
-                                <View style={{
-                                    width: "100%",
-                                    justifyContent: "space-between",
-                                    flexDirection: "row",
-                                    borderBottomWidth: 1,
-                                    borderBottomColor: '#ddd'
-                                }}>
-                                    <Text style={styles.modalTitle}>Sort By</Text>
-                                    <Feather name="sliders" size={20} color={grayColor} />
-                                </View>
-                                <TouchableOpacity
-                                    onPress={() => handleSort(sortType === "name" && sortOrder === "asc" ? "desc" : "asc", "name")}
-                                    style={styles.sortOption}
-                                >
-                                    <Text style={[styles.sortText, { fontWeight: style.fontWeightThin.fontWeight, color: sortType === "name" ? blackColor : 'gray' }]}>
-                                        Customer Name
-                                    </Text>
-                                    <Text style={[styles.sortText, { color: sortType === "name" ? blackColor : 'gray' }]}>
-                                        {sortType === "name" ? (sortOrder === "asc" ? "A to Z" : "Z to A") : "A to Z"}
-                                    </Text>
-                                </TouchableOpacity>
+                        const dataList = activeTab === "Jobs" ? jobsRawData : workOrdersRawData;
+                        const count = filterByStatus(dataList, status).length;
 
-                                <TouchableOpacity
-                                    onPress={() => handleSort(sortType === "date" && sortOrder === "newest" ? "oldest" : "newest", "date")}
-                                    style={styles.sortOption}
-                                >
-                                    <Text style={[styles.sortText, { fontWeight: style.fontWeightThin.fontWeight, color: sortType === "date" ? blackColor : 'gray' }]}>
-                                        Date Created
-                                    </Text>
-                                    <Text style={[styles.sortText, { color: sortType === "date" ? blackColor : 'gray' }]}>
-                                        {sortType === "date" ? (sortOrder === "newest" ? "New to Old" : "Old to New") : "New to Old"}
-                                    </Text>
-                                </TouchableOpacity>
+                        if (count === 0) return null;
 
-                                <TouchableOpacity
-                                    onPress={() => handleSort(sortType === "modified" && sortOrder === "latest" ? "oldest" : "latest", "modified")}
-                                    style={styles.sortOption}
-                                >
-                                    <Text style={[styles.sortText, { fontWeight: style.fontWeightThin.fontWeight, color: sortType === "modified" ? blackColor : 'gray' }]}>
-                                        Last Modified
-                                    </Text>
-                                    <Text style={[styles.sortText, { color: sortType === "modified" ? blackColor : 'gray' }]}>
-                                        {sortType === "modified" ? (sortOrder === "latest" ? "Latest to Oldest" : "Oldest to Latest") : "Latest to Oldest"}
-                                    </Text>
-                                </TouchableOpacity>
-
-                                <TouchableOpacity
-                                    onPress={() => handleSort(sortType === "status" && sortOrder === "asc" ? "desc" : "asc", "status")}
-                                    style={styles.sortOption}
-                                >
-                                    <Text style={[styles.sortText, { fontWeight: style.fontWeightThin.fontWeight, color: sortType === "status" ? blackColor : 'gray' }]}>
-                                        Job Status
-                                    </Text>
-                                    <Text style={[styles.sortText, { color: sortType === "status" ? blackColor : 'gray' }]}>
-                                        {sortType === "status" ? (sortOrder === "asc" ? "In Progress → Complete" : "Complete → In Progress") : "In Progress → Complete"}
-                                    </Text>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                    </TouchableWithoutFeedback>
-                </Modal>
+                        return (
+                            <TouchableOpacity
+                                key={status}
+                                onPress={() => setActiveStatus(status)}
+                                style={[styles.statusButton, activeStatus === status && styles.activeStatus]}
+                            >
+                                <Text style={[styles.statusText, activeStatus === status && styles.activeStatusText]}>
+                                    {status === 'InProgress' ? 'In Progress' : status} ({count})
+                                </Text>
+                            </TouchableOpacity>
+                        );
+                    })}
+                </View>
             </View>
-        </View>
+
+            {/* Jobs */}
+            {activeTab === 'Jobs' && (
+                <>
+                    {/* Table Header */}
+                    <View style={styles.tableHeaderRow}>
+                        <Text style={styles.tableHeader}>Job Name</Text>
+                        <Text style={styles.tableHeader}>Number of W.O</Text>
+                    </View>
+
+                    {/* FlatList for Jobs only */}
+                    <View style={{ width: "100%", height: Platform.OS === "android" ? hp(47) : hp(44.5) }}>
+                        <FlatList
+                            data={filteredJobs}
+                            keyExtractor={(item, index) => item?.jobName || index.toString()}
+                            showsVerticalScrollIndicator={false}
+                            renderItem={({ item, index }) => {
+                                const rowStyle = {
+                                    backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor,
+                                };
+                                return (
+                                    <View style={[styles.listItem, rowStyle]}>
+                                        <Text style={styles.text}>{item?.jobName}</Text>
+                                        <Text style={styles.text}>
+                                            {item?.workOrderCount?.toString().padStart(2, '0')}
+                                        </Text>
+                                    </View>
+                                );
+                            }}
+                            ListEmptyComponent={() => (
+                                <Text style={[styles.text, textAlign, { margin: hp(10), fontWeight: "500", color: grayColor }]}>
+                                    No data found.
+                                </Text>
+                            )}
+                        />
+                    </View>
+                </>
+            )}
+
+            {/* WorkOrders */}
+            {activeTab === 'WorkOrders' && viewType === 'grid' ? (
+                <View style={{ width: "100%", height: Platform.OS === "android" ? hp(52) : hp(49) }}>
+                    <FlatList
+                        data={filteredWorkOrders}
+                        keyExtractor={(item, index) => index.toString()}
+                        showsVerticalScrollIndicator={false}
+                        contentContainerStyle={{ paddingVertical: 10 }}
+                        renderItem={({ item, index }) => (
+                            <View style={{
+                                backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor,
+                                borderRadius: 10,
+                                padding: 10,
+                                marginBottom: 10,
+                                marginHorizontal: 10,
+                                borderWidth: 1,
+                                borderColor: blueColor
+                            }}>
+                                <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+                                    <View style={{ width: '48%', marginBottom: 10 }}>
+                                        <Text style={{ color: '#555', fontSize: 11 }}>VIN</Text>
+                                        <Text >{item.vin}</Text>
+                                    </View>
+                                    <View style={{ width: '48%', marginBottom: 10 }}>
+                                        <Text style={{ color: '#555', fontSize: 11 }}>Make</Text>
+                                        <Text >{item.make}</Text>
+                                    </View>
+                                    <View style={{ width: '48%', marginBottom: 10 }}>
+                                        <Text style={{ color: '#555', fontSize: 11 }}>Model</Text>
+                                        <Text >{item.model}</Text>
+                                    </View>
+                                    <View style={{ width: '48%', marginBottom: 10 }}>
+                                        <Text style={{ color: '#555', fontSize: 11 }}>Date</Text>
+                                        <Text >{item.date || '-'}</Text>
+                                    </View>
+                                    <View style={{ width: '48%', marginBottom: 10 }}>
+                                        <Text style={{ color: '#555', fontSize: 11 }}>Technician</Text>
+                                        <Text >{item.technician}</Text>
+                                    </View>
+                                    <View style={{ width: '48%', marginBottom: 10 }}>
+                                        <Text style={{ color: '#555', fontSize: 11 }}>Price</Text>
+                                        <Text >${item.price || '-'}</Text>
+                                    </View>
+                                    {/* <View style={{ position:"absolute",right:-10,bottom:1}}>
+                                       
+                                        <Text style={[{ fontSize: 15, fontWeight: '700' }, getStatusStyle(item?.status)]}>
+                                            {getStatusText(item.status)}
+                                        </Text>
+                                    </View> */}
+
+                                </View>
+
+                            </View>
+                        )}
+                    />
+
+                </View>
+            ) : activeTab === 'WorkOrders' && viewType === 'list' ? (
+                <View style={{ width: "100%", height: Platform.OS === "android" ? hp(53) : hp(59) }}>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                        <View>
+                            {/* Header Row */}
+                            <View style={[styles.tableHeaderRow, { backgroundColor: blueColor }]}>
+                                <Text style={[styles.tableHeader, { width: wp(50) }]}>VIN</Text>
+                                <Text style={[styles.tableHeader, { width: wp(27) }]}>Make</Text>
+                                <Text style={[styles.tableHeader, { width: wp(27) }]}>Model</Text>
+                                {/* <Text style={[styles.tableHeader, { width: wp(40) }]}>Technician</Text> */}
+                                <Text style={[styles.tableHeader, { width: wp(30) }]}>Date</Text>
+                                <Text style={[styles.tableHeader, { width: wp(27) }]}>Price</Text>
+                                <Text style={[styles.tableHeader, { width: wp(27) }]}>Status</Text>
+                            </View>
+
+                            {/* Data Rows with vertical scroll */}
+                            <ScrollView style={{ height: Platform.OS === "android" ? hp(42) : hp(39) }} showsVerticalScrollIndicator={false}>
+                                {filteredWorkOrders.map((item, index) => {
+                                    const rowStyle = { backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor };
+                                    return (
+                                        <View key={index.toString()} style={[styles.listItem, rowStyle, { flexDirection: 'row' }]}>
+                                            <Text style={[styles.text, { width: wp(50) }]}>{item?.vin || '-'}</Text>
+                                            <Text style={[styles.text, { width: wp(27) }]}>{item?.make || '-'}</Text>
+                                            <Text style={[styles.text, { width: wp(27) }]}>{item?.model || '-'}</Text>
+                                            {/* <Text style={[styles.text, { width: wp(40) }]}>{item?.technician || '-'}</Text> */}
+                                            <Text style={[styles.text, { width: wp(30) }]}>{item?.date || '-'}</Text>
+                                            <Text style={[styles.text, { width: wp(27) }]}>{item?.price ? `$${item?.price}` : '-'}</Text>
+                                            <View style={[getStatusStyle(item?.status), { width: wp(27), alignItems: "center" }]}>
+                                                <Text
+                                                    style={{
+                                                        color: getStatusText(item?.status) === "Complete" ?
+                                                            greenColor : getStatusText(item?.status) === "Pending" ?
+                                                                redColor :
+                                                                goldColor
+                                                    }}>{getStatusText(item?.status)}</Text>
+                                            </View>
+                                        </View>
+                                    );
+                                })}
+                            </ScrollView>
+                        </View>
+                    </ScrollView>
+                </View>
+            ) : null}
+
+            {/* Sorting Modal */}
+            <Modal animationType="slide" transparent={true} visible={isModalVisible} onRequestClose={toggleModal}>
+                <TouchableWithoutFeedback onPress={toggleModal}>
+                    <View style={styles.modalOverlay}>
+                        <Feather name="chevron-down" size={55} color={blackColor} />
+
+                        <View style={styles.modalContainer}>
+                            <View style={{
+                                width: "100%",
+                                justifyContent: "space-between",
+                                flexDirection: "row",
+                                borderBottomWidth: 1,
+                                borderBottomColor: '#ddd'
+                            }}>
+                                <Text style={styles.modalTitle}>Sort By</Text>
+                                <Feather name="sliders" size={20} color={grayColor} />
+                            </View>
+                            {/* <TouchableOpacity
+                                onPress={() => handleSort(sortType === "name" && sortOrder === "asc" ? "desc" : "asc", "name")}
+                                style={styles.sortOption}
+                            >
+                                <Text style={[styles.sortText, { fontWeight: style.fontWeightThin.fontWeight, color: sortType === "name" ? blackColor : 'gray' }]}>
+                                    Customer Name
+                                </Text>
+                                <Text style={[styles.sortText, { color: sortType === "name" ? blackColor : 'gray' }]}>
+                                    {sortType === "name" ? (sortOrder === "asc" ? "A to Z" : "Z to A") : "A to Z"}
+                                </Text>
+                            </TouchableOpacity> */}
+
+                            <TouchableOpacity
+                                onPress={() => handleSort(sortType === "date" && sortOrder === "newest" ? "oldest" : "newest", "date")}
+                                style={styles.sortOption}
+                            >
+                                <Text style={[styles.sortText, { fontWeight: style.fontWeightThin.fontWeight, color: sortType === "date" ? blackColor : 'gray' }]}>
+                                    Date Created
+                                </Text>
+                                <Text style={[styles.sortText, { color: sortType === "date" ? blackColor : 'gray' }]}>
+                                    {sortType === "date" ? (sortOrder === "newest" ? "New to Old" : "Old to New") : "New to Old"}
+                                </Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                onPress={() => handleSort(sortType === "modified" && sortOrder === "latest" ? "oldest" : "latest", "modified")}
+                                style={styles.sortOption}
+                            >
+                                <Text style={[styles.sortText, { fontWeight: style.fontWeightThin.fontWeight, color: sortType === "modified" ? blackColor : 'gray' }]}>
+                                    Last Modified
+                                </Text>
+                                <Text style={[styles.sortText, { color: sortType === "modified" ? blackColor : 'gray' }]}>
+                                    {sortType === "modified" ? (sortOrder === "latest" ? "Latest to Oldest" : "Oldest to Latest") : "Latest to Oldest"}
+                                </Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                onPress={() => handleSort(sortType === "status" && sortOrder === "asc" ? "desc" : "asc", "status")}
+                                style={styles.sortOption}
+                            >
+                                <Text style={[styles.sortText, { fontWeight: style.fontWeightThin.fontWeight, color: sortType === "status" ? blackColor : 'gray' }]}>
+                                    {activeTab === 'WorkOrders' ? "Work Order" : "Job Status"}
+                                </Text>
+                                <Text style={[styles.sortText, { color: sortType === "status" ? blackColor : 'gray' }]}>
+                                    {sortType === "status" ? (sortOrder === "asc" ? "InProgress → Complete" : "Complete → In Progress") : "In Progress → Complete"}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </TouchableWithoutFeedback>
+            </Modal>
+        </View >
     );
 };
 
@@ -554,11 +869,9 @@ const styles = StyleSheet.create({
         fontSize: style.fontSizeNormal.fontSize,
     },
     searchBar: {
-        // backgroundColor: blueColor,
         backgroundColor: whiteColor,
         paddingHorizontal: spacings.large,
         borderRadius: 8,
-        // width: Platform.OS === "android" ? wp(80) : isTablet ? wp(85) : wp(80),
         borderBottomWidth: 1,
         borderBottomColor: grayColor
     },
@@ -566,18 +879,7 @@ const styles = StyleSheet.create({
         height: hp(5),
         color: blackColor
     },
-    listItem: {
-        backgroundColor: lightBlueColor,
-        padding: spacings.xLarge,
-        borderRadius: 8,
-        marginTop: spacings.large,
-        width: "100%"
-    },
-    label: {
-        fontSize: style.fontSizeSmall2x.fontSize,
-        fontWeight: style.fontWeightMedium.fontWeight,
-        color: whiteColor,
-    },
+
     value: {
         fontSize: style.fontSizeSmall1x.fontSize,
         color: blackColor,
@@ -626,22 +928,105 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         width: '100%',
         paddingVertical: 12,
-        // borderBottomWidth: 1,
-        // borderBottomColor: '#ddd',
     },
     sortText: {
         fontSize: 16,
     },
     closeButton: {
         marginTop: 15,
-        paddingVertical: 10,
+        paddingVertical: spacings.xLarge,
         width: '100%',
         backgroundColor: orangeColor,
         borderRadius: 5,
         alignItems: 'center',
     },
-    closeButtonText: {
-        color: whiteColor,
-        fontWeight: 'bold',
+    tabContainer: {
+        flexDirection: 'row',
+        marginTop: spacings.xxLarge
     },
+    tabButton: {
+        marginRight: 20,
+        borderWidth: 1,
+        alignItems: "center",
+        justifyContent: "center",
+        paddingHorizontal: spacings.large,
+        paddingVertical: spacings.normal,
+        borderRadius: 5
+    },
+    activeTab: {
+        backgroundColor: blueColor,
+        paddingHorizontal: spacings.large,
+        borderRadius: 5
+    },
+    tabText: {
+        fontSize: style.fontSizeNormal.fontSize,
+        color: blackColor
+    },
+    activeTabText: {
+        fontWeight: style.fontWeightThin1x.fontWeight,
+        fontSize: style.fontSizeNormal.fontSize,
+        color: whiteColor
+    },
+
+    statusFilterContainer: {
+        flexDirection: 'row',
+        marginVertical: spacings.large
+    },
+    statusButton: {
+        paddingHorizontal: spacings.xLarge,
+        paddingVertical: spacings.medium,
+        marginRight: spacings.large
+    },
+    activeStatus: {
+        borderBottomWidth: 3,
+        borderBottomColor: blackColor
+    },
+    statusText: {
+        fontSize: style.fontSizeNormal.fontSize,
+        color: blackColor
+    },
+    activeStatusText: {
+        color: blackColor,
+        fontWeight: style.fontWeightThin1x.fontWeight
+    },
+    tableHeaderRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        padding: spacings.medium,
+        borderBottomWidth: 1,
+        borderColor: '#E6E6E6',
+        backgroundColor: blueColor
+    },
+    tableHeader: {
+        fontSize: style.fontSizeNormal.fontSize,
+        color: whiteColor,
+        fontWeight: style.fontWeightThin1x.fontWeight
+    },
+    listItem: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        padding: spacings.large,
+        borderBottomWidth: 1,
+        borderBottomColor: '#E6E6E6'
+    },
+    text: {
+        color: blackColor,
+        fontSize: style.fontSizeNormal1x.fontSize
+    },
+    statusPill: {
+        paddingHorizontal: spacings.xLarge,
+        paddingVertical: 2,
+        borderRadius: 20
+    },
+    statusCompleted: { backgroundColor: '#C8F8D6', borderWidth: 1, borderColor: greenColor, },
+    statusInProgress: { backgroundColor: '#FFEFC3', borderWidth: 1, borderColor: goldColor },
+    statusPending: { backgroundColor: '#FDE2E2', borderWidth: 1, borderColor: redColor },
+    gridItem: {
+        padding: 16,
+        marginHorizontal: 10,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: lightGrayColor,
+        // minWidth: 600
+    }
 });

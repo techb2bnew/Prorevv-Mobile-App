@@ -58,7 +58,8 @@ const HomeScreen = ({ navigation }) => {
       name: "Reports",
       image: JOB_HISTORY_IMAGE,
       backgroundColor: ExtraExtralightOrangeColor,
-      onPress: () => { navigation.navigate("JobHistory") },
+      // onPress: () => { navigation.navigate("JobHistory") },
+      onPress: () => { navigation.navigate("ReportsScreen") },
       backgroundImage: isTablet ? HOW_TO_PLAY_TAB_BACK_IMAGE : HOW_TO_PLAY_BACK_IMAGE
     }
   ]
@@ -255,9 +256,6 @@ const HomeScreen = ({ navigation }) => {
       </ImageBackground>
     );
   };
-
-
-
 
   return (
     <View style={[styles.container, flex]}>

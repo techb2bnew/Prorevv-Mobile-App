@@ -7,13 +7,12 @@ import axios from 'axios';
 import Header from '../componets/Header';
 import Ionicons from 'react-native-vector-icons/dist/Ionicons';
 import { blackColor, blueColor, grayColor, lightBlueColor, lightGrayColor, mediumGray, whiteColor } from '../constans/Color';
-import CustomButton from '../componets/CustomButton';
 import Toast from 'react-native-simple-toast';
 import Fontisto from 'react-native-vector-icons/Fontisto';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 
-const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween, textAlign } = BaseStyle;
 
 const WorkOrderScreen = ({ navigation }) => {
   const { width, height } = Dimensions.get("window");
@@ -38,6 +37,18 @@ const WorkOrderScreen = ({ navigation }) => {
     { id: '14', title: "Ron’s Jeep", year: "2024" },
     { id: '15', title: "Ron’s Mahindra", year: "2022" },
   ];
+
+  useEffect(() => {
+    const loadSelectedJob = async () => {
+      const savedJob = await AsyncStorage.getItem("current_Job");
+      if (savedJob) {
+        const parsed = JSON.parse(savedJob);
+        setSelectedJob(parsed.id);
+        setSelectedJobName(parsed.name);
+      }
+    };
+    loadSelectedJob();
+  }, []);
 
   const filteredJobList = jobList.filter(item =>
     item.title.toLowerCase().includes(searchText.toLowerCase())
@@ -79,23 +90,31 @@ const WorkOrderScreen = ({ navigation }) => {
             renderItem={({ item, index }) => {
               const isSelected = selectedJob === item.id;
               const backgroundColor = isSelected
-                ? lightBlueColor
+                ? blueColor
                 : index % 2 === 0
                   ? whiteColor
-                  : lightGrayColor;
+                  : lightBlueColor;
 
               return (
                 <Pressable
                   style={[styles.jobItem, { backgroundColor }]}
-                  onPress={() => { setSelectedJob(item.id), setSelectedJobName(item.title) }}
+                  onPress={async () => {
+                    const selectedJob = {
+                      id: item.id,
+                      name: item.title
+                    };
+                    setSelectedJob(item.id);
+                    setSelectedJobName(item.title);
+                    await AsyncStorage.setItem("current_Job", JSON.stringify(selectedJob));
+                  }}
                 >
                   <Fontisto
                     name={isSelected ? "radio-btn-active" : "radio-btn-passive"}
                     size={16}
-                    color={blackColor}
+                    color={isSelected ? whiteColor : blackColor}
                     style={styles.radioIcon}
                   />
-                  <Text style={[{ color: blackColor, marginLeft: 10 }]}>
+                  <Text style={[{ color: isSelected ? whiteColor : blackColor, marginLeft: spacings.xLarge }]}>
                     {item.title} ({item.year})
                   </Text>
                 </Pressable>

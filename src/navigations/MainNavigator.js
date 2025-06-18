@@ -12,6 +12,9 @@ import JobHistoryStack from "./JobHistoryStack";
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Feather from 'react-native-vector-icons/Feather';
 import { useTabBar } from "../TabBarContext";
+import ReportStack from "./ReportsStack";
+import ScannerStack from "./ScannerStack";
+import AntDesign from 'react-native-vector-icons/AntDesign';
 
 const Tab = createBottomTabNavigator();
 const { width, height } = Dimensions.get("window");
@@ -46,12 +49,12 @@ export default function MainNavigator() {
                     if (route.name === "Home") {
                         IconComponent = Feather;
                         iconName = focused ? "home" : "home";
-                    } else if (route.name === "History") {
+                    } else if (route.name === "Reports") {
                         IconComponent = Ionicons;
                         iconName = "bag-add-outline";
-                    } else if (route.name === "Menu") {
-                        IconComponent = Ionicons;
-                        iconName = focused ? "menu" : "menu";
+                    } else if (route.name === "Scanner") {
+                        IconComponent = AntDesign;
+                        iconName = focused ? "scan1" : "scan1";
                     }
 
                     return (
@@ -110,15 +113,15 @@ export default function MainNavigator() {
             />
 
             <Tab.Screen
-                name="History"
-                component={JobHistoryStack}
+                name="Scanner"
+                component={ScannerStack}
                 listeners={({ navigation }) => ({
                     tabPress: e => {
                         const state = navigation.getState();
-                        const currentRoute = state.routes.find(r => r.name === "History");
+                        const currentRoute = state.routes.find(r => r.name === "Scanner");
                         if (currentRoute?.state?.index > 0) {
-                            navigation.navigate("History", {
-                                screen: "JobHistory", // 👈 initial screen of your JobHistoryStack
+                            navigation.navigate("Scanner", {
+                                screen: "ScannerScreen", 
                             });
                         }
                     },
@@ -126,15 +129,15 @@ export default function MainNavigator() {
             />
 
             <Tab.Screen
-                name="Menu"
-                component={ProfileStack}
+                name="Reports"
+                component={ReportStack}
                 listeners={({ navigation }) => ({
                     tabPress: e => {
                         const state = navigation.getState();
-                        const currentRoute = state.routes.find(r => r.name === "Menu");
+                        const currentRoute = state.routes.find(r => r.name === "Reports");
                         if (currentRoute?.state?.index > 0) {
-                            navigation.navigate("Menu", {
-                                screen: "Profile", // 👈 initial screen of your ProfileStack
+                            navigation.navigate("Reports", {
+                                screen: "ReportsScreen", 
                             });
                         }
                     },

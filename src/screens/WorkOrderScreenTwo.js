@@ -424,14 +424,10 @@ const WorkOrderScreenTwo = ({ route }) => {
 
     // Function to handle submit job
     const handleSubmitJob = async () => {
-        if (!selectedCustomer) {
-            Toast.show("Please select a customer.");
-            return;
-        }
-        if (technicianType === "ifs" && !selectedVehicleType && storedPayRate === "Pay Per Vehicles") {
-            setVehicleTypeError("Please select a Vehicle Type");
-            return;
-        }
+        // if (technicianType === "ifs" && !selectedVehicleType && storedPayRate === "Pay Per Vehicles") {
+        //     setVehicleTypeError("Please select a Vehicle Type");
+        //     return;
+        // }
         if (!selectedColor) {
             setSelectedColorError("Please select a color");
             return;
@@ -446,6 +442,9 @@ const WorkOrderScreenTwo = ({ route }) => {
             return updatedValues[variableName] ||
                 (carDetails.find(item => item.Variable === variableName)?.Value || "");
         };
+
+        console.log("working");
+
         const formData = new FormData();
         formData.append("vin", vin);
         formData.append("vehicleDescriptor", getValue("Vehicle Descriptor"));
@@ -453,7 +452,6 @@ const WorkOrderScreenTwo = ({ route }) => {
         formData.append("manufacturerName", getValue("Manufacturer Name"));
         formData.append("model", getValue("Model"));
         formData.append("modelYear", getValue("Model Year"));
-        // formData.append("vehicleType", getValue("Vehicle Type"));
         formData.append("vehicleType", selectedVehicleType);
         formData.append("plantCountry", getValue("Plant Country"));
         formData.append("plantCompanyName", getValue("Plant Company Name"));
@@ -471,7 +469,7 @@ const WorkOrderScreenTwo = ({ route }) => {
         formData.append("roleType", technicianType);
         formData.append("labourCost", labourCost || "");
         formData.append("schedule", "true");
-        formData.append("assignCustomer", selectedCustomer.id);
+        formData.append("assignCustomer", selectedCustomer?.id);
         formData.append("notes", notes || " ");
         formData.append("payRate", storedPayRate);
         formData.append("payVehicleType", selectedVehicleType);
@@ -485,6 +483,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                 });
             });
         }
+        console.log("working1111");
 
         console.log("fomerData", formData);
 
@@ -627,7 +626,7 @@ const WorkOrderScreenTwo = ({ route }) => {
             behavior={Platform.OS === "ios" ? "padding" : "height"}
             style={{ flex: 1 }}
         >
-            <Header title={route?.params?.jobName} onBack={() => navigation.navigate("Home")} />
+            <Header title={route?.params?.jobName} />
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                 <ScrollView contentContainerStyle={{ flexGrow: 1, backgroundColor: whiteColor }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
                     {/* Header */}
@@ -836,39 +835,40 @@ const WorkOrderScreenTwo = ({ route }) => {
 
                             {carDetails && carDetails.length > 0 && (
                                 <>
-                                    {technicianType === "ifs" && storedPayRate === "Pay Per Vehicles" && (<Text style={[styles.label, { marginTop: 5 }]}>Vehicle Type <Text style={{ color: "red" }}>*</Text></Text>)}
-                                    {technicianType === "ifs" && storedPayRate === "Pay Per Vehicles" && (
-                                        <DropDownPicker
-                                            open={vTypeopen}
-                                            value={selectedVehicleType} // ✅ this should match the value in your items array
-                                            items={storedVehicles}
-                                            setOpen={(val) => {
-                                                if (val) Keyboard.dismiss();
-                                                setVTypeOpen(val);
-                                            }}
-                                            setValue={(callback) => {
-                                                const val = callback();
-                                                setSelectedVehicleType(val);
-                                                setVehicleTypeError('');
-                                            }}
-                                            placeholder="Select a Vehicle Type"
-                                            style={{
-                                                borderColor: blueColor,
-                                                borderWidth: 1,
-                                                marginBottom: 10,
-                                                borderRadius: 10,
-                                            }}
-                                            dropDownContainerStyle={{
-                                                borderColor: blueColor,
-                                                borderWidth: 1,
-                                                zIndex: 1000,
-                                                backgroundColor: lightBlueColor,
-                                                maxHeight: hp(15)
-                                            }}
-                                            listMode="SCROLLVIEW"
-                                        />
-                                    )}
-                                    {technicianType === "ifs" && vehicleTypeError && storedPayRate === "Pay Per Vehicles" && (<Text style={{ color: 'red' }}>{vehicleTypeError}</Text>)}
+                                    {/* vechilecolor */}
+                                    <Text style={[styles.label, { marginTop: 5 }]}>Vehicle Color <Text style={{ color: "red" }}>*</Text></Text>
+                                    <DropDownPicker
+                                        open={open}
+                                        value={selectedColor}
+                                        items={dropdownItems}
+                                        setOpen={(val) => {
+                                            if (val) {
+                                                Keyboard.dismiss(); // Keyboard ko close kar do jab dropdown open ho
+                                            }
+                                            setOpen(val);
+                                        }} setValue={(val) => {
+                                            setSelectedColor(val);
+                                            setSelectedColorError("");
+                                        }}
+                                        placeholder="Select a Color"
+                                        style={{
+                                            borderColor: blueColor,
+                                            borderWidth: 1,
+                                            marginBottom: 10,
+                                            zIndex: 1000,
+                                            borderRadius: 10,
+                                        }}
+                                        dropDownContainerStyle={{
+                                            borderColor: blueColor,
+                                            borderWidth: 1,
+                                            zIndex: 100000,
+                                            backgroundColor: lightBlueColor,
+                                              maxHeight: hp(15)
+                                        }}
+                                        listMode="SCROLLVIEW"
+                                    />
+                                    {selectedColorError && <Text style={{ color: 'red' }}>{selectedColorError}</Text>}
+
 
 
                                     {/* Work Description */}
@@ -944,6 +944,41 @@ const WorkOrderScreenTwo = ({ route }) => {
                                         </View>
                                     </View>
 
+
+                                    {technicianType === "ifs" && storedPayRate === "Pay Per Vehicles" && (<Text style={[styles.label, { marginTop: 5 }]}>Vehicle Type </Text>)}
+                                    {technicianType === "ifs" && storedPayRate === "Pay Per Vehicles" && (
+                                        <DropDownPicker
+                                            open={vTypeopen}
+                                            value={selectedVehicleType} // ✅ this should match the value in your items array
+                                            items={storedVehicles}
+                                            setOpen={(val) => {
+                                                if (val) Keyboard.dismiss();
+                                                setVTypeOpen(val);
+                                            }}
+                                            setValue={(callback) => {
+                                                const val = callback();
+                                                setSelectedVehicleType(val);
+                                                setVehicleTypeError('');
+                                            }}
+                                            placeholder="Select a Vehicle Type"
+                                            style={{
+                                                borderColor: blueColor,
+                                                borderWidth: 1,
+                                                marginBottom: 10,
+                                                borderRadius: 10,
+                                            }}
+                                            dropDownContainerStyle={{
+                                                borderColor: blueColor,
+                                                borderWidth: 1,
+                                                // zIndex: 1000,
+                                                backgroundColor: lightBlueColor,
+                                                maxHeight: hp(15)
+                                            }}
+                                            listMode="SCROLLVIEW"
+                                        />
+                                    )}
+                                    {technicianType === "ifs" && vehicleTypeError && storedPayRate === "Pay Per Vehicles" && (<Text style={{ color: 'red' }}>{vehicleTypeError}</Text>)}
+
                                     {technicianType === "single-technician" &&
                                         <CustomTextInput
                                             label={"R/I R/R (Labour/Service Cost)"}
@@ -953,40 +988,6 @@ const WorkOrderScreenTwo = ({ route }) => {
                                             maxLength={5} // Maximum 5 digits
                                             onChangeText={(text) => setLabourCost(text)} />
                                     }
-
-                                    {/* vechilecolor */}
-                                    <Text style={[styles.label, { marginTop: 5 }]}>Vehicle Color <Text style={{ color: "red" }}>*</Text></Text>
-                                    <DropDownPicker
-                                        open={open}
-                                        value={selectedColor}
-                                        items={dropdownItems}
-                                        setOpen={(val) => {
-                                            if (val) {
-                                                Keyboard.dismiss(); // Keyboard ko close kar do jab dropdown open ho
-                                            }
-                                            setOpen(val);
-                                        }} setValue={(val) => {
-                                            setSelectedColor(val);
-                                            setSelectedColorError("");
-                                        }}
-                                        placeholder="Select a Color"
-                                        style={{
-                                            borderColor: blueColor,
-                                            borderWidth: 1,
-                                            marginBottom: 10,
-                                            borderRadius: 10,
-                                        }}
-                                        dropDownContainerStyle={{
-                                            borderColor: blueColor,
-                                            borderWidth: 1,
-                                            zIndex: 1000,
-                                            backgroundColor: lightBlueColor
-                                        }}
-                                        listMode="SCROLLVIEW"
-                                    />
-                                    {selectedColorError && <Text style={{ color: 'red' }}>{selectedColorError}</Text>}
-
-
 
                                     {/* image */}
                                     {imageUris.length === 0 ? (

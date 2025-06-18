@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Image, Platform, Dimensions, Modal } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Image, Platform, Dimensions, Modal, ScrollView } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { whiteColor, lightGrayColor, blueColor, redColor, goldColor, greenColor, verylightGrayColor, grayColor, blackColor, orangeColor, mediumGray } from '../constans/Color'
 import Header from '../componets/Header';
@@ -13,22 +13,57 @@ import Feather from 'react-native-vector-icons/Feather';
 
 const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween, textAlign } = BaseStyle;
 
+// const workOrderData = [
+//     { vin: '1HGCM82633A004352', make: 'AUDI', status: 'Complete' },
+//     { vin: '1N4AL11D75C109151', make: 'RAM', status: 'Pending' },
+//     { vin: '1GYS4HEF7BR279657', make: 'Nissan', status: 'Complete' },
+//     { vin: 'WP0ZZZ99ZTS392124', make: 'Porsche', status: 'Complete' },
+//     { vin: 'WDBUF56X88B123456', make: 'Mercedes', status: 'Complete' },
+//     { vin: 'WBA8D9C52HK477369', make: 'BMW', status: 'In Progress' },
+//     { vin: '1G6KD57Y66U123456', make: 'Cadillac', status: 'Complete' },
+//     { vin: '1FAHP2E81DG123456', make: 'Ford', status: 'Complete' },
+//     { vin: '1G6KD57Y66U123457', make: 'Cadillac', status: 'Complete' },
+//     { vin: 'SAJWA4DC8DM123456', make: 'Jaguar', status: 'Complete' },
+// ];
+
+// const partnerOrderData = [
+//     { vin: '1FAHP2E81DG123456', make: 'Ford', status: 'Complete', partner: 'John Doe' },
+//     { vin: 'SAJWA4DC8DM123456', make: 'Jaguar', status: 'Pending', partner: 'Jane Smith' },
+// ];
 const workOrderData = [
-    { vin: '1HGCM82633A004352', make: 'AUDI', status: 'Complete' },
-    { vin: '1N4AL11D75C109151', make: 'RAM', status: 'Pending' },
-    { vin: '1GYS4HEF7BR279657', make: 'Nissan', status: 'Complete' },
-    { vin: 'WP0ZZZ99ZTS392124', make: 'Porsche', status: 'Complete' },
-    { vin: 'WDBUF56X88B123456', make: 'Mercedes', status: 'Complete' },
-    { vin: 'WBA8D9C52HK477369', make: 'BMW', status: 'In Progress' },
-    { vin: '1G6KD57Y66U123456', make: 'Cadillac', status: 'Complete' },
-    { vin: '1FAHP2E81DG123456', make: 'Ford', status: 'Complete' },
-    { vin: '1G6KD57Y66U123457', make: 'Cadillac', status: 'Complete' },
-    { vin: 'SAJWA4DC8DM123456', make: 'Jaguar', status: 'Complete' },
+    { vin: '1HGCM82633A004352', make: 'AUDI', status: 'Complete', model: 'A4', date: '2024-06-01', technician: 'Ravi', price: '₹12,000' },
+    { vin: '1N4AL11D75C109151', make: 'RAM', status: 'In Progress', model: '1500', date: '2024-06-05', technician: 'Amit', price: '₹8,500' },
+    { vin: '1GYS4HEF7BR279657', make: 'Nissan', status: 'Complete', model: 'Altima', date: '2024-06-12', technician: 'Sunil', price: '₹9,000' },
+    { vin: 'WP0ZZZ99ZTS392124', make: 'Porsche', status: 'Complete', model: 'Cayenne', date: '2024-06-20', technician: 'Raj', price: '₹15,000' },
+    { vin: 'WDBUF56X88B123456', make: 'Mercedes', status: 'Complete', model: 'C-Class', date: '2024-06-21', technician: 'Deepak', price: '₹13,500' },
+    { vin: 'WBA8D9C52HK477369', make: 'BMW', status: 'In Progress', model: '320i', date: '2024-06-25', technician: 'Karan', price: '₹10,500' },
+    { vin: '1G6KD57Y66U123456', make: 'Cadillac', status: 'Complete', model: 'CTS', date: '2024-06-26', technician: 'Nikhil', price: '₹14,000' },
+    { vin: '1FAHP2E81DG123456', make: 'Ford', status: 'Complete', model: 'Fusion', date: '2024-06-28', technician: 'Ajay', price: '₹9,700' },
+    { vin: '1G6KD57Y66U123457', make: 'Cadillac', status: 'Complete', model: 'Escalade', date: '2024-06-30', technician: 'Suresh', price: '₹16,200' },
+    { vin: 'SAJWA4DC8DM123456', make: 'Jaguar', status: 'Complete', model: 'XF', date: '2024-07-01', technician: 'Rohan', price: '₹17,000' },
 ];
 
 const partnerOrderData = [
-    { vin: '1FAHP2E81DG123456', make: 'Ford', status: 'Complete', partner: 'John Doe' },
-    { vin: 'SAJWA4DC8DM123456', make: 'Jaguar', status: 'Pending', partner: 'Jane Smith' },
+    {
+        vin: '1FAHP2E81DG123456',
+        make: 'Ford',
+        status: 'Complete',
+        partner: 'John Doe',
+        model: 'Fusion',
+        date: '2024-07-02',
+        technician: 'Ajay',
+        price: '₹9,700',
+    },
+    {
+        vin: 'SAJWA4DC8DM123456',
+        make: 'Jaguar',
+        status: 'In Progress',
+        partner: 'Jane Smith',
+        model: 'XF',
+        date: '2024-07-03',
+        technician: 'Rohan',
+        price: '₹17,000',
+    },
 ];
 
 const getStatusStyle = (status) => {
@@ -59,18 +94,18 @@ const VinListScreen = ({ navigation, route }) => {
         ? baseData.filter(item => item.vin.toLowerCase().includes(searchVin.toLowerCase()))
         : baseData;
 
-    // useEffect(() => {
-    //     const { vinNumber } = route.params || {};
-    //     if (vinNumber) {
-    //         const match = baseData.find(item => item.vin.toLowerCase() === vinNumber.toLowerCase());
-    //         if (match) {
-    //             setSearchVin(vinNumber); // Show matched item
-    //         } else {
-    //             setUnmatchedVin(vinNumber); // Store for modal
-    //             setShowVinModal(true);
-    //         }
-    //     }
-    // }, [route.params?.vinNumber]);
+    useEffect(() => {
+        const { vinNumber } = route.params || {};
+        if (vinNumber) {
+            const match = baseData.find(item => item.vin.toLowerCase() === vinNumber.toLowerCase());
+            if (match) {
+                setSearchVin(vinNumber); // Show matched item
+            } else {
+                setUnmatchedVin(vinNumber); // Store for modal
+                setShowVinModal(true);
+            }
+        }
+    }, [route.params?.vinNumber]);
 
     const toggleModal = () => {
         setModalVisible(!isModalVisible);
@@ -169,7 +204,7 @@ const VinListScreen = ({ navigation, route }) => {
                     <Text style={[styles.tableHeaderText, { width: wp(20) }]}>Status</Text>)}
             </View>
 
-            {/* FlatList */}
+
             <View style={{ width: "100%", height: Platform.OS === "android" ? hp(56) : hp(51) }}>
                 <FlatList
                     data={filteredData}
@@ -178,7 +213,7 @@ const VinListScreen = ({ navigation, route }) => {
                     renderItem={({ item, index }) => {
                         const { backgroundColor, borderColor, textColor } = getStatusStyle(item.status);
                         return (
-                            <View style={[styles.tableRow, { backgroundColor: index % 2 === 0 ? verylightGrayColor : whiteColor }, flexDirectionRow]}>
+                            <View style={[styles.tableRow, { backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor }, flexDirectionRow]}>
                                 <Text style={[styles.tableText, { width: wp(48) }]}>{item.vin}</Text>
                                 <Text style={[styles.tableText, { width: wp(25) }]}>{item.make}</Text>
                                 {activeTab === 'partnerOrder' && (
@@ -198,6 +233,66 @@ const VinListScreen = ({ navigation, route }) => {
                     )}
                 />
             </View>
+            {/* <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <View>
+                    <View style={[styles.tableHeader, flexDirectionRow]}>
+                        <Text style={[styles.tableHeaderText, { width: wp(50) }]}>VIN No.</Text>
+                        <Text style={[styles.tableHeaderText, { width: wp(25) }]}>Make</Text>
+                        <Text style={[styles.tableHeaderText, { width: wp(25) }]}>Model</Text>
+                        <Text style={[styles.tableHeaderText, { width: wp(28) }]}>Date</Text>
+                        <Text style={[styles.tableHeaderText, { width: wp(30) }]}>Technician</Text>
+                        <Text style={[styles.tableHeaderText, { width: wp(25) }]}>Price</Text>
+                        {activeTab === 'partnerOrder' && (
+                            <Text style={[styles.tableHeaderText, { width: wp(25) }]}>Partner</Text>
+                        )}
+                        {activeTab === 'workOrder' && (
+                            <Text style={[styles.tableHeaderText, { width: wp(25) }]}>Status</Text>
+                        )}
+                    </View>
+
+                    <View style={{ width: "100%", height: Platform.OS === "android" ? hp(56) : hp(51) }}>
+
+                        <FlatList
+                            data={filteredData}
+                            keyExtractor={(item, index) => index.toString()}
+                            showsVerticalScrollIndicator={false}
+                            renderItem={({ item, index }) => {
+                                const { backgroundColor, borderColor, textColor } = getStatusStyle(item.status);
+                                return (
+                                    <View
+                                        style={[
+                                            styles.tableRow,
+                                            flexDirectionRow,
+                                            { backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor },
+                                        ]}
+                                    >
+                                        <Text style={[styles.tableText, { width: wp(50) }]}>{item.vin}</Text>
+                                        <Text style={[styles.tableText, { width: wp(25) }]}>{item.make}</Text>
+                                        <Text style={[styles.tableText, { width: wp(25) }]}>{item.model}</Text>
+                                        <Text style={[styles.tableText, { width: wp(33) }]}>{item.date}</Text>
+                                        <Text style={[styles.tableText, { width: wp(25) }]}>{item.technician}</Text>
+                                        <Text style={[styles.tableText, { width: wp(25) }]}>{item.price}</Text>
+                                        {activeTab === 'workOrder' && (
+                                            <View style={[styles.statusPill, { backgroundColor, borderColor }]}>
+                                                <Text style={{ color: textColor, fontSize: 12 }}>{item.status}</Text>
+                                            </View>
+                                        )}
+                                        {activeTab === 'partnerOrder' && (
+                                            <Text style={[styles.tableText, { width: wp(20) }]}>{item.partner}</Text>
+                                        )}
+                                    </View>
+                                );
+                            }}
+                            ListEmptyComponent={() => (
+                                <View style={styles.emptyContainer}>
+                                    <Text style={styles.emptyText}>No results found</Text>
+                                </View>
+                            )}
+                        />
+                    </View>
+                </View>
+            </ScrollView> */}
+
 
             {isModalVisible && <Modal animationType="slide" transparent={true} visible={isModalVisible} onRequestClose={toggleModal}>
                 <TouchableWithoutFeedback onPress={toggleModal}>
@@ -215,7 +310,7 @@ const VinListScreen = ({ navigation, route }) => {
                                 <Text style={styles.modalTitle}>Sort By</Text>
                                 <Feather name="sliders" size={20} color={grayColor} />
                             </View>
-                            <TouchableOpacity
+                            {/* <TouchableOpacity
                                 onPress={() => handleSort(sortType === "name" && sortOrder === "asc" ? "desc" : "asc", "name")}
                                 style={styles.sortOption}
                             >
@@ -225,7 +320,7 @@ const VinListScreen = ({ navigation, route }) => {
                                 <Text style={[styles.sortText, { color: sortType === "name" ? blackColor : 'gray' }]}>
                                     {sortType === "name" ? (sortOrder === "asc" ? "A to Z" : "Z to A") : "A to Z"}
                                 </Text>
-                            </TouchableOpacity>
+                            </TouchableOpacity> */}
 
                             <TouchableOpacity
                                 onPress={() => handleSort(sortType === "date" && sortOrder === "newest" ? "oldest" : "newest", "date")}
@@ -256,7 +351,7 @@ const VinListScreen = ({ navigation, route }) => {
                                 style={styles.sortOption}
                             >
                                 <Text style={[styles.sortText, { fontWeight: style.fontWeightThin.fontWeight, color: sortType === "status" ? blackColor : 'gray' }]}>
-                                    Job Status
+                                    Work Order
                                 </Text>
                                 <Text style={[styles.sortText, { color: sortType === "status" ? blackColor : 'gray' }]}>
                                     {sortType === "status" ? (sortOrder === "asc" ? "In Progress → Complete" : "Complete → In Progress") : "In Progress → Complete"}
@@ -290,7 +385,9 @@ const VinListScreen = ({ navigation, route }) => {
                             <TouchableOpacity
                                 onPress={() => {
                                     // 👇 Handle YES logic here (e.g., add to list or navigate)
-                                    setSearchVin(unmatchedVin);
+                                    navigation.navigate("WorkOrderScreenTwo", {
+                                        vinNumber: route?.params?.vinNumber
+                                    })
                                     setShowVinModal(false);
                                 }}
                                 style={styles.vinButtonYes}
@@ -362,14 +459,18 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.15,
         shadowRadius: 4,
+        backgroundColor: blueColor
     },
     tableHeaderText: {
         fontWeight: style.fontWeightThin1x.fontWeight,
-        textAlign: "left"
+        textAlign: "left",
+        color: whiteColor
     },
     tableRow: {
         padding: spacings.large,
-        alignItems: 'center'
+        alignItems: 'center',
+        borderBottomWidth: 1,
+        borderBottomColor: '#E6E6E6'
     },
     tableText: {
         textAlign: 'left'
