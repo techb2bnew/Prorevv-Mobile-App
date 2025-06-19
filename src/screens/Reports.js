@@ -40,6 +40,8 @@ const Reports = ({ navigation }) => {
     const [loadingMore, setLoadingMore] = useState(false);
     const { width, height } = Dimensions.get("window");
     const isTablet = width >= 668 && height >= 1024;
+    const isIOSAndTablet = Platform.OS === "ios" && isTablet;
+
     const [activeTab, setActiveTab] = useState("WorkOrders");
     const [activeStatus, setActiveStatus] = useState("Completed");
     const [filteredJobs, setFilteredJobs] = useState([]);
@@ -483,21 +485,21 @@ const Reports = ({ navigation }) => {
             {activeTab === 'WorkOrders' &&
                 <View style={{
                     flexDirection: 'row', position: "absolute",
-                    top: Platform.OS === "android" ? isTablet ? 20 : 10 : isTablet ? 20 : 13,
+                    top: Platform.OS === "android" ? isTablet ? hp(1) : 10 : isTablet ? 20 : 13,
                     right: -10,
                     justifyContent: "center",
                     alignItems: "center",
                 }}>
                     <TouchableOpacity
                         onPress={() => setViewType('grid')}
-                        style={[styles.tabButton, { backgroundColor: viewType === 'grid' ? blueColor : whiteColor, marginRight: 10 }]}>
-                        <Ionicons name="list" size={20} color={viewType === 'grid' ? whiteColor : blackColor} />
+                        style={[styles.tabButton, { backgroundColor: viewType === 'grid' ? blueColor : whiteColor, marginRight: 10, width: isTablet ? wp(8) : wp(12), height: hp(4.5) }]}>
+                        <Ionicons name="list" size={isTablet ? 35 : 20} color={viewType === 'grid' ? whiteColor : blackColor} />
                     </TouchableOpacity>
 
                     <TouchableOpacity
                         onPress={() => setViewType('list')}
-                        style={[styles.tabButton, { backgroundColor: viewType === 'list' ? blueColor : whiteColor, margin: 0 }]}>
-                        <Ionicons name="grid-sharp" size={20} color={viewType === 'list' ? whiteColor : blackColor} />
+                        style={[styles.tabButton, { backgroundColor: viewType === 'list' ? blueColor : whiteColor, margin: 0, width: isTablet ? wp(8) : wp(12), height: hp(4.5) }]}>
+                        <Ionicons name="grid-sharp" size={isTablet ? 35 : 20} color={viewType === 'list' ? whiteColor : blackColor} />
                     </TouchableOpacity>
                 </View>
             }
@@ -583,7 +585,7 @@ const Reports = ({ navigation }) => {
                     />
                     <Feather name="search" size={20} color={blackColor} />
 
-                    <TouchableOpacity style={[styles.filterButton, { top: isTablet ? Platform.OS === "android" ? hp(0.5) : hp(1) : hp(0.5), right: isTablet ? Platform.OS === "android" ? -80 : -100 : -60 }]}
+                    <TouchableOpacity style={[styles.filterButton, { top: isTablet ? Platform.OS === "android" ? hp(1) : hp(1) : hp(0.5), right: isTablet ? Platform.OS === "android" ? -80 : -100 : -60 }]}
                         onPress={toggleModal}
                     >
                         <Image source={SORT_IMAGE} resizeMode='contain' style={{ width: isTablet ? wp(7) : wp(10), height: hp(3.2) }} />
@@ -592,10 +594,10 @@ const Reports = ({ navigation }) => {
 
                 {/* Tabs */}
                 <View style={styles.tabContainer}>
-                    <TouchableOpacity onPress={() => setActiveTab("WorkOrders")} style={[styles.tabButton, activeTab === 'WorkOrders' && styles.activeTab]}>
+                    <TouchableOpacity onPress={() => setActiveTab("WorkOrders")} style={[styles.tabButton, activeTab === 'WorkOrders' && styles.activeTab, { width: isTablet ? wp(12) : wp(30), height: hp(4) }]}>
                         <Text style={[styles.tabText, activeTab === 'WorkOrders' && styles.activeTabText]}>Work Orders</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => { setActiveTab("Jobs"), setActiveStatus("Completed") }} style={[styles.tabButton, activeTab === 'Jobs' && styles.activeTab]}>
+                    <TouchableOpacity onPress={() => { setActiveTab("Jobs"), setActiveStatus("Completed") }} style={[styles.tabButton, activeTab === 'Jobs' && styles.activeTab, { width: isTablet ? wp(12) : wp(20), height: hp(4) }]}>
                         <Text style={[styles.tabText, activeTab === 'Jobs' && styles.activeTabText]}>Jobs</Text>
                     </TouchableOpacity>
                 </View>
@@ -614,7 +616,7 @@ const Reports = ({ navigation }) => {
                             <TouchableOpacity
                                 key={status}
                                 onPress={() => setActiveStatus(status)}
-                                style={[styles.statusButton, activeStatus === status && styles.activeStatus]}
+                                style={[styles.statusButton, activeStatus === status && styles.activeStatus, { width: isTablet ? wp(20) : wp(35), height: hp(4) }, alignJustifyCenter]}
                             >
                                 <Text style={[styles.statusText, activeStatus === status && styles.activeStatusText]}>
                                     {status === 'InProgress' ? 'In Progress' : status} ({count})
@@ -630,12 +632,14 @@ const Reports = ({ navigation }) => {
                 <>
                     {/* Table Header */}
                     <View style={styles.tableHeaderRow}>
-                        <Text style={styles.tableHeader}>Job Name</Text>
-                        <Text style={styles.tableHeader}>Number of W.O</Text>
+                        <Text style={[styles.tableHeader, { width: "50%" }]}>Job Name</Text>
+                        <Text style={[styles.tableHeader, { width: "38%" }]}>Number of W.O</Text>
+                        <Text style={[styles.tableHeader, { width: "15%" }]}>Action</Text>
+
                     </View>
 
                     {/* FlatList for Jobs only */}
-                    <View style={{ width: "100%", height: Platform.OS === "android" ? hp(47) : hp(44.5) }}>
+                    <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(63) : hp(47) : isIOSAndTablet ? hp(58) : hp(44.5) }}>
                         <FlatList
                             data={filteredJobs}
                             keyExtractor={(item, index) => item?.jobName || index.toString()}
@@ -645,12 +649,15 @@ const Reports = ({ navigation }) => {
                                     backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor,
                                 };
                                 return (
-                                    <View style={[styles.listItem, rowStyle]}>
-                                        <Text style={styles.text}>{item?.jobName}</Text>
-                                        <Text style={styles.text}>
+                                    <Pressable style={[styles.listItem, rowStyle]} onPress={() => navigation.navigate("VinListScreen")}>
+                                        <Text style={[styles.text, { width: "55%" }]}>{item?.jobName}</Text>
+                                        <Text style={[styles.text, { width: "34%" }]}>
                                             {item?.workOrderCount?.toString().padStart(2, '0')}
                                         </Text>
-                                    </View>
+                                        <View style={{ flexDirection: "row", alignItems: "center", width: "20%" }} >
+                                            <Text style={styles.viewText}>View</Text>
+                                        </View>
+                                    </Pressable>
                                 );
                             }}
                             ListEmptyComponent={() => (
@@ -665,7 +672,7 @@ const Reports = ({ navigation }) => {
 
             {/* WorkOrders */}
             {activeTab === 'WorkOrders' && viewType === 'grid' ? (
-                <View style={{ width: "100%", height: Platform.OS === "android" ? hp(52) : hp(49) }}>
+                <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(62.5) : hp(53) : isIOSAndTablet ? hp(61) : hp(49) }}>
                     <FlatList
                         data={filteredWorkOrders}
                         keyExtractor={(item, index) => index.toString()}
@@ -721,18 +728,18 @@ const Reports = ({ navigation }) => {
 
                 </View>
             ) : activeTab === 'WorkOrders' && viewType === 'list' ? (
-                <View style={{ width: "100%", height: Platform.OS === "android" ? hp(53) : hp(59) }}>
+                <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(62.5) : hp(53) : isIOSAndTablet ? hp(61) : hp(59) }}>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                         <View>
                             {/* Header Row */}
                             <View style={[styles.tableHeaderRow, { backgroundColor: blueColor }]}>
                                 <Text style={[styles.tableHeader, { width: wp(50) }]}>VIN</Text>
                                 <Text style={[styles.tableHeader, { width: wp(27) }]}>Make</Text>
-                                <Text style={[styles.tableHeader, { width: wp(27) }]}>Model</Text>
+                                <Text style={[styles.tableHeader, { width: wp(30) }]}>Model</Text>
                                 {/* <Text style={[styles.tableHeader, { width: wp(40) }]}>Technician</Text> */}
                                 <Text style={[styles.tableHeader, { width: wp(30) }]}>Date</Text>
                                 <Text style={[styles.tableHeader, { width: wp(27) }]}>Price</Text>
-                                <Text style={[styles.tableHeader, { width: wp(27) }]}>Status</Text>
+                                <Text style={[styles.tableHeader, { paddingRight: isTablet ? 30 : 0, width: isIOSAndTablet ? wp(8) : wp(20) }]}>Status</Text>
                             </View>
 
                             {/* Data Rows with vertical scroll */}
@@ -747,14 +754,16 @@ const Reports = ({ navigation }) => {
                                             {/* <Text style={[styles.text, { width: wp(40) }]}>{item?.technician || '-'}</Text> */}
                                             <Text style={[styles.text, { width: wp(30) }]}>{item?.date || '-'}</Text>
                                             <Text style={[styles.text, { width: wp(27) }]}>{item?.price ? `$${item?.price}` : '-'}</Text>
-                                            <View style={[getStatusStyle(item?.status), { width: wp(27), alignItems: "center" }]}>
+                                            <View style={[getStatusStyle(item?.status)]}>
                                                 <Text
                                                     style={{
                                                         color: getStatusText(item?.status) === "Complete" ?
                                                             greenColor : getStatusText(item?.status) === "Pending" ?
                                                                 redColor :
                                                                 goldColor
-                                                    }}>{getStatusText(item?.status)}</Text>
+                                                    }}>
+                                                    {getStatusText(item?.status)}
+                                                </Text>
                                             </View>
                                         </View>
                                     );
@@ -974,7 +983,7 @@ const styles = StyleSheet.create({
     },
     statusButton: {
         paddingHorizontal: spacings.xLarge,
-        paddingVertical: spacings.medium,
+        // paddingVertical: spacings.medium,
         marginRight: spacings.large
     },
     activeStatus: {
@@ -991,7 +1000,7 @@ const styles = StyleSheet.create({
     },
     tableHeaderRow: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
+        // justifyContent: 'space-between',
         padding: spacings.medium,
         borderBottomWidth: 1,
         borderColor: '#E6E6E6',
@@ -1004,7 +1013,7 @@ const styles = StyleSheet.create({
     },
     listItem: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
+        // justifyContent: 'space-between',
         padding: spacings.large,
         borderBottomWidth: 1,
         borderBottomColor: '#E6E6E6'
@@ -1028,5 +1037,14 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: lightGrayColor,
         // minWidth: 600
-    }
+    },
+    viewText: {
+        marginLeft: 5,
+        fontSize: style.fontSizeSmall1x.fontSize,
+        color: blackColor,
+        borderColor: blackColor,
+        borderWidth: 1,
+        padding: 4,
+        borderRadius: 2,
+    },
 });

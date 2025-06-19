@@ -10,37 +10,25 @@ import { blackColor, blueColor, grayColor, lightBlueColor, lightGrayColor, mediu
 import Toast from 'react-native-simple-toast';
 import Fontisto from 'react-native-vector-icons/Fontisto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-
-
+import { API_BASE_URL } from '../constans/Constants';
 
 const WorkOrderScreen = ({ navigation }) => {
   const { width, height } = Dimensions.get("window");
   const [selectedJob, setSelectedJob] = useState(null);
   const [selectedJobName, setSelectedJobName] = useState("");
   const [searchText, setSearchText] = useState('');
-
-  const jobList = [
-    { id: '1', title: "Ron’s Chevy", year: "2020" },
-    { id: '2', title: "Ron’s Dodge", year: "2022" },
-    { id: '3', title: "Ron’s Nissan", year: "2024" },
-    { id: '4', title: "Ron’s Audi", year: "2025" },
-    { id: '5', title: "Ron’s RAM", year: "2023" },
-    { id: '6', title: "Ron’s Lexus", year: "2025" },
-    { id: '7', title: "Ron’s Toyota", year: "2024" },
-    { id: '8', title: "Ron’s Ford", year: "2021" },
-    { id: '9', title: "Ron’s BMW", year: "2020" },
-    { id: '10', title: "Ron’s Honda", year: "2022" },
-    { id: '11', title: "Ron’s Hyundai", year: "2023" },
-    { id: '12', title: "Ron’s Kia", year: "2021" },
-    { id: '13', title: "Ron’s Volkswagen", year: "2020" },
-    { id: '14', title: "Ron’s Jeep", year: "2024" },
-    { id: '15', title: "Ron’s Mahindra", year: "2022" },
-  ];
+  const isTablet = width >= 668 && height >= 1024;
+  const [technicianId, setTechnicianId] = useState();
+  const [technicianType, setTechnicianType] = useState();
+  const [jobList, setJobList] = useState([]);
+  const pageRef = useRef(1); // useRef to avoid re-render
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const loadSelectedJob = async () => {
       const savedJob = await AsyncStorage.getItem("current_Job");
+
       if (savedJob) {
         const parsed = JSON.parse(savedJob);
         setSelectedJob(parsed.id);
@@ -50,8 +38,78 @@ const WorkOrderScreen = ({ navigation }) => {
     loadSelectedJob();
   }, []);
 
+  useEffect(() => {
+    const getTechnicianDetail = async () => {
+      try {
+        const storedData = await AsyncStorage.getItem("userDeatils");
+        if (storedData) {
+          const parsedData = JSON.parse(storedData);
+          setTechnicianId(parsedData?.id);
+          setTechnicianType(parsedData?.types)
+        }
+      } catch (error) {
+        console.error("Error fetching stored user:", error);
+      }
+    };
+
+    getTechnicianDetail();
+  }, []);
+
+  const fetchJobsFromAPI = async () => {
+    if (loading || !hasMore) return;
+
+    try {
+      setLoading(true);
+
+      const token = await AsyncStorage.getItem("auth_token");
+      if (!token) {
+        console.error("No token found");
+        return;
+      }
+
+      const response = await axios.get(
+        `${API_BASE_URL}/fetchAllJobs?page=${pageRef.current}&roleType=${technicianType}&userId=${technicianId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = response?.data;
+      const newJobs = data?.jobs.jobs || [];
+
+      if (newJobs.length > 0) {
+        setJobList(prev => [...prev, ...newJobs]);
+
+        const currentPage = data?.currentPage || pageRef.current;
+        const totalPages = data?.totalPages || 1;
+
+        if (currentPage < totalPages) {
+          pageRef.current += 1;
+        } else {
+          setHasMore(false);
+        }
+      } else {
+        setHasMore(false);
+      }
+
+    } catch (error) {
+      console.error("Fetch error:", error);
+      Toast.show("Failed to fetch jobs.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (technicianId && technicianType) {
+      fetchJobsFromAPI();
+    }
+  }, [technicianId, technicianType]);
+
   const filteredJobList = jobList.filter(item =>
-    item.title.toLowerCase().includes(searchText.toLowerCase())
+    item.jobName.toLowerCase().includes(searchText.toLowerCase())
   );
 
   return (
@@ -61,7 +119,7 @@ const WorkOrderScreen = ({ navigation }) => {
         <Text style={[styles.label, { fontSize: style.fontSizeLarge.fontSize, }]}>Select Job <Text style={{ color: 'red' }}>*</Text></Text>
 
         <Text style={styles.label}>Search Job </Text>
-        <View style={styles.searchTextInput}>
+        <View style={[styles.searchTextInput, { height: isTablet ? hp(4) : hp(5.5), }]}>
           <TextInput
             placeholder="Search Job"
             placeholderTextColor={grayColor}
@@ -77,7 +135,7 @@ const WorkOrderScreen = ({ navigation }) => {
         <Text style={styles.label}>Assigned Jobs</Text>
 
         <View style={{
-          height: hp(40),
+          maxHeight: hp(40),
           borderColor: blueColor,
           borderWidth: 1,
           borderRadius: 10,
@@ -99,13 +157,9 @@ const WorkOrderScreen = ({ navigation }) => {
                 <Pressable
                   style={[styles.jobItem, { backgroundColor }]}
                   onPress={async () => {
-                    const selectedJob = {
-                      id: item.id,
-                      name: item.title
-                    };
-                    setSelectedJob(item.id);
-                    setSelectedJobName(item.title);
-                    await AsyncStorage.setItem("current_Job", JSON.stringify(selectedJob));
+                    setSelectedJob(item?.id);
+                    setSelectedJobName(item?.jobName);
+                    await AsyncStorage.setItem("current_Job", JSON.stringify(item));
                   }}
                 >
                   <Fontisto
@@ -115,12 +169,20 @@ const WorkOrderScreen = ({ navigation }) => {
                     style={styles.radioIcon}
                   />
                   <Text style={[{ color: isSelected ? whiteColor : blackColor, marginLeft: spacings.xLarge }]}>
-                    {item.title} ({item.year})
+                    {item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}
                   </Text>
                 </Pressable>
               );
             }}
-          />
+            onEndReached={fetchJobsFromAPI}
+            onEndReachedThreshold={0.5}
+            ListFooterComponent={
+              loading ? (
+                <View style={{ paddingVertical: 16, alignItems: 'center', justifyContent: 'center' }}>
+                  <ActivityIndicator size="small" color={blueColor} />
+                </View>
+              ) : null
+            } />
         </View>
 
         <Pressable
@@ -159,7 +221,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: spacings.xxLarge,
     alignItems: 'center',
-    height: hp(5.5),
+    // height: hp(5.5),
     borderColor: blueColor,
     borderWidth: 1,
     marginBottom: spacings.large

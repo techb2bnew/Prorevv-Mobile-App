@@ -284,32 +284,32 @@ const ProfileScreen = ({ navigation }) => {
     }
   };
 
-const fetchCountries = async () => {
-  try {
-    console.log("Fetching countries...");
-    const response = await fetch("https://restcountries.com/v3.1/all?fields=name");
-    const data = await response.json();
+  const fetchCountries = async () => {
+    try {
+      console.log("Fetching countries...");
+      const response = await fetch("https://restcountries.com/v3.1/all?fields=name");
+      const data = await response.json();
 
-    console.log("Fetched Countries:", data);
+      console.log("Fetched Countries:", data);
 
-    if (Array.isArray(data)) {
-      const countryNames = data.map((item) => item.name.common);
-      const sortedCountries = countryNames.sort((a, b) => a.localeCompare(b));
+      if (Array.isArray(data)) {
+        const countryNames = data.map((item) => item.name.common);
+        const sortedCountries = countryNames.sort((a, b) => a.localeCompare(b));
 
-      setCountries(sortedCountries);
-      console.log("Countries:", sortedCountries);
+        setCountries(sortedCountries);
+        console.log("Countries:", sortedCountries);
 
-      // Set initial country value if profile has country data
-      if (profile?.country) {
-        setCountryValue(profile.country);
+        // Set initial country value if profile has country data
+        if (profile?.country) {
+          setCountryValue(profile.country);
+        }
+      } else {
+        console.log("No countries found.");
       }
-    } else {
-      console.log("No countries found.");
+    } catch (error) {
+      console.error("Error fetching countries:", error);
     }
-  } catch (error) {
-    console.error("Error fetching countries:", error);
-  }
-};
+  };
 
 
   const fetchStates = async () => {
@@ -699,7 +699,7 @@ const fetchCountries = async () => {
     setIsEditingLoading(true);
 
     // ✅ Validate Required Fields
-    if (!firstName || !lastName || !phoneNumber || !country || !address || !postalCode) {
+    if (!firstName || !lastName || !phoneNumber ) {
       setError("Please fill all details");
       setIsEditingLoading(false);
       return;
@@ -1037,16 +1037,7 @@ const fetchCountries = async () => {
                   </View>
                 </TouchableOpacity>
               </View>
-              {/* <View style={[styles.userdetailsBox, alignJustifyCenter]}>
-                <TouchableOpacity style={[{ width: wp(100), height: 'auto', paddingLeft: spacings.xLarge }, flexDirectionRow]} onPress={() => setLogoutModalVisible(true)}>
-                  <View style={{ padding: spacings.xLarge }}>
-                    <Ionicons name="power" size={25} color={redColor} />
-                  </View>
-                  <View style={{ paddingVertical: spacings.xLarge }}>
-                    <Text style={[styles.text, { fontSize: style.fontSizeNormal1x.fontSize, paddingTop: 3, fontWeight: style.fontWeightThin1x.fontWeight, color: "red" }]}>Logout</Text>
-                  </View>
-                </TouchableOpacity>
-              </View> */}
+
               {/* Modals */}
               <ConfirmationModal
                 visible={logoutModalVisible}
@@ -1223,106 +1214,6 @@ const fetchCountries = async () => {
                   <View style={styles.inputGroup}>
                     <Text style={styles.label}>Address</Text>
                     <TextInput style={styles.input} value={address} onChangeText={setAddress} placeholder="Enter Address" />
-                  </View>
-                  <View style={[flexDirectionRow, justifyContentSpaceBetween, { width: "100%" }]}>
-                    <View style={[styles.phoneContainer, { width: "49%" }]}>
-                      <Text style={styles.label}>
-                        Country<Text style={styles.asterisk}> *</Text>
-                      </Text>
-                      <CustomDropdown
-                        data={countries}
-                        country={true}
-                        selectedValue={countryValue}
-                        onSelect={(value) => {
-                          setCountryValue(value);
-                          handleInputChange("country", value);
-                          // setStates([]);
-                          // setCities([]);
-                          // setStateValue("");
-                          // setCityValue("");
-                        }}
-                        titleText={"Select a Country"}
-                        rightIcon={true}
-                      />
-                    </View>
-
-                    {/* State Dropdown */}
-                    <View style={[styles.phoneContainer, { width: "48%" }]}>
-                      <Text style={styles.label}>
-                        State
-                      </Text>
-                      {/* <CustomDropdown
-                        data={states}
-                        state={true}
-                        selectedValue={stateValue}
-                        onSelect={(value) => {
-                          setStateValue(value);
-                          handleInputChange("state", value);
-                          setCityValue("");
-                          setCities([]);
-                        }}
-                        titleText={states.length ? "Select a State" : "Select country first"}
-                        disabled={!states.length}
-                        rightIcon={true}
-
-                      /> */}
-                      <TextInput
-                        style={styles.input}
-                        placeholder={"Enter State"}
-                        value={stateValue}
-                        onChangeText={(value) => {
-                          setStateValue(value);
-                          handleInputChange("state", value);
-                          setCityValue("");
-                          setCities([]);
-                        }}
-                        placeholderTextColor="#888"
-                      />
-                    </View>
-                  </View>
-                  <View style={[flexDirectionRow, justifyContentSpaceBetween, { width: "100%" }]}>
-                    {/* <View style={styles.inputGroup}>
-                      <Text style={styles.label}>City</Text>
-                      <TextInput style={[styles.input, { width: isTablet ? wp(46) : wp(43.5) }]} value={city} onChangeText={setCity} placeholder="Enter City" />
-                    </View> */}
-                    <View style={[{ width: "48%" }]}>
-                      <Text style={styles.label}>
-                        City
-                      </Text>
-                      {/* <CustomDropdown
-                        data={cities}
-                        selectedValue={cityValue}
-                        onSelect={(value) => {
-                          console.log("value", value);
-                          setCityValue(value);
-                          handleInputChange("city", value);
-                        }}
-                        titleText={"Select a City"}
-                        placeholder={"Select a City"}
-                        rightIcon={true}
-                      /> */}
-                      <TextInput
-                        style={styles.input}
-                        placeholder="Enter City"
-                        value={cityValue}
-                        onChangeText={(value) => {
-                          console.log("City Input:", value);
-                          setCityValue(value);
-                          handleInputChange("city", value);
-                        }}
-                        placeholderTextColor="#888" // optional
-                      />
-                    </View>
-
-                    <View style={styles.inputGroup}>
-                      <Text style={styles.label}>Zip Code<Text style={styles.asterisk}> *</Text></Text>
-                      <TextInput
-                        style={[styles.input, { width: isTablet ? wp(46) : wp(43.5) }]}
-                        value={postalCode}
-                        onChangeText={setPostalCode}
-                        placeholder="Enter Zip Code"
-                        maxLength={10} />
-                    </View>
                   </View>
                   <View style={styles.inputGroup}>
                     <Text style={styles.label}>Secondary Phone Number (Optional)</Text>

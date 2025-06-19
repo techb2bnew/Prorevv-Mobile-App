@@ -9,10 +9,7 @@ import { API_BASE_URL, JOB_HISTORY, NEW_CLIENT, NEW_WORK_ORDER } from '../consta
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import Carousel, { Pagination } from 'react-native-snap-carousel';
-import Toast from 'react-native-simple-toast';
 import AntDesign from 'react-native-vector-icons/AntDesign';
-import { generateFilePath } from 'react-native-compressor';
 const { width, height } = Dimensions.get('window');
 
 const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween, textAlign } = BaseStyle;
@@ -24,7 +21,7 @@ const HomeScreen = ({ navigation }) => {
   const [bLogo, setbLogo] = useState(null);
   // const [activeIndex, setActiveIndex] = useState(0);
   const isTablet = width >= 668 && height >= 1024;
-  const isAndroidAndTablet = Platform.OS === "android" && isTablet;
+  const isIOSAndTablet = Platform.OS === "ios" && isTablet;
   // const [banners, setBanners] = useState([]);
 
 
@@ -116,11 +113,11 @@ const HomeScreen = ({ navigation }) => {
     }, [])
   );
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchCustomers();
-    }, [technicianId])
-  );
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     fetchCustomers();
+  //   }, [technicianId])
+  // );
 
   // useFocusEffect(
   //   React.useCallback(() => {
@@ -169,35 +166,35 @@ const HomeScreen = ({ navigation }) => {
   // );
 
 
-  const fetchCustomers = async () => {
-    try {
-      const token = await AsyncStorage.getItem("auth_token");
-      if (!token) {
-        console.error("Token not found!");
-        return;
-      }
-      if (!technicianId) {
-        console.error("technicianId not found!");
-        return;
-      }
-      // Construct the API URL with parameters
-      const apiUrl = `${API_BASE_URL}/fetchCustomer?userId=${technicianId}`;
-      console.log("Fetching customers from URL:", apiUrl); // Log the API URL
+  // const fetchCustomers = async () => {
+  //   try {
+  //     const token = await AsyncStorage.getItem("auth_token");
+  //     if (!token) {
+  //       console.error("Token not found!");
+  //       return;
+  //     }
+  //     if (!technicianId) {
+  //       console.error("technicianId not found!");
+  //       return;
+  //     }
+  //     // Construct the API URL with parameters
+  //     const apiUrl = `${API_BASE_URL}/fetchCustomer?userId=${technicianId}`;
+  //     console.log("Fetching customers from URL:", apiUrl); // Log the API URL
 
-      const response = await fetch(apiUrl, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      const data = await response.json();
-      console.log("customers::", data);
-      await AsyncStorage.setItem("customersList", JSON.stringify(data.customers?.customers));
-    } catch (error) {
-      console.error('Network error:', error);
-    }
-  };
+  //     const response = await fetch(apiUrl, {
+  //       method: 'GET',
+  //       headers: {
+  //         'Authorization': `Bearer ${token}`,
+  //         'Content-Type': 'application/json'
+  //       }
+  //     });
+  //     const data = await response.json();
+  //     console.log("customers::", data);
+  //     await AsyncStorage.setItem("customersList", JSON.stringify(data.customers?.customers));
+  //   } catch (error) {
+  //     console.error('Network error:', error);
+  //   }
+  // };
 
   const capitalizetext = (name) => {
     if (!name) return "";
@@ -259,20 +256,26 @@ const HomeScreen = ({ navigation }) => {
 
   return (
     <View style={[styles.container, flex]}>
-      <View style={[styles.logoContainer, alignItemsCenter]}>
+      <View style={[styles.logoContainer, alignItemsCenter, {
+        height: Platform.OS === "android" ? isTablet ? hp(12) : hp(19) : isIOSAndTablet ? hp(12) : hp(16),
+      }]}>
         <Text style={[styles.title, textAlign]}>👋 Hi, {capitalizetext(technicianName)}</Text>
-        <Pressable style={styles.searchTextInput} onPress={() => {
+        <Pressable style={[styles.searchTextInput, { height: isTablet ? hp(4) : hp(5.5), }]} onPress={() => {
           navigation.navigate("ScannerScreen", {
             from: "VinList"
           });
         }}>
-          <TextInput
+          {/* <TextInput
             placeholder="Scan VIN"
             placeholderTextColor={grayColor}
             style={styles.input}
             editable={false}
           />
           <View style={styles.iconContainer} >
+            <AntDesign name="scan1" size={24} color="#252837" />
+          </View> */}
+          <View style={[styles.input, { flexDirection: "row", alignItems: "center", justifyContent: "space-between" }]}>
+            <Text style={{ color: grayColor }}>Scan VIN</Text>
             <AntDesign name="scan1" size={24} color="#252837" />
           </View>
         </Pressable>
@@ -290,10 +293,10 @@ const HomeScreen = ({ navigation }) => {
 
         {/* Center Circular Logo */}
         <Pressable style={[styles.logoCircle, {
-          top: Platform.OS === "android" ? (isTablet ? hp(21.5) : hp(17.4)) : isTablet ? hp(12) : hp(15.8),
-          left: Platform.OS === "android" ? (isTablet ? wp(38) : wp(38.3)) : isTablet ? wp(38) : wp(38.4),
+          top: Platform.OS === "android" ? (isTablet ? hp(21.5) : hp(17.5)) : isTablet ? hp(12) : hp(15.8),
+          left: Platform.OS === "android" ? (isTablet ? wp(39) : wp(39.5)) : isTablet ? wp(38) : wp(39.4),
         }]}
-          onPress={() => navigation.navigate("ScannerScreen")}
+        // onPress={() => navigation.navigate("ScannerScreen")}
         >
           {/* {bLogo ? (
             <Image
@@ -309,7 +312,7 @@ const HomeScreen = ({ navigation }) => {
             />
           ) : ( */}
           <Image
-            source={CIRLE_SCANNER_IMAGE}
+            source={APP_NAME_IMAGE}
             style={[
               styles.logo,
               (Platform.OS === "ios" && isTablet) && {
@@ -336,7 +339,6 @@ const styles = StyleSheet.create({
     backgroundColor: whiteColor
   },
   logoContainer: {
-    height: Platform.OS === "android" ? hp(19) : hp(16),
     backgroundColor: blueColor,
     padding: spacings.large,
     borderBottomLeftRadius: 30,
@@ -367,8 +369,8 @@ const styles = StyleSheet.create({
     height: wp(12) * 2,
   },
   logo: {
-    width: '100%',
-    height: '100%',
+    width: '90%',
+    height: '90%',
     borderRadius: 100,
   },
   searchTextInput: {
@@ -377,7 +379,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: spacings.xxLarge,
     alignItems: 'center',
-    height: hp(5.5),
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 1 },

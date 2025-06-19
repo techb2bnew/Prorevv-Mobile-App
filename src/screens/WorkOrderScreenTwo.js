@@ -6,21 +6,16 @@ import { BaseStyle } from '../constans/Style';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from '../utils';
 import { style, spacings } from '../constans/Fonts';
 import Ionicons from 'react-native-vector-icons/dist/Ionicons';
-import { API_BASE_URL, CREATE_NEW_JOB, NEW_WORK_ORDER } from '../constans/Constants';
+import { API_BASE_URL } from '../constans/Constants';
 import CustomTextInput from '../componets/CustomTextInput';
 import axios from 'axios';
 import CustomButton from '../componets/CustomButton';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { NetworkInfo } from 'react-native-network-info';
 import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
 import DropDownPicker from 'react-native-dropdown-picker';
 import SuccessModal from '../componets/Modal/SuccessModal';
-import Toast from 'react-native-simple-toast';
 import { ALERT_IMAGE, SUCCESS_IMAGE, XCIRCLE_IMAGE } from '../assests/images';
 import { Image as ImageCompressor } from 'react-native-compressor';
-import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
-import NetInfo from "@react-native-community/netinfo";
-import { EventRegister } from 'react-native-event-listeners';
 import Header from '../componets/Header';
 
 const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween, textAlign } = BaseStyle;
@@ -31,18 +26,14 @@ const WorkOrderScreenTwo = ({ route }) => {
     const navigation = useNavigation();
     const [vin, setVin] = useState('');
     const [carDetails, setCarDetails] = useState([]);
-    const [customers, setCustomers] = useState([]);
     const [selectedCustomer, setSelectedCustomer] = useState(null);
-    const [customerDetails, setCustomerDetails] = useState(null);
     const [vinError, setVinError] = useState('');
-    const [ipAddress, setIpAddress] = useState('');
     const [notes, setNotes] = useState("");
     const [imageUris, setImageUris] = useState([]);
     const [selectedColor, setSelectedColor] = useState();
     const [selectedColorError, setSelectedColorError] = useState();
     const [imageError, setImageError] = useState();
     const [loading, setLoading] = useState(false);
-    const [isCustomerLoading, setIsCustomerLoading] = useState(true);
     const [isLoadingCarDetails, setIsLoadingCarDetails] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [updatedValues, setUpdatedValues] = useState({});
@@ -51,18 +42,10 @@ const WorkOrderScreenTwo = ({ route }) => {
     const [technicianType, setTechnicianType] = useState();
     const [error, setError] = useState('');
     const [open, setOpen] = useState(false);
-    const [searchText, setSearchText] = useState("");
-    const [duplicateVinModal, setDuplicateVinModal] = useState(false);
-    const [newFormData, setNewFormData] = useState(null);
-    const [isSubmitting, setIsSubmitting] = useState(false);
     const [jobDescription, setJobDescription] = useState([{ jobDescription: "", cost: "" }]);
     const [jobDescriptionError, setJobDescriptionError] = useState('');
-    const [pageNumber, setPageNumber] = useState(1);
-    const [hasMore, setHasMore] = useState(true);
     const [isSaveVisible, setIsSaveVisible] = useState(false);
     const [isVinApiError, setIsVinApiError] = useState(false);
-    const [filteredCustomers, setFilteredCustomers] = useState([]);
-    const [isDetailLoading, setIsDetailLoading] = useState(false);
     const [labourCost, setLabourCost] = useState('');
     const [textInputHeights, setTextInputHeights] = useState({});
     const [vTypeopen, setVTypeOpen] = useState(false);
@@ -71,7 +54,10 @@ const WorkOrderScreenTwo = ({ route }) => {
     const [storedVehicles, setStoredVehicles] = useState([]);
     const [storedPayRate, setStoredPayRate] = useState('');
     const inputRefs = useRef([]);
-    const [step, setStep] = useState(1); // 1 = VIN Input, 2 = Car Info Form
+    const [step, setStep] = useState(1);
+    const [selectedJobName, setSelectedJobName] = useState("");
+    const [submitLoading, setSubmitLoading] = useState(false);
+    const [scanLoading, setScanLoading] = useState(false);
 
 
     const [modalData, setModalData] = useState({
@@ -150,6 +136,25 @@ const WorkOrderScreenTwo = ({ route }) => {
     ];
 
     useFocusEffect(
+        React.useCallback(() => {
+            const loadSelectedJob = async () => {
+                const savedJob = await AsyncStorage.getItem("current_Job");
+                if (savedJob) {
+                    const parsed = JSON.parse(savedJob);
+                    console.log("savedJob:::::", parsed);
+                    setSelectedJobName(parsed.jobName);
+                    setSelectedCustomer(parsed.assignCustomer)
+                }
+            };
+
+            loadSelectedJob();
+
+            // cleanup if needed
+            return () => { };
+        }, [])
+    );
+
+    useFocusEffect(
         useCallback(() => {
             const getTechnicianDetail = async () => {
                 try {
@@ -172,19 +177,6 @@ const WorkOrderScreenTwo = ({ route }) => {
             getTechnicianDetail();
         }, [])
     );
-
-    //IP-Add
-    useEffect(() => {
-        // Fetch the IP Address when the component is mounted
-        NetworkInfo.getIPAddress()
-            .then(ip => {
-                setIpAddress(ip);
-                console.log("ip", ip)
-            })
-            .catch(err => {
-                console.log('Error getting IP address:', err);
-            });
-    }, []);
 
     // Tech Assigned Vehicle
     useEffect(() => {
@@ -261,6 +253,7 @@ const WorkOrderScreenTwo = ({ route }) => {
         } catch (error) {
             console.error("error", error);
             setIsVinApiError(true);
+            setCarDetails([])
             setModalData({
                 visible: true,
                 headingText: "VIN Not Found",
@@ -399,37 +392,31 @@ const WorkOrderScreenTwo = ({ route }) => {
     const handleDelete = (index) => {
         const updatedFields = jobDescription.filter((_, i) => i !== index);
         setJobDescription(updatedFields);
-    };
-
-    const saveOfflineJob = async (jobData) => {
-        try {
-            const existingJobs = await AsyncStorage.getItem("offlineJobs");
-            const jobsArray = existingJobs ? JSON.parse(existingJobs) : [];
-            jobsArray.push(jobData);
-            await AsyncStorage.setItem("offlineJobs", JSON.stringify(jobsArray));
-            console.log("Job saved offline.");
-            setModalData({
-                visible: true,
-                headingText: "Vehicle Saved successfully!",
-                buttonText: "Go to HomeScreen",
-                button2Text: 'Add New Vehicle',
-                image: SUCCESS_IMAGE,
-                navigateTo: "Home",
-            });
-            setLoading(false);
-        } catch (error) {
-            console.error("Error saving job offline:", error);
-        }
+        setJobDescriptionError("")
     };
 
     // Function to handle submit job
-    const handleSubmitJob = async () => {
-        // if (technicianType === "ifs" && !selectedVehicleType && storedPayRate === "Pay Per Vehicles") {
-        //     setVehicleTypeError("Please select a Vehicle Type");
-        //     return;
-        // }
+    const handleSubmitJob = async (shouldNavigate = false, setLoaderFn) => {
         if (!selectedColor) {
             setSelectedColorError("Please select a color");
+            return;
+        }
+
+        const technicianObj = {
+            payRate: storedPayRate,
+            payVehicleType: selectedVehicleType,
+        };
+
+        const invalidJob = jobDescription?.find(item => {
+            const desc = item.jobDescription?.trim();
+            const cost = item.cost?.trim();
+
+            // Block if either one is filled and the other is empty
+            return (desc && !cost) || (!desc && cost);
+        });
+
+        if (invalidJob) {
+            setJobDescriptionError("Please enter both description and cost.");
             return;
         }
 
@@ -442,10 +429,8 @@ const WorkOrderScreenTwo = ({ route }) => {
             return updatedValues[variableName] ||
                 (carDetails.find(item => item.Variable === variableName)?.Value || "");
         };
-
-        console.log("working");
-
         const formData = new FormData();
+        formData.append("jobName", selectedJobName);
         formData.append("vin", vin);
         formData.append("vehicleDescriptor", getValue("Vehicle Descriptor"));
         formData.append("make", getValue("Make"));
@@ -457,23 +442,23 @@ const WorkOrderScreenTwo = ({ route }) => {
         formData.append("plantCompanyName", getValue("Plant Company Name"));
         formData.append("plantState", getValue("Plant State"));
         formData.append("bodyClass", getValue("Body Class"));
-        jobDescription.forEach((item, index) => {
-            formData.append(`jobDescription[${index}][jobDescription]`, item.jobDescription);
-            formData.append(`jobDescription[${index}][cost]`, item.cost);
+        // jobDescription.forEach((item, index) => {
+        //     formData.append(`jobDescription[${index}][jobDescription]`, item.jobDescription);
+        //     formData.append(`jobDescription[${index}][cost]`, item.cost);
+        // });
+        jobDescription.forEach((item) => {
+            formData.append("jobDescription[]", item.jobDescription);
+            formData.append("cost[]", item.cost);
         });
         formData.append("color", selectedColor);
         formData.append("createdBy", "app");
-        formData.append("estimatedBy", technicianName);
-        formData.append("ip", ipAddress);
-        formData.append("assignTechnicians[0]", technicianId);
+        formData.append("userId[0]", technicianId);
         formData.append("roleType", technicianType);
         formData.append("labourCost", labourCost || "");
-        formData.append("schedule", "true");
-        formData.append("assignCustomer", selectedCustomer?.id);
+        formData.append("customerId", selectedCustomer);
         formData.append("notes", notes || " ");
-        formData.append("payRate", storedPayRate);
-        formData.append("payVehicleType", selectedVehicleType);
-
+        formData.append("technicians[0][payRate]", technicianObj.payRate);
+        formData.append("technicians[0][payVehicleType]", technicianObj.payVehicleType);
         if (imageUris && imageUris.length > 0) {
             imageUris.forEach((uri, index) => {
                 formData.append("images", {
@@ -483,120 +468,47 @@ const WorkOrderScreenTwo = ({ route }) => {
                 });
             });
         }
-        console.log("working1111");
+        console.log("form:::", formData);
 
-        console.log("fomerData", formData);
-
-        setLoading(true);
-        setNewFormData(formData)
+        setLoaderFn(true);
         setError("");
         setJobDescriptionError("");
-
-        const netState = await NetInfo.fetch();
-
-        if (!netState.isConnected) {
-            await saveOfflineJob(formData);
-            console.log("No internet, job saved offline.");
-            return;
-        }
         try {
-            const response = await axios.post(
-                `${API_BASE_URL}/technicianCreateJob`,
-                formData,
-                {
-                    headers: {
-                        "Content-Type": "multipart/form-data",
-                        Authorization: `Bearer ${token}`,
-                    },
+            const response = await fetch(`${API_BASE_URL}/addVehicleInfo`, {
+                method: 'POST',
+                headers: {
+                    // 'Content-Type': 'application/x-www-form-urlencoded',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: formData
+            });
+
+            const responseJson = await response.json();
+            console.log("Server response:", responseJson);
+            if (responseJson.status === true) {
+                if (shouldNavigate) {
+                    navigation.navigate("Home");
+                    setLoaderFn(false);
+                } else {
+                    setVin('');
+                    setCarDetails(null);
+                    setStep(1);
+                    setLoaderFn(false);
                 }
-            );
-
-            if (response.status === 201) {
-                setModalData({
-                    visible: true,
-                    headingText: "Job Created successfully!",
-                    buttonText: "Go to HomeScreen",
-                    button2Text: 'Create New Job',
-                    image: SUCCESS_IMAGE,
-                    navigateTo: "Home",
-                });
             } else {
-                setError("Failed to submit job.");
+                console.warn("Submission failed:", responseJson.message);
             }
+
         } catch (error) {
-            console.error("Error submitting job:", error.response?.data);
-            if (/jobDescription\[\d+\]\.cost/.test(error.response.data.error)) {
-                setJobDescriptionError("Cost cannot be empty.");
-            } else if (/jobDescription\[\d+\]/.test(error.response.data.error)) {
-                setJobDescriptionError("Job description cannot be empty.");
-            } else {
-                setError(error.response.data.error);
-            }
-            if (error.response?.data?.error === "Failed to create technician job: Duplicate VIN found") {
-                setError("");
-                setDuplicateVinModal(true);
-            }
+            console.error("Error create vehicle:", error);
         } finally {
-            setLoading(false);
-        }
-    };
-
-    // Function to handle Yes click (send same formData with different API)
-    const handleConfirmDuplicateVin = async () => {
-        setIsSubmitting(true);  // Start loading
-        try {
-            const token = await AsyncStorage.getItem("auth_token");
-
-            if (!token) {
-                console.error("Token is missing!");
-                Toast.show("Authentication error. Please log in again.");
-                setIsSubmitting(false);
-                return;
-            }
-
-            if (!newFormData) {
-                console.error("FormData is missing!");
-                Toast.show("Something went wrong. Please try again.");
-                setIsSubmitting(false);
-                return;
-            }
-
-            console.log("Sending FormData:", newFormData);
-
-            const response = await axios.post(
-                `${API_BASE_URL}/createVinDetails`,
-                newFormData,
-                {
-                    headers: {
-                        "Content-Type": "multipart/form-data",
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
-            );
-
-            console.log("API Response:", response);
-
-
-            if (response.status === 201) {
-                Toast.show("Job Created successfully!");
-                setDuplicateVinModal(false);
-                navigation.navigate("Home")
-            } else {
-                Toast.show("Failed to override job.");
-            }
-        } catch (error) {
-            console.error("Error overriding job:", error);
-            Toast.show("Something went wrong.");
-        } finally {
-            setIsSubmitting(false); // Stop loading after request completes
+            setLoaderFn(false);
         }
     };
 
     const resetForm = () => {
         setVin('');
         setCarDetails([]);
-        setSelectedCustomer(null);
-        setCustomerDetails(null);
         setVinError('');
         setNotes("");
         setLabourCost("");
@@ -615,21 +527,25 @@ const WorkOrderScreenTwo = ({ route }) => {
         setTextInputHeights(prev => ({
             ...prev,
             [index]: Math.min(
-                height + (Platform.OS === "ios" ? 20 : 8),
+                height + (Platform.OS === "ios" ? 20 : isTablet ? 13 : 8),
                 isTablet ? hp(15) : hp(20)
             )
         }));
     };
+
 
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
             style={{ flex: 1 }}
         >
-            <Header title={route?.params?.jobName} />
+            {/* Header */}
+            <Header
+                title={selectedJobName?.charAt(0).toUpperCase() + selectedJobName?.slice(1)}
+                onBack={() => navigation.navigate("WorkOrderScreen")}
+            />
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                 <ScrollView contentContainerStyle={{ flexGrow: 1, backgroundColor: whiteColor }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-                    {/* Header */}
                     {step === 1 ?
                         (
                             <Text style={[styles.label, { fontSize: style.fontSizeLarge.fontSize, marginTop: 10, marginLeft: 10 }]}>Scan Vehicle <Text style={{ color: 'red' }}>*</Text></Text>
@@ -665,7 +581,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                     <View style={[flexDirectionRow, alignItemsCenter, justifyContentSpaceBetween]}>
                                         <TextInput
                                             placeholder="Enter VIN Manually"
-                                            style={[styles.vinInput, { width: wp(50), height: isTablet ? hp(3.5) : hp(5.5) }]}
+                                            style={[styles.vinInput, { width: isTablet ? wp(60) : wp(50), height: isTablet ? hp(3.5) : hp(5.5) }]}
                                             value={vin}
                                             onChangeText={(text) => {
                                                 setVin(text);
@@ -863,7 +779,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                             borderWidth: 1,
                                             zIndex: 100000,
                                             backgroundColor: lightBlueColor,
-                                              maxHeight: hp(15)
+                                            maxHeight: hp(15)
                                         }}
                                         listMode="SCROLLVIEW"
                                     />
@@ -1057,20 +973,19 @@ const WorkOrderScreenTwo = ({ route }) => {
                                     <View style={{ width: "100%", marginTop: spacings.xLarge, flexDirection: "row", justifyContent: "space-between" }}>
                                         <CustomButton
                                             title="Submit"
-                                            onPress={handleSubmitJob}
-                                            loading={loading}
+                                            onPress={() => handleSubmitJob(true, setSubmitLoading)}
+                                            loading={submitLoading}
                                             style={{ width: wp(33) }}
-                                            disabled={loading} />
+                                            disabled={submitLoading || scanLoading}
+                                        />
+
                                         <CustomButton
                                             title="Scan Next VIN"
-                                            onPress={() => {
-                                                setVin('');
-                                                setCarDetails(null);
-                                                setStep(1); // Go back to Step 1
-                                            }}
+                                            onPress={() => handleSubmitJob(false, setScanLoading)}
+                                            loading={scanLoading}
                                             style={{ width: wp(50) }}
-                                            loading={loading}
-                                            disabled={loading} />
+                                            disabled={submitLoading || scanLoading}
+                                        />
                                     </View>
                                 </>)}
 
@@ -1096,45 +1011,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                             />
                         )}
 
-                        {duplicateVinModal && (
-                            <Modal
-                                transparent={true}
-                                visible={duplicateVinModal}
-                                animationType="slide"
-                                onRequestClose={() => setDuplicateVinModal(false)}
-                            >
-                                <View style={styles.modalContainer}>
-                                    <View style={styles.modalContent}>
-                                        <Image source={ALERT_IMAGE} style={{ width: 80, height: 80, marginBottom: 10 }} />
-                                        <Text style={styles.modalText}>
-                                            Duplicate VIN found.
-                                        </Text>
-                                        <Text style={{ color: grayColor, marginBottom: 20 }}>
-                                            Are you sure you want to continue?
-                                        </Text>
-                                        <View style={styles.buttonContainer}>
-                                            <TouchableOpacity
-                                                style={styles.confirmButton}
-                                                onPress={handleConfirmDuplicateVin}
-                                                disabled={isSubmitting}
-                                            >
-                                                {isSubmitting ? (
-                                                    <ActivityIndicator size="small" color="#fff" />
-                                                ) : (
-                                                    <Text style={styles.buttonText}>Yes</Text>
-                                                )}
-                                            </TouchableOpacity>
-                                            <TouchableOpacity
-                                                style={styles.cancelButton}
-                                                onPress={() => setDuplicateVinModal(false)}
-                                            >
-                                                <Text style={styles.buttonText}>Re-enter</Text>
-                                            </TouchableOpacity>
-                                        </View>
-                                    </View>
-                                </View>
-                            </Modal>
-                        )}
+
                     </View>
                 </ScrollView>
             </TouchableWithoutFeedback>

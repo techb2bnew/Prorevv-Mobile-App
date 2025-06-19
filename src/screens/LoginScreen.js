@@ -16,8 +16,6 @@ import SuccessModal from '../componets/Modal/SuccessModal';
 import Ionicons from 'react-native-vector-icons/dist/Ionicons';
 import Fontisto from 'react-native-vector-icons/dist/Fontisto';
 import Feather from 'react-native-vector-icons/dist/Feather';
-
-import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 const { width, height } = Dimensions.get('window');
 
 const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween } = BaseStyle;

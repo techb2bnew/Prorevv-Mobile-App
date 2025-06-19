@@ -2,7 +2,6 @@ import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import ProfileStack from "./ProfileStack";
 import HomeStack from "./HomeStack";
-import SettingsStack from "./SettingsStack";
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from "../utils";
 import { blackColor, blueColor, grayColor, lightBlueColor, orangeColor, whiteColor } from "../constans/Color";
 import { HOME_FOCUSED_IMAGE, HOME_IMAGE, JOB_FOCUSED_IMAGE, JOB_IMAGE, PROFILE_FOCUSED_IMAGE, PROFILE_IMAGE, SETTING_FOCUSED_IMAGE, SETTING_IMAGE } from "../assests/images";
@@ -55,6 +54,9 @@ export default function MainNavigator() {
                     } else if (route.name === "Scanner") {
                         IconComponent = AntDesign;
                         iconName = focused ? "scan1" : "scan1";
+                    } else if (route.name === "Account") {
+                        IconComponent = Feather;
+                        iconName = focused ? "user" : "user";
                     }
 
                     return (
@@ -112,7 +114,7 @@ export default function MainNavigator() {
                 })}
             />
 
-            <Tab.Screen
+            {/* <Tab.Screen
                 name="Scanner"
                 component={ScannerStack}
                 listeners={({ navigation }) => ({
@@ -126,7 +128,7 @@ export default function MainNavigator() {
                         }
                     },
                 })}
-            />
+            /> */}
 
             <Tab.Screen
                 name="Reports"
@@ -137,7 +139,23 @@ export default function MainNavigator() {
                         const currentRoute = state.routes.find(r => r.name === "Reports");
                         if (currentRoute?.state?.index > 0) {
                             navigation.navigate("Reports", {
-                                screen: "ReportsScreen", 
+                                screen: "ReportsScreen",
+                            });
+                        }
+                    },
+                })}
+            />
+
+            <Tab.Screen
+                name="Account"
+                component={ProfileStack}
+                listeners={({ navigation }) => ({
+                    tabPress: e => {
+                        const state = navigation.getState();
+                        const currentRoute = state.routes.find(r => r.name === "Account");
+                        if (currentRoute?.state?.index > 0) {
+                            navigation.navigate("Account", {
+                                screen: "Profile",
                             });
                         }
                     },

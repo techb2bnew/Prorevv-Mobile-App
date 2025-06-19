@@ -171,11 +171,11 @@ const VinListScreen = ({ navigation, route }) => {
 
             {/* Search */}
             <View style={[flexDirectionRow]}>
-                <View style={[styles.searchTextInput, flexDirectionRow]}>
+                <View style={[styles.searchTextInput, flexDirectionRow, { height: isTablet ? hp(4) : hp(5.5), width: isTablet ? wp(87) : wp(75) }]}>
                     <TextInput
                         placeholder="Scan/Search Job"
                         placeholderTextColor={grayColor}
-                        style={styles.input}
+                        style={[styles.input]}
                         value={searchVin}
                         onChangeText={text => setSearchVin(text)}
                     />
@@ -187,14 +187,14 @@ const VinListScreen = ({ navigation, route }) => {
                         <AntDesign name="scan1" size={24} color="#252837" />
                     </TouchableOpacity>
                 </View>
-                <TouchableOpacity style={[styles.filterButton, { top: hp(2.7), right: 10 }]}
+                <TouchableOpacity style={[styles.filterButton, { top: isTablet ? Platform.OS === "android" ? hp(1.2) : hp(1) : hp(2.7), right: isTablet ? Platform.OS === "android" ? 10 : -100 : 10 }]}
                     onPress={toggleModal}
                 >
-                    <Image source={SORT_IMAGE} resizeMode='contain' style={{ width: isTablet ? wp(7) : wp(10), height: hp(3.2) }} />
+                    <Image source={SORT_IMAGE} resizeMode='contain' style={{ width: isTablet ? wp(7) : wp(10), height: hp(3) }} />
                 </TouchableOpacity>
             </View>
             {/* Table Header */}
-            <View style={[styles.tableHeader, flexDirectionRow]}>
+            {/* <View style={[styles.tableHeader, flexDirectionRow]}>
                 <Text style={[styles.tableHeaderText, { width: wp(48) }]}>VIN No.</Text>
                 <Text style={[styles.tableHeaderText, { width: wp(25) }]}>Make</Text>
                 {activeTab === 'partnerOrder' && (
@@ -232,8 +232,8 @@ const VinListScreen = ({ navigation, route }) => {
                         </View>
                     )}
                 />
-            </View>
-            {/* <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            </View> */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 <View>
                     <View style={[styles.tableHeader, flexDirectionRow]}>
                         <Text style={[styles.tableHeaderText, { width: wp(50) }]}>VIN No.</Text>
@@ -250,8 +250,7 @@ const VinListScreen = ({ navigation, route }) => {
                         )}
                     </View>
 
-                    <View style={{ width: "100%", height: Platform.OS === "android" ? hp(56) : hp(51) }}>
-
+                    <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(69) : hp(56) : hp(51) }}>
                         <FlatList
                             data={filteredData}
                             keyExtractor={(item, index) => index.toString()}
@@ -291,7 +290,7 @@ const VinListScreen = ({ navigation, route }) => {
                         />
                     </View>
                 </View>
-            </ScrollView> */}
+            </ScrollView>
 
 
             {isModalVisible && <Modal animationType="slide" transparent={true} visible={isModalVisible} onRequestClose={toggleModal}>
@@ -429,10 +428,10 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         paddingHorizontal: spacings.xxLarge,
         alignItems: 'center',
-        height: hp(5.5),
+        // height: hp(5.5),
         marginVertical: spacings.Large1x,
         borderWidth: 1,
-        width: wp(75),
+        // width: wp(75),
         marginLeft: spacings.large
     },
     input: {
