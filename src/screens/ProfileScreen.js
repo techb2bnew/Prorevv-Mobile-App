@@ -596,17 +596,26 @@ const ProfileScreen = ({ navigation }) => {
 
       if (response.ok) {
         // Clear local data and reset navigation
-        await AsyncStorage.removeItem('auth_token');
-        await AsyncStorage.removeItem('userDeatils');
-        await AsyncStorage.removeItem("firstLoginCompleted");
-        await AsyncStorage.removeItem("jobHistoryData");
-        await AsyncStorage.removeItem('technicianName');
-        await AsyncStorage.removeItem("jobHistoryFetched");
-        await AsyncStorage.removeItem('technicianProfile');
-        await AsyncStorage.removeItem("customersList")
-        await AsyncStorage.removeItem("offlineCustomers");
-        await AsyncStorage.removeItem("businessLogo");
-        await AsyncStorage.removeItem('selectedCustomer')
+        // await AsyncStorage.removeItem('auth_token');
+        // await AsyncStorage.removeItem('userDeatils');
+        // await AsyncStorage.removeItem("firstLoginCompleted");
+        // await AsyncStorage.removeItem("jobHistoryData");
+        // await AsyncStorage.removeItem('technicianName');
+        // await AsyncStorage.removeItem("jobHistoryFetched");
+        // await AsyncStorage.removeItem('technicianProfile');
+        // await AsyncStorage.removeItem("customersList")
+        // await AsyncStorage.removeItem("offlineCustomers");
+        // await AsyncStorage.removeItem("businessLogo");
+        // await AsyncStorage.removeItem('selectedCustomer')
+        // await AsyncStorage.removeItem("current_Job");
+        // await AsyncStorage.removeItem("current_customer");
+        const keyToKeep = "alreadyLaunched";
+
+        const allKeys = await AsyncStorage.getAllKeys();
+        const keysToDelete = allKeys.filter(key => key !== keyToKeep);
+
+        await AsyncStorage.multiRemove(keysToDelete);
+
         console.log("User logged out successfully.");
         // Reset navigation to AuthStack
         // navigation.navigate("AuthStack");
@@ -699,7 +708,7 @@ const ProfileScreen = ({ navigation }) => {
     setIsEditingLoading(true);
 
     // ✅ Validate Required Fields
-    if (!firstName || !lastName || !phoneNumber ) {
+    if (!firstName || !lastName || !phoneNumber) {
       setError("Please fill all details");
       setIsEditingLoading(false);
       return;

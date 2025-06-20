@@ -93,7 +93,7 @@ function App(): React.JSX.Element {
       }
 
       const technicianId = parsedData.id; // ✅ Technician ID fetch karna
-      console.log("✅ Checking status for Technician ID:", technicianId);
+      // console.log("✅ Checking status for Technician ID:", technicianId);
 
       // ✅ POST request with query params
       const response = await fetch(`${API_BASE_URL}/fetchSingleTechnician?technicianId=${technicianId}`, {
@@ -105,7 +105,7 @@ function App(): React.JSX.Element {
       });
 
       const textResponse = await response.text();
-      console.log("🌐 Raw API Response:", textResponse);
+      // console.log("🌐 Raw API Response:", textResponse);
       // 👇 Token expire check here
       if (textResponse.includes("Token expire")) {
         Toast.show("⚠️ Session expired. Logging out...");
@@ -125,11 +125,11 @@ function App(): React.JSX.Element {
         return;
       }
       const data = JSON.parse(textResponse);
-      console.log("✅ Parsed API Response:", data);
+      // console.log("✅ Parsed API Response:", data);
 
       const technician = data?.technician;
-      console.log("🌐 technician?.payVehicleType:::::::::", technician?.payVehicleType);
-      console.log("🌐 technician?.payRate:::::::::", technician?.payRate);
+      // console.log("🌐 technician?.payVehicleType:::::::::", technician?.payVehicleType);
+      // console.log("🌐 technician?.payRate:::::::::", technician?.payRate);
 
       await AsyncStorage.setItem('payRate', technician?.payRate);
 
@@ -143,7 +143,7 @@ function App(): React.JSX.Element {
         }));
         // Save to AsyncStorage
         await AsyncStorage.setItem('allowedVehicles', JSON.stringify(vehicleArray));
-        console.log("✅ Saved allowed vehicle types:", vehicleArray);
+        // console.log("✅ Saved allowed vehicle types:", vehicleArray);
       }
 
       if (technician.isApproved === "reject") {
@@ -160,18 +160,26 @@ function App(): React.JSX.Element {
 
       // Logout process if any of the conditions are met
       if (technician.isApproved === "reject" || !technician.accountStatus || !technician.deletedStatus) {
-        await AsyncStorage.removeItem("auth_token");
-        await AsyncStorage.removeItem("technician_id");
-        await AsyncStorage.removeItem("firstLoginCompleted");
-        await AsyncStorage.removeItem("jobHistoryData");
-        await AsyncStorage.removeItem('technicianName');
-        await AsyncStorage.removeItem("jobHistoryFetched");
-        await AsyncStorage.removeItem('technicianProfile');
-        await AsyncStorage.removeItem("customersList")
-        await AsyncStorage.removeItem('userDeatils');
-        await AsyncStorage.removeItem("offlineCustomers");
-        await AsyncStorage.removeItem("businessLogo");
-        await AsyncStorage.removeItem('selectedCustomer')
+        // await AsyncStorage.removeItem("auth_token");
+        // await AsyncStorage.removeItem("technician_id");
+        // await AsyncStorage.removeItem("firstLoginCompleted");
+        // await AsyncStorage.removeItem("jobHistoryData");
+        // await AsyncStorage.removeItem('technicianName');
+        // await AsyncStorage.removeItem("jobHistoryFetched");
+        // await AsyncStorage.removeItem('technicianProfile');
+        // await AsyncStorage.removeItem("customersList")
+        // await AsyncStorage.removeItem('userDeatils');
+        // await AsyncStorage.removeItem("offlineCustomers");
+        // await AsyncStorage.removeItem("businessLogo");
+        // await AsyncStorage.removeItem('selectedCustomer')
+        // await AsyncStorage.removeItem("current_Job");
+        // await AsyncStorage.removeItem("current_customer");
+        const keyToKeep = "alreadyLaunched";
+
+        const allKeys = await AsyncStorage.getAllKeys();
+        const keysToDelete = allKeys.filter(key => key !== keyToKeep);
+
+        await AsyncStorage.multiRemove(keysToDelete);
         setIsLoggedIn(false);
       }
 

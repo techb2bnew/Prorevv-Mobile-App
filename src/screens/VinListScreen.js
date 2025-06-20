@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Image, Platform, Dimensions, Modal, ScrollView } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Image, Platform, Dimensions, Modal, ScrollView, ActivityIndicator, TouchableWithoutFeedback } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { whiteColor, lightGrayColor, blueColor, redColor, goldColor, greenColor, verylightGrayColor, grayColor, blackColor, orangeColor, mediumGray } from '../constans/Color'
 import Header from '../componets/Header';
@@ -8,63 +8,13 @@ import { widthPercentageToDP as wp, heightPercentageToDP as hp } from '../utils'
 import { style, spacings } from '../constans/Fonts';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import { SORT_IMAGE } from '../assests/images';
-import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import Feather from 'react-native-vector-icons/Feather';
+import { API_BASE_URL } from '../constans/Constants';
+import { useFocusEffect } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
 const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween, textAlign } = BaseStyle;
-
-// const workOrderData = [
-//     { vin: '1HGCM82633A004352', make: 'AUDI', status: 'Complete' },
-//     { vin: '1N4AL11D75C109151', make: 'RAM', status: 'Pending' },
-//     { vin: '1GYS4HEF7BR279657', make: 'Nissan', status: 'Complete' },
-//     { vin: 'WP0ZZZ99ZTS392124', make: 'Porsche', status: 'Complete' },
-//     { vin: 'WDBUF56X88B123456', make: 'Mercedes', status: 'Complete' },
-//     { vin: 'WBA8D9C52HK477369', make: 'BMW', status: 'In Progress' },
-//     { vin: '1G6KD57Y66U123456', make: 'Cadillac', status: 'Complete' },
-//     { vin: '1FAHP2E81DG123456', make: 'Ford', status: 'Complete' },
-//     { vin: '1G6KD57Y66U123457', make: 'Cadillac', status: 'Complete' },
-//     { vin: 'SAJWA4DC8DM123456', make: 'Jaguar', status: 'Complete' },
-// ];
-
-// const partnerOrderData = [
-//     { vin: '1FAHP2E81DG123456', make: 'Ford', status: 'Complete', partner: 'John Doe' },
-//     { vin: 'SAJWA4DC8DM123456', make: 'Jaguar', status: 'Pending', partner: 'Jane Smith' },
-// ];
-const workOrderData = [
-    { vin: '1HGCM82633A004352', make: 'AUDI', status: 'Complete', model: 'A4', date: '2024-06-01', technician: 'Ravi', price: '₹12,000' },
-    { vin: '1N4AL11D75C109151', make: 'RAM', status: 'In Progress', model: '1500', date: '2024-06-05', technician: 'Amit', price: '₹8,500' },
-    { vin: '1GYS4HEF7BR279657', make: 'Nissan', status: 'Complete', model: 'Altima', date: '2024-06-12', technician: 'Sunil', price: '₹9,000' },
-    { vin: 'WP0ZZZ99ZTS392124', make: 'Porsche', status: 'Complete', model: 'Cayenne', date: '2024-06-20', technician: 'Raj', price: '₹15,000' },
-    { vin: 'WDBUF56X88B123456', make: 'Mercedes', status: 'Complete', model: 'C-Class', date: '2024-06-21', technician: 'Deepak', price: '₹13,500' },
-    { vin: 'WBA8D9C52HK477369', make: 'BMW', status: 'In Progress', model: '320i', date: '2024-06-25', technician: 'Karan', price: '₹10,500' },
-    { vin: '1G6KD57Y66U123456', make: 'Cadillac', status: 'Complete', model: 'CTS', date: '2024-06-26', technician: 'Nikhil', price: '₹14,000' },
-    { vin: '1FAHP2E81DG123456', make: 'Ford', status: 'Complete', model: 'Fusion', date: '2024-06-28', technician: 'Ajay', price: '₹9,700' },
-    { vin: '1G6KD57Y66U123457', make: 'Cadillac', status: 'Complete', model: 'Escalade', date: '2024-06-30', technician: 'Suresh', price: '₹16,200' },
-    { vin: 'SAJWA4DC8DM123456', make: 'Jaguar', status: 'Complete', model: 'XF', date: '2024-07-01', technician: 'Rohan', price: '₹17,000' },
-];
-
-const partnerOrderData = [
-    {
-        vin: '1FAHP2E81DG123456',
-        make: 'Ford',
-        status: 'Complete',
-        partner: 'John Doe',
-        model: 'Fusion',
-        date: '2024-07-02',
-        technician: 'Ajay',
-        price: '₹9,700',
-    },
-    {
-        vin: 'SAJWA4DC8DM123456',
-        make: 'Jaguar',
-        status: 'In Progress',
-        partner: 'Jane Smith',
-        model: 'XF',
-        date: '2024-07-03',
-        technician: 'Rohan',
-        price: '₹17,000',
-    },
-];
 
 const getStatusStyle = (status) => {
     switch (status) {
@@ -82,30 +32,116 @@ const getStatusStyle = (status) => {
 const VinListScreen = ({ navigation, route }) => {
     const { width, height } = Dimensions.get("window");
     const isTablet = width >= 668 && height >= 1024;
+    const isIOSAndTablet = Platform.OS === "ios" && isTablet;
     const [activeTab, setActiveTab] = useState('workOrder');
     const [isModalVisible, setModalVisible] = useState(false);
     const [sortType, setSortType] = useState("");
     const [searchVin, setSearchVin] = useState('');
     const [unmatchedVin, setUnmatchedVin] = useState(null); // Store unmatched VIN
     const [showVinModal, setShowVinModal] = useState(false); // Control modal
-    const baseData = activeTab === 'workOrder' ? workOrderData : partnerOrderData;
+    const [vehicleData, setVehicleData] = useState([]);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+    const [loading, setLoading] = useState(false);
+    const [technicianType, setTechnicianType] = useState();
+    const [technicianId, setTechnicianId] = useState();
+    const [viewType, setViewType] = useState('list');
+
 
     const filteredData = searchVin
-        ? baseData.filter(item => item.vin.toLowerCase().includes(searchVin.toLowerCase()))
-        : baseData;
+        ? vehicleData.filter(item =>
+            item.vin?.toLowerCase().includes(searchVin.toLowerCase()) ||
+            item.make?.toLowerCase().includes(searchVin.toLowerCase()) ||
+            item.model?.toLowerCase().includes(searchVin.toLowerCase()) ||
+            item.jobName?.toLowerCase().includes(searchVin.toLowerCase())
+        )
+        : vehicleData;
 
     useEffect(() => {
-        const { vinNumber } = route.params || {};
-        if (vinNumber) {
-            const match = baseData.find(item => item.vin.toLowerCase() === vinNumber.toLowerCase());
-            if (match) {
-                setSearchVin(vinNumber); // Show matched item
-            } else {
-                setUnmatchedVin(vinNumber); // Store for modal
-                setShowVinModal(true);
-            }
+        if (!vehicleData || vehicleData.length === 0) return;
+        const vinNumber = route?.params?.vinNumber;
+        if (!vinNumber) return;
+
+        const match = vehicleData.find(item => item?.vin?.toLowerCase() === vinNumber.toLowerCase());
+
+        if (match) {
+            setSearchVin(vinNumber);
+            setUnmatchedVin(null);
+            setShowVinModal(false);
+        } else {
+            setUnmatchedVin(vinNumber);
+            setShowVinModal(true);
         }
-    }, [route.params?.vinNumber]);
+    }, [route?.params?.vinNumber, vehicleData]);
+
+
+    useFocusEffect(
+        useCallback(() => {
+            const getTechnicianDetail = async () => {
+                try {
+                    const storedData = await AsyncStorage.getItem('userDeatils');
+                    if (storedData) {
+                        const parsedData = JSON.parse(storedData);
+                        const type = parsedData?.types;
+                        // console.log("technicianType fetched:", type);
+                        setTechnicianType(type);
+                        setTechnicianId(parsedData.id);
+
+                    }
+                } catch (error) {
+                    console.error("Error fetching stored user:", error);
+                }
+            };
+
+            getTechnicianDetail();
+        }, [])
+    );
+
+    useEffect(() => {
+        if (technicianType) {
+            fetchVehicalInfo(1);
+        }
+    }, [technicianType]);
+
+    const fetchVehicalInfo = async (pageNumber = 1) => {
+        if (!hasMore && pageNumber !== 1) return;
+
+        try {
+            setLoading(true);
+            const token = await AsyncStorage.getItem("auth_token");
+            if (!token) {
+                console.error("Token not found!");
+                return;
+            }
+
+            const response = await axios.get(`${API_BASE_URL}/fetchVehicleInfo?roleType=${technicianType}&page=${pageNumber}&userId=${technicianId}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            // console.log(`${API_BASE_URL}/fetchVehicleInfo?roleType=${technicianType}&page=${pageNumber}&userId=${technicianId}`);
+
+            const { response: resData } = response.data;
+            const newVehicles = resData?.vehicles || [];
+            console.log("resss", newVehicles);
+
+            // Update vehicle data
+            if (pageNumber === 1) {
+                setVehicleData(newVehicles);
+            } else {
+                setVehicleData(prev => [...prev, ...newVehicles]);
+            }
+
+            // Handle pagination
+            const morePagesAvailable = pageNumber < resData?.totalPages;
+            setHasMore(morePagesAvailable);
+            setPage(pageNumber);
+        } catch (error) {
+            console.error("Failed to fetch vehicle info:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const toggleModal = () => {
         setModalVisible(!isModalVisible);
@@ -158,6 +194,42 @@ const VinListScreen = ({ navigation, route }) => {
         <View style={{ width: wp(100), height: hp(100), backgroundColor: whiteColor }}>
             {/* Header */}
             <Header title={"Vin List"} onBack={() => navigation.navigate("Home")} />
+            <View style={{
+                flexDirection: 'row',
+                position: "absolute",
+                top: Platform.OS === "android" ? isTablet ? hp(1) : 10 : isTablet ? 20 : 13,
+                right: 10,
+                zIndex: 10
+            }}>
+
+                <TouchableOpacity
+                    onPress={() => setViewType('grid')}
+                    style={[styles.tabButton, {
+                        backgroundColor: viewType === 'grid' ? blueColor : whiteColor,
+                        width: isTablet ? wp(8) : wp(12),
+                        height: hp(4.5),
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        borderRadius: 5,
+                        marginRight: 10,
+                    }]}>
+                    <Ionicons name="grid-sharp" size={isTablet ? 35 : 20} color={viewType === 'grid' ? whiteColor : blackColor} />
+                </TouchableOpacity>
+                <TouchableOpacity
+                    onPress={() => setViewType('list')}
+                    style={[styles.tabButton, {
+                        backgroundColor: viewType === 'list' ? blueColor : whiteColor,
+                        width: isTablet ? wp(8) : wp(12),
+                        height: hp(4.5),
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        borderRadius: 5
+                    }]}>
+                    <Ionicons name="list" size={isTablet ? 35 : 20} color={viewType === 'list' ? whiteColor : blackColor} />
+                </TouchableOpacity>
+
+
+            </View>
 
             {/* Tabs */}
             <View style={[styles.tabContainer, flexDirectionRow]}>
@@ -173,7 +245,7 @@ const VinListScreen = ({ navigation, route }) => {
             <View style={[flexDirectionRow]}>
                 <View style={[styles.searchTextInput, flexDirectionRow, { height: isTablet ? hp(4) : hp(5.5), width: isTablet ? wp(87) : wp(75) }]}>
                     <TextInput
-                        placeholder="Scan/Search Job"
+                        placeholder="Search Vin Make Model/Scan"
                         placeholderTextColor={grayColor}
                         style={[styles.input]}
                         value={searchVin}
@@ -187,70 +259,29 @@ const VinListScreen = ({ navigation, route }) => {
                         <AntDesign name="scan1" size={24} color="#252837" />
                     </TouchableOpacity>
                 </View>
-                <TouchableOpacity style={[styles.filterButton, { top: isTablet ? Platform.OS === "android" ? hp(1.2) : hp(1) : hp(2.7), right: isTablet ? Platform.OS === "android" ? 10 : -100 : 10 }]}
+                <TouchableOpacity style={[styles.filterButton, { top: Platform.OS === "android" ? isTablet ? hp(1.2) : hp(2.8) : isIOSAndTablet ? hp(1.5) : hp(2.7), right: Platform.OS === "android" ? isTablet ? 10 : 10 : isIOSAndTablet ? 10 : 10 }]}
                     onPress={toggleModal}
                 >
                     <Image source={SORT_IMAGE} resizeMode='contain' style={{ width: isTablet ? wp(7) : wp(10), height: hp(3) }} />
                 </TouchableOpacity>
             </View>
-            {/* Table Header */}
-            {/* <View style={[styles.tableHeader, flexDirectionRow]}>
-                <Text style={[styles.tableHeaderText, { width: wp(48) }]}>VIN No.</Text>
-                <Text style={[styles.tableHeaderText, { width: wp(25) }]}>Make</Text>
-                {activeTab === 'partnerOrder' && (
-                    <Text style={[styles.tableHeaderText, { width: wp(20) }]}>Partner</Text>
-                )}
-                {activeTab === 'workOrder' && (
-                    <Text style={[styles.tableHeaderText, { width: wp(20) }]}>Status</Text>)}
-            </View>
 
-
-            <View style={{ width: "100%", height: Platform.OS === "android" ? hp(56) : hp(51) }}>
-                <FlatList
-                    data={filteredData}
-                    keyExtractor={(item, index) => index.toString()}
-                    showsVerticalScrollIndicator={false}
-                    renderItem={({ item, index }) => {
-                        const { backgroundColor, borderColor, textColor } = getStatusStyle(item.status);
-                        return (
-                            <View style={[styles.tableRow, { backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor }, flexDirectionRow]}>
-                                <Text style={[styles.tableText, { width: wp(48) }]}>{item.vin}</Text>
-                                <Text style={[styles.tableText, { width: wp(25) }]}>{item.make}</Text>
-                                {activeTab === 'partnerOrder' && (
-                                    <Text style={[styles.tableText, { width: wp(20) }]}>{item.partner}</Text>
-                                )}
-                                {activeTab === 'workOrder' && (
-                                    <View style={[styles.statusPill, { backgroundColor, borderColor }]}>
-                                        <Text style={{ color: textColor, fontSize: 12 }}>{item.status}</Text>
-                                    </View>)}
-                            </View>
-                        );
-                    }}
-                    ListEmptyComponent={() => (
-                        <View style={styles.emptyContainer}>
-                            <Text style={styles.emptyText}>No results found</Text>
-                        </View>
-                    )}
-                />
-            </View> */}
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {viewType === "list" && <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 <View>
                     <View style={[styles.tableHeader, flexDirectionRow]}>
+                        <Text style={[styles.tableHeaderText, { width: wp(30) }]}>JobName</Text>
                         <Text style={[styles.tableHeaderText, { width: wp(50) }]}>VIN No.</Text>
-                        <Text style={[styles.tableHeaderText, { width: wp(25) }]}>Make</Text>
-                        <Text style={[styles.tableHeaderText, { width: wp(25) }]}>Model</Text>
-                        <Text style={[styles.tableHeaderText, { width: wp(28) }]}>Date</Text>
-                        <Text style={[styles.tableHeaderText, { width: wp(30) }]}>Technician</Text>
-                        <Text style={[styles.tableHeaderText, { width: wp(25) }]}>Price</Text>
+                        <Text style={[styles.tableHeaderText, { width: wp(35) }]}>Make</Text>
+                        <Text style={[styles.tableHeaderText, { width: wp(35) }]}>Model</Text>
+                        <Text style={[styles.tableHeaderText, { width: wp(35) }]}>Date</Text>
                         {activeTab === 'partnerOrder' && (
                             <Text style={[styles.tableHeaderText, { width: wp(25) }]}>Partner</Text>
                         )}
-                        {activeTab === 'workOrder' && (
-                            <Text style={[styles.tableHeaderText, { width: wp(25) }]}>Status</Text>
-                        )}
+                        <Text style={[styles.tableHeaderText, { width: wp(10) }]}>Price</Text>
+
                     </View>
 
-                    <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(69) : hp(56) : hp(51) }}>
+                    <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(69) : hp(56) : isIOSAndTablet ? hp(67) : hp(51) }}>
                         <FlatList
                             data={filteredData}
                             keyExtractor={(item, index) => index.toString()}
@@ -265,32 +296,130 @@ const VinListScreen = ({ navigation, route }) => {
                                             { backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor },
                                         ]}
                                     >
-                                        <Text style={[styles.tableText, { width: wp(50) }]}>{item.vin}</Text>
-                                        <Text style={[styles.tableText, { width: wp(25) }]}>{item.make}</Text>
-                                        <Text style={[styles.tableText, { width: wp(25) }]}>{item.model}</Text>
-                                        <Text style={[styles.tableText, { width: wp(33) }]}>{item.date}</Text>
-                                        <Text style={[styles.tableText, { width: wp(25) }]}>{item.technician}</Text>
-                                        <Text style={[styles.tableText, { width: wp(25) }]}>{item.price}</Text>
-                                        {activeTab === 'workOrder' && (
-                                            <View style={[styles.statusPill, { backgroundColor, borderColor }]}>
-                                                <Text style={{ color: textColor, fontSize: 12 }}>{item.status}</Text>
-                                            </View>
-                                        )}
+                                        <Text style={[styles.tableText, { width: wp(30), paddingLeft: spacings.large }]}>{item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}</Text>
+                                        <Text style={[styles.tableText, { width: wp(50) }]}>{item?.vin}</Text>
+                                        <Text style={[styles.tableText, { width: wp(35) }]}>{item?.make}</Text>
+                                        <Text style={[styles.tableText, { width: wp(35) }]}>{item?.model}</Text>
+                                        <Text style={[styles.tableText, { width: wp(35) }]}> {new Date(item?.createdAt).toLocaleDateString("en-US", {
+                                            month: "long",
+                                            day: "numeric",
+                                            year: "numeric"
+                                        })}
+                                        </Text>
                                         {activeTab === 'partnerOrder' && (
-                                            <Text style={[styles.tableText, { width: wp(20) }]}>{item.partner}</Text>
+                                            <Text style={[styles.tableText, { width: wp(25) }]}>{item?.partner}</Text>
                                         )}
+                                        <Text style={[styles.tableText, { width: wp(10) }]}>
+                                            {Array.isArray(item?.jobDescription) && item?.jobDescription?.length > 0
+                                                ? item?.jobDescription?.reduce((total, job) => total + Number(job?.cost || 0), 0)
+                                                : '0'}
+                                        </Text>
+
                                     </View>
                                 );
                             }}
-                            ListEmptyComponent={() => (
-                                <View style={styles.emptyContainer}>
-                                    <Text style={styles.emptyText}>No results found</Text>
-                                </View>
-                            )}
+                            ListFooterComponent={() =>
+                                loading ? (
+                                    <View style={{ paddingVertical: 10, alignItems: "center", width: wp(130), height: hp(50), justifyContent: "center" }}>
+                                        <ActivityIndicator size="small" color="#0000ff" />
+                                    </View>
+                                ) : null
+                            }
+                            ListEmptyComponent={() => {
+                                if (loading) return null; // 👈 Loading ke time kuch mat dikhao
+                                return (
+                                    <View style={styles.emptyContainer}>
+                                        <Text style={styles.emptyText}>No Vehicle List found</Text>
+                                    </View>
+                                );
+                            }}
+                            onEndReached={() => {
+                                if (!loading && hasMore) {
+                                    fetchVehicalInfo(page + 1);
+                                }
+                            }}
+                            onEndReachedThreshold={0.3}
                         />
                     </View>
                 </View>
-            </ScrollView>
+            </ScrollView>}
+
+            {viewType === "grid" && <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(69) : hp(63) : isIOSAndTablet ? hp(67) : hp(51) }}>
+                <FlatList
+                    data={filteredData}
+                    keyExtractor={(item, index) => index.toString()}
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={{ paddingVertical: 10 }}
+                    renderItem={({ item, index }) => (
+                        <View style={{
+                            backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor,
+                            borderRadius: 10,
+                            padding: 10,
+                            marginBottom: 10,
+                            marginHorizontal: 10,
+                            borderWidth: 1,
+                            borderColor: blueColor
+                        }}>
+                            <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+                                <View style={{ width: '48%', marginBottom: 10 }}>
+                                    <Text style={{ color: '#555', fontSize: 11 }}>VIN</Text>
+                                    <Text >{item?.vin}</Text>
+                                </View>
+                                <View style={{ width: '48%', marginBottom: 10 }}>
+                                    <Text style={{ color: '#555', fontSize: 11 }}>Make</Text>
+                                    <Text >{item?.make}</Text>
+                                </View>
+                                <View style={{ width: '48%', marginBottom: 10 }}>
+                                    <Text style={{ color: '#555', fontSize: 11 }}>Model</Text>
+                                    <Text >{item?.model}</Text>
+                                </View>
+                                <View style={{ width: '48%', marginBottom: 10 }}>
+                                    <Text style={{ color: '#555', fontSize: 11 }}>Date</Text>
+                                    <Text > {new Date(item?.createdAt).toLocaleDateString("en-US", {
+                                        month: "long",
+                                        day: "numeric",
+                                        year: "numeric"
+                                    })}
+                                    </Text>
+                                </View>
+                                {activeTab === 'partnerOrder' && (<View style={{ width: '48%', marginBottom: 10 }}>
+                                    <Text style={{ color: '#555', fontSize: 11 }}>Partner</Text>
+                                    <Text >{item?.technician}</Text>
+                                </View>)}
+                                <View style={{ width: '48%', marginBottom: 10 }}>
+                                    <Text style={{ color: '#555', fontSize: 11 }}>Price</Text>
+                                    <Text >${Array.isArray(item?.jobDescription) && item?.jobDescription?.length > 0
+                                        ? item?.jobDescription?.reduce((total, job) => total + Number(job?.cost || 0), 0)
+                                        : '0'}</Text>
+                                </View>
+                            </View>
+
+                        </View>
+                    )}
+                    onEndReached={() => {
+                        if (!loading && hasMore) {
+                            fetchVehicalInfo(page + 1);
+                        }
+                    }}
+                    onEndReachedThreshold={0.3}
+                    ListFooterComponent={() =>
+                        loading ? (
+                            <View style={{ paddingVertical: 10, alignItems: "center", width: "100%", height: hp(50), justifyContent: "center" }}>
+                                <ActivityIndicator size="small" color="#0000ff" />
+                            </View>
+                        ) : null
+                    }
+                    ListEmptyComponent={() => {
+                        if (loading) return null; // 👈 Loading ke time kuch mat dikhao
+                        return (
+                            <View style={styles.emptyContainer}>
+                                <Text style={styles.emptyText}>No Vehicle List found</Text>
+                            </View>
+                        );
+                    }}
+                />
+
+            </View>}
 
 
             {isModalVisible && <Modal animationType="slide" transparent={true} visible={isModalVisible} onRequestClose={toggleModal}>
@@ -309,18 +438,6 @@ const VinListScreen = ({ navigation, route }) => {
                                 <Text style={styles.modalTitle}>Sort By</Text>
                                 <Feather name="sliders" size={20} color={grayColor} />
                             </View>
-                            {/* <TouchableOpacity
-                                onPress={() => handleSort(sortType === "name" && sortOrder === "asc" ? "desc" : "asc", "name")}
-                                style={styles.sortOption}
-                            >
-                                <Text style={[styles.sortText, { fontWeight: style.fontWeightThin.fontWeight, color: sortType === "name" ? blackColor : 'gray' }]}>
-                                    Customer Name
-                                </Text>
-                                <Text style={[styles.sortText, { color: sortType === "name" ? blackColor : 'gray' }]}>
-                                    {sortType === "name" ? (sortOrder === "asc" ? "A to Z" : "Z to A") : "A to Z"}
-                                </Text>
-                            </TouchableOpacity> */}
-
                             <TouchableOpacity
                                 onPress={() => handleSort(sortType === "date" && sortOrder === "newest" ? "oldest" : "newest", "date")}
                                 style={styles.sortOption}
@@ -398,7 +515,6 @@ const VinListScreen = ({ navigation, route }) => {
                 </View>
             </Modal>}
 
-
         </View>
     );
 };
@@ -436,8 +552,10 @@ const styles = StyleSheet.create({
     },
     input: {
         flex: 1,
-        fontSize: style.fontSizeNormal2x.fontSize,
-        color: blueColor,
+        fontSize: style.fontSizeNormal1x.fontSize,
+        color: blackColor,
+        alignItems: "center",
+        justifyContent: "center"
     },
     iconContainer: {
         paddingLeft: spacings.large,

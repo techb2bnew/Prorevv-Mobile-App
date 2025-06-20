@@ -26,8 +26,8 @@ const CustomerDropdown = ({ data, selectedValue, onSelect, showIcon, rightIcon, 
 
     // Function to get full customer name
     const getCustomerName = (customer) => {
-        const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-        return `${capitalize(customer.firstName)} ${capitalize(customer.lastName)}`;
+        const capitalize = (str) => str?.charAt(0).toUpperCase() + str?.slice(1).toLowerCase();
+        return `${capitalize(customer.fullName)}`;
     };
 
 
@@ -78,17 +78,29 @@ const CustomerDropdown = ({ data, selectedValue, onSelect, showIcon, rightIcon, 
                     <FlatList
                         data={data}
                         keyExtractor={(item) => item.id.toString()}
-                        renderItem={({ item }) => (
-                            <Pressable
-                                style={styles.item}
-                                onPress={() => {
-                                    onSelect(item); // Pass the entire customer object
-                                    handleCloseDropdown();
-                                }}
-                            >
-                                <Text style={styles.itemText}>{getCustomerName(item)}</Text>
-                            </Pressable>
-                        )}
+                        renderItem={({ item }) => {
+                            const isSelected = selectedValue?.id === item.id;
+
+                            return (
+                                <Pressable
+                                    style={[
+                                        styles.item,
+                                        isSelected && { backgroundColor: "#e6f0ff" }  // light blue background
+                                    ]}
+                                    onPress={() => {
+                                        onSelect(item);
+                                        handleCloseDropdown();
+                                    }}
+                                >
+                                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                                        <Text style={styles.itemText}>{getCustomerName(item)}</Text>
+                                        {isSelected && (
+                                            <MaterialCommunityIcons name="check-circle" size={20} color={blueColor} />
+                                        )}
+                                    </View>
+                                </Pressable>
+                            );
+                        }}
                         ListEmptyComponent={
                             <Text style={styles.emptyText}>No customers available</Text>
                         }
@@ -141,7 +153,7 @@ const styles = StyleSheet.create({
         borderTopLeftRadius: 15,
         borderTopRightRadius: 15,
         elevation: 5,
-        padding: 10,
+        paddingVertical: 10,
         paddingBottom: 30
     },
     modalTitle: {

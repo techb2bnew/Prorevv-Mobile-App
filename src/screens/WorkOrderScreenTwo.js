@@ -56,8 +56,13 @@ const WorkOrderScreenTwo = ({ route }) => {
     const inputRefs = useRef([]);
     const [step, setStep] = useState(1);
     const [selectedJobName, setSelectedJobName] = useState("");
+    const [selectedJobId, setSelectedJobId] = useState("");
     const [submitLoading, setSubmitLoading] = useState(false);
+    const [duplicateVinModal, setDuplicateVinModal] = useState(false);
+    const [duplicateVinMessage, setDuplicateVinMessage] = useState('');
+    const [newFormData, setNewFormData] = useState(null);
     const [scanLoading, setScanLoading] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
 
     const [modalData, setModalData] = useState({
@@ -143,6 +148,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                     const parsed = JSON.parse(savedJob);
                     console.log("savedJob:::::", parsed);
                     setSelectedJobName(parsed.jobName);
+                    setSelectedJobId(parsed.id);
                     setSelectedCustomer(parsed.assignCustomer)
                 }
             };
@@ -431,6 +437,7 @@ const WorkOrderScreenTwo = ({ route }) => {
         };
         const formData = new FormData();
         formData.append("jobName", selectedJobName);
+        formData.append("jobId", selectedJobId);
         formData.append("vin", vin);
         formData.append("vehicleDescriptor", getValue("Vehicle Descriptor"));
         formData.append("make", getValue("Make"));
@@ -442,10 +449,6 @@ const WorkOrderScreenTwo = ({ route }) => {
         formData.append("plantCompanyName", getValue("Plant Company Name"));
         formData.append("plantState", getValue("Plant State"));
         formData.append("bodyClass", getValue("Body Class"));
-        // jobDescription.forEach((item, index) => {
-        //     formData.append(`jobDescription[${index}][jobDescription]`, item.jobDescription);
-        //     formData.append(`jobDescription[${index}][cost]`, item.cost);
-        // });
         jobDescription.forEach((item) => {
             formData.append("jobDescription[]", item.jobDescription);
             formData.append("cost[]", item.cost);
@@ -496,7 +499,19 @@ const WorkOrderScreenTwo = ({ route }) => {
                     setLoaderFn(false);
                 }
             } else {
-                console.warn("Submission failed:", responseJson.message);
+                console.warn("Submission failed:", responseJson);
+                if (
+                    responseJson?.error &&
+                    responseJson.error.includes('VIN') &&
+                    responseJson.error.includes('already exists')
+                ) {
+                    setDuplicateVinModal(true);
+                    setDuplicateVinMessage(responseJson?.error || "Are you sure you want to continue?.");
+                } else {
+                    console.warn("Submission failed:", responseJson?.error);
+                    setError(responseJson?.error)
+                }
+
             }
 
         } catch (error) {
@@ -527,7 +542,7 @@ const WorkOrderScreenTwo = ({ route }) => {
         setTextInputHeights(prev => ({
             ...prev,
             [index]: Math.min(
-                height + (Platform.OS === "ios" ? 20 : isTablet ? 13 : 8),
+                height + (Platform.OS === "ios" ? 20 : isTablet ? 13 : 13),
                 isTablet ? hp(15) : hp(20)
             )
         }));
@@ -542,7 +557,14 @@ const WorkOrderScreenTwo = ({ route }) => {
             {/* Header */}
             <Header
                 title={selectedJobName?.charAt(0).toUpperCase() + selectedJobName?.slice(1)}
-                onBack={() => navigation.navigate("WorkOrderScreen")}
+                // onBack={() => navigation.navigate("WorkOrderScreen")}
+                onBack={() => {
+                    if (route?.params?.jobName || route.params?.isFromScanner) {
+                        navigation.navigate("WorkOrderScreen");
+                    } else {
+                        navigation.goBack();
+                    }
+                }}
             />
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                 <ScrollView contentContainerStyle={{ flexGrow: 1, backgroundColor: whiteColor }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
@@ -822,7 +844,7 @@ const WorkOrderScreenTwo = ({ route }) => {
 
                                                         />
                                                         <TextInput
-                                                            style={[styles.input, { width: jobDescription.length > 1 ? "26%" : "30%", height: isTablet ? hp(3.5) : hp(5) }]}
+                                                            style={[styles.input, { width: jobDescription.length > 1 ? "26%" : "30%", height: isTablet ? hp(3.5) : hp(6) }]}
                                                             placeholder="$0"
                                                             keyboardType="number-pad"
                                                             value={item.cost}
@@ -1013,7 +1035,53 @@ const WorkOrderScreenTwo = ({ route }) => {
 
 
                     </View>
+                    {duplicateVinModal && (
+                        <Modal
+                            transparent={true}
+                            visible={duplicateVinModal}
+                            animationType="slide"
+                            onRequestClose={() => setDuplicateVinModal(false)}
+                        >
+                            <View style={styles.modalContainer}>
+                                <View style={styles.modalContent}>
+                                    <Image source={ALERT_IMAGE} style={{ width: 80, height: 80, marginBottom: 10 }} />
+                                    <Text style={styles.modalText}>
+                                        Duplicate VIN found.
+                                    </Text>
+                                    <Text style={{ color: grayColor, marginBottom: 20, textAlign: "center" }}>
+                                        {duplicateVinMessage?.replace("Failed to add vehicle: ❌ ", "") || "This VIN is already assigned to another job. Please recheck and try again."}
+                                    </Text>
+                                    <View style={styles.buttonContainer}>
+                                        <TouchableOpacity
+                                            style={styles.confirmButton}
+                                            onPress={() => setDuplicateVinModal(false)}
+                                        // disabled={isSubmitting}
+                                        >
+                                            {isSubmitting ? (
+                                                <ActivityIndicator size="small" color="#fff" />
+                                            ) : (
+                                                <Text style={styles.buttonText}>Yes</Text>
+                                            )}
+                                        </TouchableOpacity>
+                                        <TouchableOpacity
+                                            style={styles.cancelButton}
+                                            onPress={() => {
+                                                setDuplicateVinModal(false),
+                                                    setVin('');
+                                                setCarDetails(null);
+                                                setStep(1);
+                                            }}
+                                        >
+                                            <Text style={styles.buttonText}>Re-enter</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                </View>
+                            </View>
+                        </Modal>
+                    )}
                 </ScrollView>
+
+
             </TouchableWithoutFeedback>
         </KeyboardAvoidingView>
     );
@@ -1044,7 +1112,7 @@ const styles = StyleSheet.create({
         fontSize: style.fontSizeNormal.fontSize,
         fontWeight: "500",
         color: blackColor,
-        marginBottom: spacings.large,
+        marginBottom: spacings.xsmall,
     },
     searchContainer: {
         backgroundColor: whiteColor,
