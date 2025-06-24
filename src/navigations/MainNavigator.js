@@ -33,6 +33,7 @@ export default function MainNavigator() {
             || routeName === "AddVehicle"
             || routeName === "WorkOrderScreen"
             || routeName === "WorkOrderScreenTwo"
+            || routeName === "VehicleDetailsScreen"
             || isTabBarHidden;
     };
 

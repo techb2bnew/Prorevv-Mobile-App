@@ -100,7 +100,6 @@ const WorkOrderScreen = ({ navigation }) => {
   useEffect(() => {
     if (technicianId && customers.length === 0) {
       fetchCustomers(1);
-      console.log("Fetching customers for the first time...");
     }
   }, [technicianId]);
 
@@ -116,9 +115,7 @@ const WorkOrderScreen = ({ navigation }) => {
         return;
       }
 
-      // Construct the API URL with parameters
       const apiUrl = `${API_BASE_URL}/fetchAllTechnicianCustomer?userId=${technicianId}&page=${page}`;
-      // console.log(apiUrl, token);
 
       const response = await fetch(apiUrl, {
         method: 'GET',
@@ -129,10 +126,12 @@ const WorkOrderScreen = ({ navigation }) => {
       });
 
       const data = await response.json();
+      console.log("data.jobs", data.jobs);
+
+      let uniqueCustomers = [];
 
       if (data.status && data.jobs?.jobs?.length > 0) {
         setAllJobList(data.jobs?.jobs);
-        console.log("data.jobs?.jobs", data.jobs?.jobs);
 
         const newCustomers = data.jobs.jobs
           .map(job => {
@@ -145,14 +144,11 @@ const WorkOrderScreen = ({ navigation }) => {
             }
             return null;
           })
-          .filter(cust => cust); // Remove nulls
+          .filter(cust => cust);
 
-        // ✅ Remove duplicate customers by ID
-        const uniqueCustomers = [...customers, ...newCustomers].filter(
-          (cust, index, self) =>
-            index === self.findIndex(c => c.id === cust.id)
+        uniqueCustomers = [...customers, ...newCustomers].filter(
+          (cust, index, self) => index === self.findIndex(c => c.id === cust.id)
         );
-        console.log("uniqueCustomers", uniqueCustomers);
 
         setCustomers(uniqueCustomers);
 
@@ -163,13 +159,27 @@ const WorkOrderScreen = ({ navigation }) => {
         }
       } else {
         setHasMoreCustomer(false);
+        setAllJobList([]); // Clear old job list if API returned no jobs
+        setCustomers([]);  // Clear old customers if nothing found
       }
+
+      // ✅ This check now runs EVEN IF jobs array is empty
+      if (selectedCustomer && !uniqueCustomers.some(cust => cust.id === selectedCustomer.id)) {
+        console.log("Selected customer no longer exists. Clearing selection.");
+        setSelectedCustomer(null);
+        setCustomerDetails(null);
+        setJobList([]);
+        await AsyncStorage.removeItem("current_customer");
+        await AsyncStorage.removeItem("current_Job");
+      }
+
     } catch (error) {
       console.error('Network error:', error);
     } finally {
       setIsCustomerLoading(false);
     }
   };
+
 
   const fetchSingleCustomerDetails = async (customerId) => {
     try {

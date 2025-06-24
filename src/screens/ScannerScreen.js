@@ -207,7 +207,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Pressable } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { blackColor, whiteColor } from '../constans/Color';
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from '../utils';
 import Toast from 'react-native-simple-toast';
 
 import {
@@ -217,7 +216,7 @@ import {
 } from 'dynamsoft-capture-vision-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 
-const LICENSE = 't0088pwAAABD8OHQ0/UvnShe4C+1IJdkz3JJP//JUFyQb7cE0vGVGB9wg48bHttuaO/w5TtTHkN84j8ihTeGkzszT2G+z7kIPeqR7Yz5fYmfjL29Bjc4LGnUhnQ==;t0088pwAAABCcLixyUwT7B8rUN1kRqyexIEMhDset/hb1ecFLbgAIRVZSo9kcfvBo+B7Ht2x4GTRZ5WYnckn92oV1aUUCxxP4G114UrNcSdaPP9QczQMnKIshtg==;t0089pwAAAEDBPRWUCLZe09uixYi6c4koyijjkaSGpOd3Zt02v/BoilRN6ZgViiih+BH0k6xxtZMCjv6pl19r2NVM6GOmUbroNzqhz8Yor2Jz4w+vQYnGCSvfIbw=';
+const LICENSE = 't0090pwAAAI0r6gfXKf9/+1TlyOKvHltxIY6HUawAuEtYEDq119CjLopiCMKT7ZIsOU1vyyb3p8cuk9ynAHwr2qe25A3apbTyJ3qgu2M+V7lOxx8XNXJgfQEddSGn;t0090pwAAAKduXas5JYobS9eKUQVc7caTs3tdhjwNBwJi8vSC6Z2zYsYre0GmxyhLKicUzr9faUZzaJ3BrUqAA+cacKOIPE6eg7/o0kPN40Z1/firohlrtBM0/SHP;t0090pwAAAHaJvcuecK43iD9z0yXOSP+ck6EUbk5bPmpZTLNJairUu8qTd4f8n76oS88ni7lkqUD4nDmma7O494c03GJqg22j3+iCPhuzXKWsjT8K1dV6PQEuyiHG';
 
 const ScannerScreen = ({ navigation, route }) => {
   const fromScreen = route?.params?.from;

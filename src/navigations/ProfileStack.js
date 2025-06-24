@@ -7,6 +7,7 @@ import JobDetailsScreen from "../screens/JobDetailsScreen";
 import FeedbackScreen from "../screens/FeedbackScreen";
 import HowToPlayScreen from "../screens/HowToPlayScreen";
 import NewJobScreen from "../screens/NewJobScreen";
+import VehicleDetailsScreen from "../screens/VehicleDetailsScreen";
 
 
 const Stack = createStackNavigator();
@@ -21,6 +22,8 @@ export default function ProfileStack() {
       <Stack.Screen name="AuthStack" component={AuthStack} />
       <Stack.Screen name="HowToPlay" component={HowToPlayScreen} />
       <Stack.Screen name="NewJob" component={NewJobScreen} />
+      <Stack.Screen name="VehicleDetailsScreen" component={VehicleDetailsScreen} />
+
     </Stack.Navigator>
   );
 }

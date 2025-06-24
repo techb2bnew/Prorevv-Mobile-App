@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Image, Platform, Dimensions, Modal, ScrollView, ActivityIndicator, TouchableWithoutFeedback } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Image, Platform, Dimensions, Modal, ScrollView, ActivityIndicator, TouchableWithoutFeedback, Pressable } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { whiteColor, lightGrayColor, blueColor, redColor, goldColor, greenColor, verylightGrayColor, grayColor, blackColor, orangeColor, mediumGray } from '../constans/Color'
 import Header from '../componets/Header';
@@ -37,7 +37,6 @@ const VinListScreen = ({ navigation, route }) => {
     const [isModalVisible, setModalVisible] = useState(false);
     const [sortType, setSortType] = useState("");
     const [searchVin, setSearchVin] = useState('');
-    const [unmatchedVin, setUnmatchedVin] = useState(null); // Store unmatched VIN
     const [showVinModal, setShowVinModal] = useState(false); // Control modal
     const [vehicleData, setVehicleData] = useState([]);
     const [page, setPage] = useState(1);
@@ -46,16 +45,32 @@ const VinListScreen = ({ navigation, route }) => {
     const [technicianType, setTechnicianType] = useState();
     const [technicianId, setTechnicianId] = useState();
     const [viewType, setViewType] = useState('list');
+    const [refreshing, setRefreshing] = useState(false);
+    const [sortOrder, setSortOrder] = useState("newest");
 
+    const sortedData = React.useMemo(() => {
+        let data = [...vehicleData];
+
+        if (sortType === "date") {
+            data.sort((a, b) => sortOrder === "oldest"
+                ? new Date(a.createdAt) - new Date(b.createdAt)
+                : new Date(b.createdAt) - new Date(a.createdAt));
+        } else if (sortType === "modified") {
+            data.sort((a, b) => sortOrder === "oldest"
+                ? new Date(a.updatedAt) - new Date(b.updatedAt)
+                : new Date(b.updatedAt) - new Date(a.updatedAt));
+        }
+
+        return data;
+    }, [vehicleData, sortType, sortOrder]);
 
     const filteredData = searchVin
-        ? vehicleData.filter(item =>
+        ? sortedData.filter(item =>
             item.vin?.toLowerCase().includes(searchVin.toLowerCase()) ||
             item.make?.toLowerCase().includes(searchVin.toLowerCase()) ||
             item.model?.toLowerCase().includes(searchVin.toLowerCase()) ||
-            item.jobName?.toLowerCase().includes(searchVin.toLowerCase())
-        )
-        : vehicleData;
+            item.jobName?.toLowerCase().includes(searchVin.toLowerCase()))
+        : sortedData;
 
     useEffect(() => {
         if (!vehicleData || vehicleData.length === 0) return;
@@ -66,10 +81,8 @@ const VinListScreen = ({ navigation, route }) => {
 
         if (match) {
             setSearchVin(vinNumber);
-            setUnmatchedVin(null);
             setShowVinModal(false);
         } else {
-            setUnmatchedVin(vinNumber);
             setShowVinModal(true);
         }
     }, [route?.params?.vinNumber, vehicleData]);
@@ -114,12 +127,12 @@ const VinListScreen = ({ navigation, route }) => {
                 return;
             }
 
-            const response = await axios.get(`${API_BASE_URL}/fetchVehicleInfo?roleType=${technicianType}&page=${pageNumber}&userId=${technicianId}`, {
+            const response = await axios.get(`${API_BASE_URL}/fetchtechVehicleInfo?page=${pageNumber}&userId=${technicianId}`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
             });
-            // console.log(`${API_BASE_URL}/fetchVehicleInfo?roleType=${technicianType}&page=${pageNumber}&userId=${technicianId}`);
+            // console.log(`${API_BASE_URL}/fetchtechVehicleInfo?page=${pageNumber}&userId=${technicianId}`);
 
             const { response: resData } = response.data;
             const newVehicles = resData?.vehicles || [];
@@ -143,52 +156,109 @@ const VinListScreen = ({ navigation, route }) => {
         }
     };
 
+    const handleRefresh = async () => {
+        try {
+            setRefreshing(true);
+            await fetchVehicalInfo(1); // Page reset to 1
+        } catch (error) {
+            console.error("Refresh failed:", error);
+        } finally {
+            setRefreshing(false);
+        }
+    };
+
     const toggleModal = () => {
         setModalVisible(!isModalVisible);
     };
 
+    // const handleSort = (order, type) => {
+    //     // let sortedData = [...jobHistoryData];
+
+    //     // if (type === "name") {
+    //     //     sortedData.sort((a, b) => {
+    //     //         return order === "asc"
+    //     //             ? a?.customer?.firstName.localeCompare(b?.customer?.firstName)
+    //     //             : b?.customer?.firstName.localeCompare(a?.customer?.firstName);
+    //     //     });
+    //     // } else if (type === "date") {
+    //     //     sortedData.sort((a, b) => {
+    //     //         return order === "oldest"
+    //     //             ? new Date(a?.createdAt) - new Date(b?.createdAt)
+    //     //             : new Date(b?.createdAt) - new Date(a?.createdAt);
+    //     //     });
+    //     // } else if (type === "modified") {
+    //     //     sortedData.sort((a, b) => {
+    //     //         return order === "oldest"
+    //     //             ? new Date(a?.updatedAt) - new Date(b?.updatedAt)
+    //     //             : new Date(b?.updatedAt) - new Date(a?.updatedAt);
+    //     //     });
+    //     // } else if (type === "status") {
+    //     //     sortedData.sort((a, b) => {
+    //     //         const statusA = a?.jobStatus ? "Complete" : "InProgress";
+    //     //         const statusB = b?.jobStatus ? "Complete" : "InProgress";
+
+    //     //         return order === "asc"
+    //     //             ? statusA.localeCompare(statusB) // InProgress → Complete
+    //     //             : statusB.localeCompare(statusA); // Complete → InProgress
+    //     //     });
+    //     // }
+
+    //     // // ✅ Pehle se select kiya hua item sabse upar rahe
+    //     // const selectedItem = sortedData.find(item => item.sortType === type);
+    //     // sortedData = sortedData.filter(item => item.sortType !== type);
+    //     // if (selectedItem) sortedData.unshift(selectedItem);
+
+    //     // setjobHistoryData(sortedData);
+    //     // setSortOrder(order);
+    //     // setSortType(type);
+    //     setModalVisible(false);
+    // };
+
+
     const handleSort = (order, type) => {
-        // let sortedData = [...jobHistoryData];
+        let sortedData = [...vehicleData];
 
-        // if (type === "name") {
-        //     sortedData.sort((a, b) => {
-        //         return order === "asc"
-        //             ? a?.customer?.firstName.localeCompare(b?.customer?.firstName)
-        //             : b?.customer?.firstName.localeCompare(a?.customer?.firstName);
-        //     });
-        // } else if (type === "date") {
-        //     sortedData.sort((a, b) => {
-        //         return order === "oldest"
-        //             ? new Date(a?.createdAt) - new Date(b?.createdAt)
-        //             : new Date(b?.createdAt) - new Date(a?.createdAt);
-        //     });
-        // } else if (type === "modified") {
-        //     sortedData.sort((a, b) => {
-        //         return order === "oldest"
-        //             ? new Date(a?.updatedAt) - new Date(b?.updatedAt)
-        //             : new Date(b?.updatedAt) - new Date(a?.updatedAt);
-        //     });
-        // } else if (type === "status") {
-        //     sortedData.sort((a, b) => {
-        //         const statusA = a?.jobStatus ? "Complete" : "InProgress";
-        //         const statusB = b?.jobStatus ? "Complete" : "InProgress";
+        if (type === "date") {
+            sortedData.sort((a, b) => {
+                return order === "oldest"
+                    ? new Date(a?.createdAt) - new Date(b?.createdAt)
+                    : new Date(b?.createdAt) - new Date(a?.createdAt);
+            });
+        } else if (type === "modified") {
+            sortedData.sort((a, b) => {
+                return order === "oldest"
+                    ? new Date(a?.updatedAt) - new Date(b?.updatedAt)
+                    : new Date(b?.updatedAt) - new Date(a?.updatedAt);
+            });
+        } else if (type === "name") {
+            sortedData.sort((a, b) => {
+                return order === "asc"
+                    ? a?.jobName?.localeCompare(b?.jobName)
+                    : b?.jobName?.localeCompare(a?.jobName);
+            });
+        } else if (type === "status") {
+            sortedData.sort((a, b) => {
+                const statusA = a?.jobStatus ? "Complete" : "InProgress";
+                const statusB = b?.jobStatus ? "Complete" : "InProgress";
 
-        //         return order === "asc"
-        //             ? statusA.localeCompare(statusB) // InProgress → Complete
-        //             : statusB.localeCompare(statusA); // Complete → InProgress
-        //     });
-        // }
+                return order === "asc"
+                    ? statusA.localeCompare(statusB)
+                    : statusB.localeCompare(statusA);
+            });
+        } else if (type === "name") {
+            sortedData.sort((a, b) => {
+                return order === "asc"
+                    ? a?.jobName?.localeCompare(b?.jobName)
+                    : b?.jobName?.localeCompare(a?.jobName);
+            });
+        }
 
-        // // ✅ Pehle se select kiya hua item sabse upar rahe
-        // const selectedItem = sortedData.find(item => item.sortType === type);
-        // sortedData = sortedData.filter(item => item.sortType !== type);
-        // if (selectedItem) sortedData.unshift(selectedItem);
-
-        // setjobHistoryData(sortedData);
-        // setSortOrder(order);
-        // setSortType(type);
+        setVehicleData(sortedData);
+        setSortOrder(order);
+        setSortType(type);
         setModalVisible(false);
     };
+
 
     return (
         <View style={{ width: wp(100), height: hp(100), backgroundColor: whiteColor }}>
@@ -269,7 +339,7 @@ const VinListScreen = ({ navigation, route }) => {
             {viewType === "list" && <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 <View>
                     <View style={[styles.tableHeader, flexDirectionRow]}>
-                        <Text style={[styles.tableHeaderText, { width: wp(30) }]}>JobName</Text>
+                        {/* <Text style={[styles.tableHeaderText, { width: wp(30) }]}>JobName</Text> */}
                         <Text style={[styles.tableHeaderText, { width: wp(50) }]}>VIN No.</Text>
                         <Text style={[styles.tableHeaderText, { width: wp(35) }]}>Make</Text>
                         <Text style={[styles.tableHeaderText, { width: wp(35) }]}>Model</Text>
@@ -277,7 +347,7 @@ const VinListScreen = ({ navigation, route }) => {
                         {activeTab === 'partnerOrder' && (
                             <Text style={[styles.tableHeaderText, { width: wp(25) }]}>Partner</Text>
                         )}
-                        <Text style={[styles.tableHeaderText, { width: wp(10) }]}>Price</Text>
+                        <Text style={[styles.tableHeaderText, { width: wp(25) }]}>Cost Estimate</Text>
 
                     </View>
 
@@ -286,17 +356,20 @@ const VinListScreen = ({ navigation, route }) => {
                             data={filteredData}
                             keyExtractor={(item, index) => index.toString()}
                             showsVerticalScrollIndicator={false}
+                            refreshing={refreshing}
+                            onRefresh={handleRefresh}
                             renderItem={({ item, index }) => {
-                                const { backgroundColor, borderColor, textColor } = getStatusStyle(item.status);
                                 return (
-                                    <View
+                                    <Pressable
                                         style={[
                                             styles.tableRow,
                                             flexDirectionRow,
                                             { backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor },
                                         ]}
+                                        onPress={() => navigation.navigate("VehicleDetailsScreen", { vehicleId: item.id })}
+
                                     >
-                                        <Text style={[styles.tableText, { width: wp(30), paddingLeft: spacings.large }]}>{item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}</Text>
+                                        {/* <Text style={[styles.tableText, { width: wp(30), paddingLeft: spacings.small }]}>{item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}</Text> */}
                                         <Text style={[styles.tableText, { width: wp(50) }]}>{item?.vin}</Text>
                                         <Text style={[styles.tableText, { width: wp(35) }]}>{item?.make}</Text>
                                         <Text style={[styles.tableText, { width: wp(35) }]}>{item?.model}</Text>
@@ -307,15 +380,19 @@ const VinListScreen = ({ navigation, route }) => {
                                         })}
                                         </Text>
                                         {activeTab === 'partnerOrder' && (
-                                            <Text style={[styles.tableText, { width: wp(25) }]}>{item?.partner}</Text>
+                                            <Text style={[styles.tableText, { width: wp(25) }]}>
+                                                {item?.assignedTechnicians
+                                                    ?.filter(tech => tech?.id !== technicianId)
+                                                    ?.map(tech => `${tech?.firstName || ''} ${tech?.lastName || ''}`.trim())
+                                                    .join(', ') || '—'}
+                                            </Text>
                                         )}
-                                        <Text style={[styles.tableText, { width: wp(10) }]}>
-                                            {Array.isArray(item?.jobDescription) && item?.jobDescription?.length > 0
+                                        <Text style={[styles.tableText, { width: wp(15) }]}>
+                                            ${Array.isArray(item?.jobDescription) && item?.jobDescription?.length > 0
                                                 ? item?.jobDescription?.reduce((total, job) => total + Number(job?.cost || 0), 0)
                                                 : '0'}
                                         </Text>
-
-                                    </View>
+                                    </Pressable>
                                 );
                             }}
                             ListFooterComponent={() =>
@@ -338,20 +415,22 @@ const VinListScreen = ({ navigation, route }) => {
                                     fetchVehicalInfo(page + 1);
                                 }
                             }}
-                            onEndReachedThreshold={0.3}
+                            onEndReachedThreshold={0.5}
                         />
                     </View>
                 </View>
             </ScrollView>}
 
-            {viewType === "grid" && <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(69) : hp(63) : isIOSAndTablet ? hp(67) : hp(51) }}>
+            {viewType === "grid" && <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(69) : hp(63) : isIOSAndTablet ? hp(67) : hp(58) }}>
                 <FlatList
                     data={filteredData}
                     keyExtractor={(item, index) => index.toString()}
                     showsVerticalScrollIndicator={false}
                     contentContainerStyle={{ paddingVertical: 10 }}
+                    refreshing={refreshing}
+                    onRefresh={handleRefresh}
                     renderItem={({ item, index }) => (
-                        <View style={{
+                        <Pressable style={{
                             backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor,
                             borderRadius: 10,
                             padding: 10,
@@ -359,8 +438,14 @@ const VinListScreen = ({ navigation, route }) => {
                             marginHorizontal: 10,
                             borderWidth: 1,
                             borderColor: blueColor
-                        }}>
+                        }}
+                            onPress={() => navigation.navigate("VehicleDetailsScreen", { vehicleId: item.id })}
+                        >
                             <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+                                <View style={{ width: '48%', marginBottom: 10 }}>
+                                    <Text style={{ color: '#555', fontSize: 11 }}>JobName</Text>
+                                    <Text>{item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}</Text>
+                                </View>
                                 <View style={{ width: '48%', marginBottom: 10 }}>
                                     <Text style={{ color: '#555', fontSize: 11 }}>VIN</Text>
                                     <Text >{item?.vin}</Text>
@@ -375,7 +460,7 @@ const VinListScreen = ({ navigation, route }) => {
                                 </View>
                                 <View style={{ width: '48%', marginBottom: 10 }}>
                                     <Text style={{ color: '#555', fontSize: 11 }}>Date</Text>
-                                    <Text > {new Date(item?.createdAt).toLocaleDateString("en-US", {
+                                    <Text >{new Date(item?.createdAt).toLocaleDateString("en-US", {
                                         month: "long",
                                         day: "numeric",
                                         year: "numeric"
@@ -384,17 +469,22 @@ const VinListScreen = ({ navigation, route }) => {
                                 </View>
                                 {activeTab === 'partnerOrder' && (<View style={{ width: '48%', marginBottom: 10 }}>
                                     <Text style={{ color: '#555', fontSize: 11 }}>Partner</Text>
-                                    <Text >{item?.technician}</Text>
+                                    <Text >{item?.assignedTechnicians
+                                        ?.filter(tech => tech?.id !== technicianId)
+                                        ?.map(tech => `${tech?.firstName || ''} ${tech?.lastName || ''}`.trim())
+                                        .join(', ') || '—'}
+                                    </Text>
                                 </View>)}
                                 <View style={{ width: '48%', marginBottom: 10 }}>
-                                    <Text style={{ color: '#555', fontSize: 11 }}>Price</Text>
+                                    <Text style={{ color: '#555', fontSize: 11 }}>Cost Estimate</Text>
                                     <Text >${Array.isArray(item?.jobDescription) && item?.jobDescription?.length > 0
                                         ? item?.jobDescription?.reduce((total, job) => total + Number(job?.cost || 0), 0)
-                                        : '0'}</Text>
+                                        : '0'}
+                                    </Text>
                                 </View>
                             </View>
 
-                        </View>
+                        </Pressable>
                     )}
                     onEndReached={() => {
                         if (!loading && hasMore) {
@@ -426,7 +516,6 @@ const VinListScreen = ({ navigation, route }) => {
                 <TouchableWithoutFeedback onPress={toggleModal}>
                     <View style={styles.modalOverlay}>
                         <Feather name="chevron-down" size={55} color={blackColor} />
-
                         <View style={styles.modalContainer}>
                             <View style={{
                                 width: "100%",
@@ -438,11 +527,30 @@ const VinListScreen = ({ navigation, route }) => {
                                 <Text style={styles.modalTitle}>Sort By</Text>
                                 <Feather name="sliders" size={20} color={grayColor} />
                             </View>
-                            <TouchableOpacity
-                                onPress={() => handleSort(sortType === "date" && sortOrder === "newest" ? "oldest" : "newest", "date")}
+
+                            {/* <TouchableOpacity
+                                onPress={() => handleSort(
+                                    sortType === "name" && sortOrder === "asc" ? "desc" : "asc",
+                                    "name"
+                                )}
                                 style={styles.sortOption}
                             >
-                                <Text style={[styles.sortText, { fontWeight: style.fontWeightThin.fontWeight, color: sortType === "date" ? blackColor : 'gray' }]}>
+                                <Text style={[styles.sortText, { fontWeight: style.fontWeightThin?.fontWeight || '400', color: sortType === "name" ? blackColor : 'gray' }]}>
+                                    Job Name
+                                </Text>
+                                <Text style={[styles.sortText, { color: sortType === "name" ? blackColor : 'gray' }]}>
+                                    {sortType === "name" ? (sortOrder === "asc" ? "A to Z" : "Z to A") : "A to Z"}
+                                </Text>
+                            </TouchableOpacity> */}
+
+                            <TouchableOpacity
+                                onPress={() => handleSort(
+                                    sortType === "date" && sortOrder === "newest" ? "oldest" : "newest",
+                                    "date"
+                                )}
+                                style={styles.sortOption}
+                            >
+                                <Text style={[styles.sortText, { color: sortType === "date" ? blackColor : 'gray' }]}>
                                     Date Created
                                 </Text>
                                 <Text style={[styles.sortText, { color: sortType === "date" ? blackColor : 'gray' }]}>
@@ -459,18 +567,6 @@ const VinListScreen = ({ navigation, route }) => {
                                 </Text>
                                 <Text style={[styles.sortText, { color: sortType === "modified" ? blackColor : 'gray' }]}>
                                     {sortType === "modified" ? (sortOrder === "latest" ? "Latest to Oldest" : "Oldest to Latest") : "Latest to Oldest"}
-                                </Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                onPress={() => handleSort(sortType === "status" && sortOrder === "asc" ? "desc" : "asc", "status")}
-                                style={styles.sortOption}
-                            >
-                                <Text style={[styles.sortText, { fontWeight: style.fontWeightThin.fontWeight, color: sortType === "status" ? blackColor : 'gray' }]}>
-                                    Work Order
-                                </Text>
-                                <Text style={[styles.sortText, { color: sortType === "status" ? blackColor : 'gray' }]}>
-                                    {sortType === "status" ? (sortOrder === "asc" ? "In Progress → Complete" : "Complete → In Progress") : "In Progress → Complete"}
                                 </Text>
                             </TouchableOpacity>
                         </View>

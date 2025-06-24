@@ -12,6 +12,7 @@ import WorkOrderScreen from "../screens/WorkOrderScreen";
 import WorkOrderScreenTwo from "../screens/WorkOrderScreenTwo";
 import VinListScreen from "../screens/VinListScreen";
 import Reports from "../screens/Reports";
+import VehicleDetailsScreen from "../screens/VehicleDetailsScreen";
 
 
 const Stack = createStackNavigator();
@@ -30,6 +31,8 @@ export default function HomeStack() {
       <Stack.Screen name="WorkOrderScreen" component={WorkOrderScreen} />
       <Stack.Screen name="WorkOrderScreenTwo" component={WorkOrderScreenTwo} />
       <Stack.Screen name="VinListScreen" component={VinListScreen} />
+      <Stack.Screen name="VehicleDetailsScreen" component={VehicleDetailsScreen} />
+
       <Stack.Screen name="ReportsScreen" component={Reports} />
 
 

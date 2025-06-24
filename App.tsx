@@ -154,12 +154,12 @@ function App(): React.JSX.Element {
         Toast.show("⚠️ Your technician account is inactive. Please contact support.");
       }
 
-      if (technician.deletedStatus === false) {
+      if (technician.deletedStatus === true) {
         Toast.show("⚠️ Your technician account has been deleted. Please contact support.");
       }
 
       // Logout process if any of the conditions are met
-      if (technician.isApproved === "reject" || !technician.accountStatus || !technician.deletedStatus) {
+      if (technician.isApproved === "reject" || !technician.accountStatus || technician.deletedStatus) {
         // await AsyncStorage.removeItem("auth_token");
         // await AsyncStorage.removeItem("technician_id");
         // await AsyncStorage.removeItem("firstLoginCompleted");

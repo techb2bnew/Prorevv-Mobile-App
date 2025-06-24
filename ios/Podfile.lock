@@ -1342,6 +1342,8 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
+  - react-native-get-random-values (1.11.0):
+    - React-Core
   - react-native-image-picker (8.0.0):
     - DoubleConversion
     - glog
@@ -2064,6 +2066,7 @@ DEPENDENCIES:
   - react-native-compressor (from `../node_modules/react-native-compressor`)
   - react-native-date-picker (from `../node_modules/react-native-date-picker`)
   - react-native-document-picker (from `../node_modules/react-native-document-picker`)
+  - react-native-get-random-values (from `../node_modules/react-native-get-random-values`)
   - react-native-image-picker (from `../node_modules/react-native-image-picker`)
   - "react-native-netinfo (from `../node_modules/@react-native-community/netinfo`)"
   - react-native-network-info (from `../node_modules/react-native-network-info`)
@@ -2222,6 +2225,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-date-picker"
   react-native-document-picker:
     :path: "../node_modules/react-native-document-picker"
+  react-native-get-random-values:
+    :path: "../node_modules/react-native-get-random-values"
   react-native-image-picker:
     :path: "../node_modules/react-native-image-picker"
   react-native-netinfo:
@@ -2374,6 +2379,7 @@ SPEC CHECKSUMS:
   react-native-compressor: 6486c372520c72a1db9b3b152fff43d7217ab925
   react-native-date-picker: cee4dc94d7c939d3d2929a110150a85a5b25afca
   react-native-document-picker: da64a39fd71a84a9d3f7f58c8b0623c393e9991c
+  react-native-get-random-values: 21325b2244dfa6b58878f51f9aa42821e7ba3d06
   react-native-image-picker: c1ecf2bc4393b8ecaa6a40be41a18924f120081a
   react-native-netinfo: f0a9899081c185db1de5bb2fdc1c88c202a059ac
   react-native-network-info: d1290ffc0bd0709e11436f5b8d7f605dcc5c4530

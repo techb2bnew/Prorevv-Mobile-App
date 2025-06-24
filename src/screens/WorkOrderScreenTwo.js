@@ -17,6 +17,8 @@ import SuccessModal from '../componets/Modal/SuccessModal';
 import { ALERT_IMAGE, SUCCESS_IMAGE, XCIRCLE_IMAGE } from '../assests/images';
 import { Image as ImageCompressor } from 'react-native-compressor';
 import Header from '../componets/Header';
+import Toast from 'react-native-simple-toast';
+
 
 const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween, textAlign } = BaseStyle;
 
@@ -472,7 +474,7 @@ const WorkOrderScreenTwo = ({ route }) => {
             });
         }
         console.log("form:::", formData);
-
+        setNewFormData(formData);
         setLoaderFn(true);
         setError("");
         setJobDescriptionError("");
@@ -493,8 +495,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                     navigation.navigate("Home");
                     setLoaderFn(false);
                 } else {
-                    setVin('');
-                    setCarDetails(null);
+                    resetForm();
                     setStep(1);
                     setLoaderFn(false);
                 }
@@ -546,6 +547,55 @@ const WorkOrderScreenTwo = ({ route }) => {
                 isTablet ? hp(15) : hp(20)
             )
         }));
+    };
+
+    const handleConfirmDuplicateVin = async () => {
+        setIsSubmitting(true);  // Start loading
+        try {
+            const token = await AsyncStorage.getItem("auth_token");
+
+            if (!token) {
+                console.error("Token is missing!");
+                Toast.show("Authentication error. Please log in again.");
+                setIsSubmitting(false);
+                return;
+            }
+
+            if (!newFormData) {
+                console.error("FormData is missing!");
+                Toast.show("Something went wrong. Please try again.");
+                setIsSubmitting(false);
+                return;
+            }
+
+            console.log("Sending FormData:", newFormData);
+
+            const response = await axios.post(
+                `${API_BASE_URL}/createVinDetails`,
+                newFormData,
+                {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            console.log("API Response:", response);
+
+
+            if (response.status === 201) {
+                Toast.show("Vehicle add successfully!");
+                setDuplicateVinModal(false);
+                navigation.navigate("Home")
+            } else {
+                Toast.show("Failed to override Vehicle.");
+            }
+        } catch (error) {
+            console.error("Error overriding Vehicle:", error);
+        } finally {
+            setIsSubmitting(false); // Stop loading after request completes
+        }
     };
 
 
@@ -1054,8 +1104,8 @@ const WorkOrderScreenTwo = ({ route }) => {
                                     <View style={styles.buttonContainer}>
                                         <TouchableOpacity
                                             style={styles.confirmButton}
-                                            onPress={() => setDuplicateVinModal(false)}
-                                        // disabled={isSubmitting}
+                                            onPress={handleConfirmDuplicateVin}
+                                            disabled={isSubmitting}
                                         >
                                             {isSubmitting ? (
                                                 <ActivityIndicator size="small" color="#fff" />

@@ -21,8 +21,6 @@ import { API_BASE_URL } from '../constans/Constants';
 const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween, textAlign, justifyContentCenter, justifyContentSpaceEvenly } = BaseStyle;
 
 const Reports = ({ navigation }) => {
-    const route = useRoute();
-    const { jobCompleted } = route.params || {};
     const [search, setSearch] = useState('');
     const [jobHistoryData, setjobHistoryData] = useState([])
     const [technicianId, setTechnicianId] = useState();
@@ -36,193 +34,31 @@ const Reports = ({ navigation }) => {
     const [sortOrder, setSortOrder] = useState("asc");
     const [sortType, setSortType] = useState("");
     const [page, setPage] = useState(1);
+    const [jobPage, setJobPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
     const { width, height } = Dimensions.get("window");
     const isTablet = width >= 668 && height >= 1024;
     const isIOSAndTablet = Platform.OS === "ios" && isTablet;
-
     const [activeTab, setActiveTab] = useState("WorkOrders");
-    const [activeStatus, setActiveStatus] = useState("Completed");
+    const [activeStatus, setActiveStatus] = useState("InProgress");
     const [filteredJobs, setFilteredJobs] = useState([]);
     const [filteredWorkOrders, setFilteredWorkOrders] = useState([]);
     const [viewType, setViewType] = useState('list');
+    const [jobsRawData, setJobsRawData] = useState([])
+    const [workOrdersRawData, setWorkOrdersRawData] = useState([]);
+    const [refreshing, setRefreshing] = useState(false);
+    const [refreshingJob, setRefreshingJob] = useState(false);
 
-
-    const [jobsRawData, setJobsRawData] = useState([
-        { jobName: "Ron’s Chevvy (2020)", workOrderCount: 10, status: true },
-        { jobName: "Ron’s Dodge (2022)", workOrderCount: 20, status: false },
-        { jobName: "Ron’s Dodge (2022)", workOrderCount: 20, status: true },
-        { jobName: "Ron’s Dodge (2022)", workOrderCount: 20, status: true },
-        { jobName: "Ron’s Dodge (2022)", workOrderCount: 20, status: true },
-        { jobName: "Ron’s Chevvy (2020)", workOrderCount: 10, status: true },
-        { jobName: "Ron’s Dodge (2022)", workOrderCount: 20, status: false },
-        { jobName: "Ron’s Chevvy (2020)", workOrderCount: 10, status: true },
-        { jobName: "Ron’s Dodge (2022)", workOrderCount: 20, status: false },
-        { jobName: "Ron’s Chevvy (2020)", workOrderCount: 10, status: true },
-        { jobName: "Ron’s Dodge (2022)", workOrderCount: 20, status: true },
-        { jobName: "Ron’s Chevvy (2020)", workOrderCount: 10, status: true },
-        { jobName: "Ron’s Dodge (2022)", workOrderCount: 20, status: false },
-        { jobName: "Ron’s Chevvy (2020)", workOrderCount: 10, status: true },
-        { jobName: "Ron’s Dodge (2022)", workOrderCount: 20, status: true },
-        { jobName: "Ron’s Chevvy (2020)", workOrderCount: 10, status: true },
-        { jobName: "Ron’s Dodge (2022)", workOrderCount: 20, status: false },
-        { jobName: "Ron’s Chevvy (2020)", workOrderCount: 10, status: true },
-        { jobName: "Ron’s Dodge (2022)", workOrderCount: 20, status: false },
-    ]);
-
-    const [workOrdersRawData, setWorkOrdersRawData] = useState([
-        {
-            vin: "1FAHP2E81DG123456",
-            make: "AUDI",
-            model: "Q5",
-            technician: "Ravi Kumar",
-            price: 2500,
-            date: "2024-08-01",
-            status: true
-        },
-        {
-            vin: "2FTRX18W1XCA12345",
-            make: "RAM",
-            model: "1500",
-            technician: "Amit Verma",
-            price: 3200,
-            date: "2024-08-02",
-            status: true
-        },
-        {
-            vin: "3HGCM56497G123456",
-            make: "TOYOTA",
-            model: "Corolla",
-            technician: "Suman Joshi",
-            price: 1800,
-            date: "2024-08-03",
-            status: true
-        },
-        {
-            vin: "4T1BE46KX7U123456",
-            make: "AUDI",
-            model: "A4",
-            technician: "Ravi Kumar",
-            price: 2800,
-            date: "2024-08-04",
-            status: true
-        },
-        {
-            vin: "5NPEB4AC8BH123456",
-            make: "RAM",
-            model: "2500",
-            technician: "Neha Yadav",
-            price: 3500,
-            date: "2024-08-05",
-            status: "pending"
-        },
-        {
-            vin: "1FAHP2E81DG654321",
-            make: "TOYOTA",
-            model: "Camry",
-            technician: "Suman Joshi",
-            price: 2100,
-            date: "2024-08-06",
-            status: true
-        },
-        {
-            vin: "2C3KA53G56H123456",
-            make: "AUDI",
-            model: "Q7",
-            technician: "Ravi Kumar",
-            price: 4000,
-            date: "2024-08-07",
-            status: false
-        },
-        {
-            vin: "3VWFE21C04M123456",
-            make: "RAM",
-            model: "Rebel",
-            technician: "Amit Verma",
-            price: 2900,
-            date: "2024-08-08",
-            status: true
-        },
-        {
-            vin: "1HGCM82633A765432",
-            make: "TOYOTA",
-            model: "Fortuner",
-            technician: "Neha Yadav",
-            price: 3300,
-            date: "2024-08-09",
-            status: false
-        },
-        {
-            vin: "1FAHP2E81DG123456",
-            make: "AUDI",
-            model: "Q5",
-            technician: "Ravi Kumar",
-            price: 2500,
-            date: "2024-08-01",
-            status: false
-        },
-        {
-            vin: "2FTRX18W1XCA12345",
-            make: "RAM",
-            model: "1500",
-            technician: "Amit Verma",
-            price: 3200,
-            date: "2024-08-02",
-            status: true
-        },
-        {
-            vin: "3HGCM56497G123456",
-            make: "TOYOTA",
-            model: "Corolla",
-            technician: "Suman Joshi",
-            price: 1800,
-            date: "2024-08-03",
-            status: false
-        },
-        {
-            vin: "4T1BE46KX7U123456",
-            make: "AUDI",
-            model: "A4",
-            technician: "Ravi Kumar",
-            price: 2800,
-            date: "2024-08-04",
-            status: "pending"
-        },
-        {
-            vin: "5NPEB4AC8BH123456",
-            make: "RAM",
-            model: "2500",
-            technician: "Neha Yadav",
-            price: 3500,
-            date: "2024-08-05",
-            status: "pending"
-        },
-        {
-            vin: "1FAHP2E81DG654321",
-            make: "TOYOTA",
-            model: "Camry",
-            technician: "Suman Joshi",
-            price: 2100,
-            date: "2024-08-06",
-            status: true
-        },
-    ]);
 
     const toggleModal = () => {
         setModalVisible(!isModalVisible);
     };
 
     const handleSort = (order, type) => {
-        let sortedData = [...jobHistoryData];
+        let sortedData = activeTab === 'Jobs' ? [...filteredJobs] : [...filteredWorkOrders];
 
-        if (type === "name") {
-            sortedData.sort((a, b) => {
-                return order === "asc"
-                    ? a?.customer?.firstName.localeCompare(b?.customer?.firstName)
-                    : b?.customer?.firstName.localeCompare(a?.customer?.firstName);
-            });
-        } else if (type === "date") {
+        if (type === "date") {
             sortedData.sort((a, b) => {
                 return order === "oldest"
                     ? new Date(a?.createdAt) - new Date(b?.createdAt)
@@ -234,23 +70,29 @@ const Reports = ({ navigation }) => {
                     ? new Date(a?.updatedAt) - new Date(b?.updatedAt)
                     : new Date(b?.updatedAt) - new Date(a?.updatedAt);
             });
+        } else if (type === "name") {
+            sortedData.sort((a, b) => {
+                return order === "asc"
+                    ? a?.jobName?.localeCompare(b?.jobName)
+                    : b?.jobName?.localeCompare(a?.jobName);
+            });
         } else if (type === "status") {
             sortedData.sort((a, b) => {
-                const statusA = a?.jobStatus ? "Complete" : "InProgress";
-                const statusB = b?.jobStatus ? "Complete" : "InProgress";
+                const statusA = a?.jobStatus || a?.vehicleStatus ? "Complete" : "InProgress";
+                const statusB = b?.jobStatus || b?.vehicleStatus ? "Complete" : "InProgress";
 
                 return order === "asc"
-                    ? statusA.localeCompare(statusB) // InProgress → Complete
-                    : statusB.localeCompare(statusA); // Complete → InProgress
+                    ? statusA.localeCompare(statusB)
+                    : statusB.localeCompare(statusA);
             });
         }
 
-        // ✅ Pehle se select kiya hua item sabse upar rahe
-        const selectedItem = sortedData.find(item => item.sortType === type);
-        sortedData = sortedData.filter(item => item.sortType !== type);
-        if (selectedItem) sortedData.unshift(selectedItem);
+        if (activeTab === 'Jobs') {
+            setFilteredJobs(sortedData);
+        } else {
+            setFilteredWorkOrders(sortedData);
+        }
 
-        setjobHistoryData(sortedData);
         setSortOrder(order);
         setSortType(type);
         setModalVisible(false);
@@ -263,6 +105,8 @@ const Reports = ({ navigation }) => {
         setStartDate(lastMonth);
     }, []);
 
+
+    //fetch tech details
     useEffect(() => {
         const getTechnicianDetail = async () => {
             try {
@@ -281,73 +125,16 @@ const Reports = ({ navigation }) => {
     }, []);
 
     useEffect(() => {
-        if (technicianId) {
-            checkFirstLaunch();
+        if (activeTab === "Jobs" && technicianId) {
+            fetchJobHistory();
+        } else {
+            fetchVehicalInfo(page);
         }
-    }, [technicianId]);
-
-
-    const checkFirstLaunch = async () => {
-        try {
-            const storedData = await AsyncStorage.getItem("jobHistoryData");
-
-            if (storedData) {
-                setjobHistoryData(JSON.parse(storedData));
-                setLoading(false);
-            }
-
-            const isFetched = await AsyncStorage.getItem("jobHistoryFetched");
-            if (!isFetched) {
-                console.log("wokring");
-                await fetchJobHistory();
-                await AsyncStorage.setItem("jobHistoryFetched", "true");
-            }
-        } catch (error) {
-            console.error("Error checking first launch:", error);
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    useEffect(() => {
-        const getTechnicianDetailAndFetchJobs = async () => {
-            try {
-                const storedData = await AsyncStorage.getItem("userDeatils");
-                if (storedData) {
-                    const parsedData = JSON.parse(storedData);
-                    const id = parsedData?.id;
-                    setTechnicianId(id);
-
-                    if (id) {
-                        setTimeout(() => {
-                            fetchJobHistory(); // Ab ye technicianId update hone ke baad chalega
-                        }, 100);
-                    }
-                }
-            } catch (error) {
-                console.error("Error fetching stored user:", error);
-            }
-        };
-
-        getTechnicianDetailAndFetchJobs();
-    }, [jobCompleted, technicianId]);
-
+    }, [activeTab, technicianId, activeStatus]);
 
     const fetchJobHistory = async (newPage = 1, isPagination = false) => {
         if (!technicianId) {
             console.warn("No Technician ID found. Exiting function.");
-            return;
-        }
-
-        const netInfo = await NetInfo.fetch();
-        if (!netInfo.isConnected) {
-            console.warn("No internet connection. Loading cached data...");
-
-            // Load cached data if offline
-            const cachedData = await AsyncStorage.getItem("jobHistoryData");
-            if (cachedData) {
-                setjobHistoryData(JSON.parse(cachedData));
-            }
             return;
         }
 
@@ -366,20 +153,21 @@ const Reports = ({ navigation }) => {
             }
 
             const response = await axios.get(
-                `${API_BASE_URL}/fetchJobHistory?technicianId=${technicianId}&roleType=${technicianType}&page=${newPage}&limit=10`,
+                `${API_BASE_URL}/technicianJobFetch?userId=${technicianId}&page=${newPage}&limit=10`,
                 { headers: { Authorization: `Bearer ${token}` } }
             );
 
-            const newJobs = response?.data?.jobs?.jobs || [];
+            const newJobs = response?.data?.response?.jobs || [];
+            // console.log("fetchJobHistory", response?.data?.response?.jobs);
 
-            const updatedJobs = newPage === 1 ? newJobs : [...jobHistoryData, ...newJobs];
+            const updatedJobs = newPage === 1 ? newJobs : [...jobsRawData, ...newJobs];
 
-            setjobHistoryData(updatedJobs);
-            await AsyncStorage.setItem("jobHistoryData", JSON.stringify(updatedJobs));
-            console.log("working", updatedJobs);
+            setJobsRawData(updatedJobs);
+            // await AsyncStorage.setItem("jobHistoryData", JSON.stringify(updatedJobs));
+            // console.log("fetchJobHistory", updatedJobs);
 
             setHasMore(newJobs.length > 0);
-            setPage(newPage);
+            setJobPage(newPage);
         } catch (error) {
             console.error("Error fetching job history:", error);
         } finally {
@@ -391,10 +179,50 @@ const Reports = ({ navigation }) => {
         }
     };
 
-    const fetchFilteredJobHistory = async (start, end) => {
-        if (!technicianId) return;
+    // const fetchFilteredJobHistory = async (start, end,tab) => {   
+    //     if (!technicianId) return;
 
+    //     setLoading(true);
+    //     try {
+    //         const token = await AsyncStorage.getItem("auth_token");
+    //         if (!token) {
+    //             console.error("No token found");
+    //             return;
+    //         }
+
+    //         const formattedStartDate = start
+    //             ? new Date(start).toISOString().split("T")[0].split("-").reverse().join("-")
+    //             : "";
+
+    //         const formattedEndDate = end
+    //             ? new Date(end).toISOString().split("T")[0].split("-").reverse().join("-")
+    //             : "";
+
+    //         console.log("Start date:", formattedStartDate, "End date:", formattedEndDate, "technicianid", technicianId, token);
+
+    //         const response = await axios.post(
+    //             `${API_BASE_URL}/jobFilter`,
+    //             `startDate=${formattedStartDate}&endDate=${formattedEndDate}&technicianId=${technicianId}`,
+    //             {
+    //                 headers: {
+    //                     "Content-Type": "application/x-www-form-urlencoded",
+    //                     Authorization: `Bearer ${token}`,
+    //                 },
+    //             }
+    //         );
+
+    //         console.log("Response:", response?.data?.jobs);
+    //         setjobHistoryData(response?.data?.jobs || []);
+    //     } catch (error) {
+    //         console.error("Error fetching filtered job history:", error);
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
+    const fetchFilteredData = async (start, end, tab) => {
+        if (!technicianId) return;
         setLoading(true);
+
         try {
             const token = await AsyncStorage.getItem("auth_token");
             if (!token) {
@@ -410,38 +238,105 @@ const Reports = ({ navigation }) => {
                 ? new Date(end).toISOString().split("T")[0].split("-").reverse().join("-")
                 : "";
 
-            console.log("Start date:", formattedStartDate, "End date:", formattedEndDate, "technicianid", technicianId, token);
+            console.log("Start:", formattedStartDate, "End:", formattedEndDate, "Tab:", tab);
 
-            const response = await axios.post(
-                `${API_BASE_URL}/jobFilter`,
-                `startDate=${formattedStartDate}&endDate=${formattedEndDate}&technicianId=${technicianId}`,
-                {
-                    headers: {
-                        "Content-Type": "application/x-www-form-urlencoded",
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
-            );
+            if (tab === "Jobs") {
+                const response = await axios.post(
+                    `${API_BASE_URL}/jobFilter`,
+                    `startDate=${formattedStartDate}&endDate=${formattedEndDate}&technicianId=${technicianId}`,
+                    {
+                        headers: {
+                            "Content-Type": "application/x-www-form-urlencoded",
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
+                );
 
-            console.log("Response:", response?.data?.jobs);
-            setjobHistoryData(response?.data?.jobs || []);
+                const jobs = response?.data?.jobs || [];
+                // setjobHistoryData(jobs);
+                setJobsRawData(jobs); // if needed for filtering/searching
+            } else if (tab === "WorkOrders") {
+                const response = await axios.post(
+                    `${API_BASE_URL}/vehicleFilter`,
+                    `startDate=${formattedStartDate}&endDate=${formattedEndDate}&technicianId=${technicianId}`,
+                    {
+                        headers: {
+                            "Content-Type": "application/x-www-form-urlencoded",
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
+                );
+                console.log("response?.data", response?.data);
+
+                const vehicles = response?.data?.vehicles || [];
+                setWorkOrdersRawData(vehicles);
+            }
         } catch (error) {
-            console.error("Error fetching filtered job history:", error);
+            console.error("Error fetching filtered data:", error);
         } finally {
             setLoading(false);
         }
     };
 
-    const filterByStatus = useCallback((data, status) => {
-        if (status === "Completed") return data.filter(item => item.status === true || item.status === "completed");
-        if (status === "InProgress") return data.filter(item => item.status === false || item.status === "inprogress");
-        if (status === "Pending") return data.filter(item => item.status === "pending");
-        return data;
+    const fetchVehicalInfo = async (pageNumber = 1) => {
+        if (!hasMore && pageNumber !== 1) return;
+
+        try {
+            setLoading(true);
+            const token = await AsyncStorage.getItem("auth_token");
+            if (!token) {
+                console.error("Token not found!");
+                return;
+            }
+
+            const response = await axios.get(`${API_BASE_URL}/fetchtechVehicleInfo?page=${pageNumber}&userId=${technicianId}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            const { response: resData } = response.data;
+            const newVehicles = resData?.vehicles || [];
+            // console.log("fetchVehicalInfo::::", newVehicles);
+
+            // Update vehicle data
+            if (pageNumber === 1) {
+                setWorkOrdersRawData(newVehicles);
+            } else {
+                setWorkOrdersRawData(prev => [...prev, ...newVehicles]);
+            }
+
+            // Handle pagination
+            const morePagesAvailable = pageNumber < resData?.totalPages;
+            setHasMore(morePagesAvailable);
+            setPage(pageNumber);
+            // console.log("work::", workOrdersRawData);
+
+        } catch (error) {
+            console.error("Failed to fetch vehicle info:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const filterByStatus = useCallback((data, status, tab) => {
+        return data.filter(item => {
+            const field =
+                tab === "Jobs"
+                    ? item?.jobStatus
+                    : item?.vehicleStatus;
+
+            if (status === "Completed") return field === true || field === "completed";
+            if (status === "InProgress") return field === false || field === "inprogress";
+            return true;
+        });
     }, []);
 
     useEffect(() => {
-        const filteredJob = filterByStatus(jobsRawData, activeStatus);
-        const filteredWork = filterByStatus(workOrdersRawData, activeStatus);
+        const filteredJob = filterByStatus(jobsRawData, activeStatus, 'Jobs');
+        const filteredWork = filterByStatus(workOrdersRawData, activeStatus, 'WorkOrders');
+        // console.log("filteredWork", filteredWork);
+
         setFilteredJobs(filteredJob);
         setFilteredWorkOrders(filteredWork);
     }, [activeStatus, jobsRawData, workOrdersRawData]);
@@ -449,18 +344,16 @@ const Reports = ({ navigation }) => {
     const getStatusStyle = (status) => {
         if (status === true || status === "completed") return [styles.statusPill, styles.statusCompleted];
         if (status === false || status === "inprogress") return [styles.statusPill, styles.statusInProgress];
-        return [styles.statusPill, styles.statusPending];
     };
 
     const getStatusText = (status) => {
         if (status === true || status === "completed") return 'Complete';
         if (status === false || status === "inprogress") return 'In Progress';
-        return 'Pending';
     };
 
     useEffect(() => {
-        const jobFiltered = filterByStatus(jobsRawData, activeStatus);
-        const workOrderFiltered = filterByStatus(workOrdersRawData, activeStatus);
+        const jobFiltered = filterByStatus(jobsRawData, activeStatus, 'Jobs');
+        const workOrderFiltered = filterByStatus(workOrdersRawData, activeStatus, 'WorkOrders');
 
         const searchLower = search.toLowerCase();
 
@@ -470,12 +363,35 @@ const Reports = ({ navigation }) => {
 
         const filteredWork = workOrderFiltered.filter(item =>
             item?.vin?.toLowerCase().includes(searchLower) ||
-            item?.make?.toLowerCase().includes(searchLower)
-        );
+            item?.make?.toLowerCase().includes(searchLower) ||
+            item?.jobName?.toLowerCase().includes(searchLower)
 
+        );
         setFilteredJobs(filteredJob);
         setFilteredWorkOrders(filteredWork);
     }, [activeStatus, jobsRawData, workOrdersRawData, search]);
+
+    const handleRefreshVehicle = async () => {
+        try {
+            setRefreshing(true);
+            await fetchVehicalInfo(1);
+        } catch (error) {
+            console.error("Refresh failed:", error);
+        } finally {
+            setRefreshing(false);
+        }
+    };
+
+    const handleRefreshJob = async () => {
+        try {
+            setRefreshingJob(true);
+            await fetchJobHistory(jobPage);
+        } catch (error) {
+            console.error("Refresh failed:", error);
+        } finally {
+            setRefreshingJob(false);
+        }
+    };
 
     return (
         <View style={[flex, styles.container]}>
@@ -543,10 +459,11 @@ const Reports = ({ navigation }) => {
                     open={isStartPickerOpen}
                     date={startDate}
                     mode="date"
+                    maximumDate={new Date()} // ⛔ prevents selecting future dates
                     onConfirm={(date) => {
                         setStartDate(date);
                         setIsStartPickerOpen(false);
-                        fetchFilteredJobHistory(date, endDate);
+                        fetchFilteredData(date, endDate, activeTab);
                     }}
                     onCancel={() => setIsStartPickerOpen(false)}
                 />
@@ -556,11 +473,13 @@ const Reports = ({ navigation }) => {
                     open={isEndPickerOpen}
                     date={endDate}
                     mode="date"
+                    minimumDate={startDate}       // ✅ StartDate se pehle ki date disable
+                    maximumDate={new Date()} // ⛔ prevents selecting future dates
                     onConfirm={(date) => {
                         const newEndDate = date;
                         setEndDate(newEndDate);
                         setIsEndPickerOpen(false);
-                        fetchFilteredJobHistory(startDate, newEndDate); // Use new end date
+                        fetchFilteredData(startDate, newEndDate, activeTab); // Use new end date
                     }}
                     onCancel={() => setIsEndPickerOpen(false)}
                 />
@@ -597,7 +516,7 @@ const Reports = ({ navigation }) => {
                     <TouchableOpacity onPress={() => setActiveTab("WorkOrders")} style={[styles.tabButton, activeTab === 'WorkOrders' && styles.activeTab, { width: isTablet ? wp(12) : wp(30), height: hp(4) }]}>
                         <Text style={[styles.tabText, activeTab === 'WorkOrders' && styles.activeTabText]}>Work Orders</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => { setActiveTab("Jobs"), setActiveStatus("Completed") }} style={[styles.tabButton, activeTab === 'Jobs' && styles.activeTab, { width: isTablet ? wp(12) : wp(20), height: hp(4) }]}>
+                    <TouchableOpacity onPress={() => { setActiveTab("Jobs"), setActiveStatus("InProgress") }} style={[styles.tabButton, activeTab === 'Jobs' && styles.activeTab, { width: isTablet ? wp(12) : wp(20), height: hp(4) }]}>
                         <Text style={[styles.tabText, activeTab === 'Jobs' && styles.activeTabText]}>Jobs</Text>
                     </TouchableOpacity>
                 </View>
@@ -605,18 +524,19 @@ const Reports = ({ navigation }) => {
                 {/* Status Filters */}
                 <View style={styles.statusFilterContainer}>
                     {['Completed', 'InProgress'].map(status => {
-                        if (activeTab === 'Jobs' && status === 'Pending') return null;
-
                         const dataList = activeTab === "Jobs" ? jobsRawData : workOrdersRawData;
-                        const count = filterByStatus(dataList, status).length;
-
-                        if (count === 0) return null;
+                        const count = filterByStatus(dataList, status, activeTab).length;
 
                         return (
                             <TouchableOpacity
                                 key={status}
                                 onPress={() => setActiveStatus(status)}
-                                style={[styles.statusButton, activeStatus === status && styles.activeStatus, { width: isTablet ? wp(20) : wp(35), height: hp(4) }, alignJustifyCenter]}
+                                style={[
+                                    styles.statusButton,
+                                    activeStatus === status && styles.activeStatus,
+                                    { width: isTablet ? wp(20) : wp(35), height: hp(4) },
+                                    alignJustifyCenter
+                                ]}
                             >
                                 <Text style={[styles.statusText, activeStatus === status && styles.activeStatusText]}>
                                     {status === 'InProgress' ? 'In Progress' : status} ({count})
@@ -632,9 +552,9 @@ const Reports = ({ navigation }) => {
                 <>
                     {/* Table Header */}
                     <View style={styles.tableHeaderRow}>
-                        <Text style={[styles.tableHeader, { width: "50%" }]}>Job Name</Text>
-                        <Text style={[styles.tableHeader, { width: "38%" }]}>Number of W.O</Text>
-                        <Text style={[styles.tableHeader, { width: "15%" }]}>Action</Text>
+                        <Text style={[styles.tableHeader, { width: "40%" }]}>Job Name</Text>
+                        <Text style={[styles.tableHeader, { width: "42%" }]}>Number of W.O</Text>
+                        <Text style={[styles.tableHeader, { width: "20%", textAlign: "center" }]}>Action</Text>
 
                     </View>
 
@@ -644,15 +564,22 @@ const Reports = ({ navigation }) => {
                             data={filteredJobs}
                             keyExtractor={(item, index) => item?.jobName || index.toString()}
                             showsVerticalScrollIndicator={false}
+                            refreshing={refreshingJob}
+                            onRefresh={handleRefreshJob}
                             renderItem={({ item, index }) => {
                                 const rowStyle = {
                                     backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor,
                                 };
+
                                 return (
-                                    <Pressable style={[styles.listItem, rowStyle]} onPress={() => navigation.navigate("VinListScreen")}>
-                                        <Text style={[styles.text, { width: "55%" }]}>{item?.jobName}</Text>
-                                        <Text style={[styles.text, { width: "34%" }]}>
-                                            {item?.workOrderCount?.toString().padStart(2, '0')}
+                                    <Pressable style={[styles.listItem, rowStyle]}
+                                    // onPress={() => navigation.navigate("VinListScreen")}
+                                    >
+                                        <Text style={[styles.text, { width: "49%" }]}>
+                                            {item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}
+                                        </Text>
+                                        <Text style={[styles.text, { width: "38%" }]}>
+                                            {item?.vehicles?.length}
                                         </Text>
                                         <View style={{ flexDirection: "row", alignItems: "center", width: "20%" }} >
                                             <Text style={styles.viewText}>View</Text>
@@ -678,8 +605,10 @@ const Reports = ({ navigation }) => {
                         keyExtractor={(item, index) => index.toString()}
                         showsVerticalScrollIndicator={false}
                         contentContainerStyle={{ paddingVertical: 10 }}
+                        refreshing={refreshing}
+                        onRefresh={handleRefreshVehicle}
                         renderItem={({ item, index }) => (
-                            <View style={{
+                            <Pressable style={{
                                 backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor,
                                 borderRadius: 10,
                                 padding: 10,
@@ -687,87 +616,151 @@ const Reports = ({ navigation }) => {
                                 marginHorizontal: 10,
                                 borderWidth: 1,
                                 borderColor: blueColor
-                            }}>
+                            }}
+                                onPress={() => navigation.navigate("VehicleDetailsScreen", { vehicleId: item?.id, from: "report" })}>
                                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-                                    <View style={{ width: '48%', marginBottom: 10 }}>
-                                        <Text style={{ color: '#555', fontSize: 11 }}>VIN</Text>
-                                        <Text >{item.vin}</Text>
+                                    <View style={{ width: '48%', marginBottom: 9 }}>
+                                        <Text style={{ color: '#555', fontSize: 10 }}>JobName</Text>
+                                        <Text >{item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}</Text>
                                     </View>
-                                    <View style={{ width: '48%', marginBottom: 10 }}>
-                                        <Text style={{ color: '#555', fontSize: 11 }}>Make</Text>
-                                        <Text >{item.make}</Text>
+                                    <View style={{ width: '48%', marginBottom: 9 }}>
+                                        <Text style={{ color: '#555', fontSize: 10 }}>VIN</Text>
+                                        <Text >{item?.vin}</Text>
                                     </View>
-                                    <View style={{ width: '48%', marginBottom: 10 }}>
-                                        <Text style={{ color: '#555', fontSize: 11 }}>Model</Text>
-                                        <Text >{item.model}</Text>
+                                    <View style={{ width: '48%', marginBottom: 9 }}>
+                                        <Text style={{ color: '#555', fontSize: 10 }}>Make</Text>
+                                        <Text >{item?.make}</Text>
                                     </View>
-                                    <View style={{ width: '48%', marginBottom: 10 }}>
-                                        <Text style={{ color: '#555', fontSize: 11 }}>Date</Text>
-                                        <Text >{item.date || '-'}</Text>
+                                    <View style={{ width: '48%', marginBottom: 9 }}>
+                                        <Text style={{ color: '#555', fontSize: 10 }}>Model</Text>
+                                        <Text >{item?.model}</Text>
                                     </View>
-                                    <View style={{ width: '48%', marginBottom: 10 }}>
-                                        <Text style={{ color: '#555', fontSize: 11 }}>Technician</Text>
-                                        <Text >{item.technician}</Text>
+                                    <View style={{ width: '48%', marginBottom: 9 }}>
+                                        <Text style={{ color: '#555', fontSize: 10 }}>Date</Text>
+                                        <Text >{new Date(item?.createdAt).toLocaleDateString("en-US", {
+                                            month: "long",
+                                            day: "numeric",
+                                            year: "numeric"
+                                        })}</Text>
                                     </View>
-                                    <View style={{ width: '48%', marginBottom: 10 }}>
-                                        <Text style={{ color: '#555', fontSize: 11 }}>Price</Text>
-                                        <Text >${item.price || '-'}</Text>
+
+                                    <View style={{ width: '48%', marginBottom: 9 }}>
+                                        <Text style={{ color: '#555', fontSize: 10 }}>Cost Estimate</Text>
+                                        <Text > ${Array.isArray(item?.jobDescription) && item?.jobDescription?.length > 0
+                                            ? item?.jobDescription?.reduce((total, job) => total + Number(job?.cost || 0), 0)
+                                            : '0'}</Text>
                                     </View>
-                                    {/* <View style={{ position:"absolute",right:-10,bottom:1}}>
-                                       
-                                        <Text style={[{ fontSize: 15, fontWeight: '700' }, getStatusStyle(item?.status)]}>
-                                            {getStatusText(item.status)}
+                                    <View style={{ width: '48%', marginBottom: 9 }}>
+                                        <Text style={{ color: '#555', fontSize: 10 }}>Status</Text>
+
+                                        <Text style={[{ fontSize: 15, fontWeight: '700' }]}>
+                                            {getStatusText(item?.vehicleStatus)}
                                         </Text>
-                                    </View> */}
+                                    </View>
 
                                 </View>
 
-                            </View>
+                            </Pressable>
                         )}
+                        onEndReached={() => {
+                            if (!loading && hasMore) {
+                                fetchVehicalInfo(page + 1);
+                            }
+                        }}
+                        onEndReachedThreshold={0.3}
+                        ListFooterComponent={() =>
+                            loading ? (
+                                <View style={{ paddingVertical: 10, alignItems: "center", width: "100%", height: hp(50), justifyContent: "center" }}>
+                                    <ActivityIndicator size="small" color="#0000ff" />
+                                </View>
+                            ) : null
+                        }
+                        ListEmptyComponent={() => {
+                            if (loading) return null; // 👈 Loading ke time kuch mat dikhao
+                            return (
+                                <View style={styles.emptyContainer}>
+                                    <Text style={styles.emptyText}>No Vehicle List found</Text>
+                                </View>
+                            );
+                        }}
                     />
 
                 </View>
             ) : activeTab === 'WorkOrders' && viewType === 'list' ? (
-                <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(62.5) : hp(53) : isIOSAndTablet ? hp(61) : hp(59) }}>
+                <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(62.5) : hp(53) : isIOSAndTablet ? hp(61) : hp(49) }}>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                         <View>
                             {/* Header Row */}
                             <View style={[styles.tableHeaderRow, { backgroundColor: blueColor }]}>
-                                <Text style={[styles.tableHeader, { width: wp(50) }]}>VIN</Text>
-                                <Text style={[styles.tableHeader, { width: wp(27) }]}>Make</Text>
-                                <Text style={[styles.tableHeader, { width: wp(30) }]}>Model</Text>
-                                {/* <Text style={[styles.tableHeader, { width: wp(40) }]}>Technician</Text> */}
-                                <Text style={[styles.tableHeader, { width: wp(30) }]}>Date</Text>
-                                <Text style={[styles.tableHeader, { width: wp(27) }]}>Price</Text>
+                                <Text style={[styles.tableHeader, { width: wp(25) }]}>JobName</Text>
+                                <Text style={[styles.tableHeader, { width: wp(55) }]}>VIN</Text>
+                                <Text style={[styles.tableHeader, { width: wp(35) }]}>Make</Text>
+                                <Text style={[styles.tableHeader, { width: wp(25) }]}>Model</Text>
+                                <Text style={[styles.tableHeader, { width: wp(35) }]}>Date</Text>
+                                <Text style={[styles.tableHeader, { width: wp(30) }]}>Cost Estimate</Text>
                                 <Text style={[styles.tableHeader, { paddingRight: isTablet ? 30 : 0, width: isIOSAndTablet ? wp(8) : wp(20) }]}>Status</Text>
                             </View>
 
                             {/* Data Rows with vertical scroll */}
                             <ScrollView style={{ height: Platform.OS === "android" ? hp(42) : hp(39) }} showsVerticalScrollIndicator={false}>
-                                {filteredWorkOrders.map((item, index) => {
-                                    const rowStyle = { backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor };
-                                    return (
-                                        <View key={index.toString()} style={[styles.listItem, rowStyle, { flexDirection: 'row' }]}>
-                                            <Text style={[styles.text, { width: wp(50) }]}>{item?.vin || '-'}</Text>
-                                            <Text style={[styles.text, { width: wp(27) }]}>{item?.make || '-'}</Text>
-                                            <Text style={[styles.text, { width: wp(27) }]}>{item?.model || '-'}</Text>
-                                            {/* <Text style={[styles.text, { width: wp(40) }]}>{item?.technician || '-'}</Text> */}
-                                            <Text style={[styles.text, { width: wp(30) }]}>{item?.date || '-'}</Text>
-                                            <Text style={[styles.text, { width: wp(27) }]}>{item?.price ? `$${item?.price}` : '-'}</Text>
-                                            <View style={[getStatusStyle(item?.status)]}>
-                                                <Text
-                                                    style={{
-                                                        color: getStatusText(item?.status) === "Complete" ?
-                                                            greenColor : getStatusText(item?.status) === "Pending" ?
-                                                                redColor :
-                                                                goldColor
-                                                    }}>
-                                                    {getStatusText(item?.status)}
-                                                </Text>
+                                <FlatList
+                                    data={filteredWorkOrders}
+                                    keyExtractor={(item, index) => index.toString()}
+                                    showsVerticalScrollIndicator={false}
+                                    refreshing={refreshing}
+                                    onRefresh={handleRefreshVehicle}
+                                    renderItem={({ item, index }) => {
+                                        const rowStyle = { backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor };
+                                        return (
+                                            <Pressable key={index.toString()} style={[styles.listItem, rowStyle, { flexDirection: 'row' }]} onPress={() => navigation.navigate("VehicleDetailsScreen", { vehicleId: item?.id, from: "report" })}>
+                                                <Text style={[styles.text, { width: wp(25), paddingLeft: spacings.small }]}>{item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}</Text>
+                                                <Text style={[styles.text, { width: wp(55) }]}>{item?.vin || '-'}</Text>
+                                                <Text style={[styles.text, { width: wp(35) }]}>{item?.make || '-'}</Text>
+                                                <Text style={[styles.text, { width: wp(25) }]}>{item?.model || '-'}</Text>
+                                                <Text style={[styles.text, { width: wp(35) }]}>{new Date(item?.createdAt).toLocaleDateString("en-US", {
+                                                    month: "long",
+                                                    day: "numeric",
+                                                    year: "numeric"
+                                                })}</Text>
+                                                <Text style={[styles.text, { width: wp(30) }]}> ${Array.isArray(item?.jobDescription) && item?.jobDescription?.length > 0
+                                                    ? item?.jobDescription?.reduce((total, job) => total + Number(job?.cost || 0), 0)
+                                                    : '0'}</Text>
+                                                <View style={[getStatusStyle(item?.vehicleStatus), alignJustifyCenter]}>
+                                                    <Text
+                                                        style={{
+                                                            color: getStatusText(item?.vehicleStatus) === "Complete" ?
+                                                                greenColor : getStatusText(item?.vehicleStatus) === "inprogress" ?
+                                                                    redColor :
+                                                                    goldColor
+                                                        }}>
+                                                        {getStatusText(item?.vehicleStatus)}
+                                                    </Text>
+                                                </View>
+                                            </Pressable>
+                                        );
+                                    }}
+                                    ListFooterComponent={() =>
+                                        loading ? (
+                                            <View style={{ paddingVertical: 10, alignItems: "center", width: wp(100), height: hp(50), justifyContent: "center" }}>
+                                                <ActivityIndicator size="small" color="#0000ff" />
                                             </View>
-                                        </View>
-                                    );
-                                })}
+                                        ) : null
+                                    }
+                                    ListEmptyComponent={() => {
+                                        if (loading) return null; // 👈 Loading ke time kuch mat dikhao
+                                        return (
+                                            <View style={styles.emptyContainer}>
+                                                <Text style={styles.emptyText}>No Vehicle List found</Text>
+                                            </View>
+                                        );
+                                    }}
+                                    onEndReached={() => {
+                                        if (!loading && hasMore) {
+                                            fetchVehicalInfo(page + 1);
+                                        }
+                                    }}
+                                    onEndReachedThreshold={0.3}
+                                />
                             </ScrollView>
                         </View>
                     </ScrollView>
@@ -775,73 +768,96 @@ const Reports = ({ navigation }) => {
             ) : null}
 
             {/* Sorting Modal */}
-            <Modal animationType="slide" transparent={true} visible={isModalVisible} onRequestClose={toggleModal}>
-                <TouchableWithoutFeedback onPress={toggleModal}>
-                    <View style={styles.modalOverlay}>
-                        <Feather name="chevron-down" size={55} color={blackColor} />
+            {isModalVisible && (
+                <Modal animationType="slide" transparent={true} visible={isModalVisible} onRequestClose={toggleModal}>
+                    <TouchableWithoutFeedback onPress={toggleModal}>
+                        <View style={styles.modalOverlay}>
+                            <Feather name="chevron-down" size={55} color={blackColor} />
+                            <View style={styles.modalContainer}>
+                                <View style={{
+                                    width: "100%",
+                                    justifyContent: "space-between",
+                                    flexDirection: "row",
+                                    borderBottomWidth: 1,
+                                    borderBottomColor: '#ddd'
+                                }}>
+                                    <Text style={styles.modalTitle}>Sort By</Text>
+                                    <Feather name="sliders" size={20} color={grayColor} />
+                                </View>
+                                {/* Only show for Jobs tab */}
+                                {activeTab === "Jobs" && (
+                                    <>
+                                        <TouchableOpacity
+                                            onPress={() => handleSort(
+                                                sortType === "name" && sortOrder === "asc" ? "desc" : "asc",
+                                                "name"
+                                            )}
+                                            style={styles.sortOption}
+                                        >
+                                            <Text style={[styles.sortText, { color: sortType === "name" ? blackColor : 'gray' }]}>
+                                                Job Name
+                                            </Text>
+                                            <Text style={[styles.sortText, { color: sortType === "name" ? blackColor : 'gray' }]}>
+                                                {sortType === "name" ? (sortOrder === "asc" ? "A to Z" : "Z to A") : "A to Z"}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    </>
+                                )}
+                                {/* Common Sort: Date Created */}
+                                <TouchableOpacity
+                                    onPress={() => handleSort(
+                                        sortType === "date" && sortOrder === "newest" ? "oldest" : "newest",
+                                        "date"
+                                    )}
+                                    style={styles.sortOption}
+                                >
+                                    <Text style={[styles.sortText, { color: sortType === "date" ? blackColor : 'gray' }]}>
+                                        Date Created
+                                    </Text>
+                                    <Text style={[styles.sortText, { color: sortType === "date" ? blackColor : 'gray' }]}>
+                                        {sortType === "date" ? (sortOrder === "newest" ? "New to Old" : "Old to New") : "New to Old"}
+                                    </Text>
+                                </TouchableOpacity>
 
-                        <View style={styles.modalContainer}>
-                            <View style={{
-                                width: "100%",
-                                justifyContent: "space-between",
-                                flexDirection: "row",
-                                borderBottomWidth: 1,
-                                borderBottomColor: '#ddd'
-                            }}>
-                                <Text style={styles.modalTitle}>Sort By</Text>
-                                <Feather name="sliders" size={20} color={grayColor} />
+                                {/* Common Sort: Last Modified */}
+                                <TouchableOpacity
+                                    onPress={() => handleSort(
+                                        sortType === "modified" && sortOrder === "latest" ? "oldest" : "latest",
+                                        "modified"
+                                    )}
+                                    style={styles.sortOption}
+                                >
+                                    <Text style={[styles.sortText, { color: sortType === "modified" ? blackColor : 'gray' }]}>
+                                        Last Modified
+                                    </Text>
+                                    <Text style={[styles.sortText, { color: sortType === "modified" ? blackColor : 'gray' }]}>
+                                        {sortType === "modified" ? (sortOrder === "latest" ? "Latest to Oldest" : "Oldest to Latest") : "Latest to Oldest"}
+                                    </Text>
+                                </TouchableOpacity>
+
+
+
+                                {/* Status Sorting for both tabs */}
+                                {/* <TouchableOpacity
+                                    onPress={() => handleSort(
+                                        sortType === "status" && sortOrder === "asc" ? "desc" : "asc",
+                                        "status"
+                                    )}
+                                    style={styles.sortOption}
+                                >
+                                    <Text style={[styles.sortText, { color: sortType === "status" ? blackColor : 'gray' }]}>
+                                        {activeTab === 'Jobs' ? "Job Status" : "Work Order Status"}
+                                    </Text>
+                                    <Text style={[styles.sortText, { color: sortType === "status" ? blackColor : 'gray' }]}>
+                                        {sortType === "status" ? (sortOrder === "asc" ? "In Progress → Complete" : "Complete → In Progress") : "In Progress → Complete"}
+                                    </Text>
+                                </TouchableOpacity> */}
                             </View>
-                            {/* <TouchableOpacity
-                                onPress={() => handleSort(sortType === "name" && sortOrder === "asc" ? "desc" : "asc", "name")}
-                                style={styles.sortOption}
-                            >
-                                <Text style={[styles.sortText, { fontWeight: style.fontWeightThin.fontWeight, color: sortType === "name" ? blackColor : 'gray' }]}>
-                                    Customer Name
-                                </Text>
-                                <Text style={[styles.sortText, { color: sortType === "name" ? blackColor : 'gray' }]}>
-                                    {sortType === "name" ? (sortOrder === "asc" ? "A to Z" : "Z to A") : "A to Z"}
-                                </Text>
-                            </TouchableOpacity> */}
-
-                            <TouchableOpacity
-                                onPress={() => handleSort(sortType === "date" && sortOrder === "newest" ? "oldest" : "newest", "date")}
-                                style={styles.sortOption}
-                            >
-                                <Text style={[styles.sortText, { fontWeight: style.fontWeightThin.fontWeight, color: sortType === "date" ? blackColor : 'gray' }]}>
-                                    Date Created
-                                </Text>
-                                <Text style={[styles.sortText, { color: sortType === "date" ? blackColor : 'gray' }]}>
-                                    {sortType === "date" ? (sortOrder === "newest" ? "New to Old" : "Old to New") : "New to Old"}
-                                </Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                onPress={() => handleSort(sortType === "modified" && sortOrder === "latest" ? "oldest" : "latest", "modified")}
-                                style={styles.sortOption}
-                            >
-                                <Text style={[styles.sortText, { fontWeight: style.fontWeightThin.fontWeight, color: sortType === "modified" ? blackColor : 'gray' }]}>
-                                    Last Modified
-                                </Text>
-                                <Text style={[styles.sortText, { color: sortType === "modified" ? blackColor : 'gray' }]}>
-                                    {sortType === "modified" ? (sortOrder === "latest" ? "Latest to Oldest" : "Oldest to Latest") : "Latest to Oldest"}
-                                </Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                onPress={() => handleSort(sortType === "status" && sortOrder === "asc" ? "desc" : "asc", "status")}
-                                style={styles.sortOption}
-                            >
-                                <Text style={[styles.sortText, { fontWeight: style.fontWeightThin.fontWeight, color: sortType === "status" ? blackColor : 'gray' }]}>
-                                    {activeTab === 'WorkOrders' ? "Work Order" : "Job Status"}
-                                </Text>
-                                <Text style={[styles.sortText, { color: sortType === "status" ? blackColor : 'gray' }]}>
-                                    {sortType === "status" ? (sortOrder === "asc" ? "InProgress → Complete" : "Complete → In Progress") : "In Progress → Complete"}
-                                </Text>
-                            </TouchableOpacity>
                         </View>
-                    </View>
-                </TouchableWithoutFeedback>
-            </Modal>
+                    </TouchableWithoutFeedback>
+                </Modal>
+            )}
+
         </View >
     );
 };
@@ -984,7 +1000,7 @@ const styles = StyleSheet.create({
     statusButton: {
         paddingHorizontal: spacings.xLarge,
         // paddingVertical: spacings.medium,
-        marginRight: spacings.large
+        // marginRight: spacings.large
     },
     activeStatus: {
         borderBottomWidth: 3,
@@ -1020,7 +1036,7 @@ const styles = StyleSheet.create({
     },
     text: {
         color: blackColor,
-        fontSize: style.fontSizeNormal1x.fontSize
+        fontSize: style.fontSizeNormal.fontSize
     },
     statusPill: {
         paddingHorizontal: spacings.xLarge,
@@ -1046,5 +1062,14 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         padding: 4,
         borderRadius: 2,
+    },
+    emptyContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 40,
+    },
+    emptyText: {
+        fontSize: 16,
+        color: mediumGray
     },
 });

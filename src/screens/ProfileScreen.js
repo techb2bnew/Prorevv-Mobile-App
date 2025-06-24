@@ -25,6 +25,7 @@ import ConfirmationModal from '../componets/Modal/ConfirmationModal';
 import { DELETE_ACCOUNT_IMAGE, LOGOUT_IMAGE } from '../assests/images';
 import Header from '../componets/Header';
 import { useEditing, useTabBar } from '../TabBarContext';
+import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 const { width, height } = Dimensions.get('window');
 
 const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween, textAlign, justifyContentCenter } = BaseStyle;
@@ -69,6 +70,7 @@ const ProfileScreen = ({ navigation }) => {
   const isIOsAndTablet = Platform.OS === "ios" && isTablet;
   const [cities, setCities] = useState([]);
   const [cityValue, setCityValue] = useState("");
+  const googleRef = useRef();
 
 
   useEffect(() => {
@@ -182,9 +184,9 @@ const ProfileScreen = ({ navigation }) => {
     }, [isEditing])
   );
 
-  useEffect(() => {
-    fetchCountries();
-  }, [country]);
+  // useEffect(() => {
+  //   fetchCountries();
+  // }, [country]);
 
   // useEffect(() => {
   //   if (countryValue) {
@@ -1220,9 +1222,50 @@ const ProfileScreen = ({ navigation }) => {
                       flagButtonStyle={styles.flagButton}
                     />
                   </View>
-                  <View style={styles.inputGroup}>
+                  <View style={[styles.inputGroup, { height: hp(10) }]}>
                     <Text style={styles.label}>Address</Text>
                     <TextInput style={styles.input} value={address} onChangeText={setAddress} placeholder="Enter Address" />
+
+                    {/* <GooglePlacesAutocomplete
+                      ref={googleRef}
+                      placeholder="Enter Your Address"
+                      fetchDetails={true}
+                      onPress={(data, details = null) => {
+                        console.log('Selected:', data.description);
+                        setAddress(data.description);
+                      }}
+                      textInputProps={{
+                        value: address,
+                        onChangeText: (text) => setAddress(text),
+                      }}
+                      query={{
+                        key: 'AIzaSyBXNyT9zcGdvhAUCUEYTm6e_qPw26AOPgI',
+                        language: 'en',
+                      }}
+                      styles={{
+                        container: {
+                          flex: 0,
+                          zIndex: 999,
+                        },
+                        listView: {
+                          zIndex: 999,
+                          position: 'absolute',
+                          top: 55,
+                        },
+                        textInputContainer: {
+                          zIndex: 999,
+                        },
+                        textInput: {
+                          height: 44,
+                          borderWidth: 1,
+                          borderColor: 'blue',
+                          borderRadius: 50,
+                          paddingHorizontal: 16,
+                          backgroundColor: '#fff',
+                        },
+                      }}
+                    /> */}
+
                   </View>
                   <View style={styles.inputGroup}>
                     <Text style={styles.label}>Secondary Phone Number (Optional)</Text>

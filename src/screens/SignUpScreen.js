@@ -20,6 +20,7 @@ import { Image as ImageCompressor } from 'react-native-compressor';
 import SuccessModal from "../componets/Modal/SuccessModal";
 import Header from "../componets/Header";
 import { useFocusEffect, useRoute } from '@react-navigation/native';
+import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 
 const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween, textAlign } = BaseStyle;
 
@@ -49,6 +50,7 @@ const SignUpScreen = ({ navigation }) => {
     const [successModalVisible, setSuccessModalVisible] = useState(false);
     const [cities, setCities] = useState([]);
     const [cityValue, setCityValue] = useState("");
+    const googleRef = useRef();
 
 
     const [formData, setFormData] = useState({
@@ -57,10 +59,10 @@ const SignUpScreen = ({ navigation }) => {
         email: "",
         phoneNumber: "",
         address: "",
-        country: countryValue,
-        state: "",
-        city: "",
-        zipCode: "",
+        // country: countryValue,
+        // state: "",
+        // city: "",
+        // zipCode: "",
         secondaryEmail: "",
         secondaryPhoneNumber: "",
         password: "",
@@ -480,7 +482,7 @@ const SignUpScreen = ({ navigation }) => {
             setIsLoadingState(true);
             const response = await fetch("https://restcountries.com/v3.1/all?fields=name");
             const data = await response.json();
-            console.log("wokting:::fetchcountyr",data);
+            console.log("wokting:::fetchcountyr", data);
 
             const countryNames = data.map((item) => item.name.common);
             const sortedCountries = countryNames.sort((a, b) => a.localeCompare(b));
@@ -757,8 +759,48 @@ const SignUpScreen = ({ navigation }) => {
                     />
                 </View>
                 {errors.phoneNumber && <Text style={styles.error}>{errors.phoneNumber}</Text>}
+                <View style={styles.phoneContainer}>
+                    <Text style={styles.label}>
+                        Address
+                    </Text>
+                    <GooglePlacesAutocomplete
+                        ref={googleRef}
+                        placeholder="Enter Your Address"
+                        fetchDetails={true}
+                        onPress={(data, details = null) => {
+                            console.log('Selected:', data.description);
+                            handleInputChange("address", data.description)
+                        }}
 
-                <CustomTextInput
+                        query={{
+                            key: 'AIzaSyBXNyT9zcGdvhAUCUEYTm6e_qPw26AOPgI',
+                            language: 'en',
+                        }}
+                        styles={{
+                            container: {
+                                flex: 0,
+                                zIndex: 999,
+                            },
+                            listView: {
+                                zIndex: 999,
+                                position: 'absolute',
+                                top: 55,
+                            },
+                            textInputContainer: {
+                                zIndex: 999,
+                            },
+                            textInput: {
+                                height: 44,
+                                borderWidth: 1,
+                                borderColor: blueColor,
+                                borderRadius: 50,
+                                paddingHorizontal: 16,
+                                backgroundColor: '#fff',
+                            },
+                        }}
+                    />
+                </View>
+                {/* <CustomTextInput
                     label="Address"
                     placeholder="Enter your address"
                     value={formData.address}
@@ -772,22 +814,6 @@ const SignUpScreen = ({ navigation }) => {
                         <Text style={styles.label}>
                             Country<Text style={styles.asterisk}> *</Text>
                         </Text>
-                        {/* <CustomDropdown
-                            data={countries}
-                            country={true}
-                            selectedValue={countryValue}
-                            onSelect={(value) => {
-                                setCountryValue(value);
-                                handleInputChange("country", value);
-                                setStateValue("")
-                                setStates([]);
-                                setCityValue("")
-                            }}
-                            // showIcon={true}
-                            titleText={"Select a Country"}
-                            rightIcon={true}
-
-                        /> */}
                         <CustomDropdown
                             data={countries}
                             country={true}
@@ -807,22 +833,7 @@ const SignUpScreen = ({ navigation }) => {
                         {errors.country && <Text style={styles.error}>{errors.country}</Text>}
                     </View>
                     <View style={[{ width: "48%" }]}>
-                        {/* <Text style={styles.label}>
-                            State
-                        </Text>
-                        <CustomDropdown
-                            data={states}
-                            state={true}
-                            selectedValue={stateValue}
-                            onSelect={(value) => {
-                                setStateValue(value);
-                                handleInputChange("state", value);
-                                setCityValue("");
-                                setCities([]);
-                            }}
-                            titleText="Select a State"
-                            rightIcon={true}
-                        /> */}
+                       
                         <CustomTextInput
                             label="State"
                             placeholder="Enter State"
@@ -842,19 +853,6 @@ const SignUpScreen = ({ navigation }) => {
                     <View
                         style={[styles.phoneContainer, { width: isTablet ? wp(44.5) : wp(42.5), marginRight: 10, marginTop: isTablet ? 2 : 1 }]}
                     >
-                        {/* <Text style={styles.label}>
-                            City
-                        </Text> */}
-                        {/* <CustomDropdown
-                            data={cities}
-                            selectedValue={cityValue}
-                            onSelect={(value) => {
-                                setCityValue(value);
-                                handleInputChange("city", value);
-                            }}
-                            titleText="Select a City"
-                            rightIcon={true}
-                        /> */}
                         <CustomTextInput
                             label="City"
                             placeholder="Enter City"
@@ -881,7 +879,7 @@ const SignUpScreen = ({ navigation }) => {
                         />
                         {errors.zipCode && <Text style={styles.error}>{errors.zipCode}</Text>}
                     </View>
-                </View>
+                </View> */}
 
                 {/* <CustomButton title="Next" onPress={handleNext} style={styles.button} /> */}
                 {/* </>)} */}
