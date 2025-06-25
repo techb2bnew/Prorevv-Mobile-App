@@ -55,6 +55,8 @@ const WorkOrderScreenTwo = ({ route }) => {
     const [vehicleTypeError, setVehicleTypeError] = useState();
     const [storedVehicles, setStoredVehicles] = useState([]);
     const [storedPayRate, setStoredPayRate] = useState('');
+    const [storedSimpleFlatRate, setStoredSimpleFlatRate] = useState(null);
+    const [storedAmountPercentage, setStoredAmountPercentage] = useState(null);
     const inputRefs = useRef([]);
     const [step, setStep] = useState(1);
     const [selectedJobName, setSelectedJobName] = useState("");
@@ -62,11 +64,12 @@ const WorkOrderScreenTwo = ({ route }) => {
     const [submitLoading, setSubmitLoading] = useState(false);
     const [duplicateVinModal, setDuplicateVinModal] = useState(false);
     const [duplicateVinMessage, setDuplicateVinMessage] = useState('');
+    const [extractedVin, setExtractedVin] = useState('');
+    const [extractedJob, setExtractedJob] = useState('');
+    const [extractedCustomer, setExtractedCustomer] = useState('');
     const [newFormData, setNewFormData] = useState(null);
     const [scanLoading, setScanLoading] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
-
-
     const [modalData, setModalData] = useState({
         visible: false,
         headingText: '',
@@ -139,8 +142,64 @@ const WorkOrderScreenTwo = ({ route }) => {
         "Model",
         "Model Year",
         "Manufacturer Name",
-        // "Vehicle Type",
     ];
+
+    useFocusEffect(
+        useCallback(() => {
+            const checkTechnicianStatus = async () => {
+                try {
+                    const token = await AsyncStorage.getItem("auth_token");
+                    const storedData = await AsyncStorage.getItem('userDeatils');
+
+                    if (!token || !storedData) {
+                        console.log("❌ Token or user details missing!");
+                        return;
+                    }
+
+                    const parsedData = JSON.parse(storedData);
+                    const technicianId = parsedData?.id;
+
+                    if (!technicianId) {
+                        console.log("❌ Technician ID not found in stored user details");
+                        return;
+                    }
+
+                    const response = await fetch(`${API_BASE_URL}/fetchSingleTechnician?technicianId=${technicianId}`, {
+                        method: "POST",
+                        headers: {
+                            "Authorization": `Bearer ${token}`,
+                            "Content-Type": "application/json"
+                        }
+                    });
+                    const textResponse = await response.text();
+                    const data = JSON.parse(textResponse);
+                    const technician = data?.technician;
+                    console.log("technicia::::::", technician);
+
+                    // Save only 4 values
+                    await AsyncStorage.setItem('payRate', technician?.payRate);
+                    await AsyncStorage.setItem('simpleFlatRate', technician?.simpleFlatRate);
+                    await AsyncStorage.setItem('amountPercentage', technician?.amountPercentage);
+
+                    if (technician?.payVehicleType) {
+                        const vehicleList = technician.payVehicleType
+                            .split(',')
+                            .filter(item => item.trim() !== '');
+                        const vehicleArray = vehicleList.map(vehicle => ({
+                            label: vehicle.trim(),
+                            value: vehicle.trim()
+                        }));
+                        await AsyncStorage.setItem('allowedVehicles', JSON.stringify(vehicleArray));
+                    }
+
+                } catch (error) {
+                    console.error("🚨 Error in checkTechnicianStatus:", error);
+                }
+            };
+
+            checkTechnicianStatus();
+        }, [])
+    );
 
     useFocusEffect(
         React.useCallback(() => {
@@ -148,7 +207,6 @@ const WorkOrderScreenTwo = ({ route }) => {
                 const savedJob = await AsyncStorage.getItem("current_Job");
                 if (savedJob) {
                     const parsed = JSON.parse(savedJob);
-                    console.log("savedJob:::::", parsed);
                     setSelectedJobName(parsed.jobName);
                     setSelectedJobId(parsed.id);
                     setSelectedCustomer(parsed.assignCustomer)
@@ -199,8 +257,18 @@ const WorkOrderScreenTwo = ({ route }) => {
     useEffect(() => {
         const fetchPayRate = async () => {
             const rate = await AsyncStorage.getItem('payRate');
+            const simpleFlatRate = await AsyncStorage.getItem('simpleFlatRate');
+            const amountPercentage = await AsyncStorage.getItem('amountPercentage');
+
             if (rate) {
                 setStoredPayRate(rate);
+            }
+            if (simpleFlatRate) {
+                setStoredSimpleFlatRate(simpleFlatRate);
+            }
+
+            if (amountPercentage) {
+                setStoredAmountPercentage(amountPercentage);
             }
         };
         fetchPayRate();
@@ -210,15 +278,27 @@ const WorkOrderScreenTwo = ({ route }) => {
     useEffect(() => {
         const { vinNumber } = route.params || {};
         if (vinNumber) {
-            console.log("working:::::::::::::::::::::::::", vinNumber)
             // Only VIN is present
+            const loadSelectedJob = async () => {
+                const savedJob = await AsyncStorage.getItem("current_Job");
+                if (savedJob) {
+                    console.log("working:::::::::::::::::::::::::", vinNumber)
+                    const parsed = JSON.parse(savedJob);
+                    console.log("savedJob:::::", parsed);
+                    setSelectedJobName(parsed.jobName);
+                    setSelectedJobId(parsed.id);
+                    setSelectedCustomer(parsed.assignCustomer)
+                }
+            };
+
+            loadSelectedJob();
             setVin(vinNumber);
             fetchCarDetails(vinNumber);
         }
     }, [route.params?.vinNumber]);
 
     // fetch Car Details 
-    const fetchCarDetails = async (vinNumber) => {
+    const fetchCarDetails = async (vinNumber, skipDuplicateCheck = false) => {
         setCarDetails([]);
         setIsVinApiError(false);
         Keyboard.dismiss();
@@ -231,7 +311,40 @@ const WorkOrderScreenTwo = ({ route }) => {
             return;
         }
         setIsLoadingCarDetails(true)
+        const token = await AsyncStorage.getItem("auth_token");
+        if (!token) {
+            console.error("Token not found!");
+            return;
+        }
+        const savedJob = await AsyncStorage.getItem("current_Job");
+        const parsed = JSON.parse(savedJob);
         try {
+            if (!skipDuplicateCheck) {
+                const formData = new URLSearchParams();
+                formData.append('customerId', parsed.assignCustomer);
+                formData.append('jobName', parsed.jobName);
+                formData.append('vin', vinNumber);
+
+                const duplicateResponse = await axios.post(
+                    `${API_BASE_URL}/checkVehicle`,
+                    formData.toString(),
+                    {
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'Authorization': `Bearer ${token}`
+                        }
+                    }
+                );
+
+                console.log("🔁 VIN check response:", duplicateResponse.data);
+                console.log("duplicateResponse", duplicateResponse);
+
+                if (duplicateResponse?.data?.status === false) {
+                    setDuplicateVinModal(true);
+                    setIsLoadingCarDetails(false);
+                    return;
+                }
+            }
             const response = await axios.get(`https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVIN/${vinNumber}?format=json`);
             console.log("response.data", response.data.Results);
             // setCarDetails(response.data.Results);
@@ -259,6 +372,24 @@ const WorkOrderScreenTwo = ({ route }) => {
                 // setVin("")
             }
         } catch (error) {
+            if (error.response?.status === 409 && error.response?.data?.status === false) {
+                const msg = error.response.data.message; // e.g., ❗ Duplicate VIN detected: VIN WAUNE78P28A492843 already exists in the job Tajmahel1 for customer Suraj moters.
+
+                const vinMatch = msg.match(/VIN (\w+)/);
+                const jobMatch = msg.match(/job (\w+)/);
+                const customerMatch = msg.match(/customer (.+)\./); // till dot
+
+                setDuplicateVinModal(true);
+                setIsLoadingCarDetails(false);
+
+                setDuplicateVinMessage(msg); // for reference
+
+                setExtractedVin(vinMatch ? vinMatch[1] : "");
+                setExtractedJob(jobMatch ? jobMatch[1] : "");
+                setExtractedCustomer(customerMatch ? customerMatch[1] : "");
+
+                return;
+            }
             console.error("error", error);
             setIsVinApiError(true);
             setCarDetails([])
@@ -410,10 +541,33 @@ const WorkOrderScreenTwo = ({ route }) => {
             return;
         }
 
+        console.log("workingggg");
         const technicianObj = {
             payRate: storedPayRate,
             payVehicleType: selectedVehicleType,
+            amountPercentage: storedAmountPercentage,
+            simpleFlatRate: storedSimpleFlatRate
         };
+        console.log("technicianObj", technicianObj);
+
+        let fullFlatRate = {};
+        try {
+            fullFlatRate = JSON.parse(technicianObj?.simpleFlatRate);
+        } catch (error) {
+            console.error("Invalid JSON in simpleFlatRate", error);
+        }
+
+        const selectedVehicleRate = {
+            [technicianObj?.payVehicleType]: fullFlatRate[technicianObj?.payVehicleType]
+        };
+        const finalFlatRate =
+            selectedVehicleRate[technicianObj.payVehicleType] !== undefined
+                ? JSON.stringify(selectedVehicleRate)
+                : technicianObj.simpleFlatRate;
+
+
+
+        console.log("finalFlatRate", finalFlatRate);
 
         const invalidJob = jobDescription?.find(item => {
             const desc = item.jobDescription?.trim();
@@ -423,10 +577,10 @@ const WorkOrderScreenTwo = ({ route }) => {
             return (desc && !cost) || (!desc && cost);
         });
 
-        if (invalidJob) {
-            setJobDescriptionError("Please enter both description and cost.");
-            return;
-        }
+        // if (invalidJob) {
+        //     setJobDescriptionError("Please enter both description and cost.");
+        //     return;
+        // }
 
         const token = await AsyncStorage.getItem("auth_token");
         if (!token) {
@@ -464,6 +618,11 @@ const WorkOrderScreenTwo = ({ route }) => {
         formData.append("notes", notes || " ");
         formData.append("technicians[0][payRate]", technicianObj.payRate);
         formData.append("technicians[0][payVehicleType]", technicianObj.payVehicleType);
+        // formData.append("technicians[0][simpleFlatRate]", technicianObj.simpleFlatRate);
+        formData.append("technicians[0][simpleFlatRate]", finalFlatRate);
+        formData.append("technicians[0][amountPercentage]", technicianObj.amountPercentage);
+
+
         if (imageUris && imageUris.length > 0) {
             imageUris.forEach((uri, index) => {
                 formData.append("images", {
@@ -482,7 +641,6 @@ const WorkOrderScreenTwo = ({ route }) => {
             const response = await fetch(`${API_BASE_URL}/addVehicleInfo`, {
                 method: 'POST',
                 headers: {
-                    // 'Content-Type': 'application/x-www-form-urlencoded',
                     'Authorization': `Bearer ${token}`
                 },
                 body: formData
@@ -494,25 +652,26 @@ const WorkOrderScreenTwo = ({ route }) => {
                 if (shouldNavigate) {
                     navigation.navigate("Home");
                     setLoaderFn(false);
+                    Toast.show("Vehicle add successfully!");
                 } else {
                     resetForm();
                     setStep(1);
                     setLoaderFn(false);
+                    Toast.show("Vehicle add successfully!");
                 }
             } else {
                 console.warn("Submission failed:", responseJson);
-                if (
-                    responseJson?.error &&
-                    responseJson.error.includes('VIN') &&
-                    responseJson.error.includes('already exists')
-                ) {
-                    setDuplicateVinModal(true);
-                    setDuplicateVinMessage(responseJson?.error || "Are you sure you want to continue?.");
-                } else {
-                    console.warn("Submission failed:", responseJson?.error);
-                    setError(responseJson?.error)
-                }
-
+                // if (
+                //     responseJson?.error &&
+                //     responseJson.error.includes('VIN') &&
+                //     responseJson.error.includes('already exists')
+                // ) {
+                //     setDuplicateVinModal(true);
+                //     setDuplicateVinMessage(responseJson?.error || "Are you sure you want to continue?.");
+                // } else {
+                console.warn("Submission failed:", responseJson?.error);
+                setError(responseJson?.error)
+                // }
             }
 
         } catch (error) {
@@ -1083,7 +1242,6 @@ const WorkOrderScreenTwo = ({ route }) => {
                             />
                         )}
 
-
                     </View>
                     {duplicateVinModal && (
                         <Modal
@@ -1098,31 +1256,42 @@ const WorkOrderScreenTwo = ({ route }) => {
                                     <Text style={styles.modalText}>
                                         Duplicate VIN found.
                                     </Text>
-                                    <Text style={{ color: grayColor, marginBottom: 20, textAlign: "center" }}>
-                                        {duplicateVinMessage?.replace("Failed to add vehicle: ❌ ", "") || "This VIN is already assigned to another job. Please recheck and try again."}
+                                    <Text style={[textAlign]}>
+                                        VIN{' '}
+                                        <Text style={{ fontWeight: 'bold' }}>{extractedVin}</Text>{' '}
+                                        already exists in the job{' '}
+                                        <Text style={{ fontWeight: 'bold' }}>{extractedJob}</Text>{' '}
+                                        for customer{' '}
+                                        <Text style={{ fontWeight: 'bold' }}>{extractedCustomer}</Text>.
                                     </Text>
+
                                     <View style={styles.buttonContainer}>
                                         <TouchableOpacity
                                             style={styles.confirmButton}
-                                            onPress={handleConfirmDuplicateVin}
+                                            // onPress={handleConfirmDuplicateVin}
+                                            onPress={() => {
+                                                setDuplicateVinModal(false);
+                                                fetchCarDetails(vin, true);
+                                            }}
+
                                             disabled={isSubmitting}
                                         >
                                             {isSubmitting ? (
                                                 <ActivityIndicator size="small" color="#fff" />
                                             ) : (
-                                                <Text style={styles.buttonText}>Yes</Text>
+                                                <Text style={styles.buttonText}>Create Again</Text>
                                             )}
                                         </TouchableOpacity>
                                         <TouchableOpacity
                                             style={styles.cancelButton}
                                             onPress={() => {
                                                 setDuplicateVinModal(false),
-                                                    setVin('');
+                                                setVin('');
                                                 setCarDetails(null);
                                                 setStep(1);
                                             }}
                                         >
-                                            <Text style={styles.buttonText}>Re-enter</Text>
+                                            <Text style={styles.buttonText}>Re-enter Details</Text>
                                         </TouchableOpacity>
                                     </View>
                                 </View>
@@ -1358,14 +1527,15 @@ const styles = StyleSheet.create({
     confirmButton: {
         width: "45%",
         paddingVertical: 8,
-        paddingHorizontal: 20,
+        paddingHorizontal: 10,
         backgroundColor: "#5cb85c",
         borderRadius: 5,
         alignItems: "center",
     },
     buttonText: {
         color: "#fff",
-        fontSize: 16,
+        fontSize: 13,
+        textAlign: "center"
     },
     addMore: {
         marginTop: spacings.xLarge,

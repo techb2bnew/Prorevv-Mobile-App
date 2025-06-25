@@ -115,9 +115,16 @@ const LoginScreen = ({ navigation }) => {
                     console.log("Login successful:", result);
                     await AsyncStorage.setItem('auth_token', result.token);
                     await AsyncStorage.setItem('userDeatils', JSON.stringify(result.user));
+                    console.log("result.user", result.user);
 
                     // Navigate to Home screen
-                    navigation.replace('MainNavigator');
+                    // navigation.replace('MainNavigator');
+                    const userRole = result.user?.role;
+                    if (userRole === "manager") {
+                        navigation.replace('ManagerNavigator');
+                    } else {
+                        navigation.replace('MainNavigator');
+                    }
                     await AsyncStorage.setItem('biometricEnabled', 'true');
                     await AsyncStorage.removeItem('isRegistered');
                 } else {

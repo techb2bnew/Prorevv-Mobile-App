@@ -10,6 +10,7 @@ import JoinAsScreen from "../screens/JoinAsScreen";
 import OnboardingScreen from "../screens/onBoardingScreen";
 import { ActivityIndicator, View } from "react-native";
 import HowToPlayScreen from "../screens/HowToPlayScreen";
+import ManagerNavigator from "./ManagerNavigator";
 
 const Stack = createStackNavigator();
 
@@ -47,14 +48,14 @@ export default function AuthStack() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       {isFirstLaunch && (
         <Stack.Screen name="OnBoard" component={OnboardingScreen} />
-     )} 
+      )}
       <Stack.Screen name="Login" component={LoginScreen} />
       {/* <Stack.Screen name="JoinAs" component={JoinAsScreen} /> */}
       <Stack.Screen name="Register" component={SignUpScreen} />
       <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
       <Stack.Screen name="MainNavigator" component={MainNavigator} />
+      <Stack.Screen name="ManagerNavigator" component={ManagerNavigator} />
       <Stack.Screen name="HowToPlay" component={HowToPlayScreen} />
-
     </Stack.Navigator>
   );
 }

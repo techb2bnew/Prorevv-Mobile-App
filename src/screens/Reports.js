@@ -105,7 +105,6 @@ const Reports = ({ navigation }) => {
         setStartDate(lastMonth);
     }, []);
 
-
     //fetch tech details
     useEffect(() => {
         const getTechnicianDetail = async () => {
@@ -114,7 +113,7 @@ const Reports = ({ navigation }) => {
                 if (storedData) {
                     const parsedData = JSON.parse(storedData);
                     setTechnicianId(parsedData?.id);
-                    setTechnicianType(parsedData?.types)
+                    setTechnicianType(parsedData?.types);
                 }
             } catch (error) {
                 console.error("Error fetching stored user:", error);
@@ -123,6 +122,7 @@ const Reports = ({ navigation }) => {
 
         getTechnicianDetail();
     }, []);
+    
 
     useEffect(() => {
         if (activeTab === "Jobs" && technicianId) {
@@ -151,6 +151,7 @@ const Reports = ({ navigation }) => {
                 console.error("No token found");
                 return;
             }
+            // console.log("token", token);
 
             const response = await axios.get(
                 `${API_BASE_URL}/technicianJobFetch?userId=${technicianId}&page=${newPage}&limit=10`,
@@ -179,46 +180,6 @@ const Reports = ({ navigation }) => {
         }
     };
 
-    // const fetchFilteredJobHistory = async (start, end,tab) => {   
-    //     if (!technicianId) return;
-
-    //     setLoading(true);
-    //     try {
-    //         const token = await AsyncStorage.getItem("auth_token");
-    //         if (!token) {
-    //             console.error("No token found");
-    //             return;
-    //         }
-
-    //         const formattedStartDate = start
-    //             ? new Date(start).toISOString().split("T")[0].split("-").reverse().join("-")
-    //             : "";
-
-    //         const formattedEndDate = end
-    //             ? new Date(end).toISOString().split("T")[0].split("-").reverse().join("-")
-    //             : "";
-
-    //         console.log("Start date:", formattedStartDate, "End date:", formattedEndDate, "technicianid", technicianId, token);
-
-    //         const response = await axios.post(
-    //             `${API_BASE_URL}/jobFilter`,
-    //             `startDate=${formattedStartDate}&endDate=${formattedEndDate}&technicianId=${technicianId}`,
-    //             {
-    //                 headers: {
-    //                     "Content-Type": "application/x-www-form-urlencoded",
-    //                     Authorization: `Bearer ${token}`,
-    //                 },
-    //             }
-    //         );
-
-    //         console.log("Response:", response?.data?.jobs);
-    //         setjobHistoryData(response?.data?.jobs || []);
-    //     } catch (error) {
-    //         console.error("Error fetching filtered job history:", error);
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
     const fetchFilteredData = async (start, end, tab) => {
         if (!technicianId) return;
         setLoading(true);
@@ -251,10 +212,11 @@ const Reports = ({ navigation }) => {
                         },
                     }
                 );
+                console.log("joresponse?.databs", response?.data);
 
-                const jobs = response?.data?.jobs || [];
-                // setjobHistoryData(jobs);
-                setJobsRawData(jobs); // if needed for filtering/searching
+                const jobs = response?.data?.jobs;
+                console.log("jobs", jobs);
+                setJobsRawData(jobs); 
             } else if (tab === "WorkOrders") {
                 const response = await axios.post(
                     `${API_BASE_URL}/vehicleFilter`,
@@ -573,7 +535,9 @@ const Reports = ({ navigation }) => {
 
                                 return (
                                     <Pressable style={[styles.listItem, rowStyle]}
-                                    // onPress={() => navigation.navigate("VinListScreen")}
+                                        onPress={() => navigation.navigate("NewJobDetailsScreen", {
+                                            jobId: item?.id
+                                        })}
                                     >
                                         <Text style={[styles.text, { width: "49%" }]}>
                                             {item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}

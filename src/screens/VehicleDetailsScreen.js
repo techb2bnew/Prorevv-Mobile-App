@@ -26,8 +26,11 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
     const [selectedImage, setSelectedImage] = useState(null);
     const [imageModalVisible, setImageModalVisible] = useState(false);
     const [technicianType, setTechnicianType] = useState();
+    const [technicianId, setTechnicianId] = useState();
+
     const { width, height } = Dimensions.get("window");
     const isTablet = width >= 668 && height >= 1024;
+    const [successModalVisible, setSuccessModalVisible] = useState(false);
 
     useFocusEffect(
         useCallback(() => {
@@ -37,7 +40,8 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
                     if (storedData) {
                         const parsedData = JSON.parse(storedData);
                         // console.log("parsedData:::::", parsedData.types);
-                        setTechnicianType(parsedData.types)
+                        setTechnicianType(parsedData.types);
+                        setTechnicianId(parsedData.id)
                     }
                 } catch (error) {
                     console.error("Error fetching stored user:", error);
@@ -53,7 +57,6 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
         setImageModalVisible(true);
     };
 
-
     const fetchVehileData = async (vehicleId) => {
         try {
             setLoading(true);
@@ -65,6 +68,7 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
             if (token) {
                 headers["Authorization"] = `Bearer ${token}`;
             }
+// console.log(vehicleId);
 
             const response = await fetch(`${apiUrl}/fetchSingleVehicleInfo?vehicleId=${vehicleId}`, {
                 method: "GET", // ✅ FIXED
@@ -93,11 +97,54 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
         }
     };
 
-
-
     useEffect(() => {
         fetchVehileData(vehicleId);
     }, [vehicleId]);
+
+
+    const handelCompleteWorkOrder = async (vehicleId) => {
+        try {
+            const apiUrl = `${API_BASE_URL}/updateVehicleStatus`;
+            const token = await AsyncStorage.getItem("auth_token");
+
+            const headers = {
+                "Content-Type": "application/x-www-form-urlencoded",
+                Authorization: `Bearer ${token}`,
+            };
+
+            const body = new URLSearchParams();
+            body.append("vehicleId", vehicleId);
+            body.append("vehicleStatus", "true");
+
+            const response = await fetch(apiUrl, {
+                method: "POST",
+                headers,
+                body: body.toString(),
+            });
+
+            const data = await response.json();
+            console.log("API Response Data:", data);
+
+            if (response.ok) {
+                setSuccessModalVisible(true)
+                // ✅ Remove from pending list after successful sync
+                // let pendingJobs = await AsyncStorage.getItem("pendingCompleteJobs");
+                // pendingJobs = pendingJobs ? JSON.parse(pendingJobs) : [];
+                // pendingJobs = pendingJobs.filter((id) => id !== jobId);
+                // await AsyncStorage.setItem("pendingCompleteJobs", JSON.stringify(pendingJobs));
+            } else {
+                console.error("Error updating job status:", data.error || "Unknown error");
+            }
+        } catch (error) {
+            console.error("Error updating job status:", error);
+        }
+
+    };
+
+    const capitalize = (str) => {
+        if (!str) return "";
+        return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+    };
 
     const formatVehicleData = (vehicleDetails) => {
         if (!vehicleDetails) return [];
@@ -153,8 +200,15 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
 
         const totalCost = parseFloat(jobDescriptionTotal);
 
+        let partnerTechnician = null;
+        if (vehicleDetails?.assignedTechnicians?.length > 1 && technicianId) {
+            partnerTechnician = vehicleDetails.assignedTechnicians.find(t => t.id !== technicianId);
+        }
+
+        console.log("partnerTechnician", partnerTechnician);
+
         return [
-           
+
             {
                 groupTitle: "Vehicle Info",
                 data: [
@@ -192,23 +246,32 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
                             .join('\n'),
                         isMultiLine: true
                     },
-                    {
-                        label: "Sub Total",
-                        value: `$${jobDescriptionTotal}`,
-                        isTotal: true
-                    },
-                    ...(totalCost > 0
-                        ? [{
-                            label: "Total Cost",
-                            value: `$${totalCost?.toFixed(2)}`
-                        }]
-                        : []),
+                    // {
+                    //     label: "Sub Total",
+                    //     value: `$${jobDescriptionTotal}`,
+                    //     isTotal: true
+                    // },
+                    // ...(totalCost > 0
+                    //     ? [{
+                    //         label: "Total Cost",
+                    //         value: `$${totalCost?.toFixed(2)}`
+                    //     }]
+                    //     : []),
                 ]
             }] : []),
             {
                 groupTitle: "Pay Info",
                 data: [
-                    { label: "Date", value: vehicleDetails?.createdAt ? new Date(vehicleDetails?.createdAt).toLocaleDateString() : "N/A" },
+                    {
+                        label: "Date",
+                        value: vehicleDetails?.createdAt
+                            ? new Date(vehicleDetails.createdAt).toLocaleDateString("en-US", {
+                                month: "long",    // e.g., June
+                                day: "numeric",   // e.g., 23
+                                year: "numeric",  // e.g., 2025
+                            })
+                            : "N/A"
+                    },
                     { label: "Status", value: vehicleDetails?.vehicleStatus === false ? "In-Progress" : "Completed" },
                 ]
             },
@@ -226,7 +289,28 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
                     groupTitle: "Images",
                     data: [{ label: "Attachments", images: vehicleDetails?.images }]
                 }]
+                : []),
+            ...(from === 'partner' && partnerTechnician
+                ? [{
+                    groupTitle: "Partner Technician",
+                    data: [
+                        {
+                            label: "Partner Technician",
+                            value: `${capitalize(partnerTechnician.firstName)} ${capitalize(partnerTechnician.lastName)}`
+                        },
+                        ...(partnerTechnician.email ? [{
+                            label: "Partner Technician Email",
+                            value: partnerTechnician.email
+                        }] : []),
+                        ...(partnerTechnician.mobile ? [{
+                            label: "Partner Technician Phone",
+                            value: partnerTechnician.mobile,
+                            isPhoneNumber: true
+                        }] : [])
+                    ]
+                }]
                 : [])
+
         ];
     };
 
@@ -265,7 +349,7 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
                                                         <Feather name="phone-outgoing" size={15} color={blueColor} />
                                                         <Text style={[styles.value, { color: blueColor, textDecorationLine: "underline", marginLeft: 5 }]}>{item.value}</Text>
                                                     </TouchableOpacity>
-                                                ) : item.label === "Email" ? (
+                                                ) : item.label === "Email"||item.label === "Partner Technician Email" ? (
                                                     <TouchableOpacity onPress={() => Linking.openURL(`mailto:${item.value}`)} style={[flexDirectionRow, { alignItems: "center" }]}>
                                                         <Text style={[styles.value, { color: blueColor, textDecorationLine: "underline" }]}>{item.value}</Text>
                                                     </TouchableOpacity>
@@ -291,8 +375,8 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
                                                             <Text
                                                                 style={[
                                                                     styles.value,
-                                                                    item.label === "Current Job Status" &&
-                                                                    (item.value === "Complete"
+                                                                    item.label === "Status" &&
+                                                                    (item.value === "Completed"
                                                                         ? { color: greenColor }
                                                                         : { color: redColor })
                                                                 ]}
@@ -311,6 +395,25 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
                         )}
                     </View>
 
+                    {!loading && !vehicleDetails?.vehicleStatus && from === "report" && (
+                        <Pressable
+                            style={[styles.completeButton, alignItemsCenter]}
+                            onPress={() => handelCompleteWorkOrder(vehicleId, setSuccessModalVisible)}
+                        >
+                            <Text style={styles.completeButtonText}>Complete This Work Order</Text>
+                        </Pressable>
+                    )}
+                    {successModalVisible && <SuccessModal
+                        visible={successModalVisible}
+                        onClose={() => setSuccessModalVisible(false)}
+                        headingText={"Congratulations"}
+                        buttonText={"Ok"}
+                        text={"You've successfully Complete This Work Order."}
+                        onPressContinue={() => {
+                            setSuccessModalVisible(false);
+                            navigation.navigate("ReportsScreen", { vehicleCompleted: true });
+                        }}
+                    />}
                     {/* Image Modal */}
                     <Modal visible={imageModalVisible} transparent={true} animationType="fade">
                         <View style={styles.modalContainer}>

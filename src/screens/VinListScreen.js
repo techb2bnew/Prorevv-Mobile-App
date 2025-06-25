@@ -16,18 +16,6 @@ import axios from 'axios';
 
 const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween, textAlign } = BaseStyle;
 
-const getStatusStyle = (status) => {
-    switch (status) {
-        case 'Complete':
-            return { backgroundColor: '#e6ffe6', borderColor: greenColor, textColor: greenColor };
-        case 'Pending':
-            return { backgroundColor: '#ffe6e6', borderColor: redColor, textColor: redColor };
-        case 'In Progress':
-            return { backgroundColor: '#fff5e6', borderColor: goldColor, textColor: goldColor };
-        default:
-            return { backgroundColor: '#eee', borderColor: '#ccc', textColor: '#000' };
-    }
-};
 
 const VinListScreen = ({ navigation, route }) => {
     const { width, height } = Dimensions.get("window");
@@ -64,13 +52,38 @@ const VinListScreen = ({ navigation, route }) => {
         return data;
     }, [vehicleData, sortType, sortOrder]);
 
-    const filteredData = searchVin
-        ? sortedData.filter(item =>
-            item.vin?.toLowerCase().includes(searchVin.toLowerCase()) ||
-            item.make?.toLowerCase().includes(searchVin.toLowerCase()) ||
-            item.model?.toLowerCase().includes(searchVin.toLowerCase()) ||
-            item.jobName?.toLowerCase().includes(searchVin.toLowerCase()))
-        : sortedData;
+    // const filteredData = searchVin
+    //     ? sortedData.filter(item =>
+    //         item.vin?.toLowerCase().includes(searchVin.toLowerCase()) ||
+    //         item.make?.toLowerCase().includes(searchVin.toLowerCase()) ||
+    //         item.model?.toLowerCase().includes(searchVin.toLowerCase()) ||
+    //         item.jobName?.toLowerCase().includes(searchVin.toLowerCase()))
+    //     : sortedData;
+
+    const filteredData = sortedData.filter(item => {
+        // Search filter
+        const matchesSearch = searchVin
+            ? (
+                item.vin?.toLowerCase().includes(searchVin.toLowerCase()) ||
+                item.make?.toLowerCase().includes(searchVin.toLowerCase()) ||
+                item.model?.toLowerCase().includes(searchVin.toLowerCase()) ||
+                item.jobName?.toLowerCase().includes(searchVin.toLowerCase())
+            )
+            : true;
+
+        if (!matchesSearch) return false;
+
+        const hasPartner = (item?.assignedTechnicians || []).some(tech => tech?.id !== technicianId);
+
+        if (activeTab === 'partnerOrder') {
+            // Show only those with partners
+            return hasPartner;
+        }
+
+        // For 'workOrder' tab, show everything
+        return true;
+    });
+
 
     useEffect(() => {
         if (!vehicleData || vehicleData.length === 0) return;
@@ -170,50 +183,6 @@ const VinListScreen = ({ navigation, route }) => {
     const toggleModal = () => {
         setModalVisible(!isModalVisible);
     };
-
-    // const handleSort = (order, type) => {
-    //     // let sortedData = [...jobHistoryData];
-
-    //     // if (type === "name") {
-    //     //     sortedData.sort((a, b) => {
-    //     //         return order === "asc"
-    //     //             ? a?.customer?.firstName.localeCompare(b?.customer?.firstName)
-    //     //             : b?.customer?.firstName.localeCompare(a?.customer?.firstName);
-    //     //     });
-    //     // } else if (type === "date") {
-    //     //     sortedData.sort((a, b) => {
-    //     //         return order === "oldest"
-    //     //             ? new Date(a?.createdAt) - new Date(b?.createdAt)
-    //     //             : new Date(b?.createdAt) - new Date(a?.createdAt);
-    //     //     });
-    //     // } else if (type === "modified") {
-    //     //     sortedData.sort((a, b) => {
-    //     //         return order === "oldest"
-    //     //             ? new Date(a?.updatedAt) - new Date(b?.updatedAt)
-    //     //             : new Date(b?.updatedAt) - new Date(a?.updatedAt);
-    //     //     });
-    //     // } else if (type === "status") {
-    //     //     sortedData.sort((a, b) => {
-    //     //         const statusA = a?.jobStatus ? "Complete" : "InProgress";
-    //     //         const statusB = b?.jobStatus ? "Complete" : "InProgress";
-
-    //     //         return order === "asc"
-    //     //             ? statusA.localeCompare(statusB) // InProgress → Complete
-    //     //             : statusB.localeCompare(statusA); // Complete → InProgress
-    //     //     });
-    //     // }
-
-    //     // // ✅ Pehle se select kiya hua item sabse upar rahe
-    //     // const selectedItem = sortedData.find(item => item.sortType === type);
-    //     // sortedData = sortedData.filter(item => item.sortType !== type);
-    //     // if (selectedItem) sortedData.unshift(selectedItem);
-
-    //     // setjobHistoryData(sortedData);
-    //     // setSortOrder(order);
-    //     // setSortType(type);
-    //     setModalVisible(false);
-    // };
-
 
     const handleSort = (order, type) => {
         let sortedData = [...vehicleData];
@@ -366,7 +335,10 @@ const VinListScreen = ({ navigation, route }) => {
                                             flexDirectionRow,
                                             { backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor },
                                         ]}
-                                        onPress={() => navigation.navigate("VehicleDetailsScreen", { vehicleId: item.id })}
+                                        onPress={() => navigation.navigate("VehicleDetailsScreen", {
+                                            vehicleId: item.id,
+                                            from: activeTab === "partnerOrder" ? "partner" : "workOrder"
+                                        })}
 
                                     >
                                         {/* <Text style={[styles.tableText, { width: wp(30), paddingLeft: spacings.small }]}>{item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}</Text> */}
@@ -383,10 +355,18 @@ const VinListScreen = ({ navigation, route }) => {
                                             <Text style={[styles.tableText, { width: wp(25) }]}>
                                                 {item?.assignedTechnicians
                                                     ?.filter(tech => tech?.id !== technicianId)
-                                                    ?.map(tech => `${tech?.firstName || ''} ${tech?.lastName || ''}`.trim())
+                                                    ?.map(tech => {
+                                                        const firstName = tech?.firstName || '';
+                                                        const lastName = tech?.lastName || '';
+
+                                                        const capitalize = str => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+
+                                                        return `${capitalize(firstName)} ${capitalize(lastName)}`.trim();
+                                                    })
                                                     .join(', ') || '—'}
                                             </Text>
                                         )}
+
                                         <Text style={[styles.tableText, { width: wp(15) }]}>
                                             ${Array.isArray(item?.jobDescription) && item?.jobDescription?.length > 0
                                                 ? item?.jobDescription?.reduce((total, job) => total + Number(job?.cost || 0), 0)
@@ -439,7 +419,10 @@ const VinListScreen = ({ navigation, route }) => {
                             borderWidth: 1,
                             borderColor: blueColor
                         }}
-                            onPress={() => navigation.navigate("VehicleDetailsScreen", { vehicleId: item.id })}
+                            onPress={() => navigation.navigate("VehicleDetailsScreen", {
+                                vehicleId: item.id,
+                                from: activeTab === "partnerOrder" ? "partner" : "workOrder"
+                            })}
                         >
                             <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
                                 <View style={{ width: '48%', marginBottom: 10 }}>
@@ -471,7 +454,14 @@ const VinListScreen = ({ navigation, route }) => {
                                     <Text style={{ color: '#555', fontSize: 11 }}>Partner</Text>
                                     <Text >{item?.assignedTechnicians
                                         ?.filter(tech => tech?.id !== technicianId)
-                                        ?.map(tech => `${tech?.firstName || ''} ${tech?.lastName || ''}`.trim())
+                                        ?.map(tech => {
+                                            const firstName = tech?.firstName || '';
+                                            const lastName = tech?.lastName || '';
+
+                                            const capitalize = str => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+
+                                            return `${capitalize(firstName)} ${capitalize(lastName)}`.trim();
+                                        })
                                         .join(', ') || '—'}
                                     </Text>
                                 </View>)}

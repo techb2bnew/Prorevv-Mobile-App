@@ -10,6 +10,8 @@ import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import AntDesign from 'react-native-vector-icons/AntDesign';
+import Toast from 'react-native-simple-toast';
+
 const { width, height } = Dimensions.get('window');
 
 const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween, textAlign } = BaseStyle;
@@ -19,6 +21,8 @@ const HomeScreen = ({ navigation }) => {
   const [technicianId, setTechnicianId] = useState('');
   const [technicianType, setTechnicianType] = useState('');
   const [bLogo, setbLogo] = useState(null);
+  const [customers, setCustomers] = useState([]);
+
   // const [activeIndex, setActiveIndex] = useState(0);
   const isTablet = width >= 668 && height >= 1024;
   const isIOSAndTablet = Platform.OS === "ios" && isTablet;
@@ -37,8 +41,22 @@ const HomeScreen = ({ navigation }) => {
       name: "Scan Vin",
       image: ADD_VEHICLE_IMAGE,
       backgroundColor: ExtraExtralightOrangeColor,
-      // onPress: () => { navigation.navigate("JobHistory") },
-      onPress: () => { navigation.navigate("ScannerScreen"); },
+      // onPress: () => { navigation.navigate("ScannerScreen"); },
+      onPress: async () => {
+        try {
+          const currentJob = await AsyncStorage.getItem("current_Job");
+
+          if (customers.length === 0) {
+            Toast.show("You don't have any assigned job currently.");
+          } else if (!currentJob) {
+            Toast.show("Please select a job from the jobs page first.");
+          } else {
+            navigation.navigate("ScannerScreen");
+          }
+        } catch (error) {
+          console.error("Error checking current job:", error);
+        }
+      },
       backgroundImage: isTablet ? ADD_VEHICLE_TAB_BACK_IMAGE : ADD_VEHICLE_BACK_IMAGE
     },
     {
@@ -46,16 +64,12 @@ const HomeScreen = ({ navigation }) => {
       image: VIN_LIST_IMAGE,
       backgroundColor: ExtraExtralightOrangeColor,
       onPress: () => { navigation.navigate("VinListScreen"); },
-
       backgroundImage: isTablet ? JOB_HISTORY_TAB_BACK_IMAGE : JOB_HISTORY_BACK_IMAGE
-
     },
-
     {
       name: "Reports",
       image: JOB_HISTORY_IMAGE,
       backgroundColor: ExtraExtralightOrangeColor,
-      // onPress: () => { navigation.navigate("JobHistory") },
       onPress: () => { navigation.navigate("ReportsScreen") },
       backgroundImage: isTablet ? HOW_TO_PLAY_TAB_BACK_IMAGE : HOW_TO_PLAY_BACK_IMAGE
     }
@@ -113,88 +127,58 @@ const HomeScreen = ({ navigation }) => {
     }, [])
   );
 
-  // useFocusEffect(
-  //   useCallback(() => {
-  //     fetchCustomers();
-  //   }, [technicianId])
-  // );
+  useFocusEffect(
+    useCallback(() => {
+      fetchCustomers();
+    }, [technicianId])
+  );
+  const fetchCustomers = async (page) => {
+    try {
+      const token = await AsyncStorage.getItem("auth_token");
+      if (!token) {
+        console.error("Token not found!");
+        return;
+      }
 
-  // useFocusEffect(
-  //   React.useCallback(() => {
-  //     const fetchBanners = async () => {
-  //       console.log("technician type::::::::::::::::::::", technicianType, technicianId);
+      const apiUrl = `${API_BASE_URL}/fetchAllTechnicianCustomer?userId=${technicianId}&page=${page}`;
 
-  //       try {
-  //         const token = await AsyncStorage.getItem("auth_token");
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
-  //         const response = await axios.get(`${API_BASE_URL}/bannerImages`, {
-  //           headers: {
-  //             Authorization: `Bearer ${token}`,
-  //           },
-  //         });
+      const data = await response.json();
 
-  //         const allBanners = response.data.banners;
-  //         console.log("All banners from response:", allBanners);
+      let uniqueCustomers = [];
 
-  //         const matchedBanner = allBanners.find(
-  //           (item) =>
-  //             item.roleType.trim().toLowerCase() === technicianType.trim().toLowerCase() &&
-  //             Number(item.userId) === Number(technicianId)
-  //         );
-
-  //         if (matchedBanner) {
-  //           console.log("✅ Matched banner found:", matchedBanner);
-  //           setBanners(matchedBanner.bannerImages || []);
-  //         } else {
-  //           const fallbackBanner = allBanners.find((item) => item.roleType === "superadmin");
-  //           console.log("⚠️ No exact match found. Showing superadmin banner:", fallbackBanner);
-  //           setBanners(fallbackBanner?.bannerImages || []);
-  //         }
-  //       } catch (error) {
-  //         console.error('❌ Error fetching banner images:', error);
-  //       } finally {
-  //         setLoading(false);
-  //       }
-  //     };
-
-  //     if (technicianId && technicianType) {
-  //       fetchBanners();
-  //     }
-
-  //     // Cleanup not needed in this case
-  //   }, [technicianId, technicianType])
-  // );
-
-
-  // const fetchCustomers = async () => {
-  //   try {
-  //     const token = await AsyncStorage.getItem("auth_token");
-  //     if (!token) {
-  //       console.error("Token not found!");
-  //       return;
-  //     }
-  //     if (!technicianId) {
-  //       console.error("technicianId not found!");
-  //       return;
-  //     }
-  //     // Construct the API URL with parameters
-  //     const apiUrl = `${API_BASE_URL}/fetchCustomer?userId=${technicianId}`;
-  //     console.log("Fetching customers from URL:", apiUrl); // Log the API URL
-
-  //     const response = await fetch(apiUrl, {
-  //       method: 'GET',
-  //       headers: {
-  //         'Authorization': `Bearer ${token}`,
-  //         'Content-Type': 'application/json'
-  //       }
-  //     });
-  //     const data = await response.json();
-  //     console.log("customers::", data);
-  //     await AsyncStorage.setItem("customersList", JSON.stringify(data.customers?.customers));
-  //   } catch (error) {
-  //     console.error('Network error:', error);
-  //   }
-  // };
+      if (data.status && data.jobs?.jobs?.length > 0) {
+        const newCustomers = data.jobs.jobs
+          .map(job => {
+            if (job.customer && job.customer.id) {
+              return {
+                ...job.customer,
+                jobName: job.jobName,
+                jobId: job.id
+              };
+            }
+            return null;
+          })
+          .filter(cust => cust);
+        uniqueCustomers = [...customers, ...newCustomers].filter(
+          (cust, index, self) => index === self.findIndex(c => c.id === cust.id)
+        );
+        console.log("uniqueCustomers", uniqueCustomers);
+        setCustomers(uniqueCustomers);
+      } else {
+        setCustomers([]);  // Clear old customers if nothing found
+      }
+    } catch (error) {
+      console.error('Network error:', error);
+    }
+  };
 
   const capitalizetext = (name) => {
     if (!name) return "";
@@ -260,20 +244,35 @@ const HomeScreen = ({ navigation }) => {
         height: Platform.OS === "android" ? isTablet ? hp(12) : hp(19) : isIOSAndTablet ? hp(12) : hp(16),
       }]}>
         <Text style={[styles.title, textAlign]}>👋 Hi, {capitalizetext(technicianName)}</Text>
-        <Pressable style={[styles.searchTextInput, { height: isTablet ? hp(4) : hp(5.5), }]} onPress={() => {
-          navigation.navigate("ScannerScreen", {
-            from: "VinList"
-          });
-        }}>
-          {/* <TextInput
-            placeholder="Scan VIN"
-            placeholderTextColor={grayColor}
-            style={styles.input}
-            editable={false}
-          />
-          <View style={styles.iconContainer} >
-            <AntDesign name="scan1" size={24} color="#252837" />
-          </View> */}
+        <Pressable style={[styles.searchTextInput, { height: isTablet ? hp(4) : hp(5.5), }]}
+          onPress={async () => {
+            try {
+              const currentJob = await AsyncStorage.getItem("current_Job");
+
+              if (customers.length === 0) {
+                Toast.show("You don't have any assigned job currently.");
+              } else if (!currentJob) {
+                Toast.show("Please select a job from the jobs page first.");
+              } else {
+                navigation.navigate("ScannerScreen", {
+                  from: "VinList"
+                });
+              }
+            } catch (error) {
+              console.error("Error accessing current job:", error);
+            }
+          }}
+        // onPress={() => {
+        //   if (customers.length > 0) {
+        //     navigation.navigate("ScannerScreen", {
+        //       from: "VinList"
+        //     });
+        //   } else {
+        //     Toast.show("You don't have any assigned job currently.");
+        //   }
+        // }}
+
+        >
           <View style={[styles.input, { flexDirection: "row", alignItems: "center", justifyContent: "space-between" }]}>
             <Text style={{ color: grayColor }}>Scan VIN</Text>
             <AntDesign name="scan1" size={24} color="#252837" />

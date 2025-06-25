@@ -20,6 +20,7 @@ const { flex, alignItemsCenter, alignJustifyCenter } = BaseStyle;
 const { width, height } = Dimensions.get('window');
 import Orientation from 'react-native-orientation-locker';
 import { API_BASE_URL } from './src/constans/Constants';
+import ManagerNavigator from './src/navigations/ManagerNavigator';
 
 
 function App(): React.JSX.Element {
@@ -30,14 +31,10 @@ function App(): React.JSX.Element {
   const [toastMessage, setToastMessage] = useState('');
   const [toastVisible, setToastVisible] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(hp(100));
+  const [userRole, setUserRole] = useState<string | null>(null); // ✅ Add userRole
+
   const isTablet = width >= 668 && height >= 1024;
-  const vehicleTypes = [
-    { label: 'Sedan', value: 'Sedan' },
-    { label: 'SUV', value: 'SUV' },
-    { label: 'Truck', value: 'Truck' },
-    { label: 'Van', value: 'Van' },
-    { label: 'Motorcycle', value: 'Motorcycle' },
-  ];
+
   useEffect(() => {
     // Simulate a splash screen timeout
     const timer = setTimeout(() => {
@@ -128,10 +125,13 @@ function App(): React.JSX.Element {
       // console.log("✅ Parsed API Response:", data);
 
       const technician = data?.technician;
-      // console.log("🌐 technician?.payVehicleType:::::::::", technician?.payVehicleType);
+      setUserRole(technician?.Role?.name)
+      // console.log("🌐 technician?.payVehicleType:::::::::", technician);
       // console.log("🌐 technician?.payRate:::::::::", technician?.payRate);
 
       await AsyncStorage.setItem('payRate', technician?.payRate);
+      await AsyncStorage.setItem('simpleFlatRate', technician?.simpleFlatRate);
+      await AsyncStorage.setItem('amountPercentage', technician?.amountPercentage);
 
       if (technician?.payVehicleType) {
         const vehicleList = technician.payVehicleType
@@ -160,25 +160,9 @@ function App(): React.JSX.Element {
 
       // Logout process if any of the conditions are met
       if (technician.isApproved === "reject" || !technician.accountStatus || technician.deletedStatus) {
-        // await AsyncStorage.removeItem("auth_token");
-        // await AsyncStorage.removeItem("technician_id");
-        // await AsyncStorage.removeItem("firstLoginCompleted");
-        // await AsyncStorage.removeItem("jobHistoryData");
-        // await AsyncStorage.removeItem('technicianName');
-        // await AsyncStorage.removeItem("jobHistoryFetched");
-        // await AsyncStorage.removeItem('technicianProfile');
-        // await AsyncStorage.removeItem("customersList")
-        // await AsyncStorage.removeItem('userDeatils');
-        // await AsyncStorage.removeItem("offlineCustomers");
-        // await AsyncStorage.removeItem("businessLogo");
-        // await AsyncStorage.removeItem('selectedCustomer')
-        // await AsyncStorage.removeItem("current_Job");
-        // await AsyncStorage.removeItem("current_customer");
         const keyToKeep = "alreadyLaunched";
-
         const allKeys = await AsyncStorage.getAllKeys();
         const keysToDelete = allKeys.filter(key => key !== keyToKeep);
-
         await AsyncStorage.multiRemove(keysToDelete);
         setIsLoggedIn(false);
       }
@@ -214,8 +198,6 @@ function App(): React.JSX.Element {
   }, [isLoggedIn]);
 
   useEffect(() => {
-    console.log("isBiometricModalVisible", isBiometricModalVisible);
-
     const checkFirstLaunch = async () => {
       try {
         const firstLoginCompleted = await AsyncStorage.getItem("firstLoginCompleted");
@@ -449,7 +431,10 @@ function App(): React.JSX.Element {
         ) : (
           <TabBarProvider>
             <NavigationContainer>
-              {isLoggedIn ? <MainNavigator /> : <AuthStack />}
+              {isLoggedIn ?
+                userRole === 'manager' ? <ManagerNavigator /> : <MainNavigator />
+                : <AuthStack />}
+              {/* {isLoggedIn ? <ManagerNavigator /> : <AuthStack />} */}
             </NavigationContainer>
           </TabBarProvider>
         )}

@@ -12,8 +12,11 @@ import Fontisto from 'react-native-vector-icons/Fontisto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_BASE_URL } from '../constans/Constants';
 import CustomerDropdown from '../componets/CustomerDropdown';
+import { useRoute } from '@react-navigation/native';
 
 const WorkOrderScreen = ({ navigation }) => {
+  const route = useRoute();
+
   const { width, height } = Dimensions.get("window");
   const [selectedJob, setSelectedJob] = useState(null);
   const [selectedJobName, setSelectedJobName] = useState("");
@@ -170,7 +173,7 @@ const WorkOrderScreen = ({ navigation }) => {
         setCustomerDetails(null);
         setJobList([]);
         await AsyncStorage.removeItem("current_customer");
-        await AsyncStorage.removeItem("current_Job");
+        // await AsyncStorage.removeItem("current_Job");
       }
 
     } catch (error) {
@@ -179,7 +182,6 @@ const WorkOrderScreen = ({ navigation }) => {
       setIsCustomerLoading(false);
     }
   };
-
 
   const fetchSingleCustomerDetails = async (customerId) => {
     try {
@@ -249,56 +251,9 @@ const WorkOrderScreen = ({ navigation }) => {
     }
   };
 
-  // const fetchCustomerJobs = async (customerId, jobId, force = false) => {
-  //   if (!force && (loading || !hasMore)) return;
-
-  //   try {
-  //     setLoading(true);
-
-  //     const token = await AsyncStorage.getItem("auth_token");
-  //     if (!token) {
-  //       console.error("No token found");
-  //       return;
-  //     }
-  //     if (!customerId) {
-  //       console.error("No customerId found");
-  //       return;
-  //     }
-
-  //     const response = await axios.get(
-  //       `${API_BASE_URL}/fetchCustomerJobsApp?customerId=${customerId}&jobId=${jobId}&page=${pageRef.current}`,
-  //       {
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //         },
-  //       }
-  //     );
-
-  //     const newJobs = response?.data?.jobs || [];
-
-  //     console.log("ressss:::::", newJobs);
-
-  //     if (newJobs.length > 0) {
-  //       setJobList(prev => [...prev, ...newJobs]);
-  //       if (newJobs.length < 10) {
-  //         setHasMore(false);
-  //       } else {
-  //         pageRef.current += 1;
-  //       }
-  //     } else {
-  //       setHasMore(false);
-  //     }
-
-  //   } catch (error) {
-  //     console.error("Error to fetch customer job:", error);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
   return (
     <View style={{ flex: 1 }}>
-      <Header onBack={() => navigation.navigate('Home')} title={"Select Job"} />
+      <Header onBack={() => navigation.navigate('Home')} title={"Select Job"} hideBack={route?.params?.hideBack} />
       <View style={{ padding: spacings.large, backgroundColor: whiteColor, height: hp(100), width: wp(100) }}>
         <Text style={[styles.label, { fontSize: style.fontSizeLarge.fontSize, }]}>Select Customer <Text style={{ color: 'red' }}>*</Text></Text>
         <CustomerDropdown
