@@ -152,14 +152,16 @@ const Reports = ({ navigation }) => {
                 return;
             }
             // console.log("token", token);
-
+            const apiUrl = technicianType === "manager"
+                ? `${API_BASE_URL}/fetchAllJobs?roleType=${technicianType}&page=${newPage}&limit=10`
+                : `${API_BASE_URL}/technicianJobFetch?userId=${technicianId}&page=${newPage}&limit=10`;
             const response = await axios.get(
-                `${API_BASE_URL}/technicianJobFetch?userId=${technicianId}&page=${newPage}&limit=10`,
+                apiUrl,
                 { headers: { Authorization: `Bearer ${token}` } }
             );
 
-            const newJobs = response?.data?.response?.jobs || [];
-            // console.log("fetchJobHistory", response?.data?.response?.jobs);
+            const newJobs = (technicianType === "manager") ? (response?.data?.jobs?.jobs) : (response?.data?.response?.jobs) || [];
+            console.log("fetchJobHistory", response?.data);
 
             const updatedJobs = newPage === 1 ? newJobs : [...jobsRawData, ...newJobs];
 
@@ -250,8 +252,10 @@ const Reports = ({ navigation }) => {
                 console.error("Token not found!");
                 return;
             }
-
-            const response = await axios.get(`${API_BASE_URL}/fetchtechVehicleInfo?page=${pageNumber}&userId=${technicianId}`, {
+            const apiUrl = technicianType === "manager"
+                ? `${API_BASE_URL}/fetchVehicleInfo?page=${pageNumber}&roleType=${technicianType}`
+                : `${API_BASE_URL}/fetchtechVehicleInfo?page=${pageNumber}&userId=${technicianId}`;
+            const response = await axios.get(apiUrl, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -259,7 +263,7 @@ const Reports = ({ navigation }) => {
 
             const { response: resData } = response.data;
             const newVehicles = resData?.vehicles || [];
-            // console.log("fetchVehicalInfo::::", newVehicles);
+            console.log("fetchVehicalInfo::::", newVehicles);
 
             // Update vehicle data
             if (pageNumber === 1) {
@@ -282,7 +286,7 @@ const Reports = ({ navigation }) => {
     };
 
     const filterByStatus = useCallback((data, status, tab) => {
-        return data.filter(item => {
+        return data?.filter(item => {
             const field =
                 tab === "Jobs"
                     ? item?.jobStatus

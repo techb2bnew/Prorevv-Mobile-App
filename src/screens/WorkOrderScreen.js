@@ -118,7 +118,12 @@ const WorkOrderScreen = ({ navigation }) => {
         return;
       }
 
-      const apiUrl = `${API_BASE_URL}/fetchAllTechnicianCustomer?userId=${technicianId}&page=${page}`;
+      // const apiUrl = `${API_BASE_URL}/fetchAllTechnicianCustomer?userId=${technicianId}&page=${page}`;
+      const apiUrl = technicianType === "ifs"
+        ? `${API_BASE_URL}/fetchAllTechnicianCustomer?userId=${technicianId}&page=${page}`
+        : `${API_BASE_URL}/fetchAllTechnicianCustomer?roleType=${technicianType}&page=${page}`;
+
+      console.log("technicianId", technicianId);
 
       const response = await fetch(apiUrl, {
         method: 'GET',
@@ -340,7 +345,6 @@ const WorkOrderScreen = ({ navigation }) => {
 
                 navigation.navigate("WorkOrderScreenTwo", {
                   jobName: selectedJobName,
-                  // jobId: selectedJob
                 });
               }}
             >

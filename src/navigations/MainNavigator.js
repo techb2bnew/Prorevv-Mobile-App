@@ -14,6 +14,8 @@ import { useTabBar } from "../TabBarContext";
 import ReportStack from "./ReportsStack";
 import ScannerStack from "./ScannerStack";
 import AntDesign from 'react-native-vector-icons/AntDesign';
+import VinListStack from "./VinListStack";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Tab = createBottomTabNavigator();
 const { width, height } = Dimensions.get("window");
@@ -22,6 +24,8 @@ const { width, height } = Dimensions.get("window");
 const isTablet = width >= 668 && height >= 1024;
 export default function MainNavigator() {
     const { isTabBarHidden } = useTabBar();
+    const [technicianType, setTechnicianType] = React.useState(null);
+
     const shouldHideTabBar = (route) => {
         const routeName = getFocusedRouteNameFromRoute(route) ?? "";
         return routeName === "CustomerInfo"
@@ -38,6 +42,25 @@ export default function MainNavigator() {
             || routeName === "CreateJobScreen"
             || isTabBarHidden;
     };
+
+    React.useEffect(() => {
+        const fetchUserData = async () => {
+            try {
+                const storedData = await AsyncStorage.getItem('userDeatils');
+                if (!storedData) throw new Error('User details not found');
+
+                const parsedData = JSON.parse(storedData);
+                setTechnicianType(parsedData.types);
+            } catch (error) {
+                console.error("Error fetching user details:", error.message);
+            }
+        };
+
+        fetchUserData();
+    }, []);
+
+    if (technicianType === null) return null;
+
 
     return (
         <Tab.Navigator
@@ -60,6 +83,9 @@ export default function MainNavigator() {
                     } else if (route.name === "Account") {
                         IconComponent = Feather;
                         iconName = focused ? "user" : "user";
+                    } else if (route.name === "Vin List") {
+                        IconComponent = Feather;
+                        iconName = focused ? "list" : "list";
                     }
 
                     return (
@@ -116,22 +142,22 @@ export default function MainNavigator() {
                     },
                 })}
             />
-
-            {/* <Tab.Screen
-                name="Scanner"
-                component={ScannerStack}
-                listeners={({ navigation }) => ({
-                    tabPress: e => {
-                        const state = navigation.getState();
-                        const currentRoute = state.routes.find(r => r.name === "Scanner");
-                        if (currentRoute?.state?.index > 0) {
-                            navigation.navigate("Scanner", {
-                                screen: "ScannerScreen", 
-                            });
-                        }
-                    },
-                })}
-            /> */}
+            {technicianType !== "ifs" && (
+                <Tab.Screen
+                    name="Vin List"
+                    component={VinListStack}
+                    listeners={({ navigation }) => ({
+                        tabPress: e => {
+                            const state = navigation.getState();
+                            const currentRoute = state.routes.find(r => r.name === "Vin List");
+                            if (currentRoute?.state?.index > 0) {
+                                navigation.navigate("Vin List", {
+                                    screen: "VinListScreen",
+                                });
+                            }
+                        },
+                    })}
+                />)}
 
             <Tab.Screen
                 name="Reports"
@@ -148,7 +174,7 @@ export default function MainNavigator() {
                     },
                 })}
             />
-            
+
 
             <Tab.Screen
                 name="Account"
@@ -166,7 +192,7 @@ export default function MainNavigator() {
                 })}
             />
 
-            
+
 
         </Tab.Navigator>
     )

@@ -27,48 +27,127 @@ const HomeScreen = ({ navigation }) => {
   const isIOSAndTablet = Platform.OS === "ios" && isTablet;
   // const [banners, setBanners] = useState([]);
 
+  // const cardData = [
+  //   {
+  //     name: technicianType != "ifs" ? "Vehicle" : "Jobs",
+  //     image: NEW_WORK_ORDER_IMAGE,
+  //     backgroundColor: orangeColor,
+  //     onPress: () => { navigation.navigate("WorkOrderScreen") },
+  //     backgroundImage: isTablet ? technicianType != "ifs" ? ADD_CASTUMER_TAB_WHITE_BACK_IMAGE : ADD_CASTUMER_TAB_BACK_IMAGE : technicianType != "ifs" ? ADD_CASTUMER_WHITE_BACK_IMAGE : ADD_CASTUMER_BACK_IMAGE
+  //   },
+  //   {
+  //     name: "Scan Vin",
+  //     image: ADD_VEHICLE_IMAGE,
+  //     backgroundColor: ExtraExtralightOrangeColor,
+  //     // onPress: () => { navigation.navigate("ScannerScreen"); },
+  //     onPress: async () => {
+  //       try {
+  //         const currentJob = await AsyncStorage.getItem("current_Job");
+
+  //         if (customers.length === 0) {
+  //           Toast.show("You don't have any assigned job currently.");
+  //         } else if (!currentJob) {
+  //           Toast.show("Please select a job from the jobs page first.");
+  //         } else {
+  //           navigation.navigate("ScannerScreen");
+  //         }
+  //       } catch (error) {
+  //         console.error("Error checking current job:", error);
+  //       }
+  //     },
+  //     backgroundImage: isTablet ? ADD_VEHICLE_TAB_BACK_IMAGE : ADD_VEHICLE_BACK_IMAGE
+  //   },
+  //   {
+  //     name: "Vin List",
+  //     image: VIN_LIST_IMAGE,
+  //     backgroundColor: ExtraExtralightOrangeColor,
+  //     onPress: () => { navigation.navigate("VinListScreen"); },
+  //     backgroundImage: isTablet ? JOB_HISTORY_TAB_BACK_IMAGE : JOB_HISTORY_BACK_IMAGE
+  //   },
+  //   {
+  //     name: "Reports",
+  //     image: JOB_HISTORY_IMAGE,
+  //     backgroundColor: ExtraExtralightOrangeColor,
+  //     onPress: () => { navigation.navigate("ReportsScreen") },
+  //     backgroundImage: isTablet ? HOW_TO_PLAY_TAB_BACK_IMAGE : HOW_TO_PLAY_BACK_IMAGE
+  //   }
+  // ]
+
   const cardData = [
     {
-      name: technicianType != "ifs" ? "Vehicle" : "Jobs",
-      image: NEW_WORK_ORDER_IMAGE,
+      name: technicianType === "ifs" ? "Jobs" : "Customer",
+      image: technicianType === "ifs" ? NEW_WORK_ORDER_IMAGE : NEW_CLIENT_IMAGE,
       backgroundColor: orangeColor,
-      onPress: () => { navigation.navigate("WorkOrderScreen") },
-      backgroundImage: isTablet ? technicianType != "ifs" ? ADD_CASTUMER_TAB_WHITE_BACK_IMAGE : ADD_CASTUMER_TAB_BACK_IMAGE : technicianType != "ifs" ? ADD_CASTUMER_WHITE_BACK_IMAGE : ADD_CASTUMER_BACK_IMAGE
+      onPress: () => {
+        if (technicianType === "ifs") {
+          navigation.navigate("WorkOrderScreen");
+        } else {
+          navigation.navigate("CustomerInfo");
+        }
+      },
+      backgroundImage: isTablet ? ADD_CASTUMER_TAB_BACK_IMAGE : ADD_CASTUMER_BACK_IMAGE
+
     },
     {
-      name: "Scan Vin",
-      image: ADD_VEHICLE_IMAGE,
+      name: technicianType === "ifs" ? "Scan Vin" : "Jobs",
+      image: technicianType === "ifs" ? CIRLE_SCANNER_IMAGE : NEW_WORK_ORDER_IMAGE,
       backgroundColor: ExtraExtralightOrangeColor,
       // onPress: () => { navigation.navigate("ScannerScreen"); },
       onPress: async () => {
-        try {
-          const currentJob = await AsyncStorage.getItem("current_Job");
-
-          if (customers.length === 0) {
-            Toast.show("You don't have any assigned job currently.");
-          } else if (!currentJob) {
-            Toast.show("Please select a job from the jobs page first.");
-          } else {
-            navigation.navigate("ScannerScreen");
+        if (technicianType === "ifs") {
+          try {
+            const currentJob = await AsyncStorage.getItem("current_Job");
+            if (customers.length === 0) {
+              Toast.show("You don't have any assigned job currently.");
+            } else if (!currentJob) {
+              Toast.show("Please select a job from the jobs page first.");
+            } else {
+              navigation.navigate("ScannerScreen");
+            }
+          } catch (error) {
+            console.error("Error checking current job:", error);
           }
-        } catch (error) {
-          console.error("Error checking current job:", error);
+        } else {
+          navigation.navigate("CreateJobScreen")
         }
       },
       backgroundImage: isTablet ? ADD_VEHICLE_TAB_BACK_IMAGE : ADD_VEHICLE_BACK_IMAGE
     },
     {
-      name: "Vin List",
-      image: VIN_LIST_IMAGE,
+      name: technicianType === "ifs" ? "Vin List" : "Vehicle",
+      image: technicianType === "ifs" ? VIN_LIST_IMAGE : ADD_VEHICLE_IMAGE,
       backgroundColor: ExtraExtralightOrangeColor,
-      onPress: () => { navigation.navigate("VinListScreen"); },
+      onPress: () => {
+        if (technicianType === "ifs") {
+          navigation.navigate("VinListScreen")
+        } else {
+          navigation.navigate("WorkOrderScreen");
+        }
+      },
       backgroundImage: isTablet ? JOB_HISTORY_TAB_BACK_IMAGE : JOB_HISTORY_BACK_IMAGE
     },
     {
-      name: "Reports",
-      image: JOB_HISTORY_IMAGE,
+      name: technicianType === "ifs" ? "Reports" : "Scan Vin",
+      image: technicianType === "ifs" ? JOB_HISTORY_IMAGE : CIRLE_SCANNER_IMAGE,
       backgroundColor: ExtraExtralightOrangeColor,
-      onPress: () => { navigation.navigate("ReportsScreen") },
+      onPress: async () => {
+        if (technicianType === "ifs") {
+          navigation.navigate("ReportsScreen")
+        } else {
+          try {
+            const currentJob = await AsyncStorage.getItem("current_Job");
+            if (customers.length === 0) {
+              Toast.show("You don't have any assigned job currently.");
+            } else if (!currentJob) {
+              Toast.show("Please select a job from the jobs page first.");
+            } else {
+              navigation.navigate("ScannerScreen");
+            }
+          } catch (error) {
+            console.error("Error checking current job:", error);
+          }
+        }
+      },
       backgroundImage: isTablet ? HOW_TO_PLAY_TAB_BACK_IMAGE : HOW_TO_PLAY_BACK_IMAGE
     }
   ]
@@ -225,7 +304,8 @@ const HomeScreen = ({ navigation }) => {
             style={[
               styles.cardText,
               {
-                color: item.backgroundColor === orangeColor ? technicianType != "ifs" ? blackColor : whiteColor : blackColor,
+                color: item.backgroundColor === orangeColor ? whiteColor : blackColor,
+                // color: item.backgroundColor === orangeColor ? technicianType != "ifs" ? blackColor : whiteColor : blackColor,
                 fontSize: isTablet ? style.fontSizeLarge.fontSize : style.fontSizeNormal2x.fontSize,
 
               },
@@ -262,16 +342,6 @@ const HomeScreen = ({ navigation }) => {
               console.error("Error accessing current job:", error);
             }
           }}
-        // onPress={() => {
-        //   if (customers.length > 0) {
-        //     navigation.navigate("ScannerScreen", {
-        //       from: "VinList"
-        //     });
-        //   } else {
-        //     Toast.show("You don't have any assigned job currently.");
-        //   }
-        // }}
-
         >
           <View style={[styles.input, { flexDirection: "row", alignItems: "center", justifyContent: "space-between" }]}>
             <Text style={{ color: grayColor }}>Scan VIN</Text>
@@ -279,7 +349,7 @@ const HomeScreen = ({ navigation }) => {
           </View>
         </Pressable>
       </View>
-      {technicianType != "ifs" && <View style={[{ width: "100%", marginTop: 10, paddingHorizontal: spacings.xLarge }, flexDirectionRow, justifyContentSpaceBetween]}>
+      {/* {technicianType != "ifs" && <View style={[{ width: "100%", marginTop: 10, paddingHorizontal: spacings.xLarge }, flexDirectionRow, justifyContentSpaceBetween]}>
         <View style={[{ width: "49.5%", height: isTablet ? hp(23) : hp(22), backgroundColor: '#EEEEEE', borderTopLeftRadius: isTablet ? 40 : 20, borderBottomLeftRadius: isTablet ? 40 : 20 }, alignJustifyCenter]}>
           <Pressable style={alignJustifyCenter} onPress={() => navigation.navigate("CustomerInfo")}>
             <Image source={NEW_CLIENT_IMAGE} style={[styles.cardImage, resizeModeContain]} />
@@ -316,8 +386,8 @@ const HomeScreen = ({ navigation }) => {
         </View>
 
 
-      </View>}
-      <View style={{ width: "100%", height: "55%", marginTop: technicianType != "ifs" ? 5 : 20, paddingHorizontal: spacings.large }}>
+      </View>} */}
+      <View style={{ width: "100%", height: "55%", marginTop: 20, paddingHorizontal: spacings.large }}>
         <FlatList
           data={cardData}
           renderItem={renderItem}

@@ -109,7 +109,6 @@ const VinListScreen = ({ navigation, route }) => {
                     if (storedData) {
                         const parsedData = JSON.parse(storedData);
                         const type = parsedData?.types;
-                        // console.log("technicianType fetched:", type);
                         setTechnicianType(type);
                         setTechnicianId(parsedData.id);
 
@@ -139,13 +138,15 @@ const VinListScreen = ({ navigation, route }) => {
                 console.error("Token not found!");
                 return;
             }
+            const apiUrl = technicianType === "ifs"
+                ? `${API_BASE_URL}/fetchtechVehicleInfo?page=${pageNumber}&userId=${technicianId}`
+                : `${API_BASE_URL}/fetchVehicleInfo?page=${pageNumber}&roleType=${technicianType}`;
 
-            const response = await axios.get(`${API_BASE_URL}/fetchtechVehicleInfo?page=${pageNumber}&userId=${technicianId}`, {
+            const response = await axios.get(apiUrl, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
             });
-            // console.log(`${API_BASE_URL}/fetchtechVehicleInfo?page=${pageNumber}&userId=${technicianId}`);
 
             const { response: resData } = response.data;
             const newVehicles = resData?.vehicles || [];

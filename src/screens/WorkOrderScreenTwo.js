@@ -18,6 +18,7 @@ import { ALERT_IMAGE, SUCCESS_IMAGE, XCIRCLE_IMAGE } from '../assests/images';
 import { Image as ImageCompressor } from 'react-native-compressor';
 import Header from '../componets/Header';
 import Toast from 'react-native-simple-toast';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 
 const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween, textAlign } = BaseStyle;
@@ -70,6 +71,10 @@ const WorkOrderScreenTwo = ({ route }) => {
     const [newFormData, setNewFormData] = useState(null);
     const [scanLoading, setScanLoading] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [technicians, setTechnicians] = useState([]);
+    const [selectedTechnicians, setSelectedTechnicians] = useState([]); // store selected IDs
+
+
     const [modalData, setModalData] = useState({
         visible: false,
         headingText: '',
@@ -205,11 +210,14 @@ const WorkOrderScreenTwo = ({ route }) => {
         React.useCallback(() => {
             const loadSelectedJob = async () => {
                 const savedJob = await AsyncStorage.getItem("current_Job");
+                console.log(savedJob);
+
                 if (savedJob) {
                     const parsed = JSON.parse(savedJob);
                     setSelectedJobName(parsed.jobName);
                     setSelectedJobId(parsed.id);
-                    setSelectedCustomer(parsed.assignCustomer)
+                    setSelectedCustomer(parsed.assignCustomer);
+                    setTechnicians(parsed.technicians);
                 }
             };
 
@@ -541,33 +549,33 @@ const WorkOrderScreenTwo = ({ route }) => {
             return;
         }
 
-        console.log("workingggg");
-        const technicianObj = {
-            payRate: storedPayRate,
-            payVehicleType: selectedVehicleType,
-            amountPercentage: storedAmountPercentage,
-            simpleFlatRate: storedSimpleFlatRate
-        };
-        console.log("technicianObj", technicianObj);
+        // const technicianObj = {
+        //     payRate: storedPayRate,
+        //     payVehicleType: selectedVehicleType,
+        //     amountPercentage: storedAmountPercentage,
+        //     simpleFlatRate: storedSimpleFlatRate
+        // };
+        // console.log("technicianObj", technicianObj);
+        // console.log("selectedTechnicians", selectedTechnicians);
 
-        let fullFlatRate = {};
-        try {
-            fullFlatRate = JSON.parse(technicianObj?.simpleFlatRate);
-        } catch (error) {
-            console.error("Invalid JSON in simpleFlatRate", error);
-        }
+        // let fullFlatRate = {};
+        // try {
+        //     fullFlatRate = JSON.parse(technicianObj?.simpleFlatRate);
+        // } catch (error) {
+        //     console.error("Invalid JSON in simpleFlatRate", error);
+        // }
 
-        const selectedVehicleRate = {
-            [technicianObj?.payVehicleType]: fullFlatRate[technicianObj?.payVehicleType]
-        };
-        const finalFlatRate =
-            selectedVehicleRate[technicianObj.payVehicleType] !== undefined
-                ? JSON.stringify(selectedVehicleRate)
-                : technicianObj.simpleFlatRate;
+        // const selectedVehicleRate = {
+        //     [technicianObj?.payVehicleType]: fullFlatRate[technicianObj?.payVehicleType]
+        // };
+        // const finalFlatRate =
+        //     selectedVehicleRate[technicianObj?.payVehicleType] !== undefined
+        //         ? JSON.stringify(selectedVehicleRate)
+        //         : technicianObj?.simpleFlatRate;
 
 
 
-        console.log("finalFlatRate", finalFlatRate);
+        // console.log("finalFlatRate", finalFlatRate);
 
         const invalidJob = jobDescription?.find(item => {
             const desc = item.jobDescription?.trim();
@@ -611,17 +619,69 @@ const WorkOrderScreenTwo = ({ route }) => {
         });
         formData.append("color", selectedColor);
         formData.append("createdBy", "app");
-        formData.append("userId[0]", technicianId);
+        // formData.append("userId[0]", technicianId);
+        if (technicianType === "manager") {
+            selectedTechnicians.forEach((tech, index) => {
+                formData.append(`userId[${index}]`, tech.id);
+            });
+        } else {
+            formData.append("userId[0]", technicianId);
+        }
         formData.append("roleType", technicianType);
         formData.append("labourCost", labourCost || "");
         formData.append("customerId", selectedCustomer);
         formData.append("notes", notes || " ");
-        formData.append("technicians[0][payRate]", technicianObj.payRate);
-        formData.append("technicians[0][payVehicleType]", technicianObj.payVehicleType);
-        // formData.append("technicians[0][simpleFlatRate]", technicianObj.simpleFlatRate);
-        formData.append("technicians[0][simpleFlatRate]", finalFlatRate);
-        formData.append("technicians[0][amountPercentage]", technicianObj.amountPercentage);
+        // formData.append("technicians[0][payRate]", technicianObj.payRate);
+        // formData.append("technicians[0][payVehicleType]", technicianObj.payVehicleType);
+        // formData.append("technicians[0][simpleFlatRate]", finalFlatRate);
+        // formData.append("technicians[0][amountPercentage]", technicianObj.amountPercentage);
+        if (technicianType === "ifs") {
+            // 👉 Single Technician (self)
+            let parsedRate = {};
+            try {
+                parsedRate = JSON.parse(storedSimpleFlatRate || "{}");
+            } catch (e) {
+                console.error("Invalid JSON in storedSimpleFlatRate", e);
+            }
 
+            const selRate = {
+                [selectedVehicleType]: parsedRate[selectedVehicleType],
+            };
+
+            const finalRate = parsedRate[selectedVehicleType] !== undefined
+                ? JSON.stringify(selRate)
+                : storedSimpleFlatRate || "{}";
+
+            formData.append("technicians[0][payRate]", storedPayRate);
+            formData.append("technicians[0][payVehicleType]", selectedVehicleType);
+            formData.append("technicians[0][simpleFlatRate]", finalRate);
+            formData.append("technicians[0][amountPercentage]", storedAmountPercentage);
+        } else {
+            // 👉 Multiple Selected Technicians
+            selectedTechnicians.forEach((tech, index) => {
+                let parsedRate = {};
+                const job = tech.UserJob || {}; // safe access
+
+                try {
+                    parsedRate = JSON.parse(job.simpleFlatRate || "{}");
+                } catch (e) {
+                    console.error("Invalid JSON in job.simpleFlatRate", e);
+                }
+
+                const selRate = {
+                    [job.payVehicleType]: parsedRate[job.payVehicleType],
+                };
+
+                const finalRate = parsedRate[job.payVehicleType] !== undefined
+                    ? JSON.stringify(selRate)
+                    : job.simpleFlatRate || "{}";
+
+                formData.append(`technicians[${index}][payRate]`, job.payRate || "");
+                formData.append(`technicians[${index}][payVehicleType]`, job.payVehicleType || "");
+                formData.append(`technicians[${index}][simpleFlatRate]`, finalRate);
+                formData.append(`technicians[${index}][amountPercentage]`, job.amountPercentage || "");
+            });
+        }
 
         if (imageUris && imageUris.length > 0) {
             imageUris.forEach((uri, index) => {
@@ -708,54 +768,28 @@ const WorkOrderScreenTwo = ({ route }) => {
         }));
     };
 
-    const handleConfirmDuplicateVin = async () => {
-        setIsSubmitting(true);  // Start loading
-        try {
-            const token = await AsyncStorage.getItem("auth_token");
-
-            if (!token) {
-                console.error("Token is missing!");
-                Toast.show("Authentication error. Please log in again.");
-                setIsSubmitting(false);
-                return;
-            }
-
-            if (!newFormData) {
-                console.error("FormData is missing!");
-                Toast.show("Something went wrong. Please try again.");
-                setIsSubmitting(false);
-                return;
-            }
-
-            console.log("Sending FormData:", newFormData);
-
-            const response = await axios.post(
-                `${API_BASE_URL}/createVinDetails`,
-                newFormData,
-                {
-                    headers: {
-                        "Content-Type": "multipart/form-data",
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
-            );
-
-            console.log("API Response:", response);
-
-
-            if (response.status === 201) {
-                Toast.show("Vehicle add successfully!");
-                setDuplicateVinModal(false);
-                navigation.navigate("Home")
-            } else {
-                Toast.show("Failed to override Vehicle.");
-            }
-        } catch (error) {
-            console.error("Error overriding Vehicle:", error);
-        } finally {
-            setIsSubmitting(false); // Stop loading after request completes
-        }
+    const capitalize = (str) => {
+        return str ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase() : "";
     };
+
+    const toggleTechnicianSelection = (item) => {
+        setSelectedTechnicians((prevSelected) => {
+            const isAlreadySelected = prevSelected.some((tech) => tech.id === item.id);
+            if (isAlreadySelected) {
+                return prevSelected.filter((tech) => tech.id !== item.id); // unselect
+            } else {
+                return [...prevSelected, item]; // select full object
+            }
+        });
+    };
+    const isTechnicianSelected = (id) => {
+        return selectedTechnicians.some((tech) => tech.id === id);
+    };
+    useEffect(() => {
+        if (technicians?.length > 0) {
+            setSelectedTechnicians(technicians); // store full technician objects
+        }
+    }, [technicians]);
 
 
     return (
@@ -1198,6 +1232,60 @@ const WorkOrderScreenTwo = ({ route }) => {
                                         />
                                     </View>
 
+
+                                    {technicianType != 'ifs' && <View style={{ marginTop: 20 }}>
+                                        <Text style={styles.label}>Select Technician</Text>
+                                        <View style={{
+                                            borderWidth: 1,
+                                            borderColor: blueColor,
+                                            borderRadius: 8,
+                                            // height: hp(20), // Fixed height is good
+                                            overflow: "hidden",
+                                            marginBottom: 16,
+                                        }}>
+                                            <FlatList
+                                                nestedScrollEnabled={true}
+                                                data={technicians}
+                                                keyExtractor={(item) => item.id.toString()}
+                                                renderItem={({ item }) => {
+                                                    const selected = isTechnicianSelected(item.id);
+                                                    return (
+                                                        <TouchableOpacity
+                                                            onPress={() => toggleTechnicianSelection(item)}
+                                                            style={[
+                                                                styles.techItem,
+                                                                flexDirectionRow,
+                                                                justifyContentSpaceBetween,
+                                                                alignItemsCenter,
+                                                                {
+                                                                    backgroundColor: selected ? lightBlueColor : "#fff",
+                                                                    paddingVertical: 10,
+                                                                    paddingHorizontal: 12,
+                                                                }
+                                                            ]}
+                                                        >
+                                                            <Text style={{ fontSize: 16 }}>
+                                                                {capitalize(item.firstName)} {capitalize(item.lastName)}
+                                                            </Text>
+                                                            <Icon
+                                                                name={selected ? "checkbox-marked" : "checkbox-blank-outline"}
+                                                                size={24}
+                                                                color={selected ? blueColor : "#ccc"}
+                                                                type="MaterialCommunityIcons"
+                                                            />
+                                                        </TouchableOpacity>
+                                                    );
+                                                }}
+
+                                                onEndReachedThreshold={0.3}
+                                                showsVerticalScrollIndicator={false}
+                                            />
+                                        </View>
+                                        {/* {technicianError ? (
+                                            <Text style={{ color: 'red', marginTop: 6, fontSize: 12 }}>{technicianError}</Text>
+                                        ) : null} */}
+                                    </View>}
+
                                     {error && <Text style={{ color: 'red', marginTop: 10 }}>{error}</Text>}
 
                                     {/* Submit */}
@@ -1286,7 +1374,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                             style={styles.cancelButton}
                                             onPress={() => {
                                                 setDuplicateVinModal(false),
-                                                setVin('');
+                                                    setVin('');
                                                 setCarDetails(null);
                                                 setStep(1);
                                             }}
@@ -1555,5 +1643,12 @@ const styles = StyleSheet.create({
     },
     saveButtonContainer: {
         marginTop: spacings.large,
+    },
+    techItem: {
+        paddingVertical: 10,
+        paddingHorizontal: 15,
+        borderBottomColor: blueColor,
+        borderBottomWidth: 1,
+        backgroundColor: "#fff",
     },
 });

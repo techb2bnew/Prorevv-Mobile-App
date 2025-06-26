@@ -671,15 +671,19 @@ const CustomerInfoScreen = ({ navigation }) => {
                                         bottom: hp(5),
                                         right: wp(8),
                                         backgroundColor: blueColor,
-                                        paddingVertical: spacings.xLarge,
-                                        paddingHorizontal: spacings.Large1x,
+                                        width: 60,
+                                        height: 60,
                                         borderRadius: 30,
-                                        flexDirection: 'row',
+                                        justifyContent: 'center',
                                         alignItems: 'center',
+                                        elevation: 5,
+                                        shadowColor: "#000",
+                                        shadowOffset: { width: 0, height: 2 },
+                                        shadowOpacity: 0.25,
+                                        shadowRadius: 3.84,
                                     }}
                                 >
-                                    <Ionicons name="person-add" size={20} color={whiteColor} />
-                                    <Text style={{ color: whiteColor, marginLeft: 8 }}>Add Customer</Text>
+                                    <Ionicons name="person-add" size={28} color={whiteColor} />
                                 </TouchableOpacity>
                             </>
                         )}
@@ -698,7 +702,7 @@ const CustomerInfoScreen = ({ navigation }) => {
                                             margin: 5,
                                             borderRadius: 10,
                                             flex: 1,
-                                            elevation: 2,
+                                            // elevation: 2,
                                             borderColor: blueColor,
                                             borderWidth: 1
                                         }}>
