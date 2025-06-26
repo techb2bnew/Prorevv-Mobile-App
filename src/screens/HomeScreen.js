@@ -1,7 +1,7 @@
 import { Image, StyleSheet, Text, TouchableOpacity, View, Pressable, FlatList, ImageBackground, Platform, Dimensions, Alert, ToastAndroid, TextInput } from 'react-native'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { blackColor, blueColor, ExtraExtralightOrangeColor, grayColor, lightBlueColor, lightOrangeColor, orangeColor, whiteColor } from '../constans/Color';
-import { ADD_CASTUMER_BACK_IMAGE, ADD_CASTUMER_TAB_BACK_IMAGE, ADD_VEHICLE_BACK_IMAGE, ADD_VEHICLE_IMAGE, ADD_VEHICLE_TAB_BACK_IMAGE, APP_NAME_IMAGE, CAROUSAL_ONE_IMAGE, CAROUSAL_THREE_IMAGE, CAROUSAL_TWO_IMAGE, CIRLE_SCANNER_IMAGE, HOW_TO_PLAY_BACK_IMAGE, HOW_TO_PLAY_TAB_BACK_IMAGE, HOW_TO_USE_IMAGE, JOB_HISTORY_BACK_IMAGE, JOB_HISTORY_IMAGE, JOB_HISTORY_TAB_BACK_IMAGE, NEW_CLIENT_IMAGE, NEW_WORK_ORDER_IMAGE, VIN_LIST_IMAGE } from '../assests/images';
+import { ADD_CASTUMER_BACK_IMAGE, ADD_CASTUMER_TAB_BACK_IMAGE, ADD_CASTUMER_TAB_WHITE_BACK_IMAGE, ADD_CASTUMER_WHITE_BACK_IMAGE, ADD_VEHICLE_BACK_IMAGE, ADD_VEHICLE_IMAGE, ADD_VEHICLE_TAB_BACK_IMAGE, APP_NAME_IMAGE, CAROUSAL_ONE_IMAGE, CAROUSAL_THREE_IMAGE, CAROUSAL_TWO_IMAGE, CIRLE_SCANNER_IMAGE, HOW_TO_PLAY_BACK_IMAGE, HOW_TO_PLAY_TAB_BACK_IMAGE, HOW_TO_USE_IMAGE, JOB_HISTORY_BACK_IMAGE, JOB_HISTORY_IMAGE, JOB_HISTORY_TAB_BACK_IMAGE, NEW_CLIENT_IMAGE, NEW_WORK_ORDER_IMAGE, VIN_LIST_IMAGE } from '../assests/images';
 import { BaseStyle } from '../constans/Style';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from '../utils';
 import { style, spacings } from '../constans/Fonts';
@@ -22,20 +22,18 @@ const HomeScreen = ({ navigation }) => {
   const [technicianType, setTechnicianType] = useState('');
   const [bLogo, setbLogo] = useState(null);
   const [customers, setCustomers] = useState([]);
-
   // const [activeIndex, setActiveIndex] = useState(0);
   const isTablet = width >= 668 && height >= 1024;
   const isIOSAndTablet = Platform.OS === "ios" && isTablet;
   // const [banners, setBanners] = useState([]);
 
-
   const cardData = [
     {
-      name: technicianType != "ifs" ? "Add Vehicle" : "Jobs",
+      name: technicianType != "ifs" ? "Vehicle" : "Jobs",
       image: NEW_WORK_ORDER_IMAGE,
       backgroundColor: orangeColor,
       onPress: () => { navigation.navigate("WorkOrderScreen") },
-      backgroundImage: isTablet ? ADD_CASTUMER_TAB_BACK_IMAGE : ADD_CASTUMER_BACK_IMAGE
+      backgroundImage: isTablet ? technicianType != "ifs" ? ADD_CASTUMER_TAB_WHITE_BACK_IMAGE : ADD_CASTUMER_TAB_BACK_IMAGE : technicianType != "ifs" ? ADD_CASTUMER_WHITE_BACK_IMAGE : ADD_CASTUMER_BACK_IMAGE
     },
     {
       name: "Scan Vin",
@@ -227,7 +225,7 @@ const HomeScreen = ({ navigation }) => {
             style={[
               styles.cardText,
               {
-                color: item.backgroundColor === orangeColor ? whiteColor : blackColor,
+                color: item.backgroundColor === orangeColor ? technicianType != "ifs" ? blackColor : whiteColor : blackColor,
                 fontSize: isTablet ? style.fontSizeLarge.fontSize : style.fontSizeNormal2x.fontSize,
 
               },
@@ -282,37 +280,37 @@ const HomeScreen = ({ navigation }) => {
         </Pressable>
       </View>
       {technicianType != "ifs" && <View style={[{ width: "100%", marginTop: 10, paddingHorizontal: spacings.xLarge }, flexDirectionRow, justifyContentSpaceBetween]}>
-        <View style={[{ width: "49.5%", height: hp(22), backgroundColor: blueColor, borderTopLeftRadius: 20, borderBottomLeftRadius: 20 }, alignJustifyCenter]}>
+        <View style={[{ width: "49.5%", height: isTablet ? hp(23) : hp(22), backgroundColor: '#EEEEEE', borderTopLeftRadius: isTablet ? 40 : 20, borderBottomLeftRadius: isTablet ? 40 : 20 }, alignJustifyCenter]}>
           <Pressable style={alignJustifyCenter} onPress={() => navigation.navigate("CustomerInfo")}>
             <Image source={NEW_CLIENT_IMAGE} style={[styles.cardImage, resizeModeContain]} />
             <Text
               style={[
                 styles.cardText,
                 {
-                  color: whiteColor,
+                  color: blackColor,
                   fontSize: isTablet ? style.fontSizeLarge.fontSize : style.fontSizeNormal2x.fontSize,
 
                 },
               ]}
             >
-              Create Customer
+              Customer
             </Text>
           </Pressable>
         </View>
-        <View style={[{ width: "48%", height: hp(22), backgroundColor: blueColor, borderTopRightRadius: 20, borderBottomRightRadius: 20 }, alignJustifyCenter]}>
+        <View style={[{ width: isTablet ? "49.5%" : "48%", height: isTablet ? hp(23) : hp(22), backgroundColor: '#EEEEEE', borderTopRightRadius: isTablet ? 40 : 20, borderBottomRightRadius: isTablet ? 40 : 20 }, alignJustifyCenter]}>
           <Pressable style={alignJustifyCenter} onPress={() => navigation.navigate("CreateJobScreen")}>
             <Image source={NEW_WORK_ORDER_IMAGE} style={[styles.cardImage, resizeModeContain]} />
             <Text
               style={[
                 styles.cardText,
                 {
-                  color: whiteColor,
+                  color: blackColor,
                   fontSize: isTablet ? style.fontSizeLarge.fontSize : style.fontSizeNormal2x.fontSize,
 
                 },
               ]}
             >
-              Create Job
+              Job
             </Text>
           </Pressable>
         </View>

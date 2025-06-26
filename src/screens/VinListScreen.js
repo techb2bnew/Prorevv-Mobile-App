@@ -240,7 +240,20 @@ const VinListScreen = ({ navigation, route }) => {
                 right: 10,
                 zIndex: 10
             }}>
+                <TouchableOpacity
+                    onPress={() => setViewType('list')}
+                    style={[styles.tabButton, {
+                        backgroundColor: viewType === 'list' ? blueColor : whiteColor,
+                        width: isTablet ? wp(8) : wp(12),
+                        height: hp(4.5),
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        borderRadius: 5,
+                        marginRight: 10,
 
+                    }]}>
+                    <Ionicons name="list" size={isTablet ? 35 : 20} color={viewType === 'list' ? whiteColor : blackColor} />
+                </TouchableOpacity>
                 <TouchableOpacity
                     onPress={() => setViewType('grid')}
                     style={[styles.tabButton, {
@@ -250,23 +263,9 @@ const VinListScreen = ({ navigation, route }) => {
                         justifyContent: 'center',
                         alignItems: 'center',
                         borderRadius: 5,
-                        marginRight: 10,
                     }]}>
                     <Ionicons name="grid-sharp" size={isTablet ? 35 : 20} color={viewType === 'grid' ? whiteColor : blackColor} />
                 </TouchableOpacity>
-                <TouchableOpacity
-                    onPress={() => setViewType('list')}
-                    style={[styles.tabButton, {
-                        backgroundColor: viewType === 'list' ? blueColor : whiteColor,
-                        width: isTablet ? wp(8) : wp(12),
-                        height: hp(4.5),
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        borderRadius: 5
-                    }]}>
-                    <Ionicons name="list" size={isTablet ? 35 : 20} color={viewType === 'list' ? whiteColor : blackColor} />
-                </TouchableOpacity>
-
 
             </View>
 

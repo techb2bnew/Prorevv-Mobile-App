@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { View, StyleSheet, Text, ScrollView, Image, Pressable, TouchableOpacity, Platform, KeyboardAvoidingView, ActivityIndicator, Modal, TextInput, Dimensions, PermissionsAndroid, Alert } from "react-native";
+import { View, StyleSheet, Text, ScrollView, Image, Pressable, TouchableOpacity, Platform, KeyboardAvoidingView, ActivityIndicator, Modal, TextInput, Dimensions, PermissionsAndroid, Alert, FlatList } from "react-native";
 import CustomButton from '../componets/CustomButton';
 import CustomTextInput from '../componets/CustomTextInput';
 import { blackColor, blueColor, grayColor, lightBlueColor, lightOrangeColor, lightShadeBlue, mediumGray, orangeColor, redColor, whiteColor } from "../constans/Color";
@@ -27,36 +27,27 @@ const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirec
 const CustomerInfoScreen = ({ navigation }) => {
     const phoneInput = useRef(null);
     const [errors, setErrors] = useState({});
-    // const [loading, setLoading] = useState(false);
-    const [isLoadingState, setIsLoadingState] = useState(false);
-    const [states, setStates] = useState([]);
-    const [stateValue, setStateValue] = useState("");
-    const [countries, setCountries] = useState([]);
-    const [countryValue, setCountryValue] = useState("United States" || "");
     const [technicianId, setTechnicianId] = useState();
     const [technicianType, setTechnicianType] = useState();
     const [isConnected, setIsConnected] = useState(true);
     const { width, height } = Dimensions.get("window");
-    const [cities, setCities] = useState([]);
-    const [cityValue, setCityValue] = useState("");
-    const [capturedImage, setCapturedImage] = useState(null);
     const [submitLoading, setSubmitLoading] = useState(false);
-    const [addVehicleLoading, setAddVehicleLoading] = useState(false);
+    const [customers, setCustomers] = useState([]);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
     const googleRef = useRef();
-
     const isTablet = width >= 668 && height >= 1024;
+    const [viewType, setViewType] = useState('list');
+    const [isAddMode, setIsAddMode] = useState(false); // false = show list, true = show form
+
 
     const [formData, setFormData] = useState({
         fullName: "",
-        // lastName: "",
         email: "",
         phoneNumber: "",
         address: "",
-        // country: countryValue,
-        // state: "",
-        // city: "",
-        // zipCode: "",
-        // image: null
+
     });
 
     useEffect(() => {
@@ -77,127 +68,6 @@ const CustomerInfoScreen = ({ navigation }) => {
 
         getTechnicianDetail();
     }, []);
-
-
-    // useFocusEffect(
-    //     React.useCallback(() => {
-    //         const checkConnectionAndFetchCountries = async () => {
-    //             const netInfo = await NetInfo.fetch();
-    //             if (netInfo.isConnected) {
-    //                 fetchCountries();
-    //             } else {
-    //                 console.log("Offline mode: Not fetching countries.");
-    //                 setIsLoadingState(false); // ensure loader doesn't keep spinning
-
-    //             }
-    //         };
-
-    //         checkConnectionAndFetchCountries();
-    //     }, [])
-    // );
-
-    // useEffect(() => {
-    //     const checkConnectionAndFetchStates = async () => {
-    //         const netInfo = await NetInfo.fetch();
-    //         if (netInfo.isConnected) {
-    //             fetchStates();
-    //         } else {
-    //             console.log("Offline mode: Not fetching states.");
-    //             setIsLoadingState(false); // ensure loader doesn't keep spinning
-
-    //         }
-    //     };
-    //     checkConnectionAndFetchStates();
-    // }, [formData.country]);
-
-
-    // useEffect(() => {
-    //     const checkConnectionAndFetchCities = async () => {
-    //         const netInfo = await NetInfo.fetch();
-    //         if (netInfo.isConnected) {
-    //             if (formData.country && formData.state) {
-    //                 fetchCities(); // fetch only when country & state both selected
-    //             } else {
-    //                 console.log("Country or State not selected. Skipping city fetch.");
-    //                 setIsLoadingState(false); // ensure loader doesn't keep spinning
-
-    //             }
-    //         } else {
-    //             console.log("Offline mode: Not fetching cities.");
-    //         }
-    //     };
-    //     checkConnectionAndFetchCities();
-    // }, [formData.country, formData.state]);
-
-
-    // const fetchCountries = async () => {
-    //     setIsLoadingState(true);
-    //     try {
-    //         console.log("Fetching countries...");
-    //         const response = await fetch("https://restcountries.com/v3.1/all?fields=name");
-    //         const data = await response.json();
-
-    //         console.log("Fetched Countries:", data);
-    //         if (Array.isArray(data)) {
-    //             const countryNames = data.map((item) => item.name.common);
-    //             const sortedCountries = countryNames.sort((a, b) => a.localeCompare(b));
-    //             setCountries(sortedCountries);
-    //         } else {
-    //             console.log("No countries found.");
-    //         }
-    //     } catch (error) {
-    //         console.error("Error fetching countries:", error);
-    //     } finally {
-    //         setIsLoadingState(false);
-    //     }
-    // };
-
-
-    // const fetchStates = async () => {
-    //     setIsLoadingState(true);
-    //     console.log("formData.country", formData?.country);
-    //     try {
-    //         const response = await axios.post(
-    //             "https://countriesnow.space/api/v0.1/countries/states",
-    //             { country: formData?.country }
-    //         );
-
-    //         if (response.data && response.data.data && response.data.data.states) {
-    //             console.log("States of", formData.country, ":", response.data.data.states);
-    //             setStates(response.data.data.states)
-    //         } else {
-    //             console.log("No states found for", formData.country);
-    //         }
-    //     } catch (error) {
-    //         console.error("Error fetching states:", error);
-    //     } finally {
-    //         setIsLoadingState(false)
-    //     }
-    // };
-
-    // const fetchCities = async () => {
-    //     setIsLoadingState(true);
-    //     try {
-    //         const response = await axios.post(
-    //             "https://countriesnow.space/api/v0.1/countries/state/cities",
-    //             {
-    //                 country: formData.country,
-    //                 state: formData.state,
-    //             }
-    //         );
-
-    //         if (response.data && response.data.data) {
-    //             console.log("Cities of", formData.state, ":", response.data.data);
-    //             setCities(response.data.data);
-    //         } else {
-    //             console.log("No cities found for", formData.state);
-    //         }
-    //     } catch (error) {
-    //         console.error("Error fetching cities:", error);
-    //     } finally {
-    //         setIsLoadingState(false);
-    //     }
-    // };
 
     const handleInputChange = (field, value) => {
         console.log("fieldfield", field);
@@ -222,7 +92,6 @@ const CustomerInfoScreen = ({ navigation }) => {
         setErrors((prev) => ({ ...prev, [field]: "" }));
     };
 
-
     useEffect(() => {
         // Listener for internet connectivity change
         const unsubscribe = NetInfo.addEventListener(state => {
@@ -235,32 +104,52 @@ const CustomerInfoScreen = ({ navigation }) => {
             // }
         });
 
-        return () => unsubscribe(); // Cleanup listener on unmount
+        return () => unsubscribe();
     }, []);
 
-    // const handleSubmit = async () => {
-    //     if (!technicianId) {
-    //         setErrors({ apiError: "Technician ID is required." });
-    //         return;
-    //     }
 
-    //     console.log("Internet status:", isConnected);
+    useEffect(() => {
+        if (technicianId && technicianType) {
+            fetchCustomers(1);
+        }
+    }, [technicianId, technicianType, isAddMode]);
 
-    //     const customerData = {
-    //         ...formData,
-    //         userId: technicianId,
-    //         roleType: technicianType
-    //     };
 
-    //     if (isConnected) {
-    //         console.log("Internet available. Sending data to API...");
-    //         await syncCustomerToAPI(customerData);
-    //     } else {
-    //         console.log("No internet. Saving data locally...");
-    //         await saveCustomerOffline(customerData);
-    //     }
-    // };
+    const fetchCustomers = async (pageNum = 1) => {
+        try {
+            const token = await AsyncStorage.getItem("auth_token");
+            if (!token || !technicianId || !technicianType) return;
 
+            setIsLoading(true);
+            const response = await axios.get(
+                `${API_BASE_URL}/fetchAllCustomer?page=${pageNum}&userId=${technicianId}&limit=10&roleType=${technicianType}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            const newCustomers = response?.data?.customers?.customers || [];
+
+            // If page is 1, reset list. Else, append.
+            if (pageNum === 1) {
+                setCustomers(newCustomers);
+            } else {
+                setCustomers(prev => [...prev, ...newCustomers]);
+            }
+
+            // If less than 10 items fetched, no more data
+            setHasMore(newCustomers.length === 10);
+            setPage(pageNum);
+            console.log("newCustomers", customers);
+
+        } catch (error) {
+            console.error("Error fetching customers:", error.response?.data || error.message);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const validateForm = () => {
         const newErrors = {};
@@ -353,7 +242,8 @@ const CustomerInfoScreen = ({ navigation }) => {
             if (nextAction === "AddVehicleScreen") {
                 navigation.navigate("AddVehicle");
             } else {
-                navigation.goBack();
+                // navigation.goBack();
+                setIsAddMode(false)
             }
         }
     };
@@ -383,29 +273,6 @@ const CustomerInfoScreen = ({ navigation }) => {
                 return;
             }
 
-            // setLoading(true);
-            // const formDataToSend = new FormData();
-
-            // Append customer data
-            // for (const key in customerData) {
-            //     if (key !== 'image' && customerData.hasOwnProperty(key)) {
-            //         formDataToSend.append(key, customerData[key]);
-            //     }
-            // }
-
-            // Append image if available
-            // if (customerData.image) {
-            //     const newUri = Platform.OS === 'ios'
-            //         ? customerData.image.replace('file://', '')
-            //         : customerData.image;
-
-            //     formDataToSend.append("image", {
-            //         uri: newUri,
-            //         name: "image.jpg",
-            //         type: "image/jpeg"
-            //     });
-            // }
-
             const bodyData = { ...customerData };
             console.log("formDataToSend", bodyData);
 
@@ -414,8 +281,6 @@ const CustomerInfoScreen = ({ navigation }) => {
                 bodyData,
                 {
                     headers: {
-                        // "Content-Type": "application/x-www-form-urlencoded",
-                        // "Content-Type": "multipart/form-data",
                         "Authorization": `Bearer ${token}`
                     }
                 }
@@ -449,167 +314,62 @@ const CustomerInfoScreen = ({ navigation }) => {
         }
     };
 
-    // const handleImageUpload = () => {
-    //     Alert.alert(
-    //         "Select Image",
-    //         "Choose an option",
-    //         [
-    //             { text: "Camera", onPress: requestCameraPermission },
-    //             { text: "Gallery", onPress: openGallery },
-    //             { text: "Cancel", style: "cancel" }
-    //         ]
-    //     );
-    // };
 
-    // const requestCameraPermission = async () => {
-    //     if (Platform.OS === 'android') {
-    //         const granted = await PermissionsAndroid.request(
-    //             PermissionsAndroid.PERMISSIONS.CAMERA,
-    //             {
-    //                 title: 'Camera Permission',
-    //                 message: 'This app needs access to your camera to take photos.',
-    //                 buttonNegative: 'Cancel',
-    //                 buttonPositive: 'OK',
-    //             }
-    //         );
-
-    //         if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-    //             // Permission granted, open the camera
-    //             openCamera();
-    //         } else {
-    //             // Permission denied
-    //             Alert.alert('Permission Denied', 'You need to allow camera access to take photos.');
-    //         }
-    //     } else {
-    //         // iOS doesn't need manual permission handling
-    //         openCamera();
-    //     }
-    // };
-
-    // // Function to compress the selected image
-    // const compressImage = async (uri) => {
-    //     try {
-    //         const compressedUri = await ImageCompressor.compress(uri, {
-    //             quality: 0.7, // Reduce quality to 70%
-    //             maxWidth: 500, // Resize width
-    //             maxHeight: 500, // Resize height
-    //         });
-
-    //         return compressedUri;
-    //     } catch (error) {
-    //         console.log('Image Compression Error:', error);
-    //         return uri; // Return original URI if compression fails
-    //     }
-    // };
-
-    // // Function to handle image selection from Camera
-    // const openCamera = () => {
-    //     launchCamera(
-    //         {
-    //             mediaType: "photo",
-    //             quality: 1,
-    //             includeBase64: false,
-    //             maxWidth: 800,
-    //             maxHeight: 800,
-    //         },
-    //         async (response) => {
-    //             if (response.didCancel) {
-    //                 console.log("User canceled camera");
-    //             } else if (response.errorCode) {
-    //                 console.log("Camera Error: ", response.errorMessage);
-    //             } else {
-    //                 const compressedUri = await compressImage(response.assets[0].uri);
-    //                 setCapturedImage(compressedUri);
-    //                 handleInputChange("image", compressedUri)
-    //             }
-    //         }
-    //     );
-    // };
-
-    // // Function to handle image selection from Gallery
-    // const openGallery = () => {
-    //     launchImageLibrary(
-    //         {
-    //             mediaType: "photo",
-    //             quality: 1,
-    //             includeBase64: false,
-    //             selectionLimit: 1,
-    //             maxWidth: 800,
-    //             maxHeight: 800,
-    //         },
-    //         async (response) => {
-    //             if (response.didCancel) {
-    //                 console.log("User canceled gallery");
-    //             } else if (response.errorCode) {
-    //                 console.log("Gallery Error: ", response.errorMessage);
-    //             } else {
-    //                 const compressedUri = await compressImage(response.assets[0].uri);
-    //                 setCapturedImage(compressedUri);
-    //                 handleInputChange("image", compressedUri)
-    //             }
-    //         }
-    //     );
-    // };
-
+    const capitalize = (str) => {
+        return str ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase() : "";
+    };
 
     return (
         <View style={{ flex: 1, backgroundColor: whiteColor }}>
-            {isLoadingState && (
+            {/* {isLoadingState && (
                 <View style={styles.loadingOverlay}>
                     <ActivityIndicator size="large" color={blueColor} />
                 </View>
-            )}
+            )} */}
             <KeyboardAvoidingView
                 style={[flex]}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             >
-
                 <Header title={CUSTOMER_INFORMATION} />
-                {/* {isConnected && <TouchableOpacity
-                    onPress={() => handleSubmit("AddVehicleScreen", setAddVehicleLoading)}
-                    disabled={addVehicleLoading || submitLoading}
-                    style={{
-                        position: "absolute",
-                        top: Platform.OS === "android" ? isTablet ? 20 : 10 : isTablet ? 20 : 13,
-                        right: 10,
-                        borderColor: blueColor,
-                        height: isTablet ? wp(6) : wp(9),
-                        borderRadius: 5,
-                        borderWidth: 2,
-                        justifyContent: "center",
-                        alignItems: "center",
-                        flexDirection: "row",
-                        backgroundColor: blueColor,
-                        paddingHorizontal: spacings.large,
-                    }}
-                >
-                    <Ionicons name="car-sport-outline" size={25} color={whiteColor} />
-                    <Text style={[styles.label, textAlign, { marginBottom: 0, padding: 5, color: whiteColor }]}>
-                        Add Vehicle
-                    </Text>
-                </TouchableOpacity>} */}
-                <ScrollView style={[styles.container, flex]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-                    <View style={styles.content}>
-                        {/* <TouchableOpacity onPress={handleImageUpload} style={[styles.circleButton, { marginTop: spacings.large }]}>
-                            {capturedImage ? (
-                                <>
-                                    <Image source={{ uri: capturedImage }} style={styles.image} />
-                                    <View style={[{
-                                        position: "absolute", width: 30, height: 30,
-                                        bottom: 2, right: 0, borderRadius: 50, backgroundColor: whiteColor,
-                                        borderColor: blueColor, borderWidth: 1
-                                    }, alignJustifyCenter]}>
-                                        <Ionicons name="camera" size={20} color={blueColor} />
+                {!isAddMode && <View style={{
+                    flexDirection: 'row',
+                    position: "absolute",
+                    top: Platform.OS === "android" ? isTablet ? hp(1) : 10 : isTablet ? 20 : 13,
+                    right: 10,
+                    zIndex: 10
+                }}>
 
-                                    </View>
-                                </>
-                            ) : (
-                                <Ionicons name="camera" size={35} color={blueColor} />
-                            )}
-                        </TouchableOpacity>
-                        <Text style={[styles.label, textAlign, { marginVertical: spacings.large }]}>
-                            Customer Image (Optional)
-                        </Text> */}
+                    <TouchableOpacity
+                        onPress={() => setViewType('list')}
+                        style={[{
+                            backgroundColor: viewType === 'list' ? blueColor : whiteColor,
+                            width: isTablet ? wp(8) : wp(12),
+                            height: hp(4.5),
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            borderRadius: 5,
+                            marginRight: 10,
+
+                        }]}>
+                        <Ionicons name="list" size={isTablet ? 35 : 20} color={viewType === 'list' ? whiteColor : blackColor} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        onPress={() => setViewType('grid')}
+                        style={[, {
+                            backgroundColor: viewType === 'grid' ? blueColor : whiteColor,
+                            width: isTablet ? wp(8) : wp(12),
+                            height: hp(4.5),
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            borderRadius: 5,
+                        }]}>
+                        <Ionicons name="grid-sharp" size={isTablet ? 35 : 20} color={viewType === 'grid' ? whiteColor : blackColor} />
+                    </TouchableOpacity>
+                    
+                </View>}
+
+                {/* <ScrollView style={[styles.container, flex]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+                    <View style={styles.content}>
                         <CustomTextInput
                             label="Full Name"
                             placeholder="Enter your full name"
@@ -619,17 +379,6 @@ const CustomerInfoScreen = ({ navigation }) => {
                             maxLength={20}
                         />
                         {errors.fullName && <Text style={styles.error}>{errors.fullName}</Text>}
-
-                        {/* <CustomTextInput
-                            label="Last Name"
-                            placeholder="Enter your last name"
-                            value={formData.lastName}
-                            onChangeText={(text) => handleInputChange("lastName", text)}
-                            required={true}
-                            maxLength={20}
-
-                        />
-                        {errors.lastName && <Text style={styles.error}>{errors.lastName}</Text>} */}
 
                         <CustomTextInput
                             label="Email"
@@ -647,7 +396,6 @@ const CustomerInfoScreen = ({ navigation }) => {
                         <View style={styles.phoneContainer}>
                             <Text style={styles.label}>
                                 Phone Number
-                                {/* <Text style={styles.asterisk}> *</Text> */}
                             </Text>
                             <PhoneInput
                                 ref={phoneInput}
@@ -669,12 +417,6 @@ const CustomerInfoScreen = ({ navigation }) => {
                         </View>
                         {errors.phoneNumber && <Text style={styles.error}>{errors.phoneNumber}</Text>}
 
-                        {/* <CustomTextInput
-                            label="Address"
-                            placeholder="Enter your address"
-                            value={formData.address}
-                            onChangeText={(text) => handleInputChange("address", text)}
-                        /> */}
                         <View style={styles.phoneContainer}>
                             <Text style={styles.label}>
                                 Address
@@ -717,96 +459,7 @@ const CustomerInfoScreen = ({ navigation }) => {
                             />
                         </View>
                         {errors.address && <Text style={styles.error}>{errors.address}</Text>}
-                        {/* 
-                        <View style={[flexDirectionRow, justifyContentSpaceBetween]}>
-                            <View style={[styles.phoneContainer, { width: "48%" }]}>
-                                {isConnected && <Text style={styles.label}>
-                                    Country<Text style={styles.asterisk}> *</Text>
-                                </Text>}
 
-                                {isConnected ? (
-                                    <CustomDropdown
-                                        data={countries}
-                                        country={true}
-                                        selectedValue={countryValue}
-                                        onSelect={(value) => {
-                                            setCountryValue(value);
-                                            handleInputChange("country", value);
-                                            // fetchStates(value)
-                                            setStateValue("");
-                                            setCityValue("");
-                                            setStates([]);
-                                            setCities([]);
-                                        }}
-                                        // showIcon={true}
-                                        titleText={"Select a Country"}
-                                        rightIcon={true}
-
-                                    />
-                                ) : (
-                                    <CustomTextInput
-                                        label="Country"
-                                        placeholder="Enter country"
-                                        value={formData.country}
-                                        onChangeText={(text) => handleInputChange("country", text)}
-                                        required={true}
-                                        multiline={false} // Ensures single line
-                                        numberOfLines={1} // Keeps text in one line
-
-                                    />
-                                )}
-
-                                {errors.country && <Text style={styles.error}>{errors.country}</Text>}
-                            </View>
-
-                            <View style={[{ width: "48%" }]}>
-                                <CustomTextInput
-                                    label="State"
-                                    placeholder="Enter state"
-                                    value={formData.state}
-                                    onChangeText={(text) => handleInputChange("state", text)}
-                                    // required={true}
-                                    multiline={false}
-                                    numberOfLines={1}
-                                />
-
-                                {errors.state && <Text style={styles.error}>{errors.state}</Text>}
-                            </View>
-                        </View>
-
-
-                        <View style={[flexDirectionRow, justifyContentSpaceBetween]}>
-                            <View style={[{ width: "48%", marginTop: 0, marginRight: 10, }]}>
-                                <CustomTextInput
-                                    label="City"
-                                    placeholder="Enter city"
-                                    value={formData.city}
-                                    onChangeText={(text) => handleInputChange("city", text)}
-                                    style={[styles.halfInput, { width: isTablet ? wp(44.5) : wp(42.5) }]}
-                                    // required={true}
-                                    multiline={false}
-                                    numberOfLines={1}
-
-                                />
-
-                                {errors.city && <Text style={styles.error}>{errors.city}</Text>}
-                            </View>
-                            <View>
-                                <CustomTextInput
-                                    label="Zip Code"
-                                    placeholder="Enter zip code"
-                                    value={formData.zipCode}
-                                    onChangeText={(text) => handleInputChange("zipCode", text)}
-                                    style={[styles.halfInput, { width: isTablet ? wp(44.5) : wp(42.5) }]}
-                                    required={true}
-                                    multiline={false} // Ensures single line
-                                    numberOfLines={1} // Keeps text in one line
-                                    maxLength={10}
-
-                                />
-                                {errors.zipCode && <Text style={styles.error}>{errors.zipCode}</Text>}
-                            </View>
-                        </View> */}
 
                         {errors?.apiError?.message ? (
                             <Text style={styles.error}>{errors.apiError.message}</Text>
@@ -814,30 +467,424 @@ const CustomerInfoScreen = ({ navigation }) => {
                             <Text style={styles.error}>{JSON.stringify(errors.apiError)}</Text>
                         )}
                     </View>
+                </ScrollView > */}
 
-                </ScrollView >
+
+                {/* {viewType === 'list' && (
+                    <>
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                            <View>
+                                <View style={[styles.tableHeader, flexDirectionRow]}>
+                                    <Text style={[styles.tableHeaderText, { width: wp(40) }]}>Name</Text>
+                                    <Text style={[styles.tableHeaderText, { width: wp(40) }]}>Phone</Text>
+                                    <Text style={[styles.tableHeaderText, { width: wp(60) }]}>Email</Text>
+                                    <Text style={[styles.tableHeaderText, { width: wp(80) }]}>Address</Text>
+                                </View>
+                                <FlatList
+                                    data={customers}
+                                    keyExtractor={(item, index) => index.toString()}
+                                    renderItem={({ item, index }) => (
+                                        <View style={[
+                                            styles.tableRow,
+                                            flexDirectionRow,
+                                            { backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor }
+                                        ]}>
+                                            <Text style={[styles.tableText, { width: wp(40) }]}>{capitalize(item.fullName) || '—'}</Text>
+                                            <Text style={[styles.tableText, { width: wp(40) }]}>{item.phoneNumber || '—'}</Text>
+                                            <Text style={[styles.tableText, { width: wp(60) }]}>{item.email || '—'}</Text>
+                                            <Text style={[styles.tableText, { width: wp(80) }]} numberOfLines={1} ellipsizeMode="tail">{item.address || '—'}</Text>
+                                        </View>
+                                    )}
+                                    onEndReached={() => {
+                                        if (!isLoading && hasMore) {
+                                            fetchCustomers(page + 1);
+                                        }
+                                    }}
+                                    onEndReachedThreshold={0.5}
+                                    ListFooterComponent={isLoading ? <ActivityIndicator size="small" color="blue" /> : null}
+                                    ListEmptyComponent={() => (
+                                        <View style={styles.emptyContainer}>
+                                            <Text style={styles.emptyText}>No customers found.</Text>
+                                        </View>
+                                    )}
+                                />
+                            </View>
+
+                        </ScrollView>
+                        <TouchableOpacity
+                            onPress={() => navigation.navigate("AddCustomerScreen")}
+                            style={{
+                                position: 'absolute',
+                                bottom: hp(5),
+                                right: wp(8),
+                                backgroundColor: blueColor,
+                                paddingVertical: spacings.xLarge,
+                                paddingHorizontal: spacings.Large1x,
+                                borderRadius: 30,
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                            }}
+                        >
+                            <Ionicons name="person-add" size={20} color={whiteColor} />
+                            <Text style={{ color: whiteColor, marginLeft: 8 }}>Add Customer</Text>
+                        </TouchableOpacity>
+                    </>
+                )}
+
+                {viewType === 'grid' && (
+                    <>
+                        <FlatList
+                            data={customers}
+                            keyExtractor={(item, index) => index.toString()}
+                            contentContainerStyle={{ padding: 10 }}
+                            showsVerticalScrollIndicator={false}
+                            renderItem={({ item }) => (
+                                <View style={{
+                                    backgroundColor: whiteColor,
+                                    padding: 10,
+                                    margin: 5,
+                                    borderRadius: 10,
+                                    flex: 1,
+                                    elevation: 2,
+                                    borderColor: blueColor,
+                                    borderWidth: 1
+                                }}>
+                                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+                                        <View style={{ width: '48%', marginBottom: 10 }}>
+                                            <Text style={{ color: '#555', fontSize: 11 }}>Name</Text>
+                                            <Text>{capitalize(item.fullName) || '—'}</Text>
+                                        </View>
+                                        <View style={{ width: '48%', marginBottom: 10 }}>
+                                            <Text style={{ color: '#555', fontSize: 11 }}>Email</Text>
+                                            <Text >{item.email || '—'}</Text>
+                                        </View>
+                                        <View style={{ width: '48%', marginBottom: 10 }}>
+                                            <Text style={{ color: '#555', fontSize: 11 }}>Phone Number</Text>
+                                            <Text >{item.phoneNumber || '—'}</Text>
+                                        </View>
+                                        <View style={{ width: '48%', marginBottom: 10 }}>
+                                            <Text style={{ color: '#555', fontSize: 11 }}>Address</Text>
+                                            <Text >{item.address || '—'}</Text>
+                                        </View>
+                                    </View>
+                                </View>
+                            )}
+                            onEndReached={() => {
+                                if (!isLoading && hasMore) {
+                                    fetchCustomers(page + 1);
+                                }
+                            }}
+                            onEndReachedThreshold={0.3}
+                            ListFooterComponent={isLoading ? (
+                                <View style={{ padding: 10, alignItems: 'center' }}>
+                                    <ActivityIndicator size="small" color="#0000ff" />
+                                </View>
+                            ) : null}
+                            ListEmptyComponent={() => (
+                                <View style={styles.emptyContainer}>
+                                    <Text style={styles.emptyText}>No customers found.</Text>
+                                </View>
+                            )}
+                        />
+
+                        <TouchableOpacity
+                            onPress={() => navigation.navigate("AddCustomerScreen")}
+                            style={{
+                                position: 'absolute',
+                                bottom: hp(5),
+                                right: wp(8),
+                                backgroundColor: blueColor,
+                                width: 60,
+                                height: 60,
+                                borderRadius: 30,
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                elevation: 5,
+                                shadowColor: "#000",
+                                shadowOffset: { width: 0, height: 2 },
+                                shadowOpacity: 0.25,
+                                shadowRadius: 3.84,
+                            }}
+                        >
+                            <Ionicons name="person-add" size={28} color={whiteColor} />
+                        </TouchableOpacity>
+                    </>
+                )} */}
+
+                {/* Toggle: Add Customer Form OR List/Grid View */}
+                {!isAddMode ? (
+                    <>
+                        {viewType === 'list' && (
+                            <>
+                                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                                    <View>
+                                        <View style={[styles.tableHeader, flexDirectionRow]}>
+                                            <Text style={[styles.tableHeaderText, { width: wp(40) }]}>Name</Text>
+                                            <Text style={[styles.tableHeaderText, { width: wp(40) }]}>Phone</Text>
+                                            <Text style={[styles.tableHeaderText, { width: wp(60) }]}>Email</Text>
+                                            <Text style={[styles.tableHeaderText, { width: wp(80) }]}>Address</Text>
+                                        </View>
+                                        <FlatList
+                                            data={customers}
+                                            keyExtractor={(item, index) => index.toString()}
+                                            renderItem={({ item, index }) => (
+                                                <View style={[
+                                                    styles.tableRow,
+                                                    flexDirectionRow,
+                                                    { backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor }
+                                                ]}>
+                                                    <Text style={[styles.tableText, { width: wp(40) }]}>{capitalize(item.fullName) || '—'}</Text>
+                                                    <Text style={[styles.tableText, { width: wp(40) }]}>{item.phoneNumber || '—'}</Text>
+                                                    <Text style={[styles.tableText, { width: wp(60) }]}>{item.email || '—'}</Text>
+                                                    <Text style={[styles.tableText, { width: wp(80) }]} numberOfLines={1} ellipsizeMode="tail">{item.address || '—'}</Text>
+                                                </View>
+                                            )}
+                                            onEndReached={() => {
+                                                if (!isLoading && hasMore) {
+                                                    fetchCustomers(page + 1);
+                                                }
+                                            }}
+                                            onEndReachedThreshold={0.5}
+                                            ListFooterComponent={() =>
+                                                isLoading ? (
+                                                    <View style={{ paddingVertical: 10, alignItems: "center", width: wp(120), height: hp(50), justifyContent: "center" }}>
+                                                        <ActivityIndicator size="small" color="#0000ff" />
+                                                    </View>
+                                                ) : null
+                                            }
+                                            ListEmptyComponent={() => {
+                                                if (isLoading) return null; // 👈 Loading ke time kuch mat dikhao
+                                                return (
+                                                    <View style={styles.emptyContainer}>
+                                                        <Text style={styles.emptyText}>No Customer found</Text>
+                                                    </View>
+                                                );
+                                            }}
+                                        />
+                                    </View>
+
+                                </ScrollView>
+                                <TouchableOpacity
+                                    onPress={() => setIsAddMode(true)}
+                                    style={{
+                                        position: 'absolute',
+                                        bottom: hp(5),
+                                        right: wp(8),
+                                        backgroundColor: blueColor,
+                                        paddingVertical: spacings.xLarge,
+                                        paddingHorizontal: spacings.Large1x,
+                                        borderRadius: 30,
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                    }}
+                                >
+                                    <Ionicons name="person-add" size={20} color={whiteColor} />
+                                    <Text style={{ color: whiteColor, marginLeft: 8 }}>Add Customer</Text>
+                                </TouchableOpacity>
+                            </>
+                        )}
+
+                        {viewType === 'grid' && (
+                            <>
+                                <FlatList
+                                    data={customers}
+                                    keyExtractor={(item, index) => index.toString()}
+                                    contentContainerStyle={{ padding: 10 }}
+                                    showsVerticalScrollIndicator={false}
+                                    renderItem={({ item }) => (
+                                        <View style={{
+                                            backgroundColor: whiteColor,
+                                            padding: 10,
+                                            margin: 5,
+                                            borderRadius: 10,
+                                            flex: 1,
+                                            elevation: 2,
+                                            borderColor: blueColor,
+                                            borderWidth: 1
+                                        }}>
+                                            <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+                                                <View style={{ width: '48%', marginBottom: 10 }}>
+                                                    <Text style={{ color: '#555', fontSize: 11 }}>Name</Text>
+                                                    <Text>{capitalize(item.fullName) || '—'}</Text>
+                                                </View>
+                                                <View style={{ width: '48%', marginBottom: 10 }}>
+                                                    <Text style={{ color: '#555', fontSize: 11 }}>Email</Text>
+                                                    <Text >{item.email || '—'}</Text>
+                                                </View>
+                                                <View style={{ width: '48%', marginBottom: 10 }}>
+                                                    <Text style={{ color: '#555', fontSize: 11 }}>Phone Number</Text>
+                                                    <Text >{item.phoneNumber || '—'}</Text>
+                                                </View>
+                                                <View style={{ width: '48%', marginBottom: 10 }}>
+                                                    <Text style={{ color: '#555', fontSize: 11 }}>Address</Text>
+                                                    <Text numberOfLines={2} ellipsizeMode="tail">{item.address || '—'}</Text>
+                                                </View>
+                                            </View>
+                                        </View>
+                                    )}
+                                    onEndReached={() => {
+                                        if (!isLoading && hasMore) {
+                                            fetchCustomers(page + 1);
+                                        }
+                                    }}
+                                    onEndReachedThreshold={0.3}
+                                    ListFooterComponent={() =>
+                                        isLoading ? (
+                                            <View style={{ paddingVertical: 10, alignItems: "center", width: wp(100), height: hp(50), justifyContent: "center" }}>
+                                                <ActivityIndicator size="small" color="#0000ff" />
+                                            </View>
+                                        ) : null
+                                    }
+                                    ListEmptyComponent={() => {
+                                        if (isLoading) return null; // 👈 Loading ke time kuch mat dikhao
+                                        return (
+                                            <View style={styles.emptyContainer}>
+                                                <Text style={styles.emptyText}>No Customer found</Text>
+                                            </View>
+                                        );
+                                    }}
+                                />
+
+                                <TouchableOpacity
+                                    onPress={() => setIsAddMode(true)}
+                                    style={{
+                                        position: 'absolute',
+                                        bottom: hp(5),
+                                        right: wp(8),
+                                        backgroundColor: blueColor,
+                                        width: 60,
+                                        height: 60,
+                                        borderRadius: 30,
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        elevation: 5,
+                                        shadowColor: "#000",
+                                        shadowOffset: { width: 0, height: 2 },
+                                        shadowOpacity: 0.25,
+                                        shadowRadius: 3.84,
+                                    }}
+                                >
+                                    <Ionicons name="person-add" size={28} color={whiteColor} />
+                                </TouchableOpacity>
+                            </>
+                        )}
+
+                    </>
+                ) : (
+                    // 👇 Add Customer Form
+                    <ScrollView style={[styles.container, flex]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+                        <View style={styles.content}>
+                            <CustomTextInput
+                                label="Full Name"
+                                placeholder="Enter your full name"
+                                value={formData.firstName}
+                                onChangeText={(text) => handleInputChange("fullName", text)}
+                                required={true}
+                                maxLength={20}
+                            />
+                            {errors.fullName && <Text style={styles.error}>{errors.fullName}</Text>}
+
+                            <CustomTextInput
+                                label="Email"
+                                placeholder="Enter your email"
+                                value={formData.email}
+                                onChangeText={(text) => {
+                                    const updatedText = text?.charAt(0).toLowerCase() + text.slice(1);
+                                    handleInputChange("email", updatedText);
+                                }}
+                            // required={true}
+
+                            />
+                            {errors.email && <Text style={styles.error}>{errors.email}</Text>}
+
+                            <View style={styles.phoneContainer}>
+                                <Text style={styles.label}>
+                                    Phone Number
+                                </Text>
+                                <PhoneInput
+                                    ref={phoneInput}
+                                    defaultValue={formData.phoneNumber}
+                                    defaultCode="US"
+                                    layout="second"
+                                    onChangeFormattedText={(text) => handleInputChange("phoneNumber", text)}
+                                    textInputProps={{
+                                        maxLength: 13,
+                                        keyboardType: "default",
+
+                                    }}
+                                    containerStyle={styles.phoneInput}
+                                    textContainerStyle={styles.phoneText}
+                                    textInputStyle={[styles.phoneTextInput, { marginBottom: isTablet ? 12 : 0 }]}
+                                    flagButtonStyle={styles.flagButton}
+                                    placeholder="Enter your phone number"
+                                />
+                            </View>
+                            {errors.phoneNumber && <Text style={styles.error}>{errors.phoneNumber}</Text>}
+
+                            <View style={styles.phoneContainer}>
+                                <Text style={styles.label}>
+                                    Address
+                                </Text>
+                                <GooglePlacesAutocomplete
+                                    ref={googleRef}
+                                    placeholder="Enter Your Address"
+                                    fetchDetails={true}
+                                    onPress={(data, details = null) => {
+                                        console.log('Selected:', data?.description);
+                                        handleInputChange("address", data?.description)
+                                    }}
+
+                                    query={{
+                                        key: GOOGLE_MAP_API_KEY,
+                                        language: 'en',
+                                    }}
+                                    styles={{
+                                        container: {
+                                            flex: 0,
+                                            zIndex: 999,
+                                        },
+                                        listView: {
+                                            zIndex: 999,
+                                            position: 'absolute',
+                                            top: 55,
+                                        },
+                                        textInputContainer: {
+                                            zIndex: 999,
+                                        },
+                                        textInput: {
+                                            height: 44,
+                                            borderWidth: 1,
+                                            borderColor: blueColor,
+                                            borderRadius: 50,
+                                            paddingHorizontal: 16,
+                                            backgroundColor: '#fff',
+                                        },
+                                    }}
+                                />
+                            </View>
+                            {errors.address && <Text style={styles.error}>{errors.address}</Text>}
+
+                            {errors?.apiError?.message ? (
+                                <Text style={styles.error}>{errors.apiError.message}</Text>
+                            ) : (
+                                <Text style={styles.error}>{JSON.stringify(errors.apiError)}</Text>
+                            )}
+                        </View>
+                    </ScrollView >
+                )}
 
             </KeyboardAvoidingView>
-            <View style={[{ backgroundColor: whiteColor, paddingTop: spacings.xLarge, paddingHorizontal: spacings.xxxLarge }, alignJustifyCenter]}>
-                {/* {isConnected && <CustomButton
-                        title="Add Vehicle"
-                        onPress={() => handleSubmit("AddVehicleScreen", setAddVehicleLoading)}
-                        style={[styles.button]}
-                        loading={addVehicleLoading}
-                        disabled={addVehicleLoading || submitLoading}
-                        iconType="Ionicons"
-                        iconName="car-sport-outline"
-                    />} */}
+            {isAddMode && <View style={[{ backgroundColor: whiteColor, paddingTop: spacings.xLarge, paddingHorizontal: spacings.xxxLarge }, alignJustifyCenter]}>
                 <CustomButton
                     title="Submit"
                     onPress={() => handleSubmit(null, setSubmitLoading)}
                     style={[styles.button, { backgroundColor: blueColor, borderWidth: 1, borderColor: blueColor }]}
                     textStyle={{ color: whiteColor }}
                     loading={submitLoading}
-                    disabled={submitLoading || addVehicleLoading}
+                    disabled={submitLoading}
                 />
 
-            </View>
+            </View>}
         </View>
     );
 };
@@ -962,6 +1009,36 @@ const styles = StyleSheet.create({
         width: "100%",
         height: "100%",
         tintColor: "#888", // Light gray color
+    },
+    tableHeader: {
+        padding: spacings.xxLarge,
+        backgroundColor: whiteColor,
+        elevation: 25,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 4,
+        backgroundColor: blueColor
+    },
+    tableHeaderText: {
+        fontWeight: style.fontWeightThin1x.fontWeight,
+        textAlign: "left",
+        color: whiteColor
+    },
+    tableRow: {
+        padding: spacings.large,
+        alignItems: 'center',
+        borderBottomWidth: 1,
+        borderBottomColor: '#E6E6E6'
+    },
+    emptyContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 40,
+    },
+    emptyText: {
+        fontSize: 16,
+        color: mediumGray
     },
 });
 

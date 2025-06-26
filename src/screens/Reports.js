@@ -122,7 +122,7 @@ const Reports = ({ navigation }) => {
 
         getTechnicianDetail();
     }, []);
-    
+
 
     useEffect(() => {
         if (activeTab === "Jobs" && technicianId) {
@@ -216,7 +216,7 @@ const Reports = ({ navigation }) => {
 
                 const jobs = response?.data?.jobs;
                 console.log("jobs", jobs);
-                setJobsRawData(jobs); 
+                setJobsRawData(jobs);
             } else if (tab === "WorkOrders") {
                 const response = await axios.post(
                     `${API_BASE_URL}/vehicleFilter`,
@@ -368,16 +368,16 @@ const Reports = ({ navigation }) => {
                     justifyContent: "center",
                     alignItems: "center",
                 }}>
-                    <TouchableOpacity
-                        onPress={() => setViewType('grid')}
-                        style={[styles.tabButton, { backgroundColor: viewType === 'grid' ? blueColor : whiteColor, marginRight: 10, width: isTablet ? wp(8) : wp(12), height: hp(4.5) }]}>
-                        <Ionicons name="grid-sharp" size={isTablet ? 35 : 20} color={viewType === 'grid' ? whiteColor : blackColor} />
-                    </TouchableOpacity>
 
                     <TouchableOpacity
                         onPress={() => setViewType('list')}
-                        style={[styles.tabButton, { backgroundColor: viewType === 'list' ? blueColor : whiteColor, margin: 0, width: isTablet ? wp(8) : wp(12), height: hp(4.5) }]}>
+                        style={[styles.tabButton, { backgroundColor: viewType === 'list' ? blueColor : whiteColor, margin: 0, marginRight: 10, width: isTablet ? wp(8) : wp(12), height: hp(4.5) }]}>
                         <Ionicons name="list" size={isTablet ? 35 : 20} color={viewType === 'list' ? whiteColor : blackColor} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        onPress={() => setViewType('grid')}
+                        style={[styles.tabButton, { backgroundColor: viewType === 'grid' ? blueColor : whiteColor, width: isTablet ? wp(8) : wp(12), height: hp(4.5) }]}>
+                        <Ionicons name="grid-sharp" size={isTablet ? 35 : 20} color={viewType === 'grid' ? whiteColor : blackColor} />
                     </TouchableOpacity>
                 </View>
             }

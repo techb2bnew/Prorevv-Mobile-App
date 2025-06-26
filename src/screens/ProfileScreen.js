@@ -1222,7 +1222,7 @@ const ProfileScreen = ({ navigation }) => {
                       flagButtonStyle={styles.flagButton}
                     />
                   </View>
-                  <View style={[styles.inputGroup, { height: hp(10) }]}>
+                  <View style={[styles.inputGroup, { height: isTablet ? hp(5) : hp(10) }]}>
                     <Text style={styles.label}>Address</Text>
                     <TextInput style={styles.input} value={address} onChangeText={setAddress} placeholder="Enter Address" />
 

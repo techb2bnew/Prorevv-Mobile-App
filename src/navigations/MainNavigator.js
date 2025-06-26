@@ -148,6 +148,7 @@ export default function MainNavigator() {
                     },
                 })}
             />
+            
 
             <Tab.Screen
                 name="Account"
@@ -164,6 +165,8 @@ export default function MainNavigator() {
                     },
                 })}
             />
+
+            
 
         </Tab.Navigator>
     )
