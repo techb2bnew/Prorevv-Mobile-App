@@ -3,7 +3,7 @@ import { View, StyleSheet, Text, ScrollView, Image, Pressable, TouchableOpacity,
 import CustomButton from '../componets/CustomButton';
 import CustomTextInput from '../componets/CustomTextInput';
 import { blackColor, blueColor, grayColor, lightBlueColor, lightOrangeColor, mediumGray, orangeColor, redColor, whiteColor } from "../constans/Color";
-import { ADDRESS, ALREADY_HAVE_AN_ACCOUNT, API_BASE_URL, CITY, COUNTRY, CREATE_YOUE_NEW_ACCOUNT, EMAIL, FIRST_NAME, LAST_NAME, LOGIN, PHONE_NUMBER, STATE, WELCOME, ZIP_CODE } from "../constans/Constants";
+import { ADDRESS, ALREADY_HAVE_AN_ACCOUNT, API_BASE_URL, CITY, COUNTRY, CREATE_YOUE_NEW_ACCOUNT, EMAIL, FIRST_NAME, GOOGLE_MAP_API_KEY, LAST_NAME, LOGIN, PHONE_NUMBER, STATE, WELCOME, ZIP_CODE } from "../constans/Constants";
 import { BaseStyle } from '../constans/Style';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from '../utils';
 import { style, spacings } from '../constans/Fonts';
@@ -773,7 +773,7 @@ const SignUpScreen = ({ navigation }) => {
                         }}
 
                         query={{
-                            key: 'AIzaSyBXNyT9zcGdvhAUCUEYTm6e_qPw26AOPgI',
+                            key: GOOGLE_MAP_API_KEY,
                             language: 'en',
                         }}
                         styles={{

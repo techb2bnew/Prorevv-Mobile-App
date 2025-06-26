@@ -119,12 +119,12 @@ const LoginScreen = ({ navigation }) => {
 
                     // Navigate to Home screen
                     // navigation.replace('MainNavigator');
-                    const userRole = result.user?.role;
-                    if (userRole === "manager") {
-                        navigation.replace('ManagerNavigator');
-                    } else {
-                        navigation.replace('MainNavigator');
-                    }
+                    // const userRole = result.user?.role;
+                    // if (userRole === "manager") {
+                    //     navigation.replace('ManagerNavigator');
+                    // } else {
+                    navigation.replace('MainNavigator');
+                    // }
                     await AsyncStorage.setItem('biometricEnabled', 'true');
                     await AsyncStorage.removeItem('isRegistered');
                 } else {

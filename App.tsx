@@ -134,12 +134,12 @@ function App(): React.JSX.Element {
       await AsyncStorage.setItem('amountPercentage', technician?.amountPercentage);
 
       if (technician?.payVehicleType) {
-        const vehicleList = technician.payVehicleType
+        const vehicleList = technician?.payVehicleType
           .split(',')
           .filter(item => item.trim() !== '');
         const vehicleArray = vehicleList.map(vehicle => ({
-          label: vehicle.trim(),
-          value: vehicle.trim()
+          label: vehicle?.trim(),
+          value: vehicle?.trim()
         }));
         // Save to AsyncStorage
         await AsyncStorage.setItem('allowedVehicles', JSON.stringify(vehicleArray));
@@ -431,10 +431,10 @@ function App(): React.JSX.Element {
         ) : (
           <TabBarProvider>
             <NavigationContainer>
-              {isLoggedIn ?
+              {/* {isLoggedIn ?
                 userRole === 'manager' ? <ManagerNavigator /> : <MainNavigator />
-                : <AuthStack />}
-              {/* {isLoggedIn ? <ManagerNavigator /> : <AuthStack />} */}
+                : <AuthStack />} */}
+              {isLoggedIn ? <MainNavigator /> : <AuthStack />}
             </NavigationContainer>
           </TabBarProvider>
         )}

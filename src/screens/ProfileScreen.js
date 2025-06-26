@@ -84,39 +84,39 @@ const ProfileScreen = ({ navigation }) => {
         try {
           const netState = await NetInfo.fetch();
 
-          if (!netState.isConnected) {
-            console.log("No Internet Connection. Loading from local storage...");
+          // if (!netState.isConnected) {
+          //   console.log("No Internet Connection. Loading from local storage...");
 
-            const storedProfile = await AsyncStorage.getItem('technicianProfile');
-            if (storedProfile) {
-              const parsedProfile = JSON.parse(storedProfile);
-              setProfile(parsedProfile);
-              setPhoneNumber(parsedProfile.phoneNumber);
-              setEmail(parsedProfile.email);
-              setFirstName(parsedProfile.firstName || '');
-              setLastName(parsedProfile.lastName || '');
-              setAddress(parsedProfile.address || '');
-              setCityValue(parsedProfile.city || '');
-              setCity(parsedProfile.city || '');
-              setState(parsedProfile.state || '');
-              setStateValue(parsedProfile.state || '');
-              setCountry(parsedProfile.country || '');
-              setCountryValue(parsedProfile.country || '');
-              setPostalCode(parsedProfile.zipCode || '');
-              setBusinessName(parsedProfile.businessName || "");
-              setRoleType(parsedProfile.types || "");
-              setSecondryPhoneNumber(parsedData.secondaryContactName || "")
-              setSecondryEmail(parsedData.secondaryEmail || "")
-              if (parsedProfile.image) {
-                setImageUri(parsedProfile.image);
-              }
-              if (parsedProfile.businessLogo) {
-                setBusinessLogoUri(parsedProfile.businessLogo);
-              }
+          //   const storedProfile = await AsyncStorage.getItem('technicianProfile');
+          //   if (storedProfile) {
+          //     const parsedProfile = JSON.parse(storedProfile);
+          //     setProfile(parsedProfile);
+          //     setPhoneNumber(parsedProfile.phoneNumber);
+          //     setEmail(parsedProfile.email);
+          //     setFirstName(parsedProfile.firstName || '');
+          //     setLastName(parsedProfile.lastName || '');
+          //     setAddress(parsedProfile.address || '');
+          //     setCityValue(parsedProfile.city || '');
+          //     setCity(parsedProfile.city || '');
+          //     setState(parsedProfile.state || '');
+          //     setStateValue(parsedProfile.state || '');
+          //     setCountry(parsedProfile.country || '');
+          //     setCountryValue(parsedProfile.country || '');
+          //     setPostalCode(parsedProfile.zipCode || '');
+          //     setBusinessName(parsedProfile.businessName || "");
+          //     setRoleType(parsedProfile.types || "");
+          //     setSecondryPhoneNumber(parsedData.secondaryContactName || "")
+          //     setSecondryEmail(parsedData.secondaryEmail || "")
+          //     if (parsedProfile.image) {
+          //       setImageUri(parsedProfile.image);
+          //     }
+          //     if (parsedProfile.businessLogo) {
+          //       setBusinessLogoUri(parsedProfile.businessLogo);
+          //     }
 
-            }
-            return; // Stop execution if no internet
-          }
+          //   }
+          //   return; // Stop execution if no internet
+          // }
 
           // If internet is available, fetch from API
           const storedData = await AsyncStorage.getItem('userDeatils');
@@ -218,7 +218,7 @@ const ProfileScreen = ({ navigation }) => {
   useEffect(() => {
     const handlePhone = async () => {
       if (phoneNumber?.startsWith('+')) {
-        const matchedCode = phoneNumber.match(/^\+(\d{1,4})/);
+        const matchedCode = phoneNumber.match(/^\+(\d{1})/);
         const callingCode = matchedCode ? `+${matchedCode[1]}` : null;
 
         if (callingCode) {

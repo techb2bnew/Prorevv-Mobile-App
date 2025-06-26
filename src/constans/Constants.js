@@ -45,3 +45,5 @@ export const SUPPORT_EMAIL = "info@ifshail.com";
 export const SUPPORT_MOBILE = "+1-239-919-7963";
 
 export const API_BASE_URL = "https://stagingtrt.base2brand.com/api";
+export const GOOGLE_MAP_API_KEY = 'AIzaSyBXNyT9zcGdvhAUCUEYTm6e_qPw26AOPgI';
+

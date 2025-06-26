@@ -31,7 +31,7 @@ const HomeScreen = ({ navigation }) => {
 
   const cardData = [
     {
-      name: "Jobs",
+      name: technicianType != "ifs" ? "Add Vehicle" : "Jobs",
       image: NEW_WORK_ORDER_IMAGE,
       backgroundColor: orangeColor,
       onPress: () => { navigation.navigate("WorkOrderScreen") },
@@ -86,6 +86,8 @@ const HomeScreen = ({ navigation }) => {
           const technicianId = parsedData.id;
           setTechnicianId(technicianId)
           setTechnicianType(parsedData.types)
+          // console.log(parsedData.types);
+
           const storedName = await AsyncStorage.getItem('technicianName');
           if (storedName) {
             setTechnicianName(storedName);
@@ -279,8 +281,45 @@ const HomeScreen = ({ navigation }) => {
           </View>
         </Pressable>
       </View>
+      {technicianType != "ifs" && <View style={[{ width: "100%", marginTop: 10, paddingHorizontal: spacings.xLarge }, flexDirectionRow, justifyContentSpaceBetween]}>
+        <View style={[{ width: "49.5%", height: hp(22), backgroundColor: blueColor, borderTopLeftRadius: 20, borderBottomLeftRadius: 20 }, alignJustifyCenter]}>
+          <Pressable style={alignJustifyCenter} onPress={() => navigation.navigate("CustomerInfo")}>
+            <Image source={NEW_CLIENT_IMAGE} style={[styles.cardImage, resizeModeContain]} />
+            <Text
+              style={[
+                styles.cardText,
+                {
+                  color: whiteColor,
+                  fontSize: isTablet ? style.fontSizeLarge.fontSize : style.fontSizeNormal2x.fontSize,
 
-      <View style={{ width: "100%", height: "55%", marginTop: 20, paddingHorizontal: spacings.large }}>
+                },
+              ]}
+            >
+              Create Customer
+            </Text>
+          </Pressable>
+        </View>
+        <View style={[{ width: "48%", height: hp(22), backgroundColor: blueColor, borderTopRightRadius: 20, borderBottomRightRadius: 20 }, alignJustifyCenter]}>
+          <Pressable style={alignJustifyCenter} onPress={() => navigation.navigate("CreateJobScreen")}>
+            <Image source={NEW_WORK_ORDER_IMAGE} style={[styles.cardImage, resizeModeContain]} />
+            <Text
+              style={[
+                styles.cardText,
+                {
+                  color: whiteColor,
+                  fontSize: isTablet ? style.fontSizeLarge.fontSize : style.fontSizeNormal2x.fontSize,
+
+                },
+              ]}
+            >
+              Create Job
+            </Text>
+          </Pressable>
+        </View>
+
+
+      </View>}
+      <View style={{ width: "100%", height: "55%", marginTop: technicianType != "ifs" ? 5 : 20, paddingHorizontal: spacings.large }}>
         <FlatList
           data={cardData}
           renderItem={renderItem}
