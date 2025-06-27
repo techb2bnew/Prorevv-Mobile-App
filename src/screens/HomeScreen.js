@@ -21,11 +21,12 @@ const HomeScreen = ({ navigation }) => {
   const [technicianId, setTechnicianId] = useState('');
   const [technicianType, setTechnicianType] = useState('');
   const [bLogo, setbLogo] = useState(null);
+  const [ifscustomers, setIfsCustomers] = useState([]);
   const [customers, setCustomers] = useState([]);
-  // const [activeIndex, setActiveIndex] = useState(0);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const isTablet = width >= 668 && height >= 1024;
   const isIOSAndTablet = Platform.OS === "ios" && isTablet;
-  // const [banners, setBanners] = useState([]);
 
   // const cardData = [
   //   {
@@ -97,7 +98,7 @@ const HomeScreen = ({ navigation }) => {
         if (technicianType === "ifs") {
           try {
             const currentJob = await AsyncStorage.getItem("current_Job");
-            if (customers.length === 0) {
+            if (ifscustomers.length === 0) {
               Toast.show("You don't have any assigned job currently.");
             } else if (!currentJob) {
               Toast.show("Please select a job from the jobs page first.");
@@ -108,7 +109,12 @@ const HomeScreen = ({ navigation }) => {
             console.error("Error checking current job:", error);
           }
         } else {
-          navigation.navigate("CreateJobScreen")
+          if (customers.length === 0) {
+            Toast.show("You don't have any Customer Please first add a customer before creating a job.");
+          } else {
+            navigation.navigate("CreateJobScreen")
+
+          }
         }
       },
       backgroundImage: isTablet ? ADD_VEHICLE_TAB_BACK_IMAGE : ADD_VEHICLE_BACK_IMAGE
@@ -121,7 +127,12 @@ const HomeScreen = ({ navigation }) => {
         if (technicianType === "ifs") {
           navigation.navigate("VinListScreen")
         } else {
-          navigation.navigate("WorkOrderScreen");
+          if (customers.length === 0) {
+            Toast.show("You don't have any Customer Please first add a customer before add a vehicle.");
+          } else {
+            navigation.navigate("WorkOrderScreen");
+
+          }
         }
       },
       backgroundImage: isTablet ? JOB_HISTORY_TAB_BACK_IMAGE : JOB_HISTORY_BACK_IMAGE
@@ -136,7 +147,7 @@ const HomeScreen = ({ navigation }) => {
         } else {
           try {
             const currentJob = await AsyncStorage.getItem("current_Job");
-            if (customers.length === 0) {
+            if (ifscustomers.length === 0) {
               Toast.show("You don't have any assigned job currently.");
             } else if (!currentJob) {
               Toast.show("Please select a job from the jobs page first.");
@@ -208,10 +219,49 @@ const HomeScreen = ({ navigation }) => {
 
   useFocusEffect(
     useCallback(() => {
+      fetchIFSCustomers();
       fetchCustomers();
     }, [technicianId])
   );
-  const fetchCustomers = async (page) => {
+
+  const fetchCustomers = async (pageNum = 1) => {
+    try {
+      const token = await AsyncStorage.getItem("auth_token");
+      if (!token || !technicianId || !technicianType) return;
+
+      const apiUrl = technicianType === "manager"
+        ? `${API_BASE_URL}/fetchAllCustomer?page=${pageNum}&userId=${technicianId}&limit=10&roleType=${technicianType}`
+        : `${API_BASE_URL}/fetchCustomer?page=${pageNum}&userId=${technicianId}&limit=10`;
+
+      const response = await axios.get(
+        apiUrl,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const newCustomers = response?.data?.customers?.customers || [];
+
+      // If page is 1, reset list. Else, append.
+      if (pageNum === 1) {
+        setCustomers(newCustomers);
+      } else {
+        setCustomers(prev => [...prev, ...newCustomers]);
+      }
+
+      // If less than 10 items fetched, no more data
+      setHasMore(newCustomers.length === 10);
+      setPage(pageNum);
+      console.log("newCustomers", customers);
+
+    } catch (error) {
+      console.error("Error fetching customers:", error.response?.data || error.message);
+    }
+  };
+
+  const fetchIFSCustomers = async (page) => {
     try {
       const token = await AsyncStorage.getItem("auth_token");
       if (!token) {
@@ -220,6 +270,9 @@ const HomeScreen = ({ navigation }) => {
       }
 
       const apiUrl = `${API_BASE_URL}/fetchAllTechnicianCustomer?userId=${technicianId}&page=${page}`;
+      // const apiUrl = technicianType === "manager"
+      //   ? `${API_BASE_URL}/fetchAllTechnicianCustomer?roleType=${technicianType}&page=${page}`
+      //   : `${API_BASE_URL}/fetchAllTechnicianCustomer?userId=${technicianId}&page=${page}`;
 
       const response = await fetch(apiUrl, {
         method: 'GET',
@@ -246,13 +299,13 @@ const HomeScreen = ({ navigation }) => {
             return null;
           })
           .filter(cust => cust);
-        uniqueCustomers = [...customers, ...newCustomers].filter(
+        uniqueCustomers = [...ifscustomers, ...newCustomers].filter(
           (cust, index, self) => index === self.findIndex(c => c.id === cust.id)
         );
         console.log("uniqueCustomers", uniqueCustomers);
-        setCustomers(uniqueCustomers);
+        setIfsCustomers(uniqueCustomers);
       } else {
-        setCustomers([]);  // Clear old customers if nothing found
+        setIfsCustomers([]);
       }
     } catch (error) {
       console.error('Network error:', error);
@@ -328,10 +381,18 @@ const HomeScreen = ({ navigation }) => {
           onPress={async () => {
             try {
               const currentJob = await AsyncStorage.getItem("current_Job");
-
-              if (customers.length === 0) {
-                Toast.show("You don't have any assigned job currently.");
-              } else if (!currentJob) {
+              if (technicianType === "ifs") {
+                if (ifscustomers.length === 0) {
+                  Toast.show("You don't have any IFS customers currently.");
+                  return;
+                }
+              } else {
+                if (customers.length === 0) {
+                  Toast.show("You don't have any customers. Please add a customer first.");
+                  return;
+                }
+              }
+              if (!currentJob) {
                 Toast.show("Please select a job from the jobs page first.");
               } else {
                 navigation.navigate("ScannerScreen", {
@@ -433,7 +494,7 @@ const HomeScreen = ({ navigation }) => {
         </Pressable>
       </View>
 
-    </View>
+    </View >
   )
 }
 

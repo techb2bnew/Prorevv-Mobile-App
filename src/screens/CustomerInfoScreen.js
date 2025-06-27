@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { View, StyleSheet, Text, ScrollView, Image, Pressable, TouchableOpacity, Platform, KeyboardAvoidingView, ActivityIndicator, Modal, TextInput, Dimensions, PermissionsAndroid, Alert, FlatList } from "react-native";
 import CustomButton from '../componets/CustomButton';
 import CustomTextInput from '../componets/CustomTextInput';
-import { blackColor, blueColor, grayColor, lightBlueColor, lightOrangeColor, lightShadeBlue, mediumGray, orangeColor, redColor, whiteColor } from "../constans/Color";
+import { blackColor, blueColor, grayColor, lightBlueColor, lightGrayColor, lightOrangeColor, lightShadeBlue, mediumGray, orangeColor, redColor, whiteColor } from "../constans/Color";
 import { ADDRESS, ALREADY_HAVE_AN_ACCOUNT, API_BASE_URL, CITY, COUNTRY, CREATE_YOUE_NEW_ACCOUNT, CUSTOMER_INFORMATION, EMAIL, ESSENTIAL_FOR_REGISTRATION, FIRST_NAME, GOOGLE_MAP_API_KEY, LAST_NAME, LOGIN, PHONE_NUMBER, STATE, WELCOME, ZIP_CODE } from "../constans/Constants";
 import { BaseStyle } from '../constans/Style';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from '../utils';
@@ -121,8 +121,12 @@ const CustomerInfoScreen = ({ navigation }) => {
             if (!token || !technicianId || !technicianType) return;
 
             setIsLoading(true);
+            const apiUrl = technicianType === "manager"
+                ? `${API_BASE_URL}/fetchAllCustomer?page=${pageNum}&userId=${technicianId}&limit=10&roleType=${technicianType}`
+                : `${API_BASE_URL}/fetchCustomer?page=${pageNum}&userId=${technicianId}&limit=10`;
+
             const response = await axios.get(
-                `${API_BASE_URL}/fetchAllCustomer?page=${pageNum}&userId=${technicianId}&limit=10&roleType=${technicianType}`,
+                apiUrl,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -365,7 +369,7 @@ const CustomerInfoScreen = ({ navigation }) => {
                         }]}>
                         <Ionicons name="grid-sharp" size={isTablet ? 35 : 20} color={viewType === 'grid' ? whiteColor : blackColor} />
                     </TouchableOpacity>
-                    
+
                 </View>}
 
                 {/* <ScrollView style={[styles.container, flex]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
@@ -695,37 +699,101 @@ const CustomerInfoScreen = ({ navigation }) => {
                                     keyExtractor={(item, index) => index.toString()}
                                     contentContainerStyle={{ padding: 10 }}
                                     showsVerticalScrollIndicator={false}
-                                    renderItem={({ item }) => (
-                                        <View style={{
-                                            backgroundColor: whiteColor,
-                                            padding: 10,
-                                            margin: 5,
-                                            borderRadius: 10,
-                                            flex: 1,
-                                            // elevation: 2,
-                                            borderColor: blueColor,
-                                            borderWidth: 1
-                                        }}>
-                                            <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-                                                <View style={{ width: '48%', marginBottom: 10 }}>
-                                                    <Text style={{ color: '#555', fontSize: 11 }}>Name</Text>
-                                                    <Text>{capitalize(item.fullName) || '—'}</Text>
+                                    // renderItem={({ item }) => (
+                                    //     <View style={{
+                                    //         backgroundColor: whiteColor,
+                                    //         padding: 10,
+                                    //         margin: 5,
+                                    //         borderRadius: 10,
+                                    //         flex: 1,
+                                    //         // elevation: 2,
+                                    //         borderColor: blueColor,
+                                    //         borderWidth: 1
+                                    //     }}>
+                                    //         <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+                                    //             <View style={{ width: '48%', marginBottom: 10 }}>
+                                    //                 <Text style={{ color: '#555', fontSize: 11 }}>Name</Text>
+                                    //                 <Text>{capitalize(item.fullName) || '—'}</Text>
+                                    //             </View>
+                                    //             <View style={{ width: '48%', marginBottom: 10 }}>
+                                    //                 <Text style={{ color: '#555', fontSize: 11 }}>Email</Text>
+                                    //                 <Text >{item.email || '—'}</Text>
+                                    //             </View>
+                                    //             <View style={{ width: '48%', marginBottom: 10 }}>
+                                    //                 <Text style={{ color: '#555', fontSize: 11 }}>Phone Number</Text>
+                                    //                 <Text >{item.phoneNumber || '—'}</Text>
+                                    //             </View>
+                                    //             <View style={{ width: '48%', marginBottom: 10 }}>
+                                    //                 <Text style={{ color: '#555', fontSize: 11 }}>Address</Text>
+                                    //                 <Text numberOfLines={2} ellipsizeMode="tail">{item.address || '—'}</Text>
+                                    //             </View>
+                                    //         </View>
+                                    //     </View>
+                                    // )}
+                                    renderItem={({ item }) => {
+                                        const initials = item.fullName?.charAt(0)?.toUpperCase();
+
+                                        return (
+                                            <View style={{
+                                                backgroundColor: whiteColor,
+                                                marginVertical: spacings.xLarge,
+                                                borderRadius: 15,
+                                                ...Platform.select({
+                                                    ios: {
+                                                        shadowColor: '#000',
+                                                        shadowOffset: { width: 0, height: 2 },
+                                                        shadowOpacity: 0.2,
+                                                        shadowRadius: 5,
+                                                    },
+                                                    android: {
+                                                        elevation: 3,
+                                                    }
+                                                })
+                                            }}>
+                                                {/* Header */}
+                                                <View style={{
+                                                    backgroundColor: blueColor,
+                                                    paddingVertical: spacings.normalx,
+                                                    paddingHorizontal:spacings.large,
+                                                    flexDirection: 'row',
+                                                    alignItems: 'center',
+                                                    borderTopLeftRadius: 15,
+                                                    borderTopRightRadius: 15,
+                                                }}>
+                                                    <View style={{
+                                                        backgroundColor: whiteColor,
+                                                        width: wp(10),
+                                                        height: Platform.OS ==="ios"?hp(4.5):hp(5),
+                                                        borderRadius: 20,
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        marginRight: spacings.large,
+                                                    }}>
+                                                        <Text style={{ fontSize: style.fontSizeMedium.fontSize, fontWeight: style.fontWeightThin1x.fontWeight, color: blueColor }}>{initials}</Text>
+                                                    </View>
+                                                    <Text style={{ color: whiteColor, fontSize: style.fontSizeMedium.fontSize, fontWeight: style.fontWeightThin1x.fontWeight }}>{capitalize(item.fullName)}</Text>
                                                 </View>
-                                                <View style={{ width: '48%', marginBottom: 10 }}>
-                                                    <Text style={{ color: '#555', fontSize: 11 }}>Email</Text>
-                                                    <Text >{item.email || '—'}</Text>
-                                                </View>
-                                                <View style={{ width: '48%', marginBottom: 10 }}>
-                                                    <Text style={{ color: '#555', fontSize: 11 }}>Phone Number</Text>
-                                                    <Text >{item.phoneNumber || '—'}</Text>
-                                                </View>
-                                                <View style={{ width: '48%', marginBottom: 10 }}>
-                                                    <Text style={{ color: '#555', fontSize: 11 }}>Address</Text>
-                                                    <Text numberOfLines={2} ellipsizeMode="tail">{item.address || '—'}</Text>
+
+                                                {/* Body */}
+                                                <View style={{ padding: spacings.xLarge }}>
+                                                    <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: spacings.small }}>
+                                                        <Text style={{ fontSize: style.fontSizeNormal.fontSize, color: grayColor,width:"50%" }}>Email:</Text>
+                                                        <Text style={{ color: blueColor, fontWeight: style.fontWeightThin1x.fontWeight }}>{item?.email || '—'}</Text>
+                                                    </View>
+                                                    <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: spacings.small }}>
+                                                        <Text style={{ fontSize: style.fontSizeNormal.fontSize, color: grayColor,width:"50%" }}>Phone:</Text>
+                                                        <Text style={{ color: blueColor, fontWeight: style.fontWeightThin1x.fontWeight }}>{item?.phoneNumber || '—'}</Text>
+                                                    </View>
+                                                    <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                                                        <Text style={{ fontSize: style.fontSizeNormal.fontSize, color: grayColor,width:"50%"}}>Address:</Text>
+                                                        <Text style={{ color: blueColor, fontWeight: style.fontWeightThin1x.fontWeight, flexShrink: 1, textAlign: 'right' }}>{item?.address || '—'}</Text>
+                                                    </View>
                                                 </View>
                                             </View>
-                                        </View>
-                                    )}
+                                        );
+                                    }}
+
+
                                     onEndReached={() => {
                                         if (!isLoading && hasMore) {
                                             fetchCustomers(page + 1);
@@ -771,7 +839,8 @@ const CustomerInfoScreen = ({ navigation }) => {
                                     <Ionicons name="person-add" size={28} color={whiteColor} />
                                 </TouchableOpacity>
                             </>
-                        )}
+                        )
+                        }
 
                     </>
                 ) : (

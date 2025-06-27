@@ -1233,7 +1233,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                     </View>
 
 
-                                    {technicianType != 'ifs' && <View style={{ marginTop: 20 }}>
+                                    {technicianType === 'manager' && <View style={{ marginTop: 20 }}>
                                         <Text style={styles.label}>Select Technician</Text>
                                         <View style={{
                                             borderWidth: 1,

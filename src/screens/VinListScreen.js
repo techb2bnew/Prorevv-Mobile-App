@@ -138,9 +138,9 @@ const VinListScreen = ({ navigation, route }) => {
                 console.error("Token not found!");
                 return;
             }
-            const apiUrl = technicianType === "ifs"
-                ? `${API_BASE_URL}/fetchtechVehicleInfo?page=${pageNumber}&userId=${technicianId}`
-                : `${API_BASE_URL}/fetchVehicleInfo?page=${pageNumber}&roleType=${technicianType}`;
+            const apiUrl = technicianType === "manager"
+                ? `${API_BASE_URL}/fetchVehicleInfo?page=${pageNumber}&roleType=${technicianType}`
+                : `${API_BASE_URL}/fetchtechVehicleInfo?page=${pageNumber}&userId=${technicianId}`;
 
             const response = await axios.get(apiUrl, {
                 headers: {
