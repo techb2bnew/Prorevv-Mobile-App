@@ -13,6 +13,8 @@ import { API_BASE_URL } from '../constans/Constants';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import DatePicker from "react-native-date-picker";
+
 
 const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween, textAlign } = BaseStyle;
 
@@ -35,6 +37,10 @@ const VinListScreen = ({ navigation, route }) => {
     const [viewType, setViewType] = useState('list');
     const [refreshing, setRefreshing] = useState(false);
     const [sortOrder, setSortOrder] = useState("newest");
+    const [startDate, setStartDate] = useState(new Date());
+    const [endDate, setEndDate] = useState(new Date());
+    const [isStartPickerOpen, setIsStartPickerOpen] = useState(false);
+    const [isEndPickerOpen, setIsEndPickerOpen] = useState(false);
 
     const sortedData = React.useMemo(() => {
         let data = [...vehicleData];
@@ -52,13 +58,7 @@ const VinListScreen = ({ navigation, route }) => {
         return data;
     }, [vehicleData, sortType, sortOrder]);
 
-    // const filteredData = searchVin
-    //     ? sortedData.filter(item =>
-    //         item.vin?.toLowerCase().includes(searchVin.toLowerCase()) ||
-    //         item.make?.toLowerCase().includes(searchVin.toLowerCase()) ||
-    //         item.model?.toLowerCase().includes(searchVin.toLowerCase()) ||
-    //         item.jobName?.toLowerCase().includes(searchVin.toLowerCase()))
-    //     : sortedData;
+
 
     const filteredData = sortedData.filter(item => {
         // Search filter
@@ -84,6 +84,12 @@ const VinListScreen = ({ navigation, route }) => {
         return true;
     });
 
+    useEffect(() => {
+        const today = new Date();
+        const lastMonth = new Date();
+        lastMonth.setMonth(today.getMonth() - 1); // 👈 1 month before today
+        setStartDate(lastMonth);
+    }, []);
 
     useEffect(() => {
         if (!vehicleData || vehicleData.length === 0) return;
@@ -98,7 +104,7 @@ const VinListScreen = ({ navigation, route }) => {
         } else {
             setShowVinModal(true);
         }
-    }, [route?.params?.vinNumber, vehicleData]);
+    }, [route?.params?.vinNumber]);
 
 
     useFocusEffect(
@@ -122,11 +128,13 @@ const VinListScreen = ({ navigation, route }) => {
         }, [])
     );
 
-    useEffect(() => {
-        if (technicianType) {
-            fetchVehicalInfo(1);
-        }
-    }, [technicianType]);
+    useFocusEffect(
+        useCallback(() => {
+            if (technicianType) {
+                fetchVehicalInfo(1);
+            }
+        }, [technicianType])
+    );
 
     const fetchVehicalInfo = async (pageNumber = 1) => {
         if (!hasMore && pageNumber !== 1) return;
@@ -140,7 +148,7 @@ const VinListScreen = ({ navigation, route }) => {
             }
             const apiUrl = technicianType === "manager"
                 ? `${API_BASE_URL}/fetchVehicleInfo?page=${pageNumber}&roleType=${technicianType}`
-                : `${API_BASE_URL}/fetchtechVehicleInfo?page=${pageNumber}&userId=${technicianId}`;
+                : `${API_BASE_URL}/fetchVehicleInfo?page=${pageNumber}&roleType=${technicianType}&userId=${technicianId}`;
 
             const response = await axios.get(apiUrl, {
                 headers: {
@@ -165,6 +173,49 @@ const VinListScreen = ({ navigation, route }) => {
             setPage(pageNumber);
         } catch (error) {
             console.error("Failed to fetch vehicle info:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchFilteredData = async (start, end) => {
+        if (!technicianId) return;
+        setLoading(true);
+
+        try {
+            const token = await AsyncStorage.getItem("auth_token");
+            if (!token) {
+                console.error("No token found");
+                return;
+            }
+
+            const formattedStartDate = start
+                ? new Date(start).toISOString().split("T")[0].split("-").reverse().join("-")
+                : "";
+
+            const formattedEndDate = end
+                ? new Date(end).toISOString().split("T")[0].split("-").reverse().join("-")
+                : "";
+
+            console.log("Start:", formattedStartDate, "End:", formattedEndDate);
+
+            const response = await axios.post(
+                `${API_BASE_URL}/vehicleFilter`,
+                `startDate=${formattedStartDate}&endDate=${formattedEndDate}&technicianId=${technicianId}`,
+                {
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+            console.log("response?.data", response?.data);
+
+            const vehicles = response?.data?.vehicles || [];
+            setVehicleData(vehicles);
+
+        } catch (error) {
+            console.error("Error fetching filtered data:", error);
         } finally {
             setLoading(false);
         }
@@ -270,6 +321,71 @@ const VinListScreen = ({ navigation, route }) => {
 
             </View>
 
+            <View style={{ paddingHorizontal: spacings.large, paddingTop: spacings.large }}>
+                {/* Filter & Date Picker */}
+                <View style={styles.datePickerContainer}>
+                    <View style={{ width: wp(38) }}>
+                        <Text style={styles.dateText}>From</Text>
+                    </View>
+                    <View style={{ width: wp(38) }}>
+                        <Text style={styles.dateText}>To</Text>
+                    </View>
+                </View>
+                <View style={[styles.datePickerContainer, { marginBottom: 15 }]}>
+                    <TouchableOpacity onPress={() => setIsStartPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter]}>
+                        <Text style={styles.dateText}>
+                            {startDate.toLocaleDateString("en-US", {
+                                month: "long",
+                                day: "numeric",
+                                year: "numeric",
+                            })}
+                        </Text>
+                        <Feather name="calendar" size={20} color={blackColor} />
+
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => setIsEndPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter]}>
+                        <Text style={styles.dateText}>
+                            {endDate.toLocaleDateString("en-US", {
+                                month: "long",
+                                day: "numeric",
+                                year: "numeric",
+                            })}
+                        </Text>
+                        <Feather name="calendar" size={20} color={blackColor} />
+                    </TouchableOpacity>
+                </View>
+
+                <DatePicker
+                    modal
+                    open={isStartPickerOpen}
+                    date={startDate}
+                    mode="date"
+                    maximumDate={new Date()} // ⛔ prevents selecting future dates
+                    onConfirm={(date) => {
+                        setStartDate(date);
+                        setIsStartPickerOpen(false);
+                        fetchFilteredData(date, endDate, activeTab);
+                    }}
+                    onCancel={() => setIsStartPickerOpen(false)}
+                />
+
+                <DatePicker
+                    modal
+                    open={isEndPickerOpen}
+                    date={endDate}
+                    mode="date"
+                    minimumDate={startDate}       // ✅ StartDate se pehle ki date disable
+                    maximumDate={new Date()} // ⛔ prevents selecting future dates
+                    onConfirm={(date) => {
+                        const newEndDate = date;
+                        setEndDate(newEndDate);
+                        setIsEndPickerOpen(false);
+                        fetchFilteredData(startDate, newEndDate, activeTab); // Use new end date
+                    }}
+                    onCancel={() => setIsEndPickerOpen(false)}
+                />
+
+            </View>
             {/* Tabs */}
             <View style={[styles.tabContainer, flexDirectionRow]}>
                 <TouchableOpacity style={[styles.tab, activeTab === 'workOrder' && styles.activeTab]} onPress={() => setActiveTab('workOrder')}>
@@ -316,11 +432,12 @@ const VinListScreen = ({ navigation, route }) => {
                         {activeTab === 'partnerOrder' && (
                             <Text style={[styles.tableHeaderText, { width: wp(25) }]}>Partner</Text>
                         )}
-                        <Text style={[styles.tableHeaderText, { width: wp(25) }]}>Cost Estimate</Text>
+                        <Text style={[styles.tableHeaderText, { width: wp(45) }]}>Cost Estimate</Text>
+                        <Text style={[styles.tableHeaderText, { width: wp(45), }]}>Action</Text>
 
                     </View>
 
-                    <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(69) : hp(56) : isIOSAndTablet ? hp(67) : hp(51) }}>
+                    <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(63) : hp(44) : isIOSAndTablet ? hp(67) : hp(42) }}>
                         <FlatList
                             data={filteredData}
                             keyExtractor={(item, index) => index.toString()}
@@ -329,16 +446,13 @@ const VinListScreen = ({ navigation, route }) => {
                             onRefresh={handleRefresh}
                             renderItem={({ item, index }) => {
                                 return (
-                                    <Pressable
+                                    <View
                                         style={[
                                             styles.tableRow,
                                             flexDirectionRow,
                                             { backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor },
                                         ]}
-                                        onPress={() => navigation.navigate("VehicleDetailsScreen", {
-                                            vehicleId: item.id,
-                                            from: activeTab === "partnerOrder" ? "partner" : "workOrder"
-                                        })}
+
 
                                     >
                                         {/* <Text style={[styles.tableText, { width: wp(30), paddingLeft: spacings.small }]}>{item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}</Text> */}
@@ -367,12 +481,28 @@ const VinListScreen = ({ navigation, route }) => {
                                             </Text>
                                         )}
 
-                                        <Text style={[styles.tableText, { width: wp(15) }]}>
+                                        <Text style={[styles.tableText, { width: wp(45) }]}>
                                             ${Array.isArray(item?.jobDescription) && item?.jobDescription?.length > 0
                                                 ? item?.jobDescription?.reduce((total, job) => total + Number(job?.cost || 0), 0)
                                                 : '0'}
                                         </Text>
-                                    </Pressable>
+
+                                        <View style={{ flexDirection: "row", alignItems: "center", width: wp(45) }} >
+                                            <Pressable onPress={() => navigation.navigate("VehicleDetailsScreen", {
+                                                vehicleId: item.id,
+                                                from: activeTab === "partnerOrder" ? "partner" : "workOrder"
+                                            })}>
+                                                <Text style={styles.viewText}>View</Text>
+                                            </Pressable>
+                                            <Pressable
+                                                onPress={() => navigation.navigate("WorkOrderScreenTwo", {
+                                                    vehicleId: item.id,
+                                                    // from: activeTab === "partnerOrder" ? "partner" : "workOrder"
+                                                })}>
+                                                <Text style={styles.viewText}>Edit</Text>
+                                            </Pressable>
+                                        </View>
+                                    </View>
                                 );
                             }}
                             ListFooterComponent={() =>
@@ -383,7 +513,7 @@ const VinListScreen = ({ navigation, route }) => {
                                 ) : null
                             }
                             ListEmptyComponent={() => {
-                                if (loading) return null; // 👈 Loading ke time kuch mat dikhao
+                                if (loading) return null;
                                 return (
                                     <View style={styles.emptyContainer}>
                                         <Text style={styles.emptyText}>No Vehicle List found</Text>
@@ -401,7 +531,7 @@ const VinListScreen = ({ navigation, route }) => {
                 </View>
             </ScrollView>}
 
-            {viewType === "grid" && <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(69) : hp(63) : isIOSAndTablet ? hp(67) : hp(58) }}>
+            {viewType === "grid" && <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(66) : hp(51) : isIOSAndTablet ? hp(67) : hp(48) }}>
                 <FlatList
                     data={filteredData}
                     keyExtractor={(item, index) => index.toString()}
@@ -425,6 +555,15 @@ const VinListScreen = ({ navigation, route }) => {
                             })}
                         >
                             <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+                                <Pressable
+                                    onPress={() => navigation.navigate("WorkOrderScreenTwo", {
+                                        vehicleId: item.id,
+                                    })}
+                                    style={{ position: "absolute", right: -5, top: -10, zIndex: 999 }}>
+                                    {/* <Text style={styles.viewText}>Edit</Text> */}
+                                    <AntDesign name="edit" size={20} color={blackColor} />
+
+                                </Pressable>
                                 <View style={{ width: '48%', marginBottom: 10 }}>
                                     <Text style={{ color: '#555', fontSize: 11 }}>JobName</Text>
                                     <Text>{item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}</Text>
@@ -691,6 +830,15 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-end',
         alignItems: 'center',
     },
+    viewText: {
+        marginLeft: 5,
+        fontSize: style.fontSizeSmall1x.fontSize,
+        color: blackColor,
+        borderColor: blackColor,
+        borderWidth: 1,
+        padding: 4,
+        borderRadius: 2,
+    },
     modalContainer: {
         width: '100%',
         backgroundColor: whiteColor,
@@ -799,6 +947,25 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         borderRadius: 6,
         alignItems: 'center',
+    },
+
+    datePickerContainer: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        marginHorizontal: 10,
+        // marginBottom: 15
+    },
+    datePicker: {
+        width: wp(38),
+        paddingVertical: spacings.large,
+        justifyContent: "space-between",
+        borderBottomWidth: 1,
+        borderBottomColor: grayColor,
+    },
+    dateText: {
+        color: blackColor,
+        marginRight: spacings.small2x,
+        fontSize: style.fontSizeNormal.fontSize,
     },
 
 });

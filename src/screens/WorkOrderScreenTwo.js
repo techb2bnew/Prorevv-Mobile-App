@@ -24,10 +24,12 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween, textAlign } = BaseStyle;
 
 const WorkOrderScreenTwo = ({ route }) => {
+    console.log("routerouteroute>>", route?.params?.vehicleId);
+
     const { width, height } = Dimensions.get("window");
     const isTablet = width >= 668 && height >= 1024;
     const navigation = useNavigation();
-    const [vin, setVin] = useState('');
+    const [vin, setVin] = useState('' || vehicleDetails);
     const [carDetails, setCarDetails] = useState([]);
     const [selectedCustomer, setSelectedCustomer] = useState(null);
     const [vinError, setVinError] = useState('');
@@ -59,7 +61,7 @@ const WorkOrderScreenTwo = ({ route }) => {
     const [storedSimpleFlatRate, setStoredSimpleFlatRate] = useState(null);
     const [storedAmountPercentage, setStoredAmountPercentage] = useState(null);
     const inputRefs = useRef([]);
-    const [step, setStep] = useState(1);
+    const [step, setStep] = useState(route?.params?.vehicleId ? 2 : 1);
     const [selectedJobName, setSelectedJobName] = useState("");
     const [selectedJobId, setSelectedJobId] = useState("");
     const [submitLoading, setSubmitLoading] = useState(false);
@@ -73,7 +75,8 @@ const WorkOrderScreenTwo = ({ route }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [technicians, setTechnicians] = useState([]);
     const [selectedTechnicians, setSelectedTechnicians] = useState([]); // store selected IDs
-
+    const [vehicleDetails, setVehicleDetails] = useState(false);
+    console.log("vehicleDetailsvehicleDetails", vehicleDetails, technicians, selectedTechnicians);
 
     const [modalData, setModalData] = useState({
         visible: false,
@@ -549,32 +552,6 @@ const WorkOrderScreenTwo = ({ route }) => {
             return;
         }
 
-        // const technicianObj = {
-        //     payRate: storedPayRate,
-        //     payVehicleType: selectedVehicleType,
-        //     amountPercentage: storedAmountPercentage,
-        //     simpleFlatRate: storedSimpleFlatRate
-        // };
-        // console.log("technicianObj", technicianObj);
-        // console.log("selectedTechnicians", selectedTechnicians);
-
-        // let fullFlatRate = {};
-        // try {
-        //     fullFlatRate = JSON.parse(technicianObj?.simpleFlatRate);
-        // } catch (error) {
-        //     console.error("Invalid JSON in simpleFlatRate", error);
-        // }
-
-        // const selectedVehicleRate = {
-        //     [technicianObj?.payVehicleType]: fullFlatRate[technicianObj?.payVehicleType]
-        // };
-        // const finalFlatRate =
-        //     selectedVehicleRate[technicianObj?.payVehicleType] !== undefined
-        //         ? JSON.stringify(selectedVehicleRate)
-        //         : technicianObj?.simpleFlatRate;
-
-
-
         // console.log("finalFlatRate", finalFlatRate);
 
         const invalidJob = jobDescription?.find(item => {
@@ -603,29 +580,39 @@ const WorkOrderScreenTwo = ({ route }) => {
         formData.append("jobName", selectedJobName);
         formData.append("jobId", selectedJobId);
         formData.append("vin", vin);
-        formData.append("vehicleDescriptor", getValue("Vehicle Descriptor"));
-        formData.append("make", getValue("Make"));
-        formData.append("manufacturerName", getValue("Manufacturer Name"));
-        formData.append("model", getValue("Model"));
-        formData.append("modelYear", getValue("Model Year"));
-        formData.append("vehicleType", selectedVehicleType);
-        formData.append("plantCountry", getValue("Plant Country"));
-        formData.append("plantCompanyName", getValue("Plant Company Name"));
-        formData.append("plantState", getValue("Plant State"));
-        formData.append("bodyClass", getValue("Body Class"));
+        formData.append("vehicleId", route?.params?.vehicleId || undefined);
+        formData.append("vehicleDescriptor", getValue("Vehicle Descriptor") || vehicleDetails?.vehicleDescriptor);
+        formData.append("make", getValue("Make") || vehicleDetails?.make);
+        formData.append("manufacturerName", getValue("Manufacturer Name") || vehicleDetails?.manufacturerName);
+        formData.append("model", getValue("Model") || vehicleDetails?.model);
+        formData.append("modelYear", getValue("Model Year") || vehicleDetails?.modelYear);
+        formData.append("vehicleType", selectedVehicleType || vehicleDetails?.vehicleType);
+        formData.append("plantCountry", getValue("Plant Country") || vehicleDetails?.plantCountry);
+        formData.append("plantCompanyName", getValue("Plant Company Name") || vehicleDetails?.plantCompanyName);
+        formData.append("plantState", getValue("Plant State") || vehicleDetails?.plantState);
+        formData.append("bodyClass", getValue("Body Class") || vehicleDetails?.bodyClass);
         jobDescription.forEach((item) => {
-            formData.append("jobDescription[]", item.jobDescription);
-            formData.append("cost[]", item.cost);
+            formData.append("jobDescription", item.jobDescription);
+            formData.append("cost", item.cost);
         });
         formData.append("color", selectedColor);
         formData.append("createdBy", "app");
         // formData.append("userId[0]", technicianId);
+        selectedTechnicians.forEach((tech, index) => {
+
+            // Now also send full technician object
+            formData.append(`technicians[${index}][id]`, tech.id);
+            formData.append(`technicians[${index}][firstName]`, tech.firstName || '');
+            formData.append(`technicians[${index}][lastName]`, tech.lastName || '');
+            formData.append(`technicians[${index}][labourCost]`, tech.labourCost || '');
+        });
         if (technicianType === "manager") {
             selectedTechnicians.forEach((tech, index) => {
                 formData.append(`userId[${index}]`, tech.id);
             });
         } else {
             formData.append("userId[0]", technicianId);
+            formData.append("technicianid[0]", technicianId || '');
         }
         formData.append("roleType", technicianType);
         formData.append("labourCost", labourCost || "");
@@ -656,49 +643,65 @@ const WorkOrderScreenTwo = ({ route }) => {
             formData.append("technicians[0][payVehicleType]", selectedVehicleType);
             formData.append("technicians[0][simpleFlatRate]", finalRate);
             formData.append("technicians[0][amountPercentage]", storedAmountPercentage);
-        } else {
-            // 👉 Multiple Selected Technicians
-            selectedTechnicians.forEach((tech, index) => {
-                let parsedRate = {};
-                const job = tech.UserJob || {}; // safe access
-
-                try {
-                    parsedRate = JSON.parse(job.simpleFlatRate || "{}");
-                } catch (e) {
-                    console.error("Invalid JSON in job.simpleFlatRate", e);
-                }
-
-                const selRate = {
-                    [job.payVehicleType]: parsedRate[job.payVehicleType],
-                };
-
-                const finalRate = parsedRate[job.payVehicleType] !== undefined
-                    ? JSON.stringify(selRate)
-                    : job.simpleFlatRate || "{}";
-
-                formData.append(`technicians[${index}][payRate]`, job.payRate || "");
-                formData.append(`technicians[${index}][payVehicleType]`, job.payVehicleType || "");
-                formData.append(`technicians[${index}][simpleFlatRate]`, finalRate);
-                formData.append(`technicians[${index}][amountPercentage]`, job.amountPercentage || "");
-            });
         }
+        if (route?.params?.vehicleId) {
+            console.log("Vehicle ID present:", route.params.vehicleId);
 
-        if (imageUris && imageUris.length > 0) {
-            imageUris.forEach((uri, index) => {
-                formData.append("images", {
-                    uri: uri,
-                    name: `image_${index}.jpg`,
-                    type: "image/jpeg",
+            if (Array.isArray(imageUris)) {
+                imageUris.forEach((item, index) => {
+                    // For new local images (file objects or local URIs)
+                    if (item instanceof File) {
+                        formData.append('images[]', item);
+                    } else if (typeof item === 'string') {
+                        if (item.startsWith('http')) {
+                            // Old image URL - send as string
+                            formData.append('images[]', item);
+                        } else {
+                            // New local file path (uri)
+                            formData.append("images", {
+                                uri: item,
+                                name: `image_${index}.jpg`,
+                                type: "image/jpeg",
+                            });
+                        }
+                    } else if (item?.uri) {
+                        if (item.uri.startsWith('http')) {
+                            formData.append('images[]', item.uri);
+                        } else {
+                            formData.append("images[]", {
+                                uri: item.uri,
+                                name: `image_${index}.jpg`,
+                                type: "image/jpeg",
+                            });
+                        }
+                    }
                 });
-            });
+            }
+
+        } else {
+            if (imageUris && imageUris.length > 0) {
+                imageUris.forEach((uri, index) => {
+                    formData.append("images", {
+                        uri: uri,
+                        name: `image_${index}.jpg`,
+                        type: "image/jpeg",
+                    },);
+                });
+            }
         }
+
+
+
         console.log("form:::", formData);
         setNewFormData(formData);
         setLoaderFn(true);
         setError("");
         setJobDescriptionError("");
         try {
-            const response = await fetch(`${API_BASE_URL}/addVehicleInfo`, {
+            const apiUrlEndPoint = route?.params?.vehicleId ? `${API_BASE_URL}/updateVehicleInfo` : `${API_BASE_URL}/addVehicleInfo`
+            console.log("apiUrlEndPoint>>", apiUrlEndPoint);
+
+            const response = await fetch(apiUrlEndPoint, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -712,12 +715,18 @@ const WorkOrderScreenTwo = ({ route }) => {
                 if (shouldNavigate) {
                     navigation.navigate("Home");
                     setLoaderFn(false);
-                    Toast.show("Vehicle add successfully!");
+                    if (route?.params?.vehicleId) {
+                        Toast.show("Vehicle update successfully!");
+                    }
+                    Toast.show((route?.params?.vehicleId) ? "Vehicle update successfully!" : "Vehicle add successfully!");
                 } else {
                     resetForm();
                     setStep(1);
                     setLoaderFn(false);
-                    Toast.show("Vehicle add successfully!");
+                    if (route?.params?.vehicleId) {
+                        Toast.show("Vehicle update successfully!");
+                    }
+                    Toast.show((route?.params?.vehicleId) ? "Vehicle update successfully!" : "Vehicle add successfully!");
                 }
             } else {
                 console.warn("Submission failed:", responseJson);
@@ -785,12 +794,76 @@ const WorkOrderScreenTwo = ({ route }) => {
     const isTechnicianSelected = (id) => {
         return selectedTechnicians.some((tech) => tech.id === id);
     };
+
     useEffect(() => {
         if (technicians?.length > 0) {
             setSelectedTechnicians(technicians); // store full technician objects
         }
     }, [technicians]);
 
+
+    const fetchVehileData = async (vehicleId) => {
+        try {
+            setLoading(true);
+
+            const apiUrl = `${API_BASE_URL}`;
+            const token = await AsyncStorage.getItem("auth_token");
+
+            const headers = { "Content-Type": "application/json" };
+            if (token) {
+                headers["Authorization"] = `Bearer ${token}`;
+            }
+            // console.log(vehicleId);
+
+            const response = await fetch(`${apiUrl}/fetchSingleVehicleInfo?vehicleId=${vehicleId}`, {
+                method: "GET", // ✅ FIXED
+                headers,
+            });
+
+            const contentType = response.headers.get("Content-Type");
+
+            if (response.ok && contentType?.includes("application/json")) {
+                const data = await response.json();
+                console.log("API Response Data:", data?.vehicle?.vehicle);
+
+                if (data?.vehicle?.vehicle) {
+                    setVehicleDetails(data?.vehicle?.vehicle);
+                    setVin(data?.vehicle?.vehicle?.vin)
+                    setSelectedJobName(data?.vehicle?.vehicle?.jobName)
+                    setSelectedJobId(data?.vehicle?.vehicle?.jobId)
+                    setLabourCost(data?.vehicle?.vehicle?.labourCost)
+                    setSelectedColor(data?.vehicle?.vehicle?.color)
+                    // Format jobDescription properly
+                    setNotes(data?.vehicle?.vehicle?.notes)
+                    if (data?.vehicle?.vehicle?.images?.length > 0) {
+                        setImageUris(data.vehicle.vehicle.images);
+                    }
+                    const formattedJobDescriptions = (data?.vehicle?.vehicle?.jobDescription || []).map(item => ({
+                        jobDescription: item.jobDescription || "",
+                        cost: item.cost?.toString() || ""  // Ensure cost is string
+                    }));
+
+                    setJobDescription(formattedJobDescriptions.length > 0 ? formattedJobDescriptions : [{ jobDescription: "", cost: "" }]);
+
+                } else {
+                    console.error("No vehicle found in API response.");
+                }
+            } else {
+                const rawText = await response.text();
+                console.error("Unexpected non-JSON response:", rawText);
+            }
+        } catch (error) {
+            console.error("An error occurred while fetching job data:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (route?.params?.vehicleId) {
+            fetchVehileData(route?.params?.vehicleId);
+        }
+    }, [route?.params?.vehicleId]);
 
     return (
         <KeyboardAvoidingView
@@ -849,7 +922,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                             style={[styles.vinInput, { width: isTablet ? wp(60) : wp(50), height: isTablet ? hp(3.5) : hp(5.5) }]}
                                             value={vin}
                                             onChangeText={(text) => {
-                                                setVin(text);
+                                                setVin(text || route?.params?.vehicleInfo?.vin);
                                                 if (text.trim() !== '') {
                                                     setVinError('');
                                                 }
@@ -1014,7 +1087,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                 </View>
                             )}
 
-                            {carDetails && carDetails.length > 0 && (
+                            {((carDetails && carDetails.length > 0) || route?.params?.vehicleId) && (
                                 <>
                                     {/* vechilecolor */}
                                     <Text style={[styles.label, { marginTop: 5 }]}>Vehicle Color <Text style={{ color: "red" }}>*</Text></Text>
@@ -1171,6 +1244,8 @@ const WorkOrderScreenTwo = ({ route }) => {
                                     }
 
                                     {/* image */}
+                                    <Text style={[styles.label, { marginTop: spacings.large }]}>Attachments</Text>
+
                                     {imageUris.length === 0 ? (
                                         <>
                                             <TouchableOpacity style={[styles.uploadImage, alignJustifyCenter]}
@@ -1233,7 +1308,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                     </View>
 
 
-                                    {technicianType === 'manager' && <View style={{ marginTop: 20 }}>
+                                    {technicianType === 'manager' && !route?.params?.vehicleId && <View style={{ marginTop: 20 }}>
                                         <Text style={styles.label}>Select Technician</Text>
                                         <View style={{
                                             borderWidth: 1,
@@ -1291,20 +1366,20 @@ const WorkOrderScreenTwo = ({ route }) => {
                                     {/* Submit */}
                                     <View style={{ width: "100%", marginTop: spacings.xLarge, flexDirection: "row", justifyContent: "space-between" }}>
                                         <CustomButton
-                                            title="Submit"
+                                            title={route?.params?.vehicleId ? "Update" : "Submit"}
                                             onPress={() => handleSubmitJob(true, setSubmitLoading)}
                                             loading={submitLoading}
-                                            style={{ width: wp(33) }}
+                                            style={{ width: (route?.params?.vehicleId) ? "100%" : wp(33) }}
                                             disabled={submitLoading || scanLoading}
                                         />
 
-                                        <CustomButton
+                                        {!route?.params?.vehicleId && <CustomButton
                                             title="Scan Next VIN"
                                             onPress={() => handleSubmitJob(false, setScanLoading)}
                                             loading={scanLoading}
                                             style={{ width: wp(50) }}
                                             disabled={submitLoading || scanLoading}
-                                        />
+                                        />}
                                     </View>
                                 </>)}
 

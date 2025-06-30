@@ -52,7 +52,6 @@ const SignUpScreen = ({ navigation }) => {
     const [cityValue, setCityValue] = useState("");
     const googleRef = useRef();
 
-
     const [formData, setFormData] = useState({
         firstName: "",
         lastName: "",
@@ -90,17 +89,17 @@ const SignUpScreen = ({ navigation }) => {
         }
 
         if (!formData.address.trim()) newErrors.address = "Address is required";
-        if (!formData.country.trim()) newErrors.country = "Country is required";
+        // if (!formData.country.trim()) newErrors.country = "Country is required";
         // if (!formData.state.trim()) newErrors.state = "State is required";
         // if (!formData.city.trim()) newErrors.city = "City is required";
-        if (!formData.zipCode.trim()) newErrors.zipCode = "Zip code is required";
+        // if (!formData.zipCode.trim()) newErrors.zipCode = "Zip code is required";
         // Validation for secondary email and phone number if provided
-        if (formData.secondaryEmail.trim() && !/^\S+@\S+\.\S+$/.test(formData.secondaryEmail)) {
-            newErrors.secondaryEmail = "Valid secondary email is required";
-        }
-        if (formData.secondaryPhoneNumber.trim() && formData.secondaryPhoneNumber.length < 10) {
-            newErrors.secondaryPhoneNumber = "Valid secondary phone number is required";
-        }
+        // if (formData.secondaryEmail.trim() && !/^\S+@\S+\.\S+$/.test(formData.secondaryEmail)) {
+        //     newErrors.secondaryEmail = "Valid secondary email is required";
+        // }
+        // if (formData.secondaryPhoneNumber.trim() && formData.secondaryPhoneNumber.length < 10) {
+        //     newErrors.secondaryPhoneNumber = "Valid secondary phone number is required";
+        // }
         // Validation for the second step
         // if (isSecondStep) {
         if (!formData.password.trim()) newErrors.password = "Password is required";
@@ -233,10 +232,10 @@ const SignUpScreen = ({ navigation }) => {
         formDataToSend.append('email', formData.email);
         formDataToSend.append('phoneNumber', formData.phoneNumber);
         formDataToSend.append('address', formData.address);
-        formDataToSend.append('country', formData.country);
-        formDataToSend.append('state', formData.state);
-        formDataToSend.append('city', formData.city);
-        formDataToSend.append('zipCode', formData.zipCode);
+        // formDataToSend.append('country', formData.country);
+        // formDataToSend.append('state', formData.state);
+        // formDataToSend.append('city', formData.city);
+        // formDataToSend.append('zipCode', formData.zipCode);
         formDataToSend.append('password', formData.password);
         formDataToSend.append('secondaryContactName', formData.secondaryPhoneNumber);
         formDataToSend.append('secondaryEmail', formData.secondaryEmail || "");
@@ -346,9 +345,7 @@ const SignUpScreen = ({ navigation }) => {
                 } else {
                     setErrors({ apiError: data.error || "An error occurred. Please try again." });
                 }
-
                 setIsLoading(false);
-
             } else {
                 console.log("Success: Technician created successfully!");
                 await AsyncStorage.setItem("isRegistered", "true");

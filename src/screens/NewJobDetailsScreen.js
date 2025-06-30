@@ -20,7 +20,7 @@ import { API_BASE_URL } from '../constans/Constants';
 const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween, textAlign, justifyContentCenter, justifyContentSpaceEvenly } = BaseStyle;
 
 const NewJobDetailsScreen = ({ navigation, route }) => {
-  const { jobId } = route.params;
+  const { jobId, customerId, from } = route.params || {};
   const [loading, setLoading] = useState(true);
   const [jobDetails, setJobDetails] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
@@ -28,6 +28,10 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
   const [technicianType, setTechnicianType] = useState();
   const { width, height } = Dimensions.get("window");
   const isTablet = width >= 668 && height >= 1024;
+  const [customerJobs, setCustomerJobs] = useState([]);
+  const [selectedJob, setSelectedJob] = useState(null);
+
+
 
   useFocusEffect(
     useCallback(() => {
@@ -85,15 +89,88 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
   };
 
   useEffect(() => {
-    fetchJobData(jobId);
-  }, [jobId]);
+    if (customerId || from === "customer") {
+      fetchSingleCustomerDetails(customerId);
+      // fetchJobsByCustomer(1); // also load jobs
+    } else if (jobId) {
+      fetchJobData(jobId); // load only single job
+    }
+  }, [customerId, from, jobId]);
+
+  const fetchSingleCustomerDetails = async (customerId) => {
+    try {
+
+      setCustomerJobs(null);
+
+      const token = await AsyncStorage.getItem("auth_token");
+      if (!token) {
+        console.error("Token not found!");
+        return;
+      }
+
+      if (!customerId) {
+        console.error("Invalid customerId");
+        return;
+      }
+
+      const url = `${API_BASE_URL}/fetchSingleCustomer?customerId=${customerId}`;
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        const customerData = data?.customers?.customer;
+        console.log("data?.customers?.customer", data?.customers?.customer);
+
+        setCustomerJobs(customerData);
+        setLoading(false); // Start loading
+
+        // setSelectedCustomer(customerData)
+      } else {
+        console.error("Error fetching customer details. Status:", response.status);
+        setCustomerJobs(null);
+      }
+    } catch (error) {
+      console.error("Network error:", error);
+      setCustomerJobs(null);
+    } finally {
+      setLoading(false); // stop loading
+    }
+  };
+
+  const handleJobSelect = (job) => {
+    setSelectedJob(job);
+    fetchJobData(job?.id);
+
+  };
+
+
   const capitalize = (text) => {
     if (!text || typeof text !== 'string') return '';
     return text.charAt(0).toUpperCase() + text.slice(1);
   };
+
+
   return (
     <View style={{ flex: 1 }}>
-      <Header title={jobDetails?.jobName?.charAt(0).toUpperCase() + jobDetails?.jobName?.slice(1)} />
+      <Header
+        title={
+          customerId || from === 'customer'
+            ? "Customer Jobs"
+            : (selectedJob?.jobName || jobDetails?.jobName
+              ? (selectedJob?.jobName || jobDetails?.jobName).charAt(0).toUpperCase() +
+              (selectedJob?.jobName || jobDetails?.jobName).slice(1)
+              : "Job Details"
+            )
+        }
+      />
       {loading ? (
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', padding: 10 }}>
           {/* {Array.from({ length: 13 }).map((_, index) => (
@@ -111,14 +188,93 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
             <ActivityIndicator size={'large'} color={blueColor} />
           </View>
         </View>
+      ) : customerId && !selectedJob ? (
+        <FlatList
+          data={customerJobs?.jobs}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={{ paddingBottom: 20 }}
+          showsVerticalScrollIndicator={false}
+          ListHeaderComponent={() => (
+            <View style={{ padding: 16, backgroundColor: lightBlueColor, margin: 10, borderRadius: 10, borderColor: blueColor, borderWidth: 1 }}>
+              <View style={styles.rowItem}>
+                <View style={styles.leftCol}>
+                  <Text style={styles.label}>Customer</Text>
+                  <Text style={styles.value}>{capitalize(customerJobs?.fullName || "-")}</Text>
+                </View>
+                <View style={styles.rightCol}>
+                  <Text style={styles.label}>Customer Email</Text>
+                  <Text style={styles.value}>{customerJobs?.email || "-"}</Text>
+                </View>
+              </View>
+              <View style={styles.leftCol}>
+                <Text style={styles.label}>Customer Phone</Text>
+                <Text style={styles.value}>{customerJobs?.phoneNumber || "-"}</Text>
+              </View>
+            </View>
+          )}
+          renderItem={({ item, index }) => {
+            const rowStyle = {
+              backgroundColor: index % 2 === 0 ? whiteColor : lightBlueColor, // white / light blue
+            };
+
+            return (
+              <TouchableOpacity
+                style={[styles.card, { marginHorizontal: 10, borderColor: blueColor, borderWidth: 1 }, rowStyle]}
+                onPress={() => handleJobSelect(item)}
+              >
+                <View style={styles.rowItem}>
+                  <View style={styles.leftCol}>
+                    <Text style={styles.label}>Job Title</Text>
+                    <Text style={styles.value}>{capitalize(item?.jobName || "-")}</Text>
+                  </View>
+                  <View style={styles.rightCol}>
+                    <Text style={styles.label}>Estimated By</Text>
+                    <Text style={styles.value}>{capitalize(item?.estimatedBy || "-")}</Text>
+                  </View>
+                </View>
+                <View style={styles.rowItem}>
+                  <View style={styles.leftCol}>
+                    <Text style={styles.label}>Created At</Text>
+                    <Text style={styles.value}>
+                      {item?.createdAt
+                        ? new Date(item.createdAt).toLocaleDateString("en-US", {
+                          month: "long",
+                          day: "numeric",
+                          year: "numeric",
+                        })
+                        : "-"}
+                    </Text>
+                  </View>
+                  <View style={styles.rightCol}>
+                    <Text style={styles.label}>Status</Text>
+                    <Text style={[styles.value, { color: item?.jobStatus ? 'green' : 'red' }]}>
+                      {item?.jobStatus ? "Complete" : "In Progress"}
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.leftCol}>
+                  <Text style={styles.label}>Number of W.O</Text>
+                  <Text style={styles.value}>
+                    {item?.vehicles?.length}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            );
+          }}
+
+          ListEmptyComponent={() => (
+            <Text style={{ textAlign: 'center', marginTop: 20 }}>No jobs found.</Text>
+          )}
+        />
+
       ) : (
         <ScrollView contentContainerStyle={{ padding: 16 }}>
           {/* Job Info */}
           {jobDetails?.jobName && jobDetails?.customer?.fullName && (
-            <View style={styles.card}>
+            <View style={[styles.card, { borderColor: blueColor, borderWidth: 1 }]}>
               <View style={styles.rowItem}>
                 <View style={styles.leftCol}>
-                  <Text style={styles.label}>Job Name</Text>
+                  <Text style={styles.label}>Job Title</Text>
                   <Text style={styles.value}>{capitalize(jobDetails?.jobName)}</Text>
                 </View>
                 <View style={styles.rightCol}>
@@ -143,10 +299,23 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
 
           {/* Vehicles */}
           {jobDetails?.vehicles?.map((vehicle, index) => (
-            <View key={vehicle.id} style={styles.card}>
-              <Text style={styles.sectionTitle}>Vehicle {index + 1}</Text>
-              <View style={{ height: 1, backgroundColor: '#ccc', marginBottom: 10 }} />
-              <View style={styles.rowItem}>
+            <View key={vehicle.id} style={[styles.card, { borderColor: blueColor, borderWidth: 1, padding: 0 }]}>
+              {/* <Text style={[styles.sectionTitle,{backgroundColor:blueColor,color:whiteColor}]}>Vehicle {index + 1}</Text> */}
+              {/* <View style={{ height: 1, backgroundColor: '#ccc', marginBottom: 10 }} /> */}
+              <View style={{
+                backgroundColor: blueColor,
+                borderTopLeftRadius: 10,
+                borderTopRightRadius: 10,
+                paddingVertical: 8,
+                paddingHorizontal: 12,
+                width: '100%'
+              }}>
+                <Text style={[styles.sectionTitle, { color: whiteColor }]}>
+                  Vehicle {index + 1}
+                </Text>
+              </View>
+
+              <View style={[styles.rowItem, { paddingHorizontal: 10 }]}>
                 {!!vehicle.vin && (
                   <View style={styles.leftCol}>
                     <Text style={styles.label}>VIN</Text>
@@ -161,7 +330,7 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
                 )}
               </View>
 
-              <View style={styles.rowItem}>
+              <View style={[styles.rowItem, { paddingHorizontal: 10 }]}>
                 {!!vehicle.model && (
                   <View style={styles.leftCol}>
                     <Text style={styles.label}>Model</Text>
@@ -176,7 +345,7 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
                 )}
               </View>
 
-              <View style={styles.rowItem}>
+              <View style={[styles.rowItem, { paddingHorizontal: 10 }]}>
                 {!!vehicle.manufacturerName && (
                   <View style={styles.leftCol}>
                     <Text style={styles.label}>Manufacturer</Text>
@@ -191,7 +360,7 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
                 )}
               </View>
 
-              <View style={styles.rowItem}>
+              <View style={[styles.rowItem, { paddingHorizontal: 10 }]}>
                 {!!vehicle.vehicleDescriptor && (
                   <View style={styles.leftCol}>
                     <Text style={styles.label}>Descriptor</Text>
@@ -207,7 +376,7 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
               </View>
 
               {vehicle.jobDescription?.filter(d => d.jobDescription || d.cost).length > 0 && (
-                <View style={{ marginTop: 10 }}>
+                <View style={{ padding: 10 }}>
                   {/* Heading */}
                   <View style={[flexDirectionRow, justifyContentSpaceBetween]}>
                     <View style={styles.leftCol}>
@@ -244,7 +413,7 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
                 </View>
               )}
 
-              <View style={styles.rowItem}>
+              <View style={[styles.rowItem, { paddingHorizontal: 10 }]}>
                 {!!vehicle.createdAt && (
                   <View style={styles.leftCol}>
                     <Text style={styles.label}>Date</Text>
@@ -276,7 +445,7 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
 
               {/* Notes */}
               {!!vehicle.notes?.trim() && (
-                <View style={{ marginTop: 10 }}>
+                <View style={{ padding: 10 }}>
                   <Text style={styles.label}>Notes</Text>
                   <Text style={styles.value}>{vehicle.notes}</Text>
                 </View>
@@ -284,7 +453,7 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
 
               {/* Images */}
               {Array.isArray(vehicle.images) && vehicle.images.length > 0 && (
-                <View style={{ marginTop: 10 }}>
+                <View style={{ marginTop: 10, padding: 10 }}>
                   <Text style={styles.label}>Attachments</Text>
                   <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 8 }}>
                     {vehicle.images.map((img, i) => (

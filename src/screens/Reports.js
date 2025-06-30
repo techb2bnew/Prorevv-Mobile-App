@@ -49,6 +49,12 @@ const Reports = ({ navigation }) => {
     const [workOrdersRawData, setWorkOrdersRawData] = useState([]);
     const [refreshing, setRefreshing] = useState(false);
     const [refreshingJob, setRefreshingJob] = useState(false);
+    const [customerJobs, setCustomerJobs] = useState([]);
+    const [filteredCustomer, setFilteredCustomer] = useState([]);
+    const [customerJobPage, setCustomerJobPage] = useState(1);
+    const [customerHasMore, setCustomerHasMore] = useState(true);
+    const [customerLoading, setCustomerLoading] = useState(false);
+    const [customerLoadingMore, setCustomerLoadingMore] = useState(false);
 
 
     const toggleModal = () => {
@@ -127,6 +133,9 @@ const Reports = ({ navigation }) => {
     useEffect(() => {
         if (activeTab === "Jobs" && technicianId) {
             fetchJobHistory();
+        } else if (activeTab === "Customers") {
+            setCustomerJobs([]);
+            fetchCustomerJobHistory(1, false);
         } else {
             fetchVehicalInfo(page);
         }
@@ -154,13 +163,15 @@ const Reports = ({ navigation }) => {
             // console.log("token", token);
             const apiUrl = technicianType === "manager"
                 ? `${API_BASE_URL}/fetchAllJobs?roleType=${technicianType}&page=${newPage}&limit=10`
-                : `${API_BASE_URL}/technicianJobFetch?userId=${technicianId}&page=${newPage}&limit=10`;
+                : technicianType === "single-technician"
+                    ? `${API_BASE_URL}/fetchAllJobs?userId=${technicianId}&roleType=${technicianType}&page=${newPage}&limit=10`
+                    : `${API_BASE_URL}/fetchAllJobs?userId=${technicianId}&page=${newPage}&limit=10`;
             const response = await axios.get(
                 apiUrl,
                 { headers: { Authorization: `Bearer ${token}` } }
             );
 
-            const newJobs = (technicianType === "manager") ? (response?.data?.jobs?.jobs) : (response?.data?.response?.jobs) || [];
+            const newJobs = (technicianType === "manager") ? (response?.data?.jobs?.jobs) : (response?.data?.jobs?.jobs) || [];
             console.log("fetchJobHistory", response?.data);
 
             const updatedJobs = newPage === 1 ? newJobs : [...jobsRawData, ...newJobs];
@@ -285,12 +296,62 @@ const Reports = ({ navigation }) => {
         }
     };
 
+
+    const fetchCustomerJobHistory = async (newPage = 1, isPagination = false) => {
+        if (isPagination) {
+            setCustomerLoadingMore(true);
+        } else {
+            setCustomerLoading(true);
+        }
+
+        try {
+            const token = await AsyncStorage.getItem("auth_token");
+            if (!token) {
+                console.error("No token found");
+                setCustomerHasMore(false);
+                return;
+            }
+
+            let apiUrl = "";
+
+            if (technicianType === "manager") {
+                apiUrl = `${API_BASE_URL}/fetchAllJobs?roleType=${technicianType}&page=${newPage}&limit=10`;
+            } else if (technicianType === "single-technician") {
+                apiUrl = `${API_BASE_URL}/fetchAllJobs?userId=${technicianId}&roleType=${technicianType}&page=${newPage}&limit=10`;
+            } else {
+                apiUrl = `${API_BASE_URL}/fetchAllJobs?userId=${technicianId}&page=${newPage}&limit=10`;
+            }
+
+            const response = await axios.get(apiUrl, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            const newJobs = response?.data?.jobs?.jobs || [];
+            console.log("Customer Jobs Fetched:", newJobs);
+
+            const updatedJobs = newPage === 1 ? newJobs : [...customerJobs, ...newJobs];
+
+            setCustomerJobs(updatedJobs);
+            setCustomerHasMore(newJobs.length > 0);
+            setCustomerJobPage(newPage);
+        } catch (error) {
+            console.error("Error fetching customer job history:", error);
+            setCustomerHasMore(false);
+        } finally {
+            if (isPagination) {
+                setCustomerLoadingMore(false);
+            } else {
+                setCustomerLoading(false);
+            }
+        }
+    };
+
     const filterByStatus = useCallback((data, status, tab) => {
         return data?.filter(item => {
             const field =
                 tab === "Jobs"
-                    ? item?.jobStatus
-                    : item?.vehicleStatus;
+                    ? (item?.jobStatus)
+                    : tab === "Customers" ? (item?.jobStatus) : (item?.vehicleStatus);
 
             if (status === "Completed") return field === true || field === "completed";
             if (status === "InProgress") return field === false || field === "inprogress";
@@ -301,11 +362,14 @@ const Reports = ({ navigation }) => {
     useEffect(() => {
         const filteredJob = filterByStatus(jobsRawData, activeStatus, 'Jobs');
         const filteredWork = filterByStatus(workOrdersRawData, activeStatus, 'WorkOrders');
-        // console.log("filteredWork", filteredWork);
-
+        const customerFiltered = filterByStatus(customerJobs, activeStatus, 'Customers');
         setFilteredJobs(filteredJob);
         setFilteredWorkOrders(filteredWork);
-    }, [activeStatus, jobsRawData, workOrdersRawData]);
+        // console.log("customerFiltered", customerFiltered);
+
+        setFilteredCustomer(customerFiltered);
+
+    }, [activeStatus, jobsRawData, workOrdersRawData, customerJobs]);
 
     const getStatusStyle = (status) => {
         if (status === true || status === "completed") return [styles.statusPill, styles.statusCompleted];
@@ -320,6 +384,7 @@ const Reports = ({ navigation }) => {
     useEffect(() => {
         const jobFiltered = filterByStatus(jobsRawData, activeStatus, 'Jobs');
         const workOrderFiltered = filterByStatus(workOrdersRawData, activeStatus, 'WorkOrders');
+        const customerFiltered = filterByStatus(customerJobs, activeStatus, 'Customers');
 
         const searchLower = search.toLowerCase();
 
@@ -331,11 +396,15 @@ const Reports = ({ navigation }) => {
             item?.vin?.toLowerCase().includes(searchLower) ||
             item?.make?.toLowerCase().includes(searchLower) ||
             item?.jobName?.toLowerCase().includes(searchLower)
+        );
 
+        const filteredCustomer = customerFiltered.filter(item =>
+            item?.customer?.fullName?.toLowerCase().includes(searchLower)
         );
         setFilteredJobs(filteredJob);
         setFilteredWorkOrders(filteredWork);
-    }, [activeStatus, jobsRawData, workOrdersRawData, search]);
+        setFilteredCustomer(filteredCustomer);
+    }, [activeStatus, jobsRawData, workOrdersRawData, search, customerJobs]);
 
     const handleRefreshVehicle = async () => {
         try {
@@ -358,6 +427,30 @@ const Reports = ({ navigation }) => {
             setRefreshingJob(false);
         }
     };
+
+
+    const groupJobsByCustomer = (jobs = []) => {
+        const grouped = {};
+
+        jobs.forEach(job => {
+            const customerId = job?.customer?.id;
+            if (!customerId) return;
+
+            if (!grouped[customerId]) {
+                grouped[customerId] = {
+                    customer: job.customer,
+                    jobs: [],
+                };
+            }
+
+            grouped[customerId].jobs.push(job);
+        });
+
+        return Object.values(grouped);
+    };
+
+    const groupedCustomers = groupJobsByCustomer(filteredCustomer);
+
 
     return (
         <View style={[flex, styles.container]}>
@@ -485,12 +578,18 @@ const Reports = ({ navigation }) => {
                     <TouchableOpacity onPress={() => { setActiveTab("Jobs"), setActiveStatus("InProgress") }} style={[styles.tabButton, activeTab === 'Jobs' && styles.activeTab, { width: isTablet ? wp(12) : wp(20), height: hp(4) }]}>
                         <Text style={[styles.tabText, activeTab === 'Jobs' && styles.activeTabText]}>Jobs</Text>
                     </TouchableOpacity>
+                    <TouchableOpacity onPress={() => { setActiveTab("Customers"), setActiveStatus("InProgress") }} style={[styles.tabButton, activeTab === 'Customers' && styles.activeTab, { width: isTablet ? wp(12) : wp(30), height: hp(4) }]}>
+                        <Text style={[styles.tabText, activeTab === 'Customers' && styles.activeTabText]}>Customers</Text>
+                    </TouchableOpacity>
                 </View>
 
                 {/* Status Filters */}
                 <View style={styles.statusFilterContainer}>
                     {['Completed', 'InProgress'].map(status => {
-                        const dataList = activeTab === "Jobs" ? jobsRawData : workOrdersRawData;
+                        if (activeTab === "Customers") {
+                            return
+                        }
+                        const dataList = activeTab === "Jobs" ? jobsRawData : activeTab === "Customers" ? customerJobs : workOrdersRawData;
                         const count = filterByStatus(dataList, status, activeTab).length;
 
                         return (
@@ -519,7 +618,7 @@ const Reports = ({ navigation }) => {
                     {/* Table Header */}
                     <View style={styles.tableHeaderRow}>
                         <Text style={[styles.tableHeader, { width: "40%" }]}>Job Name</Text>
-                        <Text style={[styles.tableHeader, { width: "42%" }]}>Number of W.O</Text>
+                        <Text style={[styles.tableHeader, { width: "35%" }]}>Number of W.O</Text>
                         <Text style={[styles.tableHeader, { width: "20%", textAlign: "center" }]}>Action</Text>
 
                     </View>
@@ -538,21 +637,28 @@ const Reports = ({ navigation }) => {
                                 };
 
                                 return (
-                                    <Pressable style={[styles.listItem, rowStyle]}
-                                        onPress={() => navigation.navigate("NewJobDetailsScreen", {
-                                            jobId: item?.id
-                                        })}
+                                    <View style={[styles.listItem, rowStyle]}
+
                                     >
                                         <Text style={[styles.text, { width: "49%" }]}>
                                             {item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}
                                         </Text>
-                                        <Text style={[styles.text, { width: "38%" }]}>
+                                        <Text style={[styles.text, { width: "30%" }]}>
                                             {item?.vehicles?.length}
                                         </Text>
                                         <View style={{ flexDirection: "row", alignItems: "center", width: "20%" }} >
-                                            <Text style={styles.viewText}>View</Text>
+                                            <Pressable onPress={() => navigation.navigate("NewJobDetailsScreen", {
+                                                jobId: item?.id
+                                            })}>
+                                                <Text style={styles.viewText}>View</Text>
+                                            </Pressable>
+                                            <Pressable onPress={() => navigation.navigate("CreateJobScreen", {
+                                                jobId: item?.id
+                                            })}>
+                                                <Text style={styles.viewText}>Edit</Text>
+                                            </Pressable>
                                         </View>
-                                    </Pressable>
+                                    </View>
                                 );
                             }}
                             ListEmptyComponent={() => (
@@ -621,7 +727,7 @@ const Reports = ({ navigation }) => {
                                     <View style={{ width: '48%', marginBottom: 9 }}>
                                         <Text style={{ color: '#555', fontSize: 10 }}>Status</Text>
 
-                                        <Text style={[{ fontSize: 15, fontWeight: '700' }]}>
+                                        <Text style={[{ fontSize: 15, fontWeight: '700', color: item?.vehicleStatus === true ? greenColor : redColor }]}>
                                             {getStatusText(item?.vehicleStatus)}
                                         </Text>
                                     </View>
@@ -660,7 +766,7 @@ const Reports = ({ navigation }) => {
                         <View>
                             {/* Header Row */}
                             <View style={[styles.tableHeaderRow, { backgroundColor: blueColor }]}>
-                                <Text style={[styles.tableHeader, { width: wp(25) }]}>JobName</Text>
+                                <Text style={[styles.tableHeader, { width: wp(30) }]}>JobName</Text>
                                 <Text style={[styles.tableHeader, { width: wp(55) }]}>VIN</Text>
                                 <Text style={[styles.tableHeader, { width: wp(35) }]}>Make</Text>
                                 <Text style={[styles.tableHeader, { width: wp(25) }]}>Model</Text>
@@ -681,7 +787,7 @@ const Reports = ({ navigation }) => {
                                         const rowStyle = { backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor };
                                         return (
                                             <Pressable key={index.toString()} style={[styles.listItem, rowStyle, { flexDirection: 'row' }]} onPress={() => navigation.navigate("VehicleDetailsScreen", { vehicleId: item?.id, from: "report" })}>
-                                                <Text style={[styles.text, { width: wp(25), paddingLeft: spacings.small }]}>{item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}</Text>
+                                                <Text style={[styles.text, { width: wp(30), paddingLeft: spacings.small }]}>{item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}</Text>
                                                 <Text style={[styles.text, { width: wp(55) }]}>{item?.vin || '-'}</Text>
                                                 <Text style={[styles.text, { width: wp(35) }]}>{item?.make || '-'}</Text>
                                                 <Text style={[styles.text, { width: wp(25) }]}>{item?.model || '-'}</Text>
@@ -734,6 +840,86 @@ const Reports = ({ navigation }) => {
                     </ScrollView>
                 </View>
             ) : null}
+
+
+            {activeTab === 'Customers' && (
+                <>
+                    <View style={[styles.tableHeaderRow]}>
+                        <Text style={[styles.tableHeader, { width: "40%" }]}>Customer Name</Text>
+                        <Text style={[styles.tableHeader, { width: "40%" }]}>Number of Jobs</Text>
+                        <Text style={[styles.tableHeader, { width: "20%", textAlign: "center" }]}>Action</Text>
+
+                    </View>
+
+                    <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(63) : hp(47) : isIOSAndTablet ? hp(58) : hp(44.5) }}>
+                        <FlatList
+                            data={groupedCustomers}
+                            keyExtractor={(item, index) => item?.vin || index.toString()}
+                            showsVerticalScrollIndicator={false}
+                            refreshing={customerLoading}
+                            onRefresh={() => fetchCustomerJobHistory(1, false)}
+                            onEndReached={() => {
+                                if (customerHasMore && !customerLoadingMore) {
+                                    fetchCustomerJobHistory(customerJobPage + 1, true);
+                                }
+                            }}
+                            onEndReachedThreshold={0.3}
+                            renderItem={({ item, index }) => {
+                                const rowStyle = {
+                                    backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor,
+                                };
+
+                                return (
+                                    <View style={[styles.listItem, rowStyle]}
+
+                                    >
+                                        <Text style={[styles.text, { width: "49%" }]}>
+                                            {item?.customer?.fullName?.charAt(0).toUpperCase() + item?.customer?.fullName?.slice(1)}
+                                        </Text>
+                                        <Text style={[styles.text, { width: "35%" }]}>
+                                            {/* {item?.vehicles?.length} */}
+                                            {item.jobs.length} {/* ✅ Number of jobs for that customer */}
+                                        </Text>
+                                        <View style={{ flexDirection: "row", alignItems: "center", width: "20%" }} >
+                                            <Pressable onPress={() => navigation.navigate("NewJobDetailsScreen", {
+                                                // jobId: item?.id
+                                                customerId: item?.customer?.id,
+                                                from: "customer"
+                                            })}>
+                                                <Text style={styles.viewText}>View</Text>
+                                            </Pressable>
+                                            {/* <Pressable onPress={() => navigation.navigate("CreateJobScreen", {
+                                                jobId: item?.id
+                                            })}>
+                                                <Text style={styles.viewText}>Edit</Text>
+                                            </Pressable> */}
+                                        </View>
+                                    </View>
+                                );
+                            }}
+                            // ListEmptyComponent={() => (
+                            //     <Text style={[styles.text, textAlign, { margin: hp(10), fontWeight: "500", color: grayColor }]}>
+                            //         No data found.
+                            //     </Text>
+                            // )}
+                            ListEmptyComponent={() => {
+                                if (customerLoadingMore) return null; // 👈 Loading ke time kuch mat dikhao
+                                return (
+                                    <Text style={[styles.text, textAlign, { margin: hp(10), fontWeight: "500", color: grayColor }]}>
+                                        No data found.
+                                    </Text>
+                                );
+                            }}
+                            ListFooterComponent={
+                                customerLoadingMore ? (
+                                    <ActivityIndicator size="small" color={blueColor} style={{ marginTop: 10 }} />
+                                ) : null
+                            }
+                        />
+                    </View>
+                </>
+            )}
+
 
             {/* Sorting Modal */}
             {isModalVisible && (
@@ -802,24 +988,6 @@ const Reports = ({ navigation }) => {
                                         {sortType === "modified" ? (sortOrder === "latest" ? "Latest to Oldest" : "Oldest to Latest") : "Latest to Oldest"}
                                     </Text>
                                 </TouchableOpacity>
-
-
-
-                                {/* Status Sorting for both tabs */}
-                                {/* <TouchableOpacity
-                                    onPress={() => handleSort(
-                                        sortType === "status" && sortOrder === "asc" ? "desc" : "asc",
-                                        "status"
-                                    )}
-                                    style={styles.sortOption}
-                                >
-                                    <Text style={[styles.sortText, { color: sortType === "status" ? blackColor : 'gray' }]}>
-                                        {activeTab === 'Jobs' ? "Job Status" : "Work Order Status"}
-                                    </Text>
-                                    <Text style={[styles.sortText, { color: sortType === "status" ? blackColor : 'gray' }]}>
-                                        {sortType === "status" ? (sortOrder === "asc" ? "In Progress → Complete" : "Complete → In Progress") : "In Progress → Complete"}
-                                    </Text>
-                                </TouchableOpacity> */}
                             </View>
                         </View>
                     </TouchableWithoutFeedback>

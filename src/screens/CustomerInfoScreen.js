@@ -8,6 +8,7 @@ import { BaseStyle } from '../constans/Style';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from '../utils';
 import { style, spacings } from '../constans/Fonts';
 import Ionicons from 'react-native-vector-icons/dist/Ionicons';
+import AntDesign from 'react-native-vector-icons/dist/AntDesign';
 import PhoneInput from "react-native-phone-number-input";
 import DatePicker from "react-native-date-picker";
 import axios from "axios";
@@ -40,6 +41,9 @@ const CustomerInfoScreen = ({ navigation }) => {
     const isTablet = width >= 668 && height >= 1024;
     const [viewType, setViewType] = useState('list');
     const [isAddMode, setIsAddMode] = useState(false); // false = show list, true = show form
+    const [isEditMode, setIsEditMode] = useState(false); // false = show list, true = show form
+    const [customerId, setCustomerId] = useState()
+
 
 
     const [formData, setFormData] = useState({
@@ -70,8 +74,6 @@ const CustomerInfoScreen = ({ navigation }) => {
     }, []);
 
     const handleInputChange = (field, value) => {
-        console.log("fieldfield", field);
-
         if (field === "phoneNumber") {
             const countryCode = phoneInput.current?.getCallingCode(); // Get selected country code
             if (countryCode) {
@@ -230,12 +232,33 @@ const CustomerInfoScreen = ({ navigation }) => {
             userId: String(technicianId),
             roleType: String(technicianType)
         };
+        const customerEditData = {
+            ...formData,
+            customerId: customerId,
+            userId: String(technicianId),
+            roleType: String(technicianType)
+        };
         setLocalLoading(true);
 
         let success = false;
 
         if (isConnected) {
-            success = await syncCustomerToAPI(customerData);
+            if (isEditMode) {
+                success = await syncCustomerEditToAPI(customerEditData);
+                setIsAddMode(false)
+                setIsEditMode(false)
+                setFormData({
+                    fullName: "",
+                    email: "",
+                    phoneNumber: "",
+                    address: "",
+
+                })
+
+            } else {
+                success = await syncCustomerToAPI(customerData);
+            }
+            // success = await syncCustomerToAPI(customerData);
         } else {
             success = await saveCustomerOffline(customerData);
         }
@@ -248,6 +271,7 @@ const CustomerInfoScreen = ({ navigation }) => {
             } else {
                 // navigation.goBack();
                 setIsAddMode(false)
+                setIsEditMode(false)
             }
         }
     };
@@ -269,6 +293,7 @@ const CustomerInfoScreen = ({ navigation }) => {
         }
     };
 
+
     const syncCustomerToAPI = async (customerData) => {
         try {
             const token = await AsyncStorage.getItem("auth_token");
@@ -278,7 +303,6 @@ const CustomerInfoScreen = ({ navigation }) => {
             }
 
             const bodyData = { ...customerData };
-            console.log("formDataToSend", bodyData);
 
             const response = await axios.post(
                 `${API_BASE_URL}/createCustomer`,
@@ -292,6 +316,50 @@ const CustomerInfoScreen = ({ navigation }) => {
 
             console.log("Customer synced successfully:", response.data);
             console.log("Customer added successfully.");
+
+            if (response?.data?.message === "Customer created successfully") {
+                const customerId = response?.data?.customer?.id;
+                await AsyncStorage.setItem("current_customer_id", customerId.toString());
+                console.log("Customer ID saved in AsyncStorage:", customerId);
+                return true;
+
+            }
+        } catch (error) {
+            console.error("API request failed:", error.response ? error.response.data.error : error.message);
+            const errorMsg = (error.response ? error.response.data.error : error.message)?.toLowerCase();
+
+            if (errorMsg.includes("email already exists")) {
+                setErrors({ email: "Email already exists" });
+            } else if (errorMsg.includes("invalid email format")) {
+                setErrors({ email: "Invalid email format" });
+            } else if (errorMsg.includes("phone number already exists")) {
+                setErrors({ phoneNumber: "Phone number already exists" });
+            } else {
+                setErrors({ apiError: errorMsg || "An error occurred. Please try again." });
+            }
+            return false;
+
+        }
+    };
+    const syncCustomerEditToAPI = async (customerData) => {
+        try {
+            const token = await AsyncStorage.getItem("auth_token");
+            if (!token) {
+                console.error("Token not found!");
+                return;
+            }
+
+            const bodyData = { ...customerData };
+
+            const response = await axios.post(
+                `${API_BASE_URL}/updateCustomer`,
+                bodyData,
+                {
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    }
+                }
+            );
 
             if (response?.data?.message === "Customer created successfully") {
                 const customerId = response?.data?.customer?.id;
@@ -627,6 +695,8 @@ const CustomerInfoScreen = ({ navigation }) => {
                                             <Text style={[styles.tableHeaderText, { width: wp(40) }]}>Phone</Text>
                                             <Text style={[styles.tableHeaderText, { width: wp(60) }]}>Email</Text>
                                             <Text style={[styles.tableHeaderText, { width: wp(80) }]}>Address</Text>
+                                            <Text style={[styles.tableHeaderText, { width: wp(20) }]}>Action</Text>
+
                                         </View>
                                         <FlatList
                                             data={customers}
@@ -640,7 +710,30 @@ const CustomerInfoScreen = ({ navigation }) => {
                                                     <Text style={[styles.tableText, { width: wp(40) }]}>{capitalize(item.fullName) || '—'}</Text>
                                                     <Text style={[styles.tableText, { width: wp(40) }]}>{item.phoneNumber || '—'}</Text>
                                                     <Text style={[styles.tableText, { width: wp(60) }]}>{item.email || '—'}</Text>
-                                                    <Text style={[styles.tableText, { width: wp(80) }]} numberOfLines={1} ellipsizeMode="tail">{item.address || '—'}</Text>
+                                                    <Text style={[styles.tableText, { width: wp(70) }]} numberOfLines={1} ellipsizeMode="tail">{item.address || '—'}</Text>
+                                                    <TouchableOpacity
+                                                        onPress={() => {
+                                                            setIsEditMode(true);
+                                                            setIsAddMode(true);
+                                                            setCustomerId(item?.id)
+                                                            const rawNumber = item.phoneNumber || '';
+                                                            const cleanedNumber = rawNumber.replace(/^\+\d{1}-?/, '');
+                                                            setFormData({
+                                                                fullName: item.fullName || '',
+                                                                email: item.email || '',
+                                                                phoneNumber: cleanedNumber || '',
+                                                                address: item.address || '',
+                                                            });
+                                                            setTimeout(() => {
+                                                                if (googleRef?.current?.setAddressText) {
+                                                                    googleRef.current.setAddressText(item.address || '');
+                                                                }
+                                                            }, 100);
+                                                        }}
+
+                                                    >
+                                                        <AntDesign name="edit" style={[styles.tableText, { width: wp(20), marginLeft: 40 }]} size={28} color={blueColor} />
+                                                    </TouchableOpacity>
                                                 </View>
                                             )}
                                             onEndReached={() => {
@@ -669,7 +762,14 @@ const CustomerInfoScreen = ({ navigation }) => {
 
                                 </ScrollView>
                                 <TouchableOpacity
-                                    onPress={() => setIsAddMode(true)}
+                                    onPress={() => {
+                                        setIsAddMode(true); setFormData({
+                                            fullName: '',
+                                            email: '',
+                                            phoneNumber: '',
+                                            address: '',
+                                        })
+                                    }}
                                     style={{
                                         position: 'absolute',
                                         bottom: hp(5),
@@ -754,40 +854,67 @@ const CustomerInfoScreen = ({ navigation }) => {
                                                 <View style={{
                                                     backgroundColor: blueColor,
                                                     paddingVertical: spacings.normalx,
-                                                    paddingHorizontal:spacings.large,
+                                                    paddingHorizontal: spacings.large,
                                                     flexDirection: 'row',
                                                     alignItems: 'center',
                                                     borderTopLeftRadius: 15,
                                                     borderTopRightRadius: 15,
+                                                    justifyContent: "space-between"
                                                 }}>
-                                                    <View style={{
-                                                        backgroundColor: whiteColor,
-                                                        width: wp(10),
-                                                        height: Platform.OS ==="ios"?hp(4.5):hp(5),
-                                                        borderRadius: 20,
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        marginRight: spacings.large,
-                                                    }}>
-                                                        <Text style={{ fontSize: style.fontSizeMedium.fontSize, fontWeight: style.fontWeightThin1x.fontWeight, color: blueColor }}>{initials}</Text>
+                                                    <View style={[flexDirectionRow, alignItemsCenter, { width: "78%" }]}>
+                                                        <View style={{
+                                                            backgroundColor: whiteColor,
+                                                            width: wp(10),
+                                                            height: Platform.OS === "ios" ? hp(4.5) : hp(5),
+                                                            borderRadius: 20,
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            marginRight: spacings.large,
+                                                        }}>
+                                                            <Text style={{ fontSize: style.fontSizeMedium.fontSize, fontWeight: style.fontWeightThin1x.fontWeight, color: blueColor }}>{initials}</Text>
+                                                        </View>
+                                                        <Text style={{ color: whiteColor, fontSize: style.fontSizeMedium.fontSize, fontWeight: style.fontWeightThin1x.fontWeight }}>{capitalize(item.fullName)}</Text>
                                                     </View>
-                                                    <Text style={{ color: whiteColor, fontSize: style.fontSizeMedium.fontSize, fontWeight: style.fontWeightThin1x.fontWeight }}>{capitalize(item.fullName)}</Text>
+                                                    <TouchableOpacity
+                                                        onPress={() => {
+                                                            setIsEditMode(true);
+                                                            setIsAddMode(true);
+                                                            setCustomerId(item?.id)
+                                                            const rawNumber = item.phoneNumber || '';
+                                                            const cleanedNumber = rawNumber.replace(/^\+\d{1}-?/, '');
+                                                            setFormData({
+                                                                fullName: item.fullName || '',
+                                                                email: item.email || '',
+                                                                phoneNumber: cleanedNumber || '',
+                                                                address: item.address || '',
+                                                            });
+                                                            setTimeout(() => {
+                                                                if (googleRef?.current?.setAddressText) {
+                                                                    googleRef.current.setAddressText(item.address || '');
+                                                                }
+                                                            }, 100);
+                                                        }}
+
+                                                    >
+                                                        <AntDesign name="edit" style={[styles.tableText, { width: wp(20), marginLeft: 40 }]} size={25} color={whiteColor} />
+                                                    </TouchableOpacity>
                                                 </View>
 
                                                 {/* Body */}
                                                 <View style={{ padding: spacings.xLarge }}>
                                                     <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: spacings.small }}>
-                                                        <Text style={{ fontSize: style.fontSizeNormal.fontSize, color: grayColor,width:"50%" }}>Email:</Text>
+                                                        <Text style={{ fontSize: style.fontSizeNormal.fontSize, color: grayColor, width: "50%" }}>Email:</Text>
                                                         <Text style={{ color: blueColor, fontWeight: style.fontWeightThin1x.fontWeight }}>{item?.email || '—'}</Text>
                                                     </View>
                                                     <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: spacings.small }}>
-                                                        <Text style={{ fontSize: style.fontSizeNormal.fontSize, color: grayColor,width:"50%" }}>Phone:</Text>
+                                                        <Text style={{ fontSize: style.fontSizeNormal.fontSize, color: grayColor, width: "50%" }}>Phone:</Text>
                                                         <Text style={{ color: blueColor, fontWeight: style.fontWeightThin1x.fontWeight }}>{item?.phoneNumber || '—'}</Text>
                                                     </View>
                                                     <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                                                        <Text style={{ fontSize: style.fontSizeNormal.fontSize, color: grayColor,width:"50%"}}>Address:</Text>
+                                                        <Text style={{ fontSize: style.fontSizeNormal.fontSize, color: grayColor, width: "50%" }}>Addresssss:</Text>
                                                         <Text style={{ color: blueColor, fontWeight: style.fontWeightThin1x.fontWeight, flexShrink: 1, textAlign: 'right' }}>{item?.address || '—'}</Text>
                                                     </View>
+
                                                 </View>
                                             </View>
                                         );
@@ -816,7 +943,6 @@ const CustomerInfoScreen = ({ navigation }) => {
                                         );
                                     }}
                                 />
-
                                 <TouchableOpacity
                                     onPress={() => setIsAddMode(true)}
                                     style={{
@@ -850,13 +976,12 @@ const CustomerInfoScreen = ({ navigation }) => {
                             <CustomTextInput
                                 label="Full Name"
                                 placeholder="Enter your full name"
-                                value={formData.firstName}
+                                value={formData.firstName || formData.fullName}
                                 onChangeText={(text) => handleInputChange("fullName", text)}
                                 required={true}
                                 maxLength={20}
                             />
                             {errors.fullName && <Text style={styles.error}>{errors.fullName}</Text>}
-
                             <CustomTextInput
                                 label="Email"
                                 placeholder="Enter your email"
@@ -876,7 +1001,8 @@ const CustomerInfoScreen = ({ navigation }) => {
                                 </Text>
                                 <PhoneInput
                                     ref={phoneInput}
-                                    defaultValue={formData.phoneNumber}
+                                    // defaultValue={formData.phoneNumber}
+                                    value={formData.phoneNumber}
                                     defaultCode="US"
                                     layout="second"
                                     onChangeFormattedText={(text) => handleInputChange("phoneNumber", text)}
@@ -949,7 +1075,7 @@ const CustomerInfoScreen = ({ navigation }) => {
             </KeyboardAvoidingView>
             {isAddMode && <View style={[{ backgroundColor: whiteColor, paddingTop: spacings.xLarge, paddingHorizontal: spacings.xxxLarge }, alignJustifyCenter]}>
                 <CustomButton
-                    title="Submit"
+                    title={isEditMode ? "Update" : "Submit"}
                     onPress={() => handleSubmit(null, setSubmitLoading)}
                     style={[styles.button, { backgroundColor: blueColor, borderWidth: 1, borderColor: blueColor }]}
                     textStyle={{ color: whiteColor }}

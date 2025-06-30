@@ -14,8 +14,9 @@ import { API_BASE_URL } from '../constans/Constants';
 import CustomerDropdown from '../componets/CustomerDropdown';
 import { useRoute } from '@react-navigation/native';
 
-const WorkOrderScreen = ({ navigation }) => {
-  const route = useRoute();
+const WorkOrderScreen = ({ navigation, route }) => {
+  // const route = useRoute();
+// console.log("vehicleIdvehicleIdvehicleId",route?.params?.vehicleId);
 
   const { width, height } = Dimensions.get("window");
   const [selectedJob, setSelectedJob] = useState(null);
@@ -35,8 +36,8 @@ const WorkOrderScreen = ({ navigation }) => {
   const [customerDetails, setCustomerDetails] = useState(null);
   const [isCustomerLoading, setIsCustomerLoading] = useState(true);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
-  const [allJobList, setAllJobList] = useState([]);
-
+  const [allJobList, setAllJobList] = useState([]); 
+  
 
   useEffect(() => {
     const loadSelectedJob = async () => {
@@ -255,6 +256,8 @@ const WorkOrderScreen = ({ navigation }) => {
       fetchCustomers(pageNumber);
     }
   };
+
+  
 
   return (
     <View style={{ flex: 1 }}>
