@@ -411,7 +411,7 @@ const HomeScreen = ({ navigation }) => {
           })}
         >
           <View style={[styles.input, { flexDirection: "row", alignItems: "center", justifyContent: "space-between" }]}>
-            <Text style={{ color: grayColor }}>Scan VIN</Text>
+            <Text style={{ color: grayColor }}>Search By Scan VIN</Text>
             <AntDesign name="scan1" size={24} color="#252837" />
           </View>
         </Pressable>

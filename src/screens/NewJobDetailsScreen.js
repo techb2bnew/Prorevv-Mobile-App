@@ -299,8 +299,67 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
                   <Text style={styles.label}>EstimatedCost</Text>
                   <Text style={styles.value}>${jobDetails?.estimatedCost}</Text>
                 </View>}
-              </View>
 
+              </View>
+              <View style={styles.rowItem}>
+                <View style={styles.leftCol}>
+                  <Text style={styles.label}>Start Date</Text>
+                  <Text style={styles.value}>
+                    {new Date(jobDetails?.startDate).toLocaleDateString('en-US', {
+                      month: 'long',
+                      day: '2-digit',
+                      year: 'numeric',
+                    })}
+                  </Text>
+                </View>
+                <View style={styles.rightCol}>
+                  <Text style={styles.label}>End Date</Text>
+                  <Text style={styles.value}>
+                    {new Date(jobDetails?.endDate).toLocaleDateString('en-US', {
+                      month: 'long',
+                      day: '2-digit',
+                      year: 'numeric',
+                    })}
+                  </Text>
+                </View>
+              </View>
+              {Array.isArray(jobDetails.technicians) && jobDetails.technicians.length > 0 && (
+                <View >
+                  <Text style={[styles.label, { marginBottom: 6 }]}>Assigned Technicians</Text>
+
+                  {jobDetails.technicians.flatMap((tech, index) => {
+                    const name = `${capitalize(tech.firstName)} ${capitalize(tech.lastName)}`;
+                    const techTypeRaw = tech?.techType?.toLowerCase() || '';
+                    const showType = techTypeRaw.includes('r') || techTypeRaw.includes('rb');
+                    const techType = showType ? ` (${tech.techType.toUpperCase()})` : '';
+
+                    const flatRate = tech?.UserJob?.techFlatRate;
+                    const rRate = tech?.UserJob?.rRate;
+
+                    let payInfo = '';
+                    if (flatRate) {
+                      payInfo = `Flat Rate: $${flatRate}`;
+                    } else if (rRate) {
+                      payInfo = `R Rate: $${rRate}`;
+                    } else {
+                      payInfo = 'N/A';
+                    }
+
+                    return [
+                      <View style={[styles.rowItem]}>
+                        <View key={`tech-name-${index}`} style={{ marginBottom: 4 }}>
+                          <Text style={styles.label}>{`Technician ${index + 1}`}</Text>
+                          <Text style={styles.value}>{`${name}${techType}`}</Text>
+                        </View>,
+                        <View key={`tech-pay-${index}`} style={{ marginBottom: 10 }}>
+                          <Text style={styles.label}>{`Technician ${index + 1} (Pay Info)`}</Text>
+                          <Text style={styles.value}>{payInfo}</Text>
+                        </View>
+                      </View>
+                    ];
+                  })}
+                </View>
+              )}
             </View>
           )}
 
@@ -431,37 +490,6 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
                 </View>
               )}
 
-
-              <View style={[styles.rowItem, { paddingHorizontal: 10 }]}>
-                {!!vehicle.createdAt && (
-                  <View style={styles.leftCol}>
-                    <Text style={styles.label}>Date</Text>
-                    <Text style={styles.value}>
-                      {new Date(vehicle.createdAt).toLocaleDateString("en-US", {
-                        month: "long",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
-                    </Text>
-                  </View>
-                )}
-
-                <View style={styles.rightCol}>
-                  <Text style={[styles.label, { marginBottom: 4 }]}>Work Order Status</Text>
-                  <Text
-                    style={[
-                      styles.value,
-                      { fontWeight: '600' },
-                      { color: vehicle?.vehicleStatus ? 'green' : 'red' }
-                    ]}
-                  >
-                    {vehicle?.vehicleStatus ? "Complete" : "In Progress"}
-                  </Text>
-                </View>
-              </View>
-
-
-
               {/* Notes */}
               {!!vehicle.notes?.trim() && (
                 <View style={{ padding: 10 }}>
@@ -486,6 +514,83 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
                   </View>
                 </View>
               )}
+              <View style={{ padding: 10 }}>
+                <View style={styles.rowItem}>
+                  <View style={styles.leftCol}>
+                    <Text style={styles.label}>Start Date</Text>
+                    <Text style={styles.value}>
+                      {new Date(vehicle?.startDate).toLocaleDateString('en-US', {
+                        month: 'long',
+                        day: '2-digit',
+                        year: 'numeric',
+                      })}
+                    </Text>
+                  </View>
+                  <View style={styles.rightCol}>
+                    <Text style={styles.label}>End Date</Text>
+                    <Text style={styles.value}>
+                      {new Date(vehicle?.endDate).toLocaleDateString('en-US', {
+                        month: 'long',
+                        day: '2-digit',
+                        year: 'numeric',
+                      })}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+              <View style={[styles.rowItem, { paddingHorizontal: 10 }]}>
+                <View style={styles.rightCol}>
+                  <Text style={[styles.label, { marginBottom: 4 }]}>Work Order Status</Text>
+                  <Text
+                    style={[
+                      styles.value,
+                      { fontWeight: '600' },
+                      { color: vehicle?.vehicleStatus ? 'green' : 'red' }
+                    ]}
+                  >
+                    {vehicle?.vehicleStatus ? "Complete" : "In Progress"}
+                  </Text>
+                </View>
+              </View>
+
+              {Array.isArray(vehicle.assignedTechnicians) && vehicle.assignedTechnicians.length > 0 && (
+                <View style={{ padding: 10 }}>
+                  <Text style={[styles.label, { marginBottom: 6 }]}>Assigned Technicians</Text>
+
+                  {vehicle.assignedTechnicians.flatMap((tech, index) => {
+                    const name = `${capitalize(tech.firstName)} ${capitalize(tech.lastName)}`;
+                    const techTypeRaw = tech?.techType?.toLowerCase() || '';
+                    const showType = techTypeRaw.includes('r') || techTypeRaw.includes('rb');
+                    const techType = showType ? ` (${tech.techType.toUpperCase()})` : '';
+
+                    const flatRate = tech?.VehicleTechnician?.techFlatRate;
+                    const rRate = tech?.VehicleTechnician?.rRate;
+
+                    let payInfo = '';
+                    if (flatRate) {
+                      payInfo = `Flat Rate: $${flatRate}`;
+                    } else if (rRate) {
+                      payInfo = `R Rate: $${rRate}`;
+                    } else {
+                      payInfo = 'N/A';
+                    }
+
+                    return [
+                      <View style={[styles.rowItem]}>
+                        <View key={`tech-name-${index}`} style={{ marginBottom: 4 }}>
+                          <Text style={styles.label}>{`Technician ${index + 1}`}</Text>
+                          <Text style={styles.value}>{`${name}${techType}`}</Text>
+                        </View>,
+                        <View key={`tech-pay-${index}`} style={{ marginBottom: 10 }}>
+                          <Text style={styles.label}>{`Technician ${index + 1} (Pay Info)`}</Text>
+                          <Text style={styles.value}>{payInfo}</Text>
+                        </View>
+                      </View>
+                    ];
+                  })}
+                </View>
+              )}
+
             </View>
           ))}
 

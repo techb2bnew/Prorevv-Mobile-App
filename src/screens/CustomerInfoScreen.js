@@ -218,50 +218,116 @@ const CustomerInfoScreen = ({ navigation }) => {
         return Object.keys(newErrors).length === 0;
     };
 
+    // const handleSubmit = async (nextAction, setLocalLoading) => {
+    //     if (!technicianId) {
+    //         setErrors({ apiError: "Technician ID is required." });
+    //         return;
+    //     }
+    //     if (!validateForm()) {
+    //         // Toast.show("Please fix the errors in the form");
+    //         return;
+    //     }
+    //     const customerData = {
+    //         ...formData,
+    //         userId: String(technicianId),
+    //         roleType: String(technicianType)
+    //     };
+    //     const customerEditData = {
+    //         ...formData,
+    //         customerId: customerId,
+    //         userId: String(technicianId),
+    //         roleType: String(technicianType)
+    //     };
+    //     setLocalLoading(true);
+
+    //     let success = false;
+
+    //     if (isConnected) {
+    //         if (isEditMode) {
+    //             success = await syncCustomerEditToAPI(customerEditData);
+    //             setIsAddMode(false)
+    //             setIsEditMode(false)
+    //             setFormData({
+    //                 fullName: "",
+    //                 email: "",
+    //                 phoneNumber: "",
+    //                 address: "",
+
+    //             })
+
+    //         } else {
+    //             success = await syncCustomerToAPI(customerData);
+    //         }
+    //         // success = await syncCustomerToAPI(customerData);
+    //     } else {
+    //         success = await saveCustomerOffline(customerData);
+    //     }
+    //     setLocalLoading(false);
+
+    //     if (success) {
+    //         Toast.show("Successfully created a new customer!");
+    //         if (nextAction === "AddVehicleScreen") {
+    //             navigation.navigate("AddVehicle");
+    //         } else {
+    //             // navigation.goBack();
+    //             setIsAddMode(false)
+    //             setIsEditMode(false)
+    //         }
+    //     }
+    // };
     const handleSubmit = async (nextAction, setLocalLoading) => {
         if (!technicianId) {
             setErrors({ apiError: "Technician ID is required." });
             return;
         }
+
         if (!validateForm()) {
-            // Toast.show("Please fix the errors in the form");
             return;
         }
+
+        // 👇 Force format phone number here if not already in +XX-XXXX format
+        const countryCode = phoneInput.current?.getCallingCode();
+        const rawPhone = formData.phoneNumber || "";
+
+        let formattedPhone = rawPhone;
+        if (countryCode && !rawPhone.startsWith(`+${countryCode}`)) {
+            // In case it's stored as "1234567890", make it "+XX-1234567890"
+            formattedPhone = `+${countryCode}-${rawPhone.trim()}`;
+        }
+
         const customerData = {
             ...formData,
+            phoneNumber: formattedPhone, // 👈 override with formatted
             userId: String(technicianId),
             roleType: String(technicianType)
         };
-        const customerEditData = {
-            ...formData,
-            customerId: customerId,
-            userId: String(technicianId),
-            roleType: String(technicianType)
-        };
-        setLocalLoading(true);
 
+        const customerEditData = {
+            ...customerData,
+            customerId: customerId
+        };
+
+        setLocalLoading(true);
         let success = false;
 
         if (isConnected) {
             if (isEditMode) {
                 success = await syncCustomerEditToAPI(customerEditData);
-                setIsAddMode(false)
-                setIsEditMode(false)
+                setIsAddMode(false);
+                setIsEditMode(false);
                 setFormData({
                     fullName: "",
                     email: "",
                     phoneNumber: "",
                     address: "",
-
-                })
-
+                });
             } else {
                 success = await syncCustomerToAPI(customerData);
             }
-            // success = await syncCustomerToAPI(customerData);
         } else {
             success = await saveCustomerOffline(customerData);
         }
+
         setLocalLoading(false);
 
         if (success) {
@@ -269,9 +335,8 @@ const CustomerInfoScreen = ({ navigation }) => {
             if (nextAction === "AddVehicleScreen") {
                 navigation.navigate("AddVehicle");
             } else {
-                // navigation.goBack();
-                setIsAddMode(false)
-                setIsEditMode(false)
+                setIsAddMode(false);
+                setIsEditMode(false);
             }
         }
     };
@@ -341,7 +406,10 @@ const CustomerInfoScreen = ({ navigation }) => {
 
         }
     };
+
     const syncCustomerEditToAPI = async (customerData) => {
+        console.log("customerData::::::", customerData);
+
         try {
             const token = await AsyncStorage.getItem("auth_token");
             if (!token) {
@@ -439,249 +507,6 @@ const CustomerInfoScreen = ({ navigation }) => {
                     </TouchableOpacity>
 
                 </View>}
-
-                {/* <ScrollView style={[styles.container, flex]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-                    <View style={styles.content}>
-                        <CustomTextInput
-                            label="Full Name"
-                            placeholder="Enter your full name"
-                            value={formData.firstName}
-                            onChangeText={(text) => handleInputChange("fullName", text)}
-                            required={true}
-                            maxLength={20}
-                        />
-                        {errors.fullName && <Text style={styles.error}>{errors.fullName}</Text>}
-
-                        <CustomTextInput
-                            label="Email"
-                            placeholder="Enter your email"
-                            value={formData.email}
-                            onChangeText={(text) => {
-                                const updatedText = text?.charAt(0).toLowerCase() + text.slice(1);
-                                handleInputChange("email", updatedText);
-                            }}
-                        // required={true}
-
-                        />
-                        {errors.email && <Text style={styles.error}>{errors.email}</Text>}
-
-                        <View style={styles.phoneContainer}>
-                            <Text style={styles.label}>
-                                Phone Number
-                            </Text>
-                            <PhoneInput
-                                ref={phoneInput}
-                                defaultValue={formData.phoneNumber}
-                                defaultCode="US"
-                                layout="second"
-                                onChangeFormattedText={(text) => handleInputChange("phoneNumber", text)}
-                                textInputProps={{
-                                    maxLength: 13,
-                                    keyboardType: "default",
-
-                                }}
-                                containerStyle={styles.phoneInput}
-                                textContainerStyle={styles.phoneText}
-                                textInputStyle={[styles.phoneTextInput, { marginBottom: isTablet ? 12 : 0 }]}
-                                flagButtonStyle={styles.flagButton}
-                                placeholder="Enter your phone number"
-                            />
-                        </View>
-                        {errors.phoneNumber && <Text style={styles.error}>{errors.phoneNumber}</Text>}
-
-                        <View style={styles.phoneContainer}>
-                            <Text style={styles.label}>
-                                Address
-                            </Text>
-                            <GooglePlacesAutocomplete
-                                ref={googleRef}
-                                placeholder="Enter Your Address"
-                                fetchDetails={true}
-                                onPress={(data, details = null) => {
-                                    console.log('Selected:', data?.description);
-                                    handleInputChange("address", data?.description)
-                                }}
-
-                                query={{
-                                    key: GOOGLE_MAP_API_KEY,
-                                    language: 'en',
-                                }}
-                                styles={{
-                                    container: {
-                                        flex: 0,
-                                        zIndex: 999,
-                                    },
-                                    listView: {
-                                        zIndex: 999,
-                                        position: 'absolute',
-                                        top: 55,
-                                    },
-                                    textInputContainer: {
-                                        zIndex: 999,
-                                    },
-                                    textInput: {
-                                        height: 44,
-                                        borderWidth: 1,
-                                        borderColor: blueColor,
-                                        borderRadius: 50,
-                                        paddingHorizontal: 16,
-                                        backgroundColor: '#fff',
-                                    },
-                                }}
-                            />
-                        </View>
-                        {errors.address && <Text style={styles.error}>{errors.address}</Text>}
-
-
-                        {errors?.apiError?.message ? (
-                            <Text style={styles.error}>{errors.apiError.message}</Text>
-                        ) : (
-                            <Text style={styles.error}>{JSON.stringify(errors.apiError)}</Text>
-                        )}
-                    </View>
-                </ScrollView > */}
-
-
-                {/* {viewType === 'list' && (
-                    <>
-                        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                            <View>
-                                <View style={[styles.tableHeader, flexDirectionRow]}>
-                                    <Text style={[styles.tableHeaderText, { width: wp(40) }]}>Name</Text>
-                                    <Text style={[styles.tableHeaderText, { width: wp(40) }]}>Phone</Text>
-                                    <Text style={[styles.tableHeaderText, { width: wp(60) }]}>Email</Text>
-                                    <Text style={[styles.tableHeaderText, { width: wp(80) }]}>Address</Text>
-                                </View>
-                                <FlatList
-                                    data={customers}
-                                    keyExtractor={(item, index) => index.toString()}
-                                    renderItem={({ item, index }) => (
-                                        <View style={[
-                                            styles.tableRow,
-                                            flexDirectionRow,
-                                            { backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor }
-                                        ]}>
-                                            <Text style={[styles.tableText, { width: wp(40) }]}>{capitalize(item.fullName) || '—'}</Text>
-                                            <Text style={[styles.tableText, { width: wp(40) }]}>{item.phoneNumber || '—'}</Text>
-                                            <Text style={[styles.tableText, { width: wp(60) }]}>{item.email || '—'}</Text>
-                                            <Text style={[styles.tableText, { width: wp(80) }]} numberOfLines={1} ellipsizeMode="tail">{item.address || '—'}</Text>
-                                        </View>
-                                    )}
-                                    onEndReached={() => {
-                                        if (!isLoading && hasMore) {
-                                            fetchCustomers(page + 1);
-                                        }
-                                    }}
-                                    onEndReachedThreshold={0.5}
-                                    ListFooterComponent={isLoading ? <ActivityIndicator size="small" color="blue" /> : null}
-                                    ListEmptyComponent={() => (
-                                        <View style={styles.emptyContainer}>
-                                            <Text style={styles.emptyText}>No customers found.</Text>
-                                        </View>
-                                    )}
-                                />
-                            </View>
-
-                        </ScrollView>
-                        <TouchableOpacity
-                            onPress={() => navigation.navigate("AddCustomerScreen")}
-                            style={{
-                                position: 'absolute',
-                                bottom: hp(5),
-                                right: wp(8),
-                                backgroundColor: blueColor,
-                                paddingVertical: spacings.xLarge,
-                                paddingHorizontal: spacings.Large1x,
-                                borderRadius: 30,
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                            }}
-                        >
-                            <Ionicons name="person-add" size={20} color={whiteColor} />
-                            <Text style={{ color: whiteColor, marginLeft: 8 }}>Add Customer</Text>
-                        </TouchableOpacity>
-                    </>
-                )}
-
-                {viewType === 'grid' && (
-                    <>
-                        <FlatList
-                            data={customers}
-                            keyExtractor={(item, index) => index.toString()}
-                            contentContainerStyle={{ padding: 10 }}
-                            showsVerticalScrollIndicator={false}
-                            renderItem={({ item }) => (
-                                <View style={{
-                                    backgroundColor: whiteColor,
-                                    padding: 10,
-                                    margin: 5,
-                                    borderRadius: 10,
-                                    flex: 1,
-                                    elevation: 2,
-                                    borderColor: blueColor,
-                                    borderWidth: 1
-                                }}>
-                                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-                                        <View style={{ width: '48%', marginBottom: 10 }}>
-                                            <Text style={{ color: '#555', fontSize: 11 }}>Name</Text>
-                                            <Text>{capitalize(item.fullName) || '—'}</Text>
-                                        </View>
-                                        <View style={{ width: '48%', marginBottom: 10 }}>
-                                            <Text style={{ color: '#555', fontSize: 11 }}>Email</Text>
-                                            <Text >{item.email || '—'}</Text>
-                                        </View>
-                                        <View style={{ width: '48%', marginBottom: 10 }}>
-                                            <Text style={{ color: '#555', fontSize: 11 }}>Phone Number</Text>
-                                            <Text >{item.phoneNumber || '—'}</Text>
-                                        </View>
-                                        <View style={{ width: '48%', marginBottom: 10 }}>
-                                            <Text style={{ color: '#555', fontSize: 11 }}>Address</Text>
-                                            <Text >{item.address || '—'}</Text>
-                                        </View>
-                                    </View>
-                                </View>
-                            )}
-                            onEndReached={() => {
-                                if (!isLoading && hasMore) {
-                                    fetchCustomers(page + 1);
-                                }
-                            }}
-                            onEndReachedThreshold={0.3}
-                            ListFooterComponent={isLoading ? (
-                                <View style={{ padding: 10, alignItems: 'center' }}>
-                                    <ActivityIndicator size="small" color="#0000ff" />
-                                </View>
-                            ) : null}
-                            ListEmptyComponent={() => (
-                                <View style={styles.emptyContainer}>
-                                    <Text style={styles.emptyText}>No customers found.</Text>
-                                </View>
-                            )}
-                        />
-
-                        <TouchableOpacity
-                            onPress={() => navigation.navigate("AddCustomerScreen")}
-                            style={{
-                                position: 'absolute',
-                                bottom: hp(5),
-                                right: wp(8),
-                                backgroundColor: blueColor,
-                                width: 60,
-                                height: 60,
-                                borderRadius: 30,
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                elevation: 5,
-                                shadowColor: "#000",
-                                shadowOffset: { width: 0, height: 2 },
-                                shadowOpacity: 0.25,
-                                shadowRadius: 3.84,
-                            }}
-                        >
-                            <Ionicons name="person-add" size={28} color={whiteColor} />
-                        </TouchableOpacity>
-                    </>
-                )} */}
 
                 {/* Toggle: Add Customer Form OR List/Grid View */}
                 {!isAddMode ? (
@@ -1032,7 +857,8 @@ const CustomerInfoScreen = ({ navigation }) => {
                                         console.log('Selected:', data?.description);
                                         handleInputChange("address", data?.description)
                                     }}
-
+                                    enablePoweredByContainer={false}
+                                    keepResultsAfterBlur={true}
                                     query={{
                                         key: GOOGLE_MAP_API_KEY,
                                         language: 'en',

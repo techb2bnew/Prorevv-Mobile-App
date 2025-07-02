@@ -768,11 +768,12 @@ const SignUpScreen = ({ navigation }) => {
                             console.log('Selected:', data.description);
                             handleInputChange("address", data.description)
                         }}
-
                         query={{
                             key: GOOGLE_MAP_API_KEY,
                             language: 'en',
                         }}
+                        enablePoweredByContainer={false}
+                        keepResultsAfterBlur={true}
                         styles={{
                             container: {
                                 flex: 0,

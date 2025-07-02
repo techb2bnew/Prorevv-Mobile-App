@@ -600,6 +600,7 @@ const WorkOrderScreenTwo = ({ route }) => {
         formData.append("notes", notes || " ");
         formData.append("color", selectedColor);
         formData.append("createdBy", "app");
+        formData.append("estiatedBy", technicianName);
         jobDescription.forEach((item) => {
             formData.append("jobDescription[]", item.jobDescription);
             // formData.append("cost", item.cost);
@@ -610,7 +611,7 @@ const WorkOrderScreenTwo = ({ route }) => {
         selectedTechnicians.forEach((tech, index) => {
             // console.log(`Technician ${index}:`, tech); // 👈 Technician object console me print karega
             formData.append(`technicians[${index}][id]`, tech.id);
-            formData.append(`technicians[${index}][technicianFlatRate]`, tech?.UserJob?.technicianFlatRate || tech?.VehicleTechnician?.technicianFlatRate || "");
+            formData.append(`technicians[${index}][techFlatRate]`, tech?.UserJob?.techFlatRate || tech?.VehicleTechnician?.techFlatRate || "");
             formData.append(`technicians[${index}][rRate]`, tech?.UserJob?.rRate || tech?.VehicleTechnician?.rRate || "");
         });
         if (technicianType === "manager") {
@@ -1184,7 +1185,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                                                 paddingHorizontal: 20,
                                                                 paddingBottom: 0,
                                                             }]}
-                                                            placeholder="Enter job description"
+                                                            placeholder="Enter work description"
                                                             value={item.jobDescription}
                                                             placeholderTextColor={mediumGray}
                                                             multiline={true}
@@ -1216,7 +1217,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                                 <Text style={styles.addMoreText}>Add More</Text>
                                                 <Ionicons name="add-circle-outline" size={18} color={whiteColor} />
                                             </TouchableOpacity>
-                                            {(jobDescription.some(item => item.jobDescription.trim() !== '' || item.cost.trim() !== '')) && (
+                                            {(jobDescription?.some(item => item?.jobDescription?.trim() !== '')) && (
                                                 <TouchableOpacity
                                                     onPress={() => {
                                                         setJobDescription([{ jobDescription: '', cost: '' }]);
@@ -1315,7 +1316,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                             open={isStartPickerOpen}
                                             date={startDate}
                                             mode="datetime"
-                                            maximumDate={new Date()}
+                                            // maximumDate={new Date()}
                                             onConfirm={(date) => {
                                                 setStartDate(date);
                                                 setIsStartPickerOpen(false);
@@ -1405,7 +1406,8 @@ const WorkOrderScreenTwo = ({ route }) => {
                                     </View>
 
 
-                                    {technicianType === 'manager' && <View style={{ marginTop: 20 }}>
+                                    {technicianType === 'manager' && technicians?.length > 0&& 
+                                    <View style={{ marginTop: 20 }}>
                                         <Text style={styles.label}>Selected Technician</Text>
                                         <View style={{
                                             borderWidth: 1,
@@ -1423,7 +1425,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                                     const selected = isTechnicianSelected(item.id);
                                                     const userJob = item.UserJob || item.VehicleTechnician;
 
-                                                    const showFlatRate = userJob.technicianFlatRate !== '';
+                                                    const showFlatRate = userJob.techFlatRate !== '';
                                                     const showRRate = !showFlatRate && userJob.rRate !== '';
 
                                                     return (
@@ -1458,9 +1460,9 @@ const WorkOrderScreenTwo = ({ route }) => {
                                                                 <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10, justifyContent: "space-between" }}>
                                                                     <Text style={{ fontSize: 14, marginRight: 8 }}>Flat Rate:</Text>
                                                                     <TextInput
-                                                                        value={(userJob.technicianFlatRate ?? '0').toString()}
+                                                                        value={(userJob.techFlatRate ?? '0').toString()}
                                                                         keyboardType="numeric"
-                                                                        onChangeText={(text) => updateTechnicianField(item.id, 'technicianFlatRate', text)}
+                                                                        onChangeText={(text) => updateTechnicianField(item.id, 'techFlatRate', text)}
                                                                         style={{
                                                                             borderWidth: 1,
                                                                             borderColor: "#ccc",
@@ -1596,7 +1598,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                                 setStep(1);
                                             }}
                                         >
-                                            <Text style={styles.buttonText}>Re-enter Details</Text>
+                                            <Text style={styles.buttonText}>Re-Scan</Text>
                                         </TouchableOpacity>
                                     </View>
                                 </View>

@@ -124,7 +124,7 @@ const CreateJobScreen = ({ route }) => {
             }
 
             // Construct the API URL with parameters
-            const apiUrl = `${API_BASE_URL}/fetchCustomer?userId=${technicianId}&page=${page}`;
+            const apiUrl = `${API_BASE_URL}/fetchCustomer?userId=${technicianId}&roleType=${technicianType}&page=${page}`;
             console.log("Fetching customers from URL:", apiUrl);
 
             const response = await fetch(apiUrl, {
@@ -136,7 +136,7 @@ const CreateJobScreen = ({ route }) => {
             });
 
             const data = await response.json();
-            console.log("customers::", data.customers);
+            console.log("customers::", data);
 
             if (data.status && data.customers?.customers?.length > 0) {
                 const newCustomers = [...customers, ...data.customers.customers];
@@ -262,7 +262,7 @@ const CreateJobScreen = ({ route }) => {
     useEffect(() => {
         fetchTechnicians(1);
     }, []);
-    
+
     const fetchJobData = async (jobId) => {
         if (!jobId) {
             console.warn("Invalid job ID");
@@ -311,7 +311,7 @@ const CreateJobScreen = ({ route }) => {
                 // ✅ 4. Extract pay rate and rRate from first technician (if exists)
                 const normalTech = allTechs.find(t => t?.techType?.toLowerCase() === 'technician');
                 if (normalTech?.UserJob) {
-                    setSimpleFlatRate(normalTech.UserJob.technicianFlatRate || "");
+                    setSimpleFlatRate(normalTech.UserJob.techFlatRate || "");
                 }
 
                 // Find first R/I/R technician (for rRate)
@@ -624,7 +624,7 @@ const CreateJobScreen = ({ route }) => {
                 selectedTechnicians: [
                     ...selectedNormalTechnicians?.map(tech => ({
                         userId: tech?.id,
-                        technicianFlatRate: simpleFlatRate,
+                        techFlatRate: simpleFlatRate,
                         // rRate: rirValue
                     })),
                     ...selectedRrTechnicians?.map(tech => ({
@@ -735,14 +735,14 @@ const CreateJobScreen = ({ route }) => {
                                         maxLength={5}
                                     />
 
-                                    <CustomTextInput
+                                  {rrTechnicians.length > 0 &&  <CustomTextInput
                                         label="R/I/R"
                                         placeholder="Enter R/I/R"
                                         value={rirValue}
                                         onChangeText={(text) => setRirValue(text)}
                                         keyboardType="numeric"
                                         maxLength={5}
-                                    />
+                                    />}
 
                                     <View style={{ paddingTop: spacings.large }}>
                                         {/* Filter & Date Picker */}
@@ -782,7 +782,7 @@ const CreateJobScreen = ({ route }) => {
                                             open={isStartPickerOpen}
                                             date={startDate}
                                             mode="datetime"
-                                            maximumDate={new Date()}
+                                            // minimumDate={new Date()}
                                             onConfirm={(date) => {
                                                 setStartDate(date);
                                                 setIsStartPickerOpen(false);
@@ -953,8 +953,8 @@ const CreateJobScreen = ({ route }) => {
                                         </View>
                                     )} */}
 
-                                    <View style={{ marginTop: 5 }}>
-                                        <Text style={styles.label}>Select R/I/R Technicians</Text>
+                                    {rrTechnicians.length > 0 && <View style={{ marginTop: 5 }}>
+                                        <Text style={styles.label}>Select R Technicians</Text>
                                         <View style={{
                                             borderWidth: 1,
                                             borderColor: blueColor,
@@ -997,7 +997,7 @@ const CreateJobScreen = ({ route }) => {
                                         {rrTechnicianError ? (
                                             <Text style={{ color: 'red', marginTop: 5, fontSize: 12 }}>{rrTechnicianError}</Text>
                                         ) : null}
-                                    </View>
+                                    </View>}
 
                                     {/* {selectedTechnicians.length > 0 && (
                                         <View style={{ marginTop: 16 }}>
@@ -1106,7 +1106,7 @@ const CreateJobScreen = ({ route }) => {
                                 value={estimatedCost}
                                 onChangeText={(text) => setEstimatedCost(text)}
                                 keyboardType="numeric"
-                                maxLength={5}
+                                maxLength={8}
                             />
                         </View>
                     </ScrollView>

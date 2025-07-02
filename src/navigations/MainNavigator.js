@@ -76,7 +76,7 @@ export default function MainNavigator() {
                         iconName = focused ? "home" : "home";
                     } else if (route.name === "Reports") {
                         IconComponent = Ionicons;
-                        iconName = "bag-add-outline";
+                        iconName = "bag-check-outline";
                     } else if (route.name === "Scanner") {
                         IconComponent = AntDesign;
                         iconName = focused ? "scan1" : "scan1";

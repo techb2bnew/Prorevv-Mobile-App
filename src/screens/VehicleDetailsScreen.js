@@ -225,10 +225,10 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
 
         // const totalCost = parseFloat(jobDescriptionTotal);
 
-        let partnerTechnician = null;
-        if (vehicleDetails?.assignedTechnicians?.length > 1 && technicianId) {
-            partnerTechnician = vehicleDetails.assignedTechnicians.find(t => t.id !== technicianId);
-        }
+        // let partnerTechnician = null;
+        // if (vehicleDetails?.assignedTechnicians?.length > 1 && technicianId) {
+        //     partnerTechnician = vehicleDetails.assignedTechnicians.find(t => t.id !== technicianId);
+        // }
 
         // console.log("partnerTechnician", partnerTechnician);
 
@@ -288,9 +288,19 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
                 groupTitle: "Pay Info",
                 data: [
                     {
-                        label: "Date",
+                        label: "Start Date",
                         value: vehicleDetails?.createdAt
-                            ? new Date(vehicleDetails.createdAt).toLocaleDateString("en-US", {
+                            ? new Date(vehicleDetails.startDate).toLocaleDateString("en-US", {
+                                month: "long",    // e.g., June
+                                day: "numeric",   // e.g., 23
+                                year: "numeric",  // e.g., 2025
+                            })
+                            : "N/A"
+                    },
+                    {
+                        label: "End Date",
+                        value: vehicleDetails?.createdAt
+                            ? new Date(vehicleDetails.endDate).toLocaleDateString("en-US", {
                                 month: "long",    // e.g., June
                                 day: "numeric",   // e.g., 23
                                 year: "numeric",  // e.g., 2025
@@ -315,26 +325,61 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
                     data: [{ label: "Attachments", images: vehicleDetails?.images }]
                 }]
                 : []),
-            ...(from === 'partner' && partnerTechnician
+            ...(vehicleDetails?.assignedTechnicians?.length
                 ? [{
-                    groupTitle: "Partner Technician",
-                    data: [
-                        {
-                            label: "Partner Technician",
-                            value: `${capitalize(partnerTechnician.firstName)} ${capitalize(partnerTechnician.lastName)}`
-                        },
-                        ...(partnerTechnician.email ? [{
-                            label: "Partner Technician Email",
-                            value: partnerTechnician.email
-                        }] : []),
-                        ...(partnerTechnician.mobile ? [{
-                            label: "Partner Technician Phone",
-                            value: partnerTechnician.mobile,
-                            isPhoneNumber: true
-                        }] : [])
-                    ]
+                    groupTitle: "Assigned Technicians",
+                    data: vehicleDetails.assignedTechnicians.flatMap((tech, index) => {
+                        const name = `${capitalize(tech.firstName)} ${capitalize(tech.lastName)}`;
+                        const techTypeRaw = tech?.techType?.toLowerCase();
+                        const shouldShowType = techTypeRaw.includes('r') || techTypeRaw.includes('rb');
+                        const techType = shouldShowType ? ` (${tech.techType.toUpperCase()})` : '';
+                        const flatRate = tech?.VehicleTechnician?.techFlatRate;
+                        const rRate = tech?.VehicleTechnician?.rRate;
+
+                        let payInfo = '';
+                        if (flatRate) {
+                            payInfo = `Flat Rate: $${flatRate}`;
+                        } else if (rRate) {
+                            payInfo = `R Rate: $${rRate}`;
+                        } else {
+                            payInfo = 'N/A';
+                        }
+
+                        return [
+                            {
+                                label: `Technician ${index + 1}`,
+                                value: `${name}${techType}`,
+                            },
+                            {
+                                label: `Technician ${index + 1}`,
+                                value: payInfo,
+                            }
+                        ];
+                    })
                 }]
-                : [])
+                : []),
+
+
+            // ...(from === 'partner' && partnerTechnician
+            //     ? [{
+            //         groupTitle: "Partner Technician",
+            //         data: [
+            //             {
+            //                 label: "Partner Technician",
+            //                 value: `${capitalize(partnerTechnician.firstName)} ${capitalize(partnerTechnician.lastName)}`
+            //             },
+            //             ...(partnerTechnician.email ? [{
+            //                 label: "Partner Technician Email",
+            //                 value: partnerTechnician.email
+            //             }] : []),
+            //             ...(partnerTechnician.mobile ? [{
+            //                 label: "Partner Technician Phone",
+            //                 value: partnerTechnician.mobile,
+            //                 isPhoneNumber: true
+            //             }] : [])
+            //         ]
+            //     }]
+            //     : [])
 
         ];
     };

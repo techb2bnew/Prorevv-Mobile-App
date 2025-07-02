@@ -59,7 +59,7 @@ const VinListScreen = ({ navigation, route }) => {
         return data;
     }, [vehicleData, sortType, sortOrder]);
 
-  useFocusEffect(
+    useFocusEffect(
         React.useCallback(() => {
             const loadSelectedJob = async () => {
                 const savedJob = await AsyncStorage.getItem("current_Job");
@@ -68,7 +68,7 @@ const VinListScreen = ({ navigation, route }) => {
                 if (savedJob) {
                     const parsed = JSON.parse(savedJob);
                     setSelectedJobName(parsed.jobName);
-                   
+
                 }
             };
 
@@ -219,10 +219,16 @@ const VinListScreen = ({ navigation, route }) => {
                 : "";
 
             console.log("Start:", formattedStartDate, "End:", formattedEndDate);
+            let bodyData;
 
+            if (technicianType === 'manager') {
+                bodyData = `startDate=${formattedStartDate}&endDate=${formattedEndDate}&roleType=${technicianType}`;
+            } else {
+                bodyData = `startDate=${formattedStartDate}&endDate=${formattedEndDate}&roleType=${technicianType}&technicianId=${technicianId}`;
+            }
             const response = await axios.post(
                 `${API_BASE_URL}/vehicleFilter`,
-                `startDate=${formattedStartDate}&endDate=${formattedEndDate}&technicianId=${technicianId}`,
+                bodyData,
                 {
                     headers: {
                         "Content-Type": "application/x-www-form-urlencoded",
@@ -272,6 +278,18 @@ const VinListScreen = ({ navigation, route }) => {
                     ? new Date(a?.updatedAt) - new Date(b?.updatedAt)
                     : new Date(b?.updatedAt) - new Date(a?.updatedAt);
             });
+        } else if (type === "startDate") {
+            sortedData.sort((a, b) => {
+                return order === "oldest"
+                    ? new Date(a?.startDate) - new Date(b?.startDate)
+                    : new Date(b?.startDate) - new Date(a?.startDate);
+            });
+        } else if (type === "endDate") {
+            sortedData.sort((a, b) => {
+                return order === "oldest"
+                    ? new Date(a?.endDate) - new Date(b?.endDate)
+                    : new Date(b?.endDate) - new Date(a?.endDate);
+            });
         } else if (type === "name") {
             sortedData.sort((a, b) => {
                 return order === "asc"
@@ -282,16 +300,9 @@ const VinListScreen = ({ navigation, route }) => {
             sortedData.sort((a, b) => {
                 const statusA = a?.jobStatus ? "Complete" : "InProgress";
                 const statusB = b?.jobStatus ? "Complete" : "InProgress";
-
                 return order === "asc"
                     ? statusA.localeCompare(statusB)
                     : statusB.localeCompare(statusA);
-            });
-        } else if (type === "name") {
-            sortedData.sort((a, b) => {
-                return order === "asc"
-                    ? a?.jobName?.localeCompare(b?.jobName)
-                    : b?.jobName?.localeCompare(a?.jobName);
             });
         }
 
@@ -300,7 +311,6 @@ const VinListScreen = ({ navigation, route }) => {
         setSortType(type);
         setModalVisible(false);
     };
-
 
     return (
         <View style={{ width: wp(100), height: hp(100), backgroundColor: whiteColor }}>
@@ -352,7 +362,7 @@ const VinListScreen = ({ navigation, route }) => {
                         <Text style={styles.dateText}>To</Text>
                     </View>
                 </View>
-                <View style={[styles.datePickerContainer, { marginBottom: 15 }]}>
+                <View style={[styles.datePickerContainer]}>
                     <TouchableOpacity onPress={() => setIsStartPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter]}>
                         <Text style={styles.dateText}>
                             {startDate.toLocaleDateString("en-US", {
@@ -396,7 +406,7 @@ const VinListScreen = ({ navigation, route }) => {
                     date={endDate}
                     mode="date"
                     minimumDate={startDate}       // ✅ StartDate se pehle ki date disable
-                    maximumDate={new Date()} // ⛔ prevents selecting future dates
+                    // maximumDate={new Date()} // ⛔ prevents selecting future dates
                     onConfirm={(date) => {
                         const newEndDate = date;
                         setEndDate(newEndDate);
@@ -449,7 +459,9 @@ const VinListScreen = ({ navigation, route }) => {
                         <Text style={[styles.tableHeaderText, { width: wp(50) }]}>VIN No.</Text>
                         <Text style={[styles.tableHeaderText, { width: wp(35) }]}>Make</Text>
                         <Text style={[styles.tableHeaderText, { width: wp(35) }]}>Model</Text>
-                        <Text style={[styles.tableHeaderText, { width: wp(35) }]}>Date</Text>
+                        <Text style={[styles.tableHeaderText, { width: wp(35) }]}>Start Date</Text>
+                        <Text style={[styles.tableHeaderText, { width: wp(35) }]}>End Date</Text>
+
                         {activeTab === 'partnerOrder' && (
                             <Text style={[styles.tableHeaderText, { width: wp(25) }]}>Partner</Text>
                         )}
@@ -473,14 +485,18 @@ const VinListScreen = ({ navigation, route }) => {
                                             flexDirectionRow,
                                             { backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor },
                                         ]}
-
-
                                     >
                                         {/* <Text style={[styles.tableText, { width: wp(30), paddingLeft: spacings.small }]}>{item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}</Text> */}
                                         <Text style={[styles.tableText, { width: wp(50) }]}>{item?.vin}</Text>
                                         <Text style={[styles.tableText, { width: wp(35) }]}>{item?.make}</Text>
                                         <Text style={[styles.tableText, { width: wp(35) }]}>{item?.model}</Text>
-                                        <Text style={[styles.tableText, { width: wp(35) }]}> {new Date(item?.createdAt).toLocaleDateString("en-US", {
+                                        <Text style={[styles.tableText, { width: wp(35) }]}> {new Date(item?.startDate).toLocaleDateString("en-US", {
+                                            month: "long",
+                                            day: "numeric",
+                                            year: "numeric"
+                                        })}
+                                        </Text>
+                                        <Text style={[styles.tableText, { width: wp(35) }]}> {new Date(item?.endDate).toLocaleDateString("en-US", {
                                             month: "long",
                                             day: "numeric",
                                             year: "numeric"
@@ -602,8 +618,17 @@ const VinListScreen = ({ navigation, route }) => {
                                     <Text >{item?.model}</Text>
                                 </View>
                                 <View style={{ width: '48%', marginBottom: 10 }}>
-                                    <Text style={{ color: '#555', fontSize: 11 }}>Date</Text>
-                                    <Text >{new Date(item?.createdAt).toLocaleDateString("en-US", {
+                                    <Text style={{ color: '#555', fontSize: 11 }}>Start Date</Text>
+                                    <Text >{new Date(item?.startDate).toLocaleDateString("en-US", {
+                                        month: "long",
+                                        day: "numeric",
+                                        year: "numeric"
+                                    })}
+                                    </Text>
+                                </View>
+                                <View style={{ width: '48%', marginBottom: 10 }}>
+                                    <Text style={{ color: '#555', fontSize: 11 }}>End Date</Text>
+                                    <Text >{new Date(item?.endDate).toLocaleDateString("en-US", {
                                         month: "long",
                                         day: "numeric",
                                         year: "numeric"
@@ -677,22 +702,6 @@ const VinListScreen = ({ navigation, route }) => {
                                 <Text style={styles.modalTitle}>Sort By</Text>
                                 <Feather name="sliders" size={20} color={grayColor} />
                             </View>
-
-                            {/* <TouchableOpacity
-                                onPress={() => handleSort(
-                                    sortType === "name" && sortOrder === "asc" ? "desc" : "asc",
-                                    "name"
-                                )}
-                                style={styles.sortOption}
-                            >
-                                <Text style={[styles.sortText, { fontWeight: style.fontWeightThin?.fontWeight || '400', color: sortType === "name" ? blackColor : 'gray' }]}>
-                                    Job Name
-                                </Text>
-                                <Text style={[styles.sortText, { color: sortType === "name" ? blackColor : 'gray' }]}>
-                                    {sortType === "name" ? (sortOrder === "asc" ? "A to Z" : "Z to A") : "A to Z"}
-                                </Text>
-                            </TouchableOpacity> */}
-
                             <TouchableOpacity
                                 onPress={() => handleSort(
                                     sortType === "date" && sortOrder === "newest" ? "oldest" : "newest",
@@ -707,6 +716,37 @@ const VinListScreen = ({ navigation, route }) => {
                                     {sortType === "date" ? (sortOrder === "newest" ? "New to Old" : "Old to New") : "New to Old"}
                                 </Text>
                             </TouchableOpacity>
+
+                            <TouchableOpacity
+                                onPress={() => handleSort(
+                                    sortType === "startDate" && sortOrder === "newest" ? "oldest" : "newest",
+                                    "startDate"
+                                )}
+                                style={styles.sortOption}
+                            >
+                                <Text style={[styles.sortText, { color: sortType === "startDate" ? blackColor : 'gray' }]}>
+                                    Start Date
+                                </Text>
+                                <Text style={[styles.sortText, { color: sortType === "startDate" ? blackColor : 'gray' }]}>
+                                    {sortType === "startDate" ? (sortOrder === "newest" ? "New to Old" : "Old to New") : "New to Old"}
+                                </Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                onPress={() => handleSort(
+                                    sortType === "endDate" && sortOrder === "newest" ? "oldest" : "newest",
+                                    "endDate"
+                                )}
+                                style={styles.sortOption}
+                            >
+                                <Text style={[styles.sortText, { color: sortType === "endDate" ? blackColor : 'gray' }]}>
+                                    End Date
+                                </Text>
+                                <Text style={[styles.sortText, { color: sortType === "endDate" ? blackColor : 'gray' }]}>
+                                    {sortType === "endDate" ? (sortOrder === "newest" ? "New to Old" : "Old to New") : "New to Old"}
+                                </Text>
+                            </TouchableOpacity>
+
 
                             <TouchableOpacity
                                 onPress={() => handleSort(sortType === "modified" && sortOrder === "latest" ? "oldest" : "latest", "modified")}
