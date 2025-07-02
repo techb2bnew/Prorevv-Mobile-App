@@ -147,10 +147,10 @@ const HomeScreen = ({ navigation }) => {
         } else {
           try {
             const currentJob = await AsyncStorage.getItem("current_Job");
-            if (ifscustomers.length === 0) {
+            if (customers.length === 0) {
               Toast.show("You don't have any assigned job currently.");
             } else if (!currentJob) {
-              Toast.show("Please select a job from the jobs page first.");
+              Toast.show("Please select a job from the vehicles page first.");
             } else {
               navigation.navigate("ScannerScreen");
             }
@@ -219,8 +219,11 @@ const HomeScreen = ({ navigation }) => {
 
   useFocusEffect(
     useCallback(() => {
-      fetchIFSCustomers();
-      fetchCustomers();
+      if (technicianType === "ifs") {
+        fetchIFSCustomers();
+      } else {
+        fetchCustomers();
+      }
     }, [technicianId])
   );
 
@@ -378,31 +381,34 @@ const HomeScreen = ({ navigation }) => {
       }]}>
         <Text style={[styles.title, textAlign]}>👋 Hi, {capitalizetext(technicianName)}</Text>
         <Pressable style={[styles.searchTextInput, { height: isTablet ? hp(4) : hp(5.5), }]}
-          onPress={async () => {
-            try {
-              const currentJob = await AsyncStorage.getItem("current_Job");
-              if (technicianType === "ifs") {
-                if (ifscustomers.length === 0) {
-                  Toast.show("You don't have any IFS customers currently.");
-                  return;
-                }
-              } else {
-                if (customers.length === 0) {
-                  Toast.show("You don't have any customers. Please add a customer first.");
-                  return;
-                }
-              }
-              if (!currentJob) {
-                Toast.show("Please select a job from the jobs page first.");
-              } else {
-                navigation.navigate("ScannerScreen", {
-                  from: "VinList"
-                });
-              }
-            } catch (error) {
-              console.error("Error accessing current job:", error);
-            }
-          }}
+          // onPress={async () => {
+          //   try {
+          //     const currentJob = await AsyncStorage.getItem("current_Job");
+          //     if (technicianType === "ifs") {
+          //       if (ifscustomers.length === 0) {
+          //         Toast.show("You don't have any IFS customers currently.");
+          //         return;
+          //       }
+          //     } else {
+          //       if (customers.length === 0) {
+          //         Toast.show("You don't have any customers. Please add a customer first.");
+          //         return;
+          //       }
+          //     }
+          //     if (!currentJob) {
+          //       Toast.show("Please select a job from the jobs page first.");
+          //     } else {
+          //       navigation.navigate("ScannerScreen", {
+          //         from: "VinList"
+          //       });
+          //     }
+          //   } catch (error) {
+          //     console.error("Error accessing current job:", error);
+          //   }
+          // }}
+          onPress={() => navigation.navigate("ScannerScreen", {
+            from: "VinList"
+          })}
         >
           <View style={[styles.input, { flexDirection: "row", alignItems: "center", justifyContent: "space-between" }]}>
             <Text style={{ color: grayColor }}>Scan VIN</Text>

@@ -129,22 +129,22 @@ function App(): React.JSX.Element {
       // console.log("🌐 technician?.payVehicleType:::::::::", technician);
       // console.log("🌐 technician?.payRate:::::::::", technician?.payRate);
 
-      await AsyncStorage.setItem('payRate', technician?.payRate);
-      await AsyncStorage.setItem('simpleFlatRate', technician?.simpleFlatRate);
-      await AsyncStorage.setItem('amountPercentage', technician?.amountPercentage);
+      // await AsyncStorage.setItem('payRate', technician?.payRate);
+      // await AsyncStorage.setItem('simpleFlatRate', technician?.simpleFlatRate);
+      // await AsyncStorage.setItem('amountPercentage', technician?.amountPercentage);
 
-      if (technician?.payVehicleType) {
-        const vehicleList = technician?.payVehicleType
-          .split(',')
-          .filter(item => item.trim() !== '');
-        const vehicleArray = vehicleList.map(vehicle => ({
-          label: vehicle?.trim(),
-          value: vehicle?.trim()
-        }));
-        // Save to AsyncStorage
-        await AsyncStorage.setItem('allowedVehicles', JSON.stringify(vehicleArray));
-        // console.log("✅ Saved allowed vehicle types:", vehicleArray);
-      }
+      // if (technician?.payVehicleType) {
+      //   const vehicleList = technician?.payVehicleType
+      //     .split(',')
+      //     .filter(item => item.trim() !== '');
+      //   const vehicleArray = vehicleList.map(vehicle => ({
+      //     label: vehicle?.trim(),
+      //     value: vehicle?.trim()
+      //   }));
+      //   // Save to AsyncStorage
+      //   await AsyncStorage.setItem('allowedVehicles', JSON.stringify(vehicleArray));
+      //   // console.log("✅ Saved allowed vehicle types:", vehicleArray);
+      // }
 
       if (technician.isApproved === "reject") {
         Toast.show("❌ Technician access revoked. Logging out...");

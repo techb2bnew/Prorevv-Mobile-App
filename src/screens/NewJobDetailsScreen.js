@@ -282,18 +282,25 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
                   <Text style={styles.value}>{capitalize(jobDetails?.customer?.fullName)}</Text>
                 </View>
               </View>
-              <View style={styles.rightCol}>
-                <Text style={[styles.label, { marginBottom: 4 }]}>Job Status</Text>
-                <Text
-                  style={[
-                    styles.value,
-                    { fontWeight: '600' },
-                    { color: jobDetails?.jobStatus ? 'green' : 'red' }
-                  ]}
-                >
-                  {jobDetails?.jobStatus ? "Complete" : "In Progress"}
-                </Text>
+              <View style={styles.rowItem}>
+                <View style={styles.rightCol}>
+                  <Text style={[styles.label, { marginBottom: 4 }]}>Job Status</Text>
+                  <Text
+                    style={[
+                      styles.value,
+                      { fontWeight: '600' },
+                      { color: jobDetails?.jobStatus ? 'green' : 'red' }
+                    ]}
+                  >
+                    {jobDetails?.jobStatus ? "Complete" : "In Progress"}
+                  </Text>
+                </View>
+                {technicianType != 'ifs' && <View style={styles.rightCol}>
+                  <Text style={styles.label}>EstimatedCost</Text>
+                  <Text style={styles.value}>${jobDetails?.estimatedCost}</Text>
+                </View>}
               </View>
+
             </View>
           )}
 
@@ -375,43 +382,55 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
                 )}
               </View>
 
-              {vehicle.jobDescription?.filter(d => d.jobDescription || d.cost).length > 0 && (
+              {Array.isArray(vehicle.jobDescription) && vehicle.jobDescription.length > 0 && (
                 <View style={{ padding: 10 }}>
                   {/* Heading */}
                   <View style={[flexDirectionRow, justifyContentSpaceBetween]}>
                     <View style={styles.leftCol}>
                       <Text style={styles.label}>Work Description</Text>
                     </View>
-                    <View style={styles.rightCol}>
+                    {/* <View style={styles.rightCol}>
                       <Text style={styles.label}>Cost</Text>
-                    </View>
+                    </View> */}
                   </View>
 
                   {/* List of Work Items */}
-                  {vehicle.jobDescription.map((desc, i) =>
-                    (desc.jobDescription || desc.cost) ? (
+                  {vehicle.jobDescription.map((desc, i) => {
+                    const isObject = typeof desc === 'object' && desc !== null;
+                    const description = isObject ? desc.jobDescription : desc;
+                    const cost = isObject ? desc.cost : '';
+
+                    if (!description && !cost) return null;
+
+                    return (
                       <View key={i} style={[flexDirectionRow, justifyContentSpaceBetween]}>
                         <View style={styles.leftCol}>
-                          <Text style={styles.value}>• {desc.jobDescription || '—'}</Text>
+                          <Text style={styles.value}>• {description || '—'}</Text>
                         </View>
-                        <View style={styles.rightCol}>
-                          <Text style={styles.value}>• {desc.cost ? `$${desc.cost}` : '—'}</Text>
-                        </View>
+                        {/* <View style={styles.rightCol}>
+                          <Text style={styles.value}>• {cost ? `$${cost}` : '—'}</Text>
+                        </View> */}
                       </View>
-                    ) : null
-                  )}
+                    );
+                  })}
 
-                  <View style={{ height: 1, marginVertical: 8 }} />
+                  {/* <View style={{ height: 1, marginVertical: 8 }} />
 
                   {/* Total Block */}
-                  <View style={{ paddingVertical: 10 }}>
+                  {/* <View style={{ paddingVertical: 10 }}>
                     <Text style={[styles.label, { marginBottom: 4 }]}>Total</Text>
                     <Text style={[styles.value, { fontWeight: '600' }]}>
-                      ${vehicle.jobDescription.reduce((total, desc) => total + (parseFloat(desc.cost) || 0), 0)}
+                      $
+                      {vehicle.jobDescription.reduce((total, desc) => {
+                        const isObject = typeof desc === 'object' && desc !== null;
+                        const cost = isObject ? parseFloat(desc.cost) : 0;
+                        return total + (isNaN(cost) ? 0 : cost);
+                      }, 0).toFixed(2)}
                     </Text>
-                  </View>
+                  </View>  */}
                 </View>
               )}
+
 
               <View style={[styles.rowItem, { paddingHorizontal: 10 }]}>
                 {!!vehicle.createdAt && (

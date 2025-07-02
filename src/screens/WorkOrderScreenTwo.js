@@ -19,13 +19,12 @@ import { Image as ImageCompressor } from 'react-native-compressor';
 import Header from '../componets/Header';
 import Toast from 'react-native-simple-toast';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-
+import DatePicker from "react-native-date-picker";
+import Feather from 'react-native-vector-icons/Feather';
 
 const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween, textAlign } = BaseStyle;
 
 const WorkOrderScreenTwo = ({ route }) => {
-    console.log("routerouteroute>>", route?.params?.vehicleId);
-
     const { width, height } = Dimensions.get("window");
     const isTablet = width >= 668 && height >= 1024;
     const navigation = useNavigation();
@@ -54,12 +53,12 @@ const WorkOrderScreenTwo = ({ route }) => {
     const [labourCost, setLabourCost] = useState('');
     const [textInputHeights, setTextInputHeights] = useState({});
     const [vTypeopen, setVTypeOpen] = useState(false);
-    const [selectedVehicleType, setSelectedVehicleType] = useState(null);
-    const [vehicleTypeError, setVehicleTypeError] = useState();
-    const [storedVehicles, setStoredVehicles] = useState([]);
-    const [storedPayRate, setStoredPayRate] = useState('');
-    const [storedSimpleFlatRate, setStoredSimpleFlatRate] = useState(null);
-    const [storedAmountPercentage, setStoredAmountPercentage] = useState(null);
+    // const [selectedVehicleType, setSelectedVehicleType] = useState(null);
+    // const [vehicleTypeError, setVehicleTypeError] = useState();
+    // const [storedVehicles, setStoredVehicles] = useState([]);
+    // const [storedPayRate, setStoredPayRate] = useState('');
+    // const [storedSimpleFlatRate, setStoredSimpleFlatRate] = useState(null);
+    // const [storedAmountPercentage, setStoredAmountPercentage] = useState(null);
     const inputRefs = useRef([]);
     const [step, setStep] = useState(route?.params?.vehicleId ? 2 : 1);
     const [selectedJobName, setSelectedJobName] = useState("");
@@ -76,7 +75,10 @@ const WorkOrderScreenTwo = ({ route }) => {
     const [technicians, setTechnicians] = useState([]);
     const [selectedTechnicians, setSelectedTechnicians] = useState([]); // store selected IDs
     const [vehicleDetails, setVehicleDetails] = useState(false);
-    console.log("vehicleDetailsvehicleDetails", vehicleDetails, technicians, selectedTechnicians);
+    const [startDate, setStartDate] = useState(new Date());
+    const [endDate, setEndDate] = useState(new Date());
+    const [isStartPickerOpen, setIsStartPickerOpen] = useState(false);
+    const [isEndPickerOpen, setIsEndPickerOpen] = useState(false);
 
     const [modalData, setModalData] = useState({
         visible: false,
@@ -136,7 +138,7 @@ const WorkOrderScreenTwo = ({ route }) => {
         "Model",
         "Model Year",
         "Manufacturer Name",
-        // "Vehicle Type",
+        "Vehicle Type",
         "Plant City",
         "Plant Country",
         "Plant Company Name",
@@ -152,68 +154,68 @@ const WorkOrderScreenTwo = ({ route }) => {
         "Manufacturer Name",
     ];
 
-    useFocusEffect(
-        useCallback(() => {
-            const checkTechnicianStatus = async () => {
-                try {
-                    const token = await AsyncStorage.getItem("auth_token");
-                    const storedData = await AsyncStorage.getItem('userDeatils');
+    // useFocusEffect(
+    //     useCallback(() => {
+    //         const checkTechnicianStatus = async () => {
+    //             try {
+    //                 const token = await AsyncStorage.getItem("auth_token");
+    //                 const storedData = await AsyncStorage.getItem('userDeatils');
 
-                    if (!token || !storedData) {
-                        console.log("❌ Token or user details missing!");
-                        return;
-                    }
+    //                 if (!token || !storedData) {
+    //                     console.log("❌ Token or user details missing!");
+    //                     return;
+    //                 }
 
-                    const parsedData = JSON.parse(storedData);
-                    const technicianId = parsedData?.id;
+    //                 const parsedData = JSON.parse(storedData);
+    //                 const technicianId = parsedData?.id;
 
-                    if (!technicianId) {
-                        console.log("❌ Technician ID not found in stored user details");
-                        return;
-                    }
+    //                 if (!technicianId) {
+    //                     console.log("❌ Technician ID not found in stored user details");
+    //                     return;
+    //                 }
 
-                    const response = await fetch(`${API_BASE_URL}/fetchSingleTechnician?technicianId=${technicianId}`, {
-                        method: "POST",
-                        headers: {
-                            "Authorization": `Bearer ${token}`,
-                            "Content-Type": "application/json"
-                        }
-                    });
-                    const textResponse = await response.text();
-                    const data = JSON.parse(textResponse);
-                    const technician = data?.technician;
-                    console.log("technicia::::::", technician);
+    //                 const response = await fetch(`${API_BASE_URL}/fetchSingleTechnician?technicianId=${technicianId}`, {
+    //                     method: "POST",
+    //                     headers: {
+    //                         "Authorization": `Bearer ${token}`,
+    //                         "Content-Type": "application/json"
+    //                     }
+    //                 });
+    //                 const textResponse = await response.text();
+    //                 const data = JSON.parse(textResponse);
+    //                 const technician = data?.technician;
+    //                 console.log("technicia::::::", technician);
 
-                    // Save only 4 values
-                    await AsyncStorage.setItem('payRate', technician?.payRate);
-                    await AsyncStorage.setItem('simpleFlatRate', technician?.simpleFlatRate);
-                    await AsyncStorage.setItem('amountPercentage', technician?.amountPercentage);
+    //                 // Save only 4 values
+    //                 await AsyncStorage.setItem('payRate', technician?.payRate);
+    //                 await AsyncStorage.setItem('simpleFlatRate', technician?.simpleFlatRate);
+    //                 await AsyncStorage.setItem('amountPercentage', technician?.amountPercentage);
 
-                    if (technician?.payVehicleType) {
-                        const vehicleList = technician.payVehicleType
-                            .split(',')
-                            .filter(item => item.trim() !== '');
-                        const vehicleArray = vehicleList.map(vehicle => ({
-                            label: vehicle.trim(),
-                            value: vehicle.trim()
-                        }));
-                        await AsyncStorage.setItem('allowedVehicles', JSON.stringify(vehicleArray));
-                    }
+    //                 if (technician?.payVehicleType) {
+    //                     const vehicleList = technician.payVehicleType
+    //                         .split(',')
+    //                         .filter(item => item.trim() !== '');
+    //                     const vehicleArray = vehicleList.map(vehicle => ({
+    //                         label: vehicle.trim(),
+    //                         value: vehicle.trim()
+    //                     }));
+    //                     await AsyncStorage.setItem('allowedVehicles', JSON.stringify(vehicleArray));
+    //                 }
 
-                } catch (error) {
-                    console.error("🚨 Error in checkTechnicianStatus:", error);
-                }
-            };
+    //             } catch (error) {
+    //                 console.error("🚨 Error in checkTechnicianStatus:", error);
+    //             }
+    //         };
 
-            checkTechnicianStatus();
-        }, [])
-    );
+    //         checkTechnicianStatus();
+    //     }, [])
+    // );
 
     useFocusEffect(
         React.useCallback(() => {
             const loadSelectedJob = async () => {
                 const savedJob = await AsyncStorage.getItem("current_Job");
-                console.log(savedJob);
+                console.log("savedJob", savedJob);
 
                 if (savedJob) {
                     const parsed = JSON.parse(savedJob);
@@ -256,34 +258,34 @@ const WorkOrderScreenTwo = ({ route }) => {
     );
 
     // Tech Assigned Vehicle
-    useEffect(() => {
-        AsyncStorage.getItem('allowedVehicles').then(data => {
-            if (data) {
-                setStoredVehicles(JSON.parse(data));
-            }
-        });
-    }, []);
+    // useEffect(() => {
+    //     AsyncStorage.getItem('allowedVehicles').then(data => {
+    //         if (data) {
+    //             setStoredVehicles(JSON.parse(data));
+    //         }
+    //     });
+    // }, []);
 
     // Tech Pay Rate
-    useEffect(() => {
-        const fetchPayRate = async () => {
-            const rate = await AsyncStorage.getItem('payRate');
-            const simpleFlatRate = await AsyncStorage.getItem('simpleFlatRate');
-            const amountPercentage = await AsyncStorage.getItem('amountPercentage');
+    // useEffect(() => {
+    //     const fetchPayRate = async () => {
+    //         const rate = await AsyncStorage.getItem('payRate');
+    //         const simpleFlatRate = await AsyncStorage.getItem('simpleFlatRate');
+    //         const amountPercentage = await AsyncStorage.getItem('amountPercentage');
 
-            if (rate) {
-                setStoredPayRate(rate);
-            }
-            if (simpleFlatRate) {
-                setStoredSimpleFlatRate(simpleFlatRate);
-            }
+    //         if (rate) {
+    //             setStoredPayRate(rate);
+    //         }
+    //         if (simpleFlatRate) {
+    //             setStoredSimpleFlatRate(simpleFlatRate);
+    //         }
 
-            if (amountPercentage) {
-                setStoredAmountPercentage(amountPercentage);
-            }
-        };
-        fetchPayRate();
-    }, [])
+    //         if (amountPercentage) {
+    //             setStoredAmountPercentage(amountPercentage);
+    //         }
+    //     };
+    //     fetchPayRate();
+    // }, [])
 
     //Vin
     useEffect(() => {
@@ -293,7 +295,7 @@ const WorkOrderScreenTwo = ({ route }) => {
             const loadSelectedJob = async () => {
                 const savedJob = await AsyncStorage.getItem("current_Job");
                 if (savedJob) {
-                    console.log("working:::::::::::::::::::::::::", vinNumber)
+                    // console.log("working:::::::::::::::::::::::::", vinNumber)
                     const parsed = JSON.parse(savedJob);
                     console.log("savedJob:::::", parsed);
                     setSelectedJobName(parsed.jobName);
@@ -567,6 +569,7 @@ const WorkOrderScreenTwo = ({ route }) => {
         //     return;
         // }
 
+
         const token = await AsyncStorage.getItem("auth_token");
         if (!token) {
             console.error("Token not found!");
@@ -586,25 +589,29 @@ const WorkOrderScreenTwo = ({ route }) => {
         formData.append("manufacturerName", getValue("Manufacturer Name") || vehicleDetails?.manufacturerName);
         formData.append("model", getValue("Model") || vehicleDetails?.model);
         formData.append("modelYear", getValue("Model Year") || vehicleDetails?.modelYear);
-        formData.append("vehicleType", selectedVehicleType || vehicleDetails?.vehicleType);
+        formData.append("vehicleType", getValue("Vehicle Type") || vehicleDetails?.vehicleType);
         formData.append("plantCountry", getValue("Plant Country") || vehicleDetails?.plantCountry);
         formData.append("plantCompanyName", getValue("Plant Company Name") || vehicleDetails?.plantCompanyName);
         formData.append("plantState", getValue("Plant State") || vehicleDetails?.plantState);
         formData.append("bodyClass", getValue("Body Class") || vehicleDetails?.bodyClass);
-        jobDescription.forEach((item) => {
-            formData.append("jobDescription", item.jobDescription);
-            formData.append("cost", item.cost);
-        });
+        formData.append("customerId", selectedCustomer);
+        formData.append("roleType", technicianType);
+        formData.append("labourCost", labourCost || "");
+        formData.append("notes", notes || " ");
         formData.append("color", selectedColor);
         formData.append("createdBy", "app");
-        // formData.append("userId[0]", technicianId);
-        selectedTechnicians.forEach((tech, index) => {
+        jobDescription.forEach((item) => {
+            formData.append("jobDescription[]", item.jobDescription);
+            // formData.append("cost", item.cost);
+        });
 
-            // Now also send full technician object
+        formData.append("startDate", startDate ? startDate.toISOString() : null);
+        formData.append("endDate", endDate ? endDate.toISOString() : null);
+        selectedTechnicians.forEach((tech, index) => {
+            // console.log(`Technician ${index}:`, tech); // 👈 Technician object console me print karega
             formData.append(`technicians[${index}][id]`, tech.id);
-            formData.append(`technicians[${index}][firstName]`, tech.firstName || '');
-            formData.append(`technicians[${index}][lastName]`, tech.lastName || '');
-            formData.append(`technicians[${index}][labourCost]`, tech.labourCost || '');
+            formData.append(`technicians[${index}][technicianFlatRate]`, tech?.UserJob?.technicianFlatRate || tech?.VehicleTechnician?.technicianFlatRate || "");
+            formData.append(`technicians[${index}][rRate]`, tech?.UserJob?.rRate || tech?.VehicleTechnician?.rRate || "");
         });
         if (technicianType === "manager") {
             selectedTechnicians.forEach((tech, index) => {
@@ -614,36 +621,30 @@ const WorkOrderScreenTwo = ({ route }) => {
             formData.append("userId[0]", technicianId);
             formData.append("technicianid[0]", technicianId || '');
         }
-        formData.append("roleType", technicianType);
-        formData.append("labourCost", labourCost || "");
-        formData.append("customerId", selectedCustomer);
-        formData.append("notes", notes || " ");
-        // formData.append("technicians[0][payRate]", technicianObj.payRate);
-        // formData.append("technicians[0][payVehicleType]", technicianObj.payVehicleType);
-        // formData.append("technicians[0][simpleFlatRate]", finalFlatRate);
-        // formData.append("technicians[0][amountPercentage]", technicianObj.amountPercentage);
-        if (technicianType === "ifs") {
-            // 👉 Single Technician (self)
-            let parsedRate = {};
-            try {
-                parsedRate = JSON.parse(storedSimpleFlatRate || "{}");
-            } catch (e) {
-                console.error("Invalid JSON in storedSimpleFlatRate", e);
-            }
 
-            const selRate = {
-                [selectedVehicleType]: parsedRate[selectedVehicleType],
-            };
 
-            const finalRate = parsedRate[selectedVehicleType] !== undefined
-                ? JSON.stringify(selRate)
-                : storedSimpleFlatRate || "{}";
+        // if (technicianType === "ifs") {
+        //     // 👉 Single Technician (self)
+        //     let parsedRate = {};
+        //     try {
+        //         parsedRate = JSON.parse(storedSimpleFlatRate || "{}");
+        //     } catch (e) {
+        //         console.error("Invalid JSON in storedSimpleFlatRate", e);
+        //     }
 
-            formData.append("technicians[0][payRate]", storedPayRate);
-            formData.append("technicians[0][payVehicleType]", selectedVehicleType);
-            formData.append("technicians[0][simpleFlatRate]", finalRate);
-            formData.append("technicians[0][amountPercentage]", storedAmountPercentage);
-        }
+        //     const selRate = {
+        //         [selectedVehicleType]: parsedRate[selectedVehicleType],
+        //     };
+
+        //     const finalRate = parsedRate[selectedVehicleType] !== undefined
+        //         ? JSON.stringify(selRate)
+        //         : storedSimpleFlatRate || "{}";
+
+        //     formData.append("technicians[0][payRate]", storedPayRate);
+        //     formData.append("technicians[0][payVehicleType]", selectedVehicleType);
+        //     formData.append("technicians[0][simpleFlatRate]", finalRate);
+        //     formData.append("technicians[0][amountPercentage]", storedAmountPercentage);
+        // }
         if (route?.params?.vehicleId) {
             console.log("Vehicle ID present:", route.params.vehicleId);
 
@@ -690,8 +691,6 @@ const WorkOrderScreenTwo = ({ route }) => {
             }
         }
 
-
-
         console.log("form:::", formData);
         setNewFormData(formData);
         setLoaderFn(true);
@@ -729,18 +728,9 @@ const WorkOrderScreenTwo = ({ route }) => {
                     Toast.show((route?.params?.vehicleId) ? "Vehicle update successfully!" : "Vehicle add successfully!");
                 }
             } else {
-                console.warn("Submission failed:", responseJson);
-                // if (
-                //     responseJson?.error &&
-                //     responseJson.error.includes('VIN') &&
-                //     responseJson.error.includes('already exists')
-                // ) {
-                //     setDuplicateVinModal(true);
-                //     setDuplicateVinMessage(responseJson?.error || "Are you sure you want to continue?.");
-                // } else {
                 console.warn("Submission failed:", responseJson?.error);
                 setError(responseJson?.error)
-                // }
+
             }
 
         } catch (error) {
@@ -763,7 +753,7 @@ const WorkOrderScreenTwo = ({ route }) => {
         setJobDescription([{ jobDescription: "", cost: "" }]);
         setJobDescriptionError('');
         setIsVinApiError(false);
-        setSelectedVehicleType(null);
+        // setSelectedVehicleType(null);
     };
 
     const handleContentSizeChange = (index, event) => {
@@ -791,6 +781,7 @@ const WorkOrderScreenTwo = ({ route }) => {
             }
         });
     };
+
     const isTechnicianSelected = (id) => {
         return selectedTechnicians.some((tech) => tech.id === id);
     };
@@ -833,14 +824,17 @@ const WorkOrderScreenTwo = ({ route }) => {
                     setSelectedJobId(data?.vehicle?.vehicle?.jobId)
                     setLabourCost(data?.vehicle?.vehicle?.labourCost)
                     setSelectedColor(data?.vehicle?.vehicle?.color)
+                    setStartDate(new Date(data?.vehicle?.vehicle?.startDate));
+                    setEndDate(new Date(data?.vehicle?.vehicle?.endDate));
+                    setTechnicians(data?.vehicle?.vehicle?.assignedTechnicians);
                     // Format jobDescription properly
                     setNotes(data?.vehicle?.vehicle?.notes)
                     if (data?.vehicle?.vehicle?.images?.length > 0) {
                         setImageUris(data.vehicle.vehicle.images);
                     }
                     const formattedJobDescriptions = (data?.vehicle?.vehicle?.jobDescription || []).map(item => ({
-                        jobDescription: item.jobDescription || "",
-                        cost: item.cost?.toString() || ""  // Ensure cost is string
+                        jobDescription: item || "",
+                        // cost: item.cost?.toString() || ""  // Ensure cost is string
                     }));
 
                     setJobDescription(formattedJobDescriptions.length > 0 ? formattedJobDescriptions : [{ jobDescription: "", cost: "" }]);
@@ -864,6 +858,45 @@ const WorkOrderScreenTwo = ({ route }) => {
             fetchVehileData(route?.params?.vehicleId);
         }
     }, [route?.params?.vehicleId]);
+
+
+    const updateTechnicianField = (id, field, value) => {
+        const updatedTechs = technicians.map((tech) => {
+            if (tech.id === id) {
+                // Prioritize updating in the correct source
+                if (tech.UserJob && tech.UserJob[field] !== undefined) {
+                    return {
+                        ...tech,
+                        UserJob: {
+                            ...tech.UserJob,
+                            [field]: value
+                        }
+                    };
+                } else if (tech.VehicleTechnician && tech.VehicleTechnician[field] !== undefined) {
+                    return {
+                        ...tech,
+                        VehicleTechnician: {
+                            ...tech.VehicleTechnician,
+                            [field]: value
+                        }
+                    };
+                } else {
+                    // Fallback if field doesn't exist
+                    return {
+                        ...tech,
+                        UserJob: {
+                            ...(tech.UserJob || {}),
+                            [field]: value
+                        }
+                    };
+                }
+            }
+            return tech;
+        });
+        setTechnicians(updatedTechs);
+    };
+
+
 
     return (
         <KeyboardAvoidingView
@@ -1128,12 +1161,12 @@ const WorkOrderScreenTwo = ({ route }) => {
                                     {/* Work Description */}
                                     <View style={{ marginTop: spacings.large }}>
                                         <View style={[flexDirectionRow, justifyContentSpaceBetween, alignItemsCenter]}>
-                                            <View style={{ width: "65%" }}>
+                                            <View style={{ width: "100%" }}>
                                                 <Text style={[styles.label, { marginBottom: 0 }]}>Work Description</Text>
                                             </View>
-                                            <View style={{ width: jobDescription.length > 1 ? "33%" : "30%" }}>
+                                            {/* <View style={{ width: jobDescription.length > 1 ? "33%" : "30%" }}>
                                                 <Text style={[styles.label, { marginBottom: 0 }]}>Cost</Text>
-                                            </View>
+                                            </View> */}
 
                                         </View>
 
@@ -1145,10 +1178,10 @@ const WorkOrderScreenTwo = ({ route }) => {
                                                     <View style={[flexDirectionRow, justifyContentSpaceBetween, alignItemsCenter, { marginTop: spacings.xLarge }]}>
                                                         <TextInput
                                                             style={[styles.input, {
-                                                                width: "65%",
+                                                                width: "100%",
                                                                 height: textInputHeights[index] || (isTablet ? hp(3.5) : hp(5)),
                                                                 textAlignVertical: "top",
-                                                                paddingHorizontal: 20, // Consistent padding
+                                                                paddingHorizontal: 20,
                                                                 paddingBottom: 0,
                                                             }]}
                                                             placeholder="Enter job description"
@@ -1159,7 +1192,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                                             onContentSizeChange={(e) => handleContentSizeChange(index, e)}
 
                                                         />
-                                                        <TextInput
+                                                        {/* <TextInput
                                                             style={[styles.input, { width: jobDescription.length > 1 ? "26%" : "30%", height: isTablet ? hp(3.5) : hp(6) }]}
                                                             placeholder="$0"
                                                             keyboardType="number-pad"
@@ -1167,7 +1200,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                                             placeholderTextColor={mediumGray}
                                                             maxLength={5} // Maximum 5 digits
                                                             onChangeText={(text) => handleInputChange(text, index, "cost")}
-                                                        />
+                                                        /> */}
                                                         {jobDescription.length > 1 && (
                                                             <TouchableOpacity onPress={() => handleDelete(index)}>
                                                                 <Ionicons name="trash-outline" size={18} color="red" />
@@ -1186,8 +1219,8 @@ const WorkOrderScreenTwo = ({ route }) => {
                                             {(jobDescription.some(item => item.jobDescription.trim() !== '' || item.cost.trim() !== '')) && (
                                                 <TouchableOpacity
                                                     onPress={() => {
-                                                        setJobDescription([{ jobDescription: '', cost: '' }]); // Reset to one empty item
-                                                        setTextInputHeights({}); // Reset heights
+                                                        setJobDescription([{ jobDescription: '', cost: '' }]);
+                                                        setTextInputHeights({});
                                                     }}
                                                     style={[flexDirectionRow, alignJustifyCenter, styles.addMore, { backgroundColor: blueColor, borderRadius: 10 }]}
                                                 >
@@ -1199,7 +1232,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                     </View>
 
 
-                                    {technicianType === "ifs" && storedPayRate === "Pay Per Vehicles" && (<Text style={[styles.label, { marginTop: 5 }]}>Vehicle Type </Text>)}
+                                    {/* {technicianType === "ifs" && storedPayRate === "Pay Per Vehicles" && (<Text style={[styles.label, { marginTop: 5 }]}>Vehicle Type </Text>)}
                                     {technicianType === "ifs" && storedPayRate === "Pay Per Vehicles" && (
                                         <DropDownPicker
                                             open={vTypeopen}
@@ -1230,8 +1263,9 @@ const WorkOrderScreenTwo = ({ route }) => {
                                             }}
                                             listMode="SCROLLVIEW"
                                         />
-                                    )}
-                                    {technicianType === "ifs" && vehicleTypeError && storedPayRate === "Pay Per Vehicles" && (<Text style={{ color: 'red' }}>{vehicleTypeError}</Text>)}
+                                    )} */}
+
+                                    {/* {technicianType === "ifs" && vehicleTypeError && storedPayRate === "Pay Per Vehicles" && (<Text style={{ color: 'red' }}>{vehicleTypeError}</Text>)} */}
 
                                     {technicianType === "single-technician" &&
                                         <CustomTextInput
@@ -1243,8 +1277,71 @@ const WorkOrderScreenTwo = ({ route }) => {
                                             onChangeText={(text) => setLabourCost(text)} />
                                     }
 
+                                    <View style={{ paddingTop: spacings.large }}>
+                                        {/* Filter & Date Picker */}
+                                        <View style={styles.datePickerContainer}>
+                                            <View style={{ width: "45%" }}>
+                                                <Text style={styles.label}>Start Date</Text>
+                                            </View>
+                                            <View style={{ width: "45%" }}>
+                                                <Text style={styles.label}>End Date</Text>
+                                            </View>
+                                        </View>
+                                        <View style={[styles.datePickerContainer, { marginBottom: 15, color: blackColor }]}>
+                                            <TouchableOpacity onPress={() => setIsStartPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter]}>
+                                                <Text style={styles.dateText}>
+                                                    {startDate?.toLocaleDateString("en-US", {
+                                                        month: "long",
+                                                        day: "numeric",
+                                                        year: "numeric",
+                                                    })}
+                                                </Text>
+                                                <Feather name="calendar" size={20} color={blackColor} />
+                                            </TouchableOpacity>
+                                            <TouchableOpacity onPress={() => setIsEndPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter]}>
+                                                <Text style={styles.dateText}>
+                                                    {endDate?.toLocaleDateString("en-US", {
+                                                        month: "long",
+                                                        day: "numeric",
+                                                        year: "numeric",
+                                                    })}
+                                                </Text>
+                                                <Feather name="calendar" size={20} color={blackColor} />
+                                            </TouchableOpacity>
+                                        </View>
+
+                                        <DatePicker
+                                            modal
+                                            open={isStartPickerOpen}
+                                            date={startDate}
+                                            mode="datetime"
+                                            maximumDate={new Date()}
+                                            onConfirm={(date) => {
+                                                setStartDate(date);
+                                                setIsStartPickerOpen(false);
+                                            }}
+                                            onCancel={() => setIsStartPickerOpen(false)}
+                                        />
+
+                                        <DatePicker
+                                            modal
+                                            open={isEndPickerOpen}
+                                            date={endDate}
+                                            mode="datetime"
+                                            minimumDate={startDate}
+                                            // maximumDate={new Date()}
+                                            onConfirm={(date) => {
+                                                const newEndDate = date;
+                                                setEndDate(newEndDate);
+                                                setIsEndPickerOpen(false);
+                                            }}
+                                            onCancel={() => setIsEndPickerOpen(false)}
+                                        />
+
+                                    </View>
+
                                     {/* image */}
-                                    <Text style={[styles.label, { marginTop: spacings.large }]}>Attachments</Text>
+                                    <Text style={[styles.label]}>Attachments</Text>
 
                                     {imageUris.length === 0 ? (
                                         <>
@@ -1308,8 +1405,8 @@ const WorkOrderScreenTwo = ({ route }) => {
                                     </View>
 
 
-                                    {technicianType === 'manager' && !route?.params?.vehicleId && <View style={{ marginTop: 20 }}>
-                                        <Text style={styles.label}>Select Technician</Text>
+                                    {technicianType === 'manager' && <View style={{ marginTop: 20 }}>
+                                        <Text style={styles.label}>Selected Technician</Text>
                                         <View style={{
                                             borderWidth: 1,
                                             borderColor: blueColor,
@@ -1324,37 +1421,82 @@ const WorkOrderScreenTwo = ({ route }) => {
                                                 keyExtractor={(item) => item.id.toString()}
                                                 renderItem={({ item }) => {
                                                     const selected = isTechnicianSelected(item.id);
+                                                    const userJob = item.UserJob || item.VehicleTechnician;
+
+                                                    const showFlatRate = userJob.technicianFlatRate !== '';
+                                                    const showRRate = !showFlatRate && userJob.rRate !== '';
+
                                                     return (
-                                                        <TouchableOpacity
-                                                            onPress={() => toggleTechnicianSelection(item)}
+                                                        <View
                                                             style={[
                                                                 styles.techItem,
-                                                                flexDirectionRow,
-                                                                justifyContentSpaceBetween,
-                                                                alignItemsCenter,
                                                                 {
                                                                     backgroundColor: selected ? lightBlueColor : "#fff",
                                                                     paddingVertical: 10,
                                                                     paddingHorizontal: 12,
-                                                                }
+                                                                },
                                                             ]}
                                                         >
-                                                            <Text style={{ fontSize: 16 }}>
-                                                                {capitalize(item.firstName)} {capitalize(item.lastName)}
-                                                            </Text>
-                                                            <Icon
-                                                                name={selected ? "checkbox-marked" : "checkbox-blank-outline"}
-                                                                size={24}
-                                                                color={selected ? blueColor : "#ccc"}
-                                                                type="MaterialCommunityIcons"
-                                                            />
-                                                        </TouchableOpacity>
+                                                            {/* Top row: name and checkbox */}
+                                                            <View style={[flexDirectionRow, justifyContentSpaceBetween, alignItemsCenter]}>
+                                                                <Text style={{ fontSize: 16, flex: 1 }}>
+                                                                    {capitalize(item.firstName)} {capitalize(item.lastName)}
+                                                                    {item.techType?.toLowerCase() !== 'technician' ? ` (${item.techType})` : ''}
+                                                                </Text>
+
+                                                                <TouchableOpacity onPress={() => toggleTechnicianSelection(item)}>
+                                                                    <Icon
+                                                                        name={selected ? "checkbox-marked" : "checkbox-blank-outline"}
+                                                                        size={24}
+                                                                        color={selected ? blueColor : "#ccc"}
+                                                                        type="MaterialCommunityIcons"
+                                                                    />
+                                                                </TouchableOpacity>
+                                                            </View>
+
+                                                            {item.techType?.toLowerCase() === 'technician' && (
+                                                                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10, justifyContent: "space-between" }}>
+                                                                    <Text style={{ fontSize: 14, marginRight: 8 }}>Flat Rate:</Text>
+                                                                    <TextInput
+                                                                        value={(userJob.technicianFlatRate ?? '0').toString()}
+                                                                        keyboardType="numeric"
+                                                                        onChangeText={(text) => updateTechnicianField(item.id, 'technicianFlatRate', text)}
+                                                                        style={{
+                                                                            borderWidth: 1,
+                                                                            borderColor: "#ccc",
+                                                                            borderRadius: 6,
+                                                                            padding: 6,
+                                                                            width: 100,
+                                                                        }}
+                                                                        placeholder="0.00"
+                                                                    />
+                                                                </View>
+                                                            )}
+
+                                                            {item.techType?.toLowerCase() !== 'technician' && (
+                                                                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10, justifyContent: "space-between" }}>
+                                                                    <Text style={{ fontSize: 14, marginRight: 8 }}>R Rate:</Text>
+                                                                    <TextInput
+                                                                        value={(userJob.rRate ?? '0').toString()}
+                                                                        keyboardType="numeric"
+                                                                        onChangeText={(text) => updateTechnicianField(item.id, 'rRate', text)}
+                                                                        style={{
+                                                                            borderWidth: 1,
+                                                                            borderColor: "#ccc",
+                                                                            borderRadius: 6,
+                                                                            padding: 6,
+                                                                            width: 100,
+                                                                        }}
+                                                                        placeholder="0.00"
+                                                                    />
+                                                                </View>
+                                                            )}
+
+                                                        </View>
                                                     );
                                                 }}
-
-                                                onEndReachedThreshold={0.3}
-                                                showsVerticalScrollIndicator={false}
                                             />
+
                                         </View>
                                         {/* {technicianError ? (
                                             <Text style={{ color: 'red', marginTop: 6, fontSize: 12 }}>{technicianError}</Text>
@@ -1725,5 +1867,25 @@ const styles = StyleSheet.create({
         borderBottomColor: blueColor,
         borderBottomWidth: 1,
         backgroundColor: "#fff",
+    },
+    datePickerContainer: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        // marginHorizontal: 10,
+        // marginBottom: 15
+    },
+    datePicker: {
+        width: "47%",
+        padding: spacings.large,
+        justifyContent: "space-between",
+        borderWidth: 1,
+        borderColor: blueColor,
+        borderRadius: 10
+
+    },
+    dateText: {
+        color: blackColor,
+        marginRight: spacings.small2x,
+        fontSize: style.fontSizeNormal.fontSize,
     },
 });

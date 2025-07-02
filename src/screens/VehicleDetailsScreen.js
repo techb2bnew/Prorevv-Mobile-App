@@ -68,7 +68,7 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
             if (token) {
                 headers["Authorization"] = `Bearer ${token}`;
             }
-// console.log(vehicleId);
+            // console.log(vehicleId);
 
             const response = await fetch(`${apiUrl}/fetchSingleVehicleInfo?vehicleId=${vehicleId}`, {
                 method: "GET", // ✅ FIXED
@@ -149,63 +149,88 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
     const formatVehicleData = (vehicleDetails) => {
         if (!vehicleDetails) return [];
 
+        // let jobDescriptions = vehicleDetails.jobDescription;
+
+        // if (typeof jobDescriptions?.[0] === "string") {
+        //     try {
+        //         jobDescriptions = jobDescriptions.map(desc => JSON.parse(desc));
+        //     } catch (error) {
+        //         console.error("Error parsing jobDescription:", error);
+        //         jobDescriptions = [];
+        //     }
+        // }
+        // const validJobDescriptions = jobDescriptions?.filter(
+        //     (desc) => desc?.jobDescription?.trim() && desc?.cost?.trim()
+        // );
+
         let jobDescriptions = vehicleDetails.jobDescription;
 
-        if (typeof jobDescriptions?.[0] === "string") {
+        // Case: If it's array of strings (like ["Work", "Cg"])
+        if (Array.isArray(jobDescriptions) && typeof jobDescriptions[0] === "string") {
+            jobDescriptions = jobDescriptions.map(str => ({
+                jobDescription: str,
+                cost: "" // No cost available
+            }));
+        }
+
+        // Optional: if jobDescriptions is stored as stringified JSON array
+        if (typeof jobDescriptions === "string") {
             try {
-                jobDescriptions = jobDescriptions.map(desc => JSON.parse(desc));
+                jobDescriptions = JSON.parse(jobDescriptions);
             } catch (error) {
-                console.error("Error parsing jobDescription:", error);
+                console.error("Invalid jobDescription string format:", error);
                 jobDescriptions = [];
             }
         }
+
+        // Filter non-empty descriptions (cost may be empty)
         const validJobDescriptions = jobDescriptions?.filter(
-            (desc) => desc?.jobDescription?.trim() && desc?.cost?.trim()
+            (desc) => desc?.jobDescription?.trim()
         );
 
-        const jobDescriptionTotal = (
-            jobDescriptions?.reduce(
-                (sum, desc) => sum + (parseFloat(desc.cost) || 0),
-                0
-            ) || 0
-        ).toFixed(2);
+        // const jobDescriptionTotal = (
+        //     jobDescriptions?.reduce(
+        //         (sum, desc) => sum + (parseFloat(desc.cost) || 0),
+        //         0
+        //     ) || 0
+        // ).toFixed(2);
 
-        let labourCost = 0;
-        let payRate = "N/A";
+        // let labourCost = 0;
+        // let payRate = "N/A";
 
-        if (vehicleDetails) {
-            if (technicianType === "single-technician") {
-                labourCost = parseFloat(vehicleDetails?.labourCost) || 0;
-                payRate = `$${labourCost?.toFixed(2)}`;
-            }
-            else {
-                if (vehicleDetails.simpleFlatRate) {
-                    labourCost = parseFloat(vehicleDetails?.simpleFlatRate) || 0;
-                    payRate = `$${labourCost?.toFixed(2)}`;
-                } else if (vehicleDetails?.amountPercentage) {
-                    const percentage = parseFloat(vehicleDetails?.amountPercentage) || 0;
-                    labourCost = (jobDescriptionTotal * percentage) / 100;
-                    payRate = `${percentage}%`;
-                } else if (vehicleDetails?.technicians?.[0]?.amountPercentage) {
-                    const percentage = parseFloat(vehicleDetails?.technicians?.[0]?.amountPercentage) || 0;
-                    labourCost = (jobDescriptionTotal * percentage) / 100;
-                    payRate = `${percentage}%`;
-                } else if (vehicleDetails?.technicians?.[0]?.simpleFlatRate) {
-                    const percentage = parseFloat(vehicleDetails?.technicians?.[0]?.simpleFlatRate) || 0;
-                    labourCost = (jobDescriptionTotal * percentage) / 100;
-                    payRate = `$${labourCost?.toFixed(2)}`;
-                }
-            }
-        }
+        // if (vehicleDetails) {
+        //     if (technicianType === "single-technician") {
+        //         labourCost = parseFloat(vehicleDetails?.labourCost) || 0;
+        //         payRate = `$${labourCost?.toFixed(2)}`;
+        //     }
+        //     else {
+        //         if (vehicleDetails.simpleFlatRate) {
+        //             labourCost = parseFloat(vehicleDetails?.simpleFlatRate) || 0;
+        //             payRate = `$${labourCost?.toFixed(2)}`;
+        //         } else if (vehicleDetails?.amountPercentage) {
+        //             const percentage = parseFloat(vehicleDetails?.amountPercentage) || 0;
+        //             labourCost = (jobDescriptionTotal * percentage) / 100;
+        //             payRate = `${percentage}%`;
+        //         } else if (vehicleDetails?.technicians?.[0]?.amountPercentage) {
+        //             const percentage = parseFloat(vehicleDetails?.technicians?.[0]?.amountPercentage) || 0;
+        //             labourCost = (jobDescriptionTotal * percentage) / 100;
+        //             payRate = `${percentage}%`;
+        //         } else if (vehicleDetails?.technicians?.[0]?.simpleFlatRate) {
+        //             const percentage = parseFloat(vehicleDetails?.technicians?.[0]?.simpleFlatRate) || 0;
+        //             labourCost = (jobDescriptionTotal * percentage) / 100;
+        //             payRate = `$${labourCost?.toFixed(2)}`;
+        //         }
+        //     }
+        // }
 
-        const totalCost = parseFloat(jobDescriptionTotal);
+        // const totalCost = parseFloat(jobDescriptionTotal);
 
         let partnerTechnician = null;
         if (vehicleDetails?.assignedTechnicians?.length > 1 && technicianId) {
             partnerTechnician = vehicleDetails.assignedTechnicians.find(t => t.id !== technicianId);
         }
 
-        console.log("partnerTechnician", partnerTechnician);
+        // console.log("partnerTechnician", partnerTechnician);
 
         return [
 
@@ -239,13 +264,13 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
                             .join('\n'),
                         isMultiLine: true
                     },
-                    {
-                        label: "Cost",
-                        value: validJobDescriptions
-                            .map((desc) => `• $${(parseFloat(desc?.cost) || 0).toFixed(2)}`)
-                            .join('\n'),
-                        isMultiLine: true
-                    },
+                    // {
+                    //     label: "Cost",
+                    //     value: validJobDescriptions
+                    //         .map((desc) => `• $${(parseFloat(desc?.cost) || 0).toFixed(2)}`)
+                    //         .join('\n'),
+                    //     isMultiLine: true
+                    // },
                     // {
                     //     label: "Sub Total",
                     //     value: `$${jobDescriptionTotal}`,
@@ -349,7 +374,7 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
                                                         <Feather name="phone-outgoing" size={15} color={blueColor} />
                                                         <Text style={[styles.value, { color: blueColor, textDecorationLine: "underline", marginLeft: 5 }]}>{item.value}</Text>
                                                     </TouchableOpacity>
-                                                ) : item.label === "Email"||item.label === "Partner Technician Email" ? (
+                                                ) : item.label === "Email" || item.label === "Partner Technician Email" ? (
                                                     <TouchableOpacity onPress={() => Linking.openURL(`mailto:${item.value}`)} style={[flexDirectionRow, { alignItems: "center" }]}>
                                                         <Text style={[styles.value, { color: blueColor, textDecorationLine: "underline" }]}>{item.value}</Text>
                                                     </TouchableOpacity>

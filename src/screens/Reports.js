@@ -62,47 +62,98 @@ const Reports = ({ navigation }) => {
     };
 
     const handleSort = (order, type) => {
-        let sortedData = activeTab === 'Jobs' ? [...filteredJobs] : [...filteredWorkOrders];
-
-        if (type === "date") {
-            sortedData.sort((a, b) => {
-                return order === "oldest"
-                    ? new Date(a?.createdAt) - new Date(b?.createdAt)
-                    : new Date(b?.createdAt) - new Date(a?.createdAt);
-            });
-        } else if (type === "modified") {
-            sortedData.sort((a, b) => {
-                return order === "oldest"
-                    ? new Date(a?.updatedAt) - new Date(b?.updatedAt)
-                    : new Date(b?.updatedAt) - new Date(a?.updatedAt);
-            });
-        } else if (type === "name") {
-            sortedData.sort((a, b) => {
-                return order === "asc"
-                    ? a?.jobName?.localeCompare(b?.jobName)
-                    : b?.jobName?.localeCompare(a?.jobName);
-            });
-        } else if (type === "status") {
-            sortedData.sort((a, b) => {
-                const statusA = a?.jobStatus || a?.vehicleStatus ? "Complete" : "InProgress";
-                const statusB = b?.jobStatus || b?.vehicleStatus ? "Complete" : "InProgress";
-
-                return order === "asc"
-                    ? statusA.localeCompare(statusB)
-                    : statusB.localeCompare(statusA);
-            });
-        }
+        let sortedData;
 
         if (activeTab === 'Jobs') {
-            setFilteredJobs(sortedData);
+            sortedData = [...filteredJobs];
+        } else if (activeTab === 'WorkOrders') {
+            sortedData = [...filteredWorkOrders];
+        } else if (activeTab === 'Customers') {
+            sortedData = [...filteredCustomer];
+        }
+
+        if (activeTab === 'Customers') {
+            sortedData = [...customerJobs];
+
+            if (type === "name") {
+                sortedData.sort((a, b) => {
+                    const nameA = a?.fullName?.toLowerCase() || '';
+                    const nameB = b?.fullName?.toLowerCase() || '';
+                    return order === "asc" ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+                });
+            }
+
+            else if (type === "date") {
+                sortedData.sort((a, b) => {
+                    const aDate = a.jobs?.[0]?.createdAt ? new Date(a.jobs[0].createdAt) : new Date(0);
+                    const bDate = b.jobs?.[0]?.createdAt ? new Date(b.jobs[0].createdAt) : new Date(0);
+                    return order === "oldest" ? aDate - bDate : bDate - aDate;
+                });
+            }
+
+            else if (type === "modified") {
+                sortedData.sort((a, b) => {
+                    const aUpdated = a.jobs?.length
+                        ? Math.max(...a.jobs.map(j => new Date(j.updatedAt)))
+                        : 0;
+                    const bUpdated = b.jobs?.length
+                        ? Math.max(...b.jobs.map(j => new Date(j.updatedAt)))
+                        : 0;
+                    return order === "oldest" ? aUpdated - bUpdated : bUpdated - aUpdated;
+                });
+            }
+
+            else if (type === "count") {
+                sortedData.sort((a, b) =>
+                    order === "asc"
+                        ? (a.jobs?.length || 0) - (b.jobs?.length || 0)
+                        : (b.jobs?.length || 0) - (a.jobs?.length || 0)
+                );
+            }
+
+            setCustomerJobs(sortedData); // 👈 Apply sorted result
         } else {
-            setFilteredWorkOrders(sortedData);
+            if (type === "date") {
+                sortedData.sort((a, b) => {
+                    return order === "oldest"
+                        ? new Date(a?.createdAt) - new Date(b?.createdAt)
+                        : new Date(b?.createdAt) - new Date(a?.createdAt);
+                });
+            } else if (type === "modified") {
+                sortedData.sort((a, b) => {
+                    return order === "oldest"
+                        ? new Date(a?.updatedAt) - new Date(b?.updatedAt)
+                        : new Date(b?.updatedAt) - new Date(a?.updatedAt);
+                });
+            } else if (type === "name") {
+                sortedData.sort((a, b) => {
+                    return order === "asc"
+                        ? a?.jobName?.localeCompare(b?.jobName)
+                        : b?.jobName?.localeCompare(a?.jobName);
+                });
+            } else if (type === "status") {
+                sortedData.sort((a, b) => {
+                    const statusA = a?.jobStatus || a?.vehicleStatus ? "Complete" : "InProgress";
+                    const statusB = b?.jobStatus || b?.vehicleStatus ? "Complete" : "InProgress";
+
+                    return order === "asc"
+                        ? statusA.localeCompare(statusB)
+                        : statusB.localeCompare(statusA);
+                });
+            }
+
+            if (activeTab === 'Jobs') {
+                setFilteredJobs(sortedData);
+            } else {
+                setFilteredWorkOrders(sortedData);
+            }
         }
 
         setSortOrder(order);
         setSortType(type);
         setModalVisible(false);
     };
+
 
     useEffect(() => {
         const today = new Date();
@@ -131,7 +182,7 @@ const Reports = ({ navigation }) => {
 
 
     useEffect(() => {
-        if (activeTab === "Jobs" && technicianId) {
+        if (activeTab === "Jobs") {
             fetchJobHistory();
         } else if (activeTab === "Customers") {
             setCustomerJobs([]);
@@ -263,9 +314,13 @@ const Reports = ({ navigation }) => {
                 console.error("Token not found!");
                 return;
             }
+            // const apiUrl = technicianType === "manager"
+            //     ? `${API_BASE_URL}/fetchVehicleInfo?page=${pageNumber}&roleType=${technicianType}`
+            //     : `${API_BASE_URL}/fetchtechVehicleInfo?page=${pageNumber}&userId=${technicianId}`;
             const apiUrl = technicianType === "manager"
-                ? `${API_BASE_URL}/fetchVehicleInfo?page=${pageNumber}&roleType=${technicianType}`
-                : `${API_BASE_URL}/fetchtechVehicleInfo?page=${pageNumber}&userId=${technicianId}`;
+                ? `${API_BASE_URL}/fetchVehicalInfo?page=${pageNumber}&roleType=${technicianType}`
+                : `${API_BASE_URL}/fetchVehicalInfo?page=${pageNumber}&roleType=${technicianType}&userId=${technicianId}`;
+
             const response = await axios.get(apiUrl, {
                 headers: {
                     Authorization: `Bearer ${token}`
@@ -273,7 +328,7 @@ const Reports = ({ navigation }) => {
             });
 
             const { response: resData } = response.data;
-            const newVehicles = resData?.vehicles || [];
+            const newVehicles = response?.data?.jobs?.vehicles || [];
             console.log("fetchVehicalInfo::::", newVehicles);
 
             // Update vehicle data
@@ -296,7 +351,6 @@ const Reports = ({ navigation }) => {
         }
     };
 
-
     const fetchCustomerJobHistory = async (newPage = 1, isPagination = false) => {
         if (isPagination) {
             setCustomerLoadingMore(true);
@@ -312,22 +366,22 @@ const Reports = ({ navigation }) => {
                 return;
             }
 
-            let apiUrl = "";
+            //             let apiUrl = "";
+            //             if (technicianType === "manager") {
+            //                 apiUrl = `${API_BASE_URL}/fetchCustomer?roleType=${technicianType}&page=${newPage}&limit=10`;
+            //             } else if (technicianType === "single-technician") {
+            //                 apiUrl = `${API_BASE_URL}/fetchCustomer?userId=${technicianId}&roleType=${technicianType}&page=${newPage}&limit=10`;
+            //             } else {
+            //                 apiUrl = `${API_BASE_URL}/fetchAllJobs?userId=${technicianId}&page=${newPage}&limit=10`;
+            //             }
+            // console.log(apiUrl,technicianId);
 
-            if (technicianType === "manager") {
-                apiUrl = `${API_BASE_URL}/fetchAllJobs?roleType=${technicianType}&page=${newPage}&limit=10`;
-            } else if (technicianType === "single-technician") {
-                apiUrl = `${API_BASE_URL}/fetchAllJobs?userId=${technicianId}&roleType=${technicianType}&page=${newPage}&limit=10`;
-            } else {
-                apiUrl = `${API_BASE_URL}/fetchAllJobs?userId=${technicianId}&page=${newPage}&limit=10`;
-            }
-
-            const response = await axios.get(apiUrl, {
+            const response = await axios.get(`${API_BASE_URL}/fetchCustomer?userId=${technicianId}&roleType=${technicianType}&page=${newPage}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
-            const newJobs = response?.data?.jobs?.jobs || [];
-            console.log("Customer Jobs Fetched:", newJobs);
+            const newJobs = response?.data?.customers?.customers || [];
+            console.log("Customer Jobs Fetched:", response?.data?.customers?.customers);
 
             const updatedJobs = newPage === 1 ? newJobs : [...customerJobs, ...newJobs];
 
@@ -428,29 +482,26 @@ const Reports = ({ navigation }) => {
         }
     };
 
+    // const groupJobsByCustomer = (jobs = []) => {
+    //     const grouped = {};
+    //     jobs.forEach(job => {
+    //         const customerId = job?.assignCustomer;
+    //         if (!customerId) return;
 
-    const groupJobsByCustomer = (jobs = []) => {
-        const grouped = {};
+    //         if (!grouped[customerId]) {
+    //             grouped[customerId] = {
+    //                 customer: job.customer,
+    //                 jobs: [],
+    //             };
+    //         }
 
-        jobs.forEach(job => {
-            const customerId = job?.customer?.id;
-            if (!customerId) return;
+    //         grouped[customerId].jobs.push(job);
+    //     });
 
-            if (!grouped[customerId]) {
-                grouped[customerId] = {
-                    customer: job.customer,
-                    jobs: [],
-                };
-            }
+    //     return Object.values(grouped);
+    // };
 
-            grouped[customerId].jobs.push(job);
-        });
-
-        return Object.values(grouped);
-    };
-
-    const groupedCustomers = groupJobsByCustomer(filteredCustomer);
-
+    // const groupedCustomers = groupJobsByCustomer(filteredCustomer);
 
     return (
         <View style={[flex, styles.container]}>
@@ -718,12 +769,12 @@ const Reports = ({ navigation }) => {
                                         })}</Text>
                                     </View>
 
-                                    <View style={{ width: '48%', marginBottom: 9 }}>
+                                    {/* <View style={{ width: '48%', marginBottom: 9 }}>
                                         <Text style={{ color: '#555', fontSize: 10 }}>Cost Estimate</Text>
                                         <Text > ${Array.isArray(item?.jobDescription) && item?.jobDescription?.length > 0
                                             ? item?.jobDescription?.reduce((total, job) => total + Number(job?.cost || 0), 0)
                                             : '0'}</Text>
-                                    </View>
+                                    </View> */}
                                     <View style={{ width: '48%', marginBottom: 9 }}>
                                         <Text style={{ color: '#555', fontSize: 10 }}>Status</Text>
 
@@ -771,7 +822,7 @@ const Reports = ({ navigation }) => {
                                 <Text style={[styles.tableHeader, { width: wp(35) }]}>Make</Text>
                                 <Text style={[styles.tableHeader, { width: wp(25) }]}>Model</Text>
                                 <Text style={[styles.tableHeader, { width: wp(35) }]}>Date</Text>
-                                <Text style={[styles.tableHeader, { width: wp(30) }]}>Cost Estimate</Text>
+                                {/* <Text style={[styles.tableHeader, { width: wp(30) }]}>Cost Estimate</Text> */}
                                 <Text style={[styles.tableHeader, { paddingRight: isTablet ? 30 : 0, width: isIOSAndTablet ? wp(8) : wp(20) }]}>Status</Text>
                             </View>
 
@@ -796,9 +847,9 @@ const Reports = ({ navigation }) => {
                                                     day: "numeric",
                                                     year: "numeric"
                                                 })}</Text>
-                                                <Text style={[styles.text, { width: wp(30) }]}> ${Array.isArray(item?.jobDescription) && item?.jobDescription?.length > 0
+                                                {/* <Text style={[styles.text, { width: wp(30) }]}> ${Array.isArray(item?.jobDescription) && item?.jobDescription?.length > 0
                                                     ? item?.jobDescription?.reduce((total, job) => total + Number(job?.cost || 0), 0)
-                                                    : '0'}</Text>
+                                                    : '0'}</Text> */}
                                                 <View style={[getStatusStyle(item?.vehicleStatus), alignJustifyCenter]}>
                                                     <Text
                                                         style={{
@@ -853,7 +904,7 @@ const Reports = ({ navigation }) => {
 
                     <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(63) : hp(47) : isIOSAndTablet ? hp(58) : hp(44.5) }}>
                         <FlatList
-                            data={groupedCustomers}
+                            data={customerJobs}
                             keyExtractor={(item, index) => item?.vin || index.toString()}
                             showsVerticalScrollIndicator={false}
                             refreshing={customerLoading}
@@ -870,20 +921,16 @@ const Reports = ({ navigation }) => {
                                 };
 
                                 return (
-                                    <View style={[styles.listItem, rowStyle]}
-
-                                    >
+                                    <View style={[styles.listItem, rowStyle]}>
                                         <Text style={[styles.text, { width: "49%" }]}>
-                                            {item?.customer?.fullName?.charAt(0).toUpperCase() + item?.customer?.fullName?.slice(1)}
+                                            {item?.fullName?.charAt(0).toUpperCase() + item?.fullName?.slice(1)}
                                         </Text>
                                         <Text style={[styles.text, { width: "35%" }]}>
-                                            {/* {item?.vehicles?.length} */}
-                                            {item.jobs.length} {/* ✅ Number of jobs for that customer */}
+                                            {item?.jobs?.length}
                                         </Text>
                                         <View style={{ flexDirection: "row", alignItems: "center", width: "20%" }} >
                                             <Pressable onPress={() => navigation.navigate("NewJobDetailsScreen", {
-                                                // jobId: item?.id
-                                                customerId: item?.customer?.id,
+                                                customerId: item?.id,
                                                 from: "customer"
                                             })}>
                                                 <Text style={styles.viewText}>View</Text>
@@ -897,13 +944,8 @@ const Reports = ({ navigation }) => {
                                     </View>
                                 );
                             }}
-                            // ListEmptyComponent={() => (
-                            //     <Text style={[styles.text, textAlign, { margin: hp(10), fontWeight: "500", color: grayColor }]}>
-                            //         No data found.
-                            //     </Text>
-                            // )}
                             ListEmptyComponent={() => {
-                                if (customerLoadingMore) return null; // 👈 Loading ke time kuch mat dikhao
+                                if (customerLoading) return null; // 👈 Loading ke time kuch mat dikhao
                                 return (
                                     <Text style={[styles.text, textAlign, { margin: hp(10), fontWeight: "500", color: grayColor }]}>
                                         No data found.
@@ -957,8 +999,68 @@ const Reports = ({ navigation }) => {
                                         </TouchableOpacity>
                                     </>
                                 )}
+
+                                {activeTab === "Customers" && (
+                                    <>
+                                        <TouchableOpacity
+                                            onPress={() =>
+                                                handleSort(sortType === "name" && sortOrder === "asc" ? "desc" : "asc", "name")
+                                            }
+                                            style={styles.sortOption}
+                                        >
+                                            <Text style={[styles.sortText, { color: sortType === "name" ? blackColor : 'gray' }]}>
+                                                Customer Name
+                                            </Text>
+                                            <Text style={[styles.sortText, { color: sortType === "name" ? blackColor : 'gray' }]}>
+                                                {sortOrder === "asc" ? "A to Z" : "Z to A"}
+                                            </Text>
+                                        </TouchableOpacity>
+
+                                        <TouchableOpacity
+                                            onPress={() =>
+                                                handleSort(sortType === "date" && sortOrder === "newest" ? "oldest" : "newest", "date")
+                                            }
+                                            style={styles.sortOption}
+                                        >
+                                            <Text style={[styles.sortText, { color: sortType === "date" ? blackColor : 'gray' }]}>
+                                                Created Date
+                                            </Text>
+                                            <Text style={[styles.sortText, { color: sortType === "date" ? blackColor : 'gray' }]}>
+                                                {sortOrder === "newest" ? "New to Old" : "Old to New"}
+                                            </Text>
+                                        </TouchableOpacity>
+
+                                        <TouchableOpacity
+                                            onPress={() =>
+                                                handleSort(sortType === "modified" && sortOrder === "latest" ? "oldest" : "latest", "modified")
+                                            }
+                                            style={styles.sortOption}
+                                        >
+                                            <Text style={[styles.sortText, { color: sortType === "modified" ? blackColor : 'gray' }]}>
+                                                Last Modified
+                                            </Text>
+                                            <Text style={[styles.sortText, { color: sortType === "modified" ? blackColor : 'gray' }]}>
+                                                {sortOrder === "latest" ? "Latest to Oldest" : "Oldest to Latest"}
+                                            </Text>
+                                        </TouchableOpacity>
+
+                                        <TouchableOpacity
+                                            onPress={() =>
+                                                handleSort(sortType === "count" && sortOrder === "asc" ? "desc" : "asc", "count")
+                                            }
+                                            style={styles.sortOption}
+                                        >
+                                            <Text style={[styles.sortText, { color: sortType === "count" ? blackColor : 'gray' }]}>
+                                                Number of Jobs
+                                            </Text>
+                                            <Text style={[styles.sortText, { color: sortType === "count" ? blackColor : 'gray' }]}>
+                                                {sortOrder === "asc" ? "Lowest to Highest" : "Highest to Lowest"}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    </>
+                                )}
                                 {/* Common Sort: Date Created */}
-                                <TouchableOpacity
+                                {activeTab != "Customers" && <TouchableOpacity
                                     onPress={() => handleSort(
                                         sortType === "date" && sortOrder === "newest" ? "oldest" : "newest",
                                         "date"
@@ -971,10 +1073,10 @@ const Reports = ({ navigation }) => {
                                     <Text style={[styles.sortText, { color: sortType === "date" ? blackColor : 'gray' }]}>
                                         {sortType === "date" ? (sortOrder === "newest" ? "New to Old" : "Old to New") : "New to Old"}
                                     </Text>
-                                </TouchableOpacity>
+                                </TouchableOpacity>}
 
                                 {/* Common Sort: Last Modified */}
-                                <TouchableOpacity
+                                {activeTab != "Customers" && <TouchableOpacity
                                     onPress={() => handleSort(
                                         sortType === "modified" && sortOrder === "latest" ? "oldest" : "latest",
                                         "modified"
@@ -987,7 +1089,7 @@ const Reports = ({ navigation }) => {
                                     <Text style={[styles.sortText, { color: sortType === "modified" ? blackColor : 'gray' }]}>
                                         {sortType === "modified" ? (sortOrder === "latest" ? "Latest to Oldest" : "Oldest to Latest") : "Latest to Oldest"}
                                     </Text>
-                                </TouchableOpacity>
+                                </TouchableOpacity>}
                             </View>
                         </View>
                     </TouchableWithoutFeedback>

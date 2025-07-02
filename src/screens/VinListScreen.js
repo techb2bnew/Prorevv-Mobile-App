@@ -41,6 +41,7 @@ const VinListScreen = ({ navigation, route }) => {
     const [endDate, setEndDate] = useState(new Date());
     const [isStartPickerOpen, setIsStartPickerOpen] = useState(false);
     const [isEndPickerOpen, setIsEndPickerOpen] = useState(false);
+    const [selectedJobName, setSelectedJobName] = useState("");
 
     const sortedData = React.useMemo(() => {
         let data = [...vehicleData];
@@ -58,7 +59,25 @@ const VinListScreen = ({ navigation, route }) => {
         return data;
     }, [vehicleData, sortType, sortOrder]);
 
+  useFocusEffect(
+        React.useCallback(() => {
+            const loadSelectedJob = async () => {
+                const savedJob = await AsyncStorage.getItem("current_Job");
+                console.log("savedJob", savedJob);
 
+                if (savedJob) {
+                    const parsed = JSON.parse(savedJob);
+                    setSelectedJobName(parsed.jobName);
+                   
+                }
+            };
+
+            loadSelectedJob();
+
+            // cleanup if needed
+            return () => { };
+        }, [])
+    );
 
     const filteredData = sortedData.filter(item => {
         // Search filter
@@ -102,9 +121,11 @@ const VinListScreen = ({ navigation, route }) => {
             setSearchVin(vinNumber);
             setShowVinModal(false);
         } else {
-            setShowVinModal(true);
+            setTimeout(() => {
+                setShowVinModal(true);
+            }, 500);
         }
-    }, [route?.params?.vinNumber]);
+    }, [route?.params?.vinNumber && vehicleData]);
 
 
     useFocusEffect(
@@ -147,8 +168,8 @@ const VinListScreen = ({ navigation, route }) => {
                 return;
             }
             const apiUrl = technicianType === "manager"
-                ? `${API_BASE_URL}/fetchVehicleInfo?page=${pageNumber}&roleType=${technicianType}`
-                : `${API_BASE_URL}/fetchVehicleInfo?page=${pageNumber}&roleType=${technicianType}&userId=${technicianId}`;
+                ? `${API_BASE_URL}/fetchVehicalInfo?page=${pageNumber}&roleType=${technicianType}`
+                : `${API_BASE_URL}/fetchVehicalInfo?page=${pageNumber}&roleType=${technicianType}&userId=${technicianId}`;
 
             const response = await axios.get(apiUrl, {
                 headers: {
@@ -157,7 +178,7 @@ const VinListScreen = ({ navigation, route }) => {
             });
 
             const { response: resData } = response.data;
-            const newVehicles = resData?.vehicles || [];
+            const newVehicles = response?.data?.jobs?.vehicles || [];
             console.log("resss", newVehicles);
 
             // Update vehicle data
@@ -432,7 +453,7 @@ const VinListScreen = ({ navigation, route }) => {
                         {activeTab === 'partnerOrder' && (
                             <Text style={[styles.tableHeaderText, { width: wp(25) }]}>Partner</Text>
                         )}
-                        <Text style={[styles.tableHeaderText, { width: wp(45) }]}>Cost Estimate</Text>
+                        {/* <Text style={[styles.tableHeaderText, { width: wp(45) }]}>Cost Estimate</Text> */}
                         <Text style={[styles.tableHeaderText, { width: wp(45), }]}>Action</Text>
 
                     </View>
@@ -481,11 +502,11 @@ const VinListScreen = ({ navigation, route }) => {
                                             </Text>
                                         )}
 
-                                        <Text style={[styles.tableText, { width: wp(45) }]}>
+                                        {/* <Text style={[styles.tableText, { width: wp(45) }]}>
                                             ${Array.isArray(item?.jobDescription) && item?.jobDescription?.length > 0
                                                 ? item?.jobDescription?.reduce((total, job) => total + Number(job?.cost || 0), 0)
                                                 : '0'}
-                                        </Text>
+                                        </Text> */}
 
                                         <View style={{ flexDirection: "row", alignItems: "center", width: wp(45) }} >
                                             <Pressable onPress={() => navigation.navigate("VehicleDetailsScreen", {
@@ -715,7 +736,7 @@ const VinListScreen = ({ navigation, route }) => {
                             This vehicle is not found in the assigned work orders.
                         </Text>
                         <Text style={styles.vinModalTitle}>
-                            Do you still want to add this in the Ron’s Audi?
+                            Do you still want to add this in the {selectedJobName}?
                         </Text>
                         <Text style={styles.vinModalNote}>NOTE : Admin will be notified !</Text>
 
