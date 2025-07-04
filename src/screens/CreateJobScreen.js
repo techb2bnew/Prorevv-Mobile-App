@@ -1101,7 +1101,7 @@ const CreateJobScreen = ({ route }) => {
                             }
 
                             <CustomTextInput
-                                label="Estimated Cost"
+                                label="Job Estimated Cost"
                                 placeholder="Enter Estimated Cost"
                                 value={estimatedCost}
                                 onChangeText={(text) => setEstimatedCost(text)}

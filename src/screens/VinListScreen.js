@@ -103,17 +103,36 @@ const VinListScreen = ({ navigation, route }) => {
         return true;
     });
 
-    useEffect(() => {
-        const today = new Date();
-        const lastMonth = new Date();
-        lastMonth.setMonth(today.getMonth() - 1); // 👈 1 month before today
-        setStartDate(lastMonth);
-    }, []);
+    // useEffect(() => {
+    //     const today = new Date();
+    //     const lastMonth = new Date();
+    //     lastMonth.setMonth(today.getMonth() - 1); // 👈 1 month before today
+    //     setStartDate(lastMonth);
+    // }, []);
+    useFocusEffect(
+        useCallback(() => {
+            const today = new Date();
+
+            if (endDate > today) {
+                console.log("Resetting endDate to today");
+                setEndDate(today);
+            }
+
+            const lastMonth = new Date();
+            lastMonth.setMonth(today.getMonth() - 1);
+            console.log("Resetting startDate to last month");
+            setStartDate(lastMonth);
+
+        }, []) // <-- keep this empty so it only runs on focus
+    );
 
     useEffect(() => {
-        if (!vehicleData || vehicleData.length === 0) return;
         const vinNumber = route?.params?.vinNumber;
-        if (!vinNumber) return;
+
+        // 🔒 Only run logic if BOTH are available
+        if (!vinNumber || !vehicleData || vehicleData.length === 0) return;
+
+        console.log("vin::::", vinNumber, vehicleData);
 
         const match = vehicleData.find(item => item?.vin?.toLowerCase() === vinNumber.toLowerCase());
 
@@ -125,8 +144,7 @@ const VinListScreen = ({ navigation, route }) => {
                 setShowVinModal(true);
             }, 500);
         }
-    }, [route?.params?.vinNumber && vehicleData]);
-
+    }, [vehicleData, route?.params?.vinNumber]);
 
     useFocusEffect(
         useCallback(() => {
@@ -167,9 +185,13 @@ const VinListScreen = ({ navigation, route }) => {
                 console.error("Token not found!");
                 return;
             }
+            console.log(technicianId);
+
             const apiUrl = technicianType === "manager"
                 ? `${API_BASE_URL}/fetchVehicalInfo?page=${pageNumber}&roleType=${technicianType}`
-                : `${API_BASE_URL}/fetchVehicalInfo?page=${pageNumber}&roleType=${technicianType}&userId=${technicianId}`;
+                : technicianType === "ifs"
+                    ? `${API_BASE_URL}/fetchtechVehicleInfo?page=${pageNumber}&userId=${technicianId}`
+                    : `${API_BASE_URL}/fetchVehicalInfo?page=${pageNumber}&roleType=${technicianType}&userId=${technicianId}`;
 
             const response = await axios.get(apiUrl, {
                 headers: {
@@ -178,7 +200,9 @@ const VinListScreen = ({ navigation, route }) => {
             });
 
             const { response: resData } = response.data;
-            const newVehicles = response?.data?.jobs?.vehicles || [];
+            console.log("response.data", response.data?.response);
+
+            const newVehicles = response?.data?.jobs?.vehicles || response.data?.response?.vehicles || [];
             console.log("resss", newVehicles);
 
             // Update vehicle data
@@ -218,7 +242,7 @@ const VinListScreen = ({ navigation, route }) => {
                 ? new Date(end).toISOString().split("T")[0].split("-").reverse().join("-")
                 : "";
 
-            console.log("Start:", formattedStartDate, "End:", formattedEndDate);
+            console.log("Start:", formattedStartDate, "End:", formattedEndDate, technicianId);
             let bodyData;
 
             if (technicianType === 'manager') {
@@ -419,11 +443,13 @@ const VinListScreen = ({ navigation, route }) => {
             </View>
             {/* Tabs */}
             <View style={[styles.tabContainer, flexDirectionRow]}>
-                <TouchableOpacity style={[styles.tab, activeTab === 'workOrder' && styles.activeTab]} onPress={() => setActiveTab('workOrder')}>
-                    <Text style={[styles.tabText, { color: activeTab === 'workOrder' ? whiteColor : blackColor }]}>Work Order</Text>
+                <TouchableOpacity style={[styles.tab, activeTab === 'workOrder' && styles.activeTab,alignJustifyCenter]} onPress={() => setActiveTab('workOrder')}>
+                    <Text style={[styles.tabText, { color: activeTab === 'workOrder' ? whiteColor : blackColor,textAlign:"center" }]}>Work Order</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={[styles.tab, activeTab === 'partnerOrder' && styles.activeTab]} onPress={() => setActiveTab('partnerOrder')}>
-                    <Text style={[styles.tabText, { color: activeTab === 'partnerOrder' ? whiteColor : blackColor }]}>W.O With Partner</Text>
+                <TouchableOpacity style={[styles.tab, activeTab === 'partnerOrder' && styles.activeTab,alignJustifyCenter]} 
+                // onPress={() => setActiveTab('partnerOrder')}
+                >
+                    <Text style={[styles.tabText, { color: activeTab === 'partnerOrder' ? whiteColor : blackColor,fontSize:11,textAlign:"center" }]}>W.O With Partner(coming soon)</Text>
                 </TouchableOpacity>
             </View>
 
@@ -650,13 +676,13 @@ const VinListScreen = ({ navigation, route }) => {
                                         .join(', ') || '—'}
                                     </Text>
                                 </View>)}
-                                <View style={{ width: '48%', marginBottom: 10 }}>
+                                {/* <View style={{ width: '48%', marginBottom: 10 }}>
                                     <Text style={{ color: '#555', fontSize: 11 }}>Cost Estimate</Text>
                                     <Text >${Array.isArray(item?.jobDescription) && item?.jobDescription?.length > 0
                                         ? item?.jobDescription?.reduce((total, job) => total + Number(job?.cost || 0), 0)
                                         : '0'}
                                     </Text>
-                                </View>
+                                </View> */}
                             </View>
 
                         </Pressable>
@@ -768,7 +794,12 @@ const VinListScreen = ({ navigation, route }) => {
             {showVinModal && <Modal visible={showVinModal} transparent animationType="fade">
                 <View style={styles.vinModalOverlay}>
                     <View style={styles.vinModalContainer}>
-                        <TouchableOpacity style={styles.vinModalClose} onPress={() => setShowVinModal(false)}>
+                        <TouchableOpacity style={styles.vinModalClose} onPress={() => {
+                            setShowVinModal(false);
+                            setTimeout(() => {
+                                navigation.setParams({ vinNumber: undefined });
+                            }, 300);
+                        }}>
                             <Ionicons name="close-circle-sharp" size={40} color={blackColor} />
                         </TouchableOpacity>
 
@@ -781,7 +812,12 @@ const VinListScreen = ({ navigation, route }) => {
                         <Text style={styles.vinModalNote}>NOTE : Admin will be notified !</Text>
 
                         <View style={styles.vinModalButtons}>
-                            <TouchableOpacity onPress={() => setShowVinModal(false)} style={styles.vinButtonNo}>
+                            <TouchableOpacity onPress={() => {
+                                setShowVinModal(false);
+                                setTimeout(() => {
+                                    navigation.setParams({ vinNumber: undefined });
+                                }, 300);
+                            }} style={styles.vinButtonNo}>
                                 <Text style={{ color: "#252837" }}>No</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
@@ -791,6 +827,9 @@ const VinListScreen = ({ navigation, route }) => {
                                         vinNumber: route?.params?.vinNumber
                                     })
                                     setShowVinModal(false);
+                                    setTimeout(() => {
+                                        navigation.setParams({ vinNumber: undefined }); // ✅ Clear after navigating
+                                    }, 500)
                                 }}
                                 style={styles.vinButtonYes}
                             >

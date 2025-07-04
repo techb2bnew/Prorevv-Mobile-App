@@ -124,7 +124,7 @@ const WorkOrderScreen = ({ navigation, route }) => {
         ? `${API_BASE_URL}/fetchAllTechnicianCustomer?roleType=${technicianType}&page=${page}`
         : `${API_BASE_URL}/fetchAllTechnicianCustomer?userId=${technicianId}&page=${page}`;
 
-      console.log("technicianId", technicianId);
+      console.log("technicianId", technicianId,token);
 
       const response = await fetch(apiUrl, {
         method: 'GET',

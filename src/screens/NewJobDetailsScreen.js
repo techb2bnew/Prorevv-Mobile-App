@@ -292,11 +292,27 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
                       { color: jobDetails?.jobStatus ? 'green' : 'red' }
                     ]}
                   >
-                    {jobDetails?.jobStatus ? "Complete" : "In Progress"}
+                    {/* {jobDetails?.jobStatus ? "Complete" : "In Progress"} */}
+                    {(() => {
+                      const allVehiclesComplete = jobDetails?.vehicles?.every(v => v?.vehicleStatus === true);
+                      const isJobComplete = jobDetails?.jobStatus || allVehiclesComplete;
+
+                      return (
+                        <Text
+                          style={[
+                            styles.value,
+                            { fontWeight: '600' },
+                            { color: isJobComplete ? 'green' : 'red' }
+                          ]}
+                        >
+                          {isJobComplete ? "Complete" : "In Progress"}
+                        </Text>
+                      );
+                    })()}
                   </Text>
                 </View>
                 {technicianType != 'ifs' && <View style={styles.rightCol}>
-                  <Text style={styles.label}>EstimatedCost</Text>
+                  <Text style={styles.label}>Job Estimated Cost</Text>
                   <Text style={styles.value}>${jobDetails?.estimatedCost}</Text>
                 </View>}
 
@@ -347,11 +363,11 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
 
                     return [
                       <View style={[styles.rowItem]}>
-                        <View key={`tech-name-${index}`} style={{ marginBottom: 4 }}>
+                        <View key={`tech-name-${index}`} style={[{ marginBottom: 4 }, styles.leftCol]}>
                           <Text style={styles.label}>{`Technician ${index + 1}`}</Text>
                           <Text style={styles.value}>{`${name}${techType}`}</Text>
                         </View>,
-                        <View key={`tech-pay-${index}`} style={{ marginBottom: 10 }}>
+                        <View key={`tech-pay-${index}`} style={[{ marginBottom: 10 }, styles.rightCol]}>
                           <Text style={styles.label}>{`Technician ${index + 1} (Pay Info)`}</Text>
                           <Text style={styles.value}>{payInfo}</Text>
                         </View>
@@ -577,11 +593,11 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
 
                     return [
                       <View style={[styles.rowItem]}>
-                        <View key={`tech-name-${index}`} style={{ marginBottom: 4 }}>
+                        <View key={`tech-name-${index}`} style={[{ marginBottom: 4 }, styles.leftCol]}>
                           <Text style={styles.label}>{`Technician ${index + 1}`}</Text>
                           <Text style={styles.value}>{`${name}${techType}`}</Text>
                         </View>,
-                        <View key={`tech-pay-${index}`} style={{ marginBottom: 10 }}>
+                        <View key={`tech-pay-${index}`} style={[{ marginBottom: 10 }, styles.rightCol]}>
                           <Text style={styles.label}>{`Technician ${index + 1} (Pay Info)`}</Text>
                           <Text style={styles.value}>{payInfo}</Text>
                         </View>

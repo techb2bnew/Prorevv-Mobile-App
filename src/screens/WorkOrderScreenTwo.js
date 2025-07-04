@@ -331,6 +331,8 @@ const WorkOrderScreenTwo = ({ route }) => {
         }
         const savedJob = await AsyncStorage.getItem("current_Job");
         const parsed = JSON.parse(savedJob);
+        console.log("savedjob", parsed);
+
         try {
             if (!skipDuplicateCheck) {
                 const formData = new URLSearchParams();
@@ -403,7 +405,7 @@ const WorkOrderScreenTwo = ({ route }) => {
 
                 return;
             }
-            console.error("error", error);
+            console.error("error::::::", error);
             setIsVinApiError(true);
             setCarDetails([])
             setModalData({
@@ -903,6 +905,7 @@ const WorkOrderScreenTwo = ({ route }) => {
         <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
             style={{ flex: 1 }}
+
         >
             {/* Header */}
             <Header
@@ -917,7 +920,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                 }}
             />
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                <ScrollView contentContainerStyle={{ flexGrow: 1, backgroundColor: whiteColor }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+                <ScrollView contentContainerStyle={{ flexGrow: 1, backgroundColor: whiteColor, paddingBottom: Platform.OS === "ios" ? hp(15) : 0 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
                     {step === 1 ?
                         (
                             <Text style={[styles.label, { fontSize: style.fontSizeLarge.fontSize, marginTop: 10, marginLeft: 10 }]}>Scan Vehicle <Text style={{ color: 'red' }}>*</Text></Text>
@@ -1406,104 +1409,107 @@ const WorkOrderScreenTwo = ({ route }) => {
                                     </View>
 
 
-                                    {technicianType === 'manager' && technicians?.length > 0&& 
-                                    <View style={{ marginTop: 20 }}>
-                                        <Text style={styles.label}>Selected Technician</Text>
-                                        <View style={{
-                                            borderWidth: 1,
-                                            borderColor: blueColor,
-                                            borderRadius: 8,
-                                            // height: hp(20), // Fixed height is good
-                                            overflow: "hidden",
-                                            marginBottom: 16,
-                                        }}>
-                                            <FlatList
-                                                nestedScrollEnabled={true}
-                                                data={technicians}
-                                                keyExtractor={(item) => item.id.toString()}
-                                                renderItem={({ item }) => {
-                                                    const selected = isTechnicianSelected(item.id);
-                                                    const userJob = item.UserJob || item.VehicleTechnician;
+                                    {technicianType === 'manager' && technicians?.length > 0 &&
+                                        <View style={{ marginTop: 20 }}>
+                                            <Text style={styles.label}>Selected Technician</Text>
+                                            <View style={{
+                                                borderWidth: 1,
+                                                borderColor: blueColor,
+                                                borderRadius: 8,
+                                                // height: hp(20), // Fixed height is good
+                                                overflow: "hidden",
+                                                marginBottom: 8,
+                                            }}>
+                                                <FlatList
+                                                    nestedScrollEnabled={true}
+                                                    data={technicians}
+                                                    keyExtractor={(item) => item.id.toString()}
+                                                    renderItem={({ item }) => {
+                                                        const selected = isTechnicianSelected(item.id);
+                                                        const userJob = item.UserJob || item.VehicleTechnician;
 
-                                                    const showFlatRate = userJob.techFlatRate !== '';
-                                                    const showRRate = !showFlatRate && userJob.rRate !== '';
+                                                        const showFlatRate = userJob.techFlatRate !== '';
+                                                        const showRRate = !showFlatRate && userJob.rRate !== '';
 
-                                                    return (
-                                                        <View
-                                                            style={[
-                                                                styles.techItem,
-                                                                {
-                                                                    backgroundColor: selected ? lightBlueColor : "#fff",
-                                                                    paddingVertical: 10,
-                                                                    paddingHorizontal: 12,
-                                                                },
-                                                            ]}
-                                                        >
-                                                            {/* Top row: name and checkbox */}
-                                                            <View style={[flexDirectionRow, justifyContentSpaceBetween, alignItemsCenter]}>
-                                                                <Text style={{ fontSize: 16, flex: 1 }}>
-                                                                    {capitalize(item.firstName)} {capitalize(item.lastName)}
-                                                                    {item.techType?.toLowerCase() !== 'technician' ? ` (${item.techType})` : ''}
-                                                                </Text>
+                                                        return (
+                                                            <View
+                                                                style={[
+                                                                    styles.techItem,
+                                                                    {
+                                                                        backgroundColor: selected ? lightBlueColor : "#fff",
+                                                                        paddingVertical: 10,
+                                                                        paddingHorizontal: 12,
+                                                                    },
+                                                                ]}
+                                                            >
+                                                                {/* Top row: name and checkbox */}
+                                                                <View style={[flexDirectionRow, justifyContentSpaceBetween, alignItemsCenter]}>
+                                                                    <Text style={{ fontSize: 16, flex: 1 }}>
+                                                                        {capitalize(item.firstName)} {capitalize(item.lastName)}
+                                                                        {item.techType?.toLowerCase() !== 'technician' ? ` (${item.techType})` : ''}
+                                                                    </Text>
 
-                                                                <TouchableOpacity onPress={() => toggleTechnicianSelection(item)}>
-                                                                    <Icon
-                                                                        name={selected ? "checkbox-marked" : "checkbox-blank-outline"}
-                                                                        size={24}
-                                                                        color={selected ? blueColor : "#ccc"}
-                                                                        type="MaterialCommunityIcons"
-                                                                    />
-                                                                </TouchableOpacity>
+                                                                    <TouchableOpacity onPress={() => toggleTechnicianSelection(item)}>
+                                                                        <Icon
+                                                                            name={selected ? "checkbox-marked" : "checkbox-blank-outline"}
+                                                                            size={24}
+                                                                            color={selected ? blueColor : "#ccc"}
+                                                                            type="MaterialCommunityIcons"
+                                                                        />
+                                                                    </TouchableOpacity>
+                                                                </View>
+
+                                                                {item.techType?.toLowerCase() === 'technician' && (
+                                                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10, justifyContent: "space-between" }}>
+                                                                        <Text style={{ fontSize: 14, marginRight: 8 }}>Flat Rate:</Text>
+                                                                        <TextInput
+                                                                            value={(userJob.techFlatRate ?? '0').toString()}
+                                                                            keyboardType="numeric"
+                                                                            onChangeText={(text) => updateTechnicianField(item.id, 'techFlatRate', text)}
+                                                                            style={{
+                                                                                borderWidth: 1,
+                                                                                borderColor: "#ccc",
+                                                                                borderRadius: 6,
+                                                                                padding: 6,
+                                                                                width: 100,
+                                                                            }}
+                                                                            placeholder="0.00"
+                                                                        />
+                                                                    </View>
+                                                                )}
+
+                                                                {item.techType?.toLowerCase() !== 'technician' && (
+                                                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10, justifyContent: "space-between" }}>
+                                                                        <Text style={{ fontSize: 14, marginRight: 8 }}>R Rate:</Text>
+                                                                        <TextInput
+                                                                            value={(userJob.rRate ?? '0').toString()}
+                                                                            keyboardType="numeric"
+                                                                            onChangeText={(text) => updateTechnicianField(item.id, 'rRate', text)}
+                                                                            style={{
+                                                                                borderWidth: 1,
+                                                                                borderColor: "#ccc",
+                                                                                borderRadius: 6,
+                                                                                padding: 6,
+                                                                                width: 100,
+                                                                            }}
+                                                                            placeholder="0.00"
+                                                                        />
+                                                                    </View>
+                                                                )}
+
                                                             </View>
-
-                                                            {item.techType?.toLowerCase() === 'technician' && (
-                                                                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10, justifyContent: "space-between" }}>
-                                                                    <Text style={{ fontSize: 14, marginRight: 8 }}>Flat Rate:</Text>
-                                                                    <TextInput
-                                                                        value={(userJob.techFlatRate ?? '0').toString()}
-                                                                        keyboardType="numeric"
-                                                                        onChangeText={(text) => updateTechnicianField(item.id, 'techFlatRate', text)}
-                                                                        style={{
-                                                                            borderWidth: 1,
-                                                                            borderColor: "#ccc",
-                                                                            borderRadius: 6,
-                                                                            padding: 6,
-                                                                            width: 100,
-                                                                        }}
-                                                                        placeholder="0.00"
-                                                                    />
-                                                                </View>
-                                                            )}
-
-                                                            {item.techType?.toLowerCase() !== 'technician' && (
-                                                                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10, justifyContent: "space-between" }}>
-                                                                    <Text style={{ fontSize: 14, marginRight: 8 }}>R Rate:</Text>
-                                                                    <TextInput
-                                                                        value={(userJob.rRate ?? '0').toString()}
-                                                                        keyboardType="numeric"
-                                                                        onChangeText={(text) => updateTechnicianField(item.id, 'rRate', text)}
-                                                                        style={{
-                                                                            borderWidth: 1,
-                                                                            borderColor: "#ccc",
-                                                                            borderRadius: 6,
-                                                                            padding: 6,
-                                                                            width: 100,
-                                                                        }}
-                                                                        placeholder="0.00"
-                                                                    />
-                                                                </View>
-                                                            )}
-
-                                                        </View>
-                                                    );
-                                                }}
-                                            />
-
-                                        </View>
-                                        {/* {technicianError ? (
+                                                        );
+                                                    }}
+                                                />
+                                            </View>
+                                            {/* <TouchableOpacity style={[flexDirectionRow, alignJustifyCenter, { backgroundColor: blueColor, borderRadius: 10, width: wp(33),alignSelf:"flex-end" }]} onPress={addNewField}>
+                                                <Ionicons name="add-circle-outline" size={18} color={whiteColor} />
+                                                <Text style={styles.addMoreText}>Add technician</Text>
+                                            </TouchableOpacity> */}
+                                            {/* {technicianError ? (
                                             <Text style={{ color: 'red', marginTop: 6, fontSize: 12 }}>{technicianError}</Text>
                                         ) : null} */}
-                                    </View>}
+                                        </View>}
 
                                     {error && <Text style={{ color: 'red', marginTop: 10 }}>{error}</Text>}
 

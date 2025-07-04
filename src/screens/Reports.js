@@ -367,14 +367,32 @@ const Reports = ({ navigation }) => {
     //     setModalVisible(false);
     // };
 
-
-
-    useEffect(() => {
-        const today = new Date();
-        const lastMonth = new Date();
-        lastMonth.setMonth(today.getMonth() - 1); // 👈 1 month before today
-        setStartDate(lastMonth);
-    }, []);
+    // useEffect(() => {
+    //     const today = new Date();
+    //     const lastMonth = new Date();
+    //     lastMonth.setMonth(today.getMonth() - 1); // 👈 1 month before today
+    //     setStartDate(lastMonth);
+    // }, []);
+      useFocusEffect(
+            useCallback(() => {
+                const today = new Date();
+    
+                console.log("Focus effect ran on screen focus");
+                console.log("endDate:", endDate.toISOString());
+                console.log("today:", today.toISOString());
+    
+                if (endDate > today) {
+                    console.log("Resetting endDate to today");
+                    setEndDate(today);
+                }
+    
+                    const lastMonth = new Date();
+                    lastMonth.setMonth(today.getMonth() - 1);
+                    console.log("Resetting startDate to last month");
+                    setStartDate(lastMonth);
+           
+            }, []) // <-- keep this empty so it only runs on focus
+        );
 
     //fetch tech details
     useEffect(() => {
@@ -932,11 +950,11 @@ const Reports = ({ navigation }) => {
                                             })}>
                                                 <Text style={styles.viewText}>View</Text>
                                             </Pressable>
-                                            <Pressable onPress={() => navigation.navigate("CreateJobScreen", {
+                                            {activeStatus != 'Completed' && technicianType != 'ifs' && <Pressable onPress={() => navigation.navigate("CreateJobScreen", {
                                                 jobId: item?.id
                                             })}>
                                                 <Text style={styles.viewText}>Edit</Text>
-                                            </Pressable>
+                                            </Pressable>}
                                         </View>
                                     </View>
                                 );
@@ -1122,7 +1140,7 @@ const Reports = ({ navigation }) => {
                                                 {/* <Text style={[styles.text, { width: wp(30) }]}> ${Array.isArray(item?.jobDescription) && item?.jobDescription?.length > 0
                                                     ? item?.jobDescription?.reduce((total, job) => total + Number(job?.cost || 0), 0)
                                                     : '0'}</Text> */}
-                                                <View style={[getStatusStyle(item?.vehicleStatus), alignJustifyCenter,{height:hp(4)}]}>
+                                                <View style={[getStatusStyle(item?.vehicleStatus), alignJustifyCenter, { height: hp(4) }]}>
                                                     <Text
                                                         style={{
                                                             color: getStatusText(item?.vehicleStatus) === "Complete" ?
@@ -1134,20 +1152,20 @@ const Reports = ({ navigation }) => {
                                                     </Text>
                                                 </View>
 
-                                                <View style={{ flexDirection: "row", alignItems: "center", marginLeft: wp(10), width: wp(30) }} >
+                                                <View style={{ flexDirection: "row", alignItems: "center", marginLeft: wp(10), width: wp(20), justifyContent: "center" }} >
                                                     <Pressable onPress={() => navigation.navigate("VehicleDetailsScreen", {
                                                         vehicleId: item.id,
                                                         from: activeTab === "partnerOrder" ? "partner" : "workOrder"
                                                     })}>
                                                         <Text style={styles.viewText}>View</Text>
                                                     </Pressable>
-                                                    <Pressable
+                                                    {activeStatus != 'Completed' && <Pressable
                                                         onPress={() => navigation.navigate("WorkOrderScreenTwo", {
                                                             vehicleId: item.id,
                                                             // from: activeTab === "partnerOrder" ? "partner" : "workOrder"
                                                         })}>
                                                         <Text style={styles.viewText}>Edit</Text>
-                                                    </Pressable>
+                                                    </Pressable>}
                                                 </View>
                                             </Pressable>
                                         );

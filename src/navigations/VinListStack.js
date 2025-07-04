@@ -23,7 +23,6 @@ export default function VinListStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="VinListScreen" component={VinListScreen} />
-      <Stack.Screen name="Home" component={HomeScreen} />
       <Stack.Screen name="CustomerInfo" component={CustomerInfoScreen} />
       <Stack.Screen name="AddVehicle" component={AddVehicleScreen} />
       <Stack.Screen name="NewJob" component={NewJobScreen} />
@@ -37,6 +36,7 @@ export default function VinListStack() {
       <Stack.Screen name="NewJobDetailsScreen" component={NewJobDetailsScreen} />
       <Stack.Screen name="ReportsScreen" component={Reports} />
       <Stack.Screen name="CreateJobScreen" component={CreateJobScreen} />
+      <Stack.Screen name="Home" component={HomeScreen} />
 
     </Stack.Navigator>
   );

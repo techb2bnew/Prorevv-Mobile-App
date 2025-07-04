@@ -218,63 +218,7 @@ const CustomerInfoScreen = ({ navigation }) => {
         return Object.keys(newErrors).length === 0;
     };
 
-    // const handleSubmit = async (nextAction, setLocalLoading) => {
-    //     if (!technicianId) {
-    //         setErrors({ apiError: "Technician ID is required." });
-    //         return;
-    //     }
-    //     if (!validateForm()) {
-    //         // Toast.show("Please fix the errors in the form");
-    //         return;
-    //     }
-    //     const customerData = {
-    //         ...formData,
-    //         userId: String(technicianId),
-    //         roleType: String(technicianType)
-    //     };
-    //     const customerEditData = {
-    //         ...formData,
-    //         customerId: customerId,
-    //         userId: String(technicianId),
-    //         roleType: String(technicianType)
-    //     };
-    //     setLocalLoading(true);
 
-    //     let success = false;
-
-    //     if (isConnected) {
-    //         if (isEditMode) {
-    //             success = await syncCustomerEditToAPI(customerEditData);
-    //             setIsAddMode(false)
-    //             setIsEditMode(false)
-    //             setFormData({
-    //                 fullName: "",
-    //                 email: "",
-    //                 phoneNumber: "",
-    //                 address: "",
-
-    //             })
-
-    //         } else {
-    //             success = await syncCustomerToAPI(customerData);
-    //         }
-    //         // success = await syncCustomerToAPI(customerData);
-    //     } else {
-    //         success = await saveCustomerOffline(customerData);
-    //     }
-    //     setLocalLoading(false);
-
-    //     if (success) {
-    //         Toast.show("Successfully created a new customer!");
-    //         if (nextAction === "AddVehicleScreen") {
-    //             navigation.navigate("AddVehicle");
-    //         } else {
-    //             // navigation.goBack();
-    //             setIsAddMode(false)
-    //             setIsEditMode(false)
-    //         }
-    //     }
-    // };
     const handleSubmit = async (nextAction, setLocalLoading) => {
         if (!technicianId) {
             setErrors({ apiError: "Technician ID is required." });
@@ -796,7 +740,7 @@ const CustomerInfoScreen = ({ navigation }) => {
                     </>
                 ) : (
                     // 👇 Add Customer Form
-                    <ScrollView style={[styles.container, flex]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+                    <ScrollView style={[styles.container, flex]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="always">
                         <View style={styles.content}>
                             <CustomTextInput
                                 label="Full Name"
@@ -849,43 +793,47 @@ const CustomerInfoScreen = ({ navigation }) => {
                                 <Text style={styles.label}>
                                     Address
                                 </Text>
-                                <GooglePlacesAutocomplete
-                                    ref={googleRef}
-                                    placeholder="Enter Your Address"
-                                    fetchDetails={true}
-                                    onPress={(data, details = null) => {
-                                        console.log('Selected:', data?.description);
-                                        handleInputChange("address", data?.description)
-                                    }}
-                                    enablePoweredByContainer={false}
-                                    keepResultsAfterBlur={true}
-                                    query={{
-                                        key: GOOGLE_MAP_API_KEY,
-                                        language: 'en',
-                                    }}
-                                    styles={{
-                                        container: {
-                                            flex: 0,
-                                            zIndex: 999,
-                                        },
-                                        listView: {
-                                            zIndex: 999,
-                                            position: 'absolute',
-                                            top: 55,
-                                        },
-                                        textInputContainer: {
-                                            zIndex: 999,
-                                        },
-                                        textInput: {
-                                            height: 44,
-                                            borderWidth: 1,
-                                            borderColor: blueColor,
-                                            borderRadius: 50,
-                                            paddingHorizontal: 16,
-                                            backgroundColor: '#fff',
-                                        },
-                                    }}
-                                />
+                                <View style={{ flex: 1, position: 'relative', zIndex: 999 }}>
+
+                                    <GooglePlacesAutocomplete
+                                        ref={googleRef}
+                                        placeholder="Enter Your Address"
+                                        fetchDetails={true}
+                                        onPress={(data, details = null) => {
+                                            console.log('Selected:', data?.description);
+                                            handleInputChange("address", data?.description)
+                                        }}
+                                        enablePoweredByContainer={false}
+                                        keepResultsAfterBlur={true}
+                                        query={{
+                                            key: GOOGLE_MAP_API_KEY,
+                                            language: 'en',
+                                        }}
+                                        styles={{
+                                            container: {
+                                                flex: 1,
+                                                zIndex: 999,
+                                            },
+                                            listView: {
+                                                zIndex: 999,
+                                                elevation: 5,
+                                                backgroundColor: "#fff",
+                                                marginTop: 5,
+                                            },
+                                            textInputContainer: {
+                                                zIndex: 999,
+                                            },
+                                            textInput: {
+                                                height: 44,
+                                                borderWidth: 1,
+                                                borderColor: blueColor,
+                                                borderRadius: 50,
+                                                paddingHorizontal: 16,
+                                                backgroundColor: '#fff',
+                                            },
+                                        }}
+                                    />
+                                </View>
                             </View>
                             {errors.address && <Text style={styles.error}>{errors.address}</Text>}
 

@@ -28,52 +28,6 @@ const HomeScreen = ({ navigation }) => {
   const isTablet = width >= 668 && height >= 1024;
   const isIOSAndTablet = Platform.OS === "ios" && isTablet;
 
-  // const cardData = [
-  //   {
-  //     name: technicianType != "ifs" ? "Vehicle" : "Jobs",
-  //     image: NEW_WORK_ORDER_IMAGE,
-  //     backgroundColor: orangeColor,
-  //     onPress: () => { navigation.navigate("WorkOrderScreen") },
-  //     backgroundImage: isTablet ? technicianType != "ifs" ? ADD_CASTUMER_TAB_WHITE_BACK_IMAGE : ADD_CASTUMER_TAB_BACK_IMAGE : technicianType != "ifs" ? ADD_CASTUMER_WHITE_BACK_IMAGE : ADD_CASTUMER_BACK_IMAGE
-  //   },
-  //   {
-  //     name: "Scan Vin",
-  //     image: ADD_VEHICLE_IMAGE,
-  //     backgroundColor: ExtraExtralightOrangeColor,
-  //     // onPress: () => { navigation.navigate("ScannerScreen"); },
-  //     onPress: async () => {
-  //       try {
-  //         const currentJob = await AsyncStorage.getItem("current_Job");
-
-  //         if (customers.length === 0) {
-  //           Toast.show("You don't have any assigned job currently.");
-  //         } else if (!currentJob) {
-  //           Toast.show("Please select a job from the jobs page first.");
-  //         } else {
-  //           navigation.navigate("ScannerScreen");
-  //         }
-  //       } catch (error) {
-  //         console.error("Error checking current job:", error);
-  //       }
-  //     },
-  //     backgroundImage: isTablet ? ADD_VEHICLE_TAB_BACK_IMAGE : ADD_VEHICLE_BACK_IMAGE
-  //   },
-  //   {
-  //     name: "Vin List",
-  //     image: VIN_LIST_IMAGE,
-  //     backgroundColor: ExtraExtralightOrangeColor,
-  //     onPress: () => { navigation.navigate("VinListScreen"); },
-  //     backgroundImage: isTablet ? JOB_HISTORY_TAB_BACK_IMAGE : JOB_HISTORY_BACK_IMAGE
-  //   },
-  //   {
-  //     name: "Reports",
-  //     image: JOB_HISTORY_IMAGE,
-  //     backgroundColor: ExtraExtralightOrangeColor,
-  //     onPress: () => { navigation.navigate("ReportsScreen") },
-  //     backgroundImage: isTablet ? HOW_TO_PLAY_TAB_BACK_IMAGE : HOW_TO_PLAY_BACK_IMAGE
-  //   }
-  // ]
-
   const cardData = [
     {
       name: technicianType === "ifs" ? "Jobs" : "Customer",
@@ -381,34 +335,34 @@ const HomeScreen = ({ navigation }) => {
       }]}>
         <Text style={[styles.title, textAlign]}>👋 Hi, {capitalizetext(technicianName)}</Text>
         <Pressable style={[styles.searchTextInput, { height: isTablet ? hp(4) : hp(5.5), }]}
-          // onPress={async () => {
-          //   try {
-          //     const currentJob = await AsyncStorage.getItem("current_Job");
-          //     if (technicianType === "ifs") {
-          //       if (ifscustomers.length === 0) {
-          //         Toast.show("You don't have any IFS customers currently.");
-          //         return;
-          //       }
-          //     } else {
-          //       if (customers.length === 0) {
-          //         Toast.show("You don't have any customers. Please add a customer first.");
-          //         return;
-          //       }
-          //     }
-          //     if (!currentJob) {
-          //       Toast.show("Please select a job from the jobs page first.");
-          //     } else {
-          //       navigation.navigate("ScannerScreen", {
-          //         from: "VinList"
-          //       });
-          //     }
-          //   } catch (error) {
-          //     console.error("Error accessing current job:", error);
-          //   }
-          // }}
-          onPress={() => navigation.navigate("ScannerScreen", {
-            from: "VinList"
-          })}
+          onPress={async () => {
+            if (technicianType === "ifs") {
+              try {
+                const currentJob = await AsyncStorage.getItem("current_Job");
+
+                if (ifscustomers.length === 0) {
+                  Toast.show("You don't have any assigned job currently.");
+                } else if (!currentJob) {
+                  Toast.show("Please select a job from the jobs page first.");
+                } else {
+                  navigation.navigate("ScannerScreen", {
+                    from: "VinList"
+                  });
+                }
+              } catch (error) {
+                console.error("Error checking current job:", error);
+              }
+            } else {
+              navigation.navigate("ScannerScreen", {
+                from: "VinList"
+              });
+            }
+          }}
+
+        // onPress={() => navigation.navigate("ScannerScreen", {
+        //   from: "VinList"
+        // })}
+
         >
           <View style={[styles.input, { flexDirection: "row", alignItems: "center", justifyContent: "space-between" }]}>
             <Text style={{ color: grayColor }}>Search By Scan VIN</Text>
