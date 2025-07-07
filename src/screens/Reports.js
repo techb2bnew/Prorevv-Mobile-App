@@ -373,26 +373,26 @@ const Reports = ({ navigation }) => {
     //     lastMonth.setMonth(today.getMonth() - 1); // 👈 1 month before today
     //     setStartDate(lastMonth);
     // }, []);
-      useFocusEffect(
-            useCallback(() => {
-                const today = new Date();
-    
-                console.log("Focus effect ran on screen focus");
-                console.log("endDate:", endDate.toISOString());
-                console.log("today:", today.toISOString());
-    
-                if (endDate > today) {
-                    console.log("Resetting endDate to today");
-                    setEndDate(today);
-                }
-    
-                    const lastMonth = new Date();
-                    lastMonth.setMonth(today.getMonth() - 1);
-                    console.log("Resetting startDate to last month");
-                    setStartDate(lastMonth);
-           
-            }, []) // <-- keep this empty so it only runs on focus
-        );
+    useFocusEffect(
+        useCallback(() => {
+            const today = new Date();
+
+            console.log("Focus effect ran on screen focus");
+            console.log("endDate:", endDate.toISOString());
+            console.log("today:", today.toISOString());
+
+            if (endDate > today) {
+                console.log("Resetting endDate to today");
+                setEndDate(today);
+            }
+
+            const lastMonth = new Date();
+            lastMonth.setMonth(today.getMonth() - 1);
+            console.log("Resetting startDate to last month");
+            setStartDate(lastMonth);
+
+        }, []) // <-- keep this empty so it only runs on focus
+    );
 
     //fetch tech details
     useEffect(() => {
@@ -420,7 +420,7 @@ const Reports = ({ navigation }) => {
             if (activeTab === "Jobs") {
                 fetchJobHistory();
             } else if (activeTab === "Customers") {
-                setCustomerJobs([]);
+                // setCustomerJobs([]);
                 fetchCustomerJobHistory(1, false);
             } else {
                 fetchVehicalInfo(page);
@@ -922,7 +922,7 @@ const Reports = ({ navigation }) => {
                     </View>
 
                     {/* FlatList for Jobs only */}
-                    <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(63) : hp(47) : isIOSAndTablet ? hp(58) : hp(44.5) }}>
+                    <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(59.5) : hp(47) : isIOSAndTablet ? hp(58) : hp(44.5) }}>
                         <FlatList
                             data={filteredJobs}
                             keyExtractor={(item, index) => item?.jobName || index.toString()}
@@ -971,7 +971,7 @@ const Reports = ({ navigation }) => {
 
             {/* WorkOrders */}
             {activeTab === 'WorkOrders' && viewType === 'grid' ? (
-                <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(62.5) : hp(53) : isIOSAndTablet ? hp(61) : hp(49) }}>
+                <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(62.5) : hp(53) : isIOSAndTablet ? hp(61) : hp(49)}}>
                     <FlatList
                         data={filteredWorkOrders}
                         keyExtractor={(item, index) => index.toString()}
@@ -1086,7 +1086,7 @@ const Reports = ({ navigation }) => {
 
                 </View>
             ) : activeTab === 'WorkOrders' && viewType === 'list' ? (
-                <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(62.5) : hp(53) : isIOSAndTablet ? hp(61) : hp(49) }}>
+                <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(62.5) : hp(53) : isIOSAndTablet ? hp(60) : hp(49)}}>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                         <View>
                             {/* Header Row */}
@@ -1120,7 +1120,7 @@ const Reports = ({ navigation }) => {
                                                 <Text style={[styles.text, { width: wp(55) }]}>{item?.vin || '-'}</Text>
                                                 <Text style={[styles.text, { width: wp(35) }]}>{item?.make || '-'}</Text>
                                                 <Text style={[styles.text, { width: wp(30) }]}>{item?.model || '-'}</Text>
-                                                <Text style={[styles.text, { width: wp(30) }]}>
+                                                <Text style={[styles.text, { width: isTablet ? wp(35) : wp(30) }]}>
                                                     {item?.assignedTechnicians?.length > 0
                                                         ? item?.assignedTechnicians
                                                             .map(tech => `${tech.firstName} ${tech.lastName}`)
@@ -1140,7 +1140,7 @@ const Reports = ({ navigation }) => {
                                                 {/* <Text style={[styles.text, { width: wp(30) }]}> ${Array.isArray(item?.jobDescription) && item?.jobDescription?.length > 0
                                                     ? item?.jobDescription?.reduce((total, job) => total + Number(job?.cost || 0), 0)
                                                     : '0'}</Text> */}
-                                                <View style={[getStatusStyle(item?.vehicleStatus), alignJustifyCenter, { height: hp(4) }]}>
+                                                <View style={[getStatusStyle(item?.vehicleStatus), alignJustifyCenter, { height: 'auto' }]}>
                                                     <Text
                                                         style={{
                                                             color: getStatusText(item?.vehicleStatus) === "Complete" ?
@@ -1152,7 +1152,7 @@ const Reports = ({ navigation }) => {
                                                     </Text>
                                                 </View>
 
-                                                <View style={{ flexDirection: "row", alignItems: "center", marginLeft: wp(10), width: wp(20), justifyContent: "center" }} >
+                                                <View style={{ flexDirection: "row", alignItems: "center", marginLeft: wp(10), width: isTablet ? wp(30) : wp(20), justifyContent: "center" }} >
                                                     <Pressable onPress={() => navigation.navigate("VehicleDetailsScreen", {
                                                         vehicleId: item.id,
                                                         from: activeTab === "partnerOrder" ? "partner" : "workOrder"
@@ -1208,7 +1208,7 @@ const Reports = ({ navigation }) => {
 
                     </View>
 
-                    <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(63) : hp(63) : isIOSAndTablet ? hp(58) : hp(57) }}>
+                    <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(69) : hp(63) : isIOSAndTablet ? hp(67) : hp(57)}}>
                         <FlatList
                             data={customerJobs}
                             keyExtractor={(item, index) => item?.vin || index.toString()}
@@ -1234,7 +1234,7 @@ const Reports = ({ navigation }) => {
                                         <Text style={[styles.text, { width: "35%" }]}>
                                             {item?.jobs?.length}
                                         </Text>
-                                        <View style={{ flexDirection: "row", alignItems: "center", width: "20%" }} >
+                                        <View style={{ flexDirection: "row", alignItems: "center", width: "20%", marginLeft: isTablet ? spacings.xxxLarge : 0 }} >
                                             <Pressable onPress={() => navigation.navigate("NewJobDetailsScreen", {
                                                 customerId: item?.id,
                                                 from: "customer"

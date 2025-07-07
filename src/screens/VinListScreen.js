@@ -496,7 +496,7 @@ const VinListScreen = ({ navigation, route }) => {
 
                     </View>
 
-                    <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(63) : hp(44) : isIOSAndTablet ? hp(67) : hp(42) }}>
+                    <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(63) : hp(44) : isIOSAndTablet ? hp(62) : hp(42) }}>
                         <FlatList
                             data={filteredData}
                             keyExtractor={(item, index) => index.toString()}
@@ -594,7 +594,7 @@ const VinListScreen = ({ navigation, route }) => {
                 </View>
             </ScrollView>}
 
-            {viewType === "grid" && <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(66) : hp(51) : isIOSAndTablet ? hp(67) : hp(48) }}>
+            {viewType === "grid" && <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(66) : hp(51) : isIOSAndTablet ? hp(65) : hp(48)}}>
                 <FlatList
                     data={filteredData}
                     keyExtractor={(item, index) => index.toString()}

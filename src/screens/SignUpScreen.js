@@ -243,8 +243,8 @@ const SignUpScreen = ({ navigation }) => {
         formDataToSend.append('businessName', formData.businessName);
         formDataToSend.append('role', enterpriseValue === "Single-Technician" ? "singletechnician" : "technician");
         formDataToSend.append('types', enterpriseValue === "Single-Technician" ? "single-technician" : "ifs");
-        formDataToSend.append('payRate', "");
-        formDataToSend.append('amountPercentage', "");
+        // formDataToSend.append('payRate', "");
+        // formDataToSend.append('amountPercentage', "");
         formDataToSend.append("createdBy", "app");
 
 
@@ -758,9 +758,9 @@ const SignUpScreen = ({ navigation }) => {
                 {errors.phoneNumber && <Text style={styles.error}>{errors.phoneNumber}</Text>}
                 <View style={styles.phoneContainer}>
                     <Text style={styles.label}>
-                        Address
+                        Address<Text style={styles.asterisk}> *</Text>
                     </Text>
-                    <GooglePlacesAutocomplete
+                    {/* <GooglePlacesAutocomplete
                         ref={googleRef}
                         placeholder="Enter Your Address"
                         fetchDetails={true}
@@ -796,8 +796,56 @@ const SignUpScreen = ({ navigation }) => {
                                 backgroundColor: '#fff',
                             },
                         }}
-                    />
+                    /> */}
+                    <View style={{ flex: 1, position: 'relative', zIndex: 999 }}>
+                        <GooglePlacesAutocomplete
+                            ref={googleRef}
+                            placeholder="Enter Your Address"
+                            fetchDetails={true}
+                            onPress={(data, details = null) => {
+                                console.log('Selected:', data?.description);
+                                handleInputChange("address", data?.description);
+                                // Update text manually
+                                googleRef.current?.setAddressText(data?.description);
+
+                                // Delay the blur slightly to ensure suggestions unmount properly
+                                setTimeout(() => {
+                                    googleRef.current?.blur();
+                                }, 100);
+                            }}
+                            enablePoweredByContainer={false}
+                            // keepResultsAfterBlur={Platform.OS === "android" ? false : true}
+                            query={{
+                                key: GOOGLE_MAP_API_KEY,
+                                language: 'en',
+                            }}
+                            styles={{
+                                container: {
+                                    flex: 1,
+                                    zIndex: 999,
+                                },
+                                listView: {
+                                    zIndex: 999,
+                                    elevation: 5,
+                                    backgroundColor: "#fff",
+                                    marginTop: 5,
+                                },
+                                textInputContainer: {
+                                    zIndex: 999,
+                                },
+                                textInput: {
+                                    height: 44,
+                                    borderWidth: 1,
+                                    borderColor: blueColor,
+                                    borderRadius: 50,
+                                    paddingHorizontal: 16,
+                                    backgroundColor: '#fff',
+                                },
+                            }}
+                        />
+                    </View>
                 </View>
+                {errors.address && <Text style={styles.error}>{errors.address}</Text>}
                 {/* <CustomTextInput
                     label="Address"
                     placeholder="Enter your address"

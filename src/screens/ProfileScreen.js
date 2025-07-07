@@ -196,12 +196,18 @@ const ProfileScreen = ({ navigation }) => {
 
   const getCountryByCallingCode = async (callingCode) => {
     try {
-      const response = await axios.get('https://restcountries.com/v3.1/all');
+      const response = await axios.get('https://restcountries.com/v3.1/all?fields=name,cca2,idd');
+
       const countries = response.data;
 
-      const country = countries.find(c =>
-        c.idd?.root + (c.idd?.suffixes ? c.idd.suffixes[0] : '') === callingCode
-      );
+      const country = countries.find(c => {
+        const root = c.idd?.root;
+        const suffixes = c.idd?.suffixes || [];
+
+        return suffixes.some(suffix => `${root}${suffix}` === callingCode);
+      });
+
+      console.log("✅ Response data length:", country);
 
       if (country) {
         return country.cca2;
@@ -220,6 +226,7 @@ const ProfileScreen = ({ navigation }) => {
       if (phoneNumber?.startsWith('+')) {
         const matchedCode = phoneNumber.match(/^\+(\d{1})/);
         const callingCode = matchedCode ? `+${matchedCode[1]}` : null;
+        console.log("callingCode", callingCode);
 
         if (callingCode) {
           const iso = await getCountryByCallingCode(callingCode);
@@ -262,93 +269,93 @@ const ProfileScreen = ({ navigation }) => {
   //   }
   // }, [countryValue, stateValue]);
 
-  const fetchCities = async () => {
-    setIsLoadingState(true);
-    try {
-      const response = await axios.post(
-        "https://countriesnow.space/api/v0.1/countries/state/cities",
-        {
-          country: countryValue,
-          state: stateValue,
-        }
-      );
+  // const fetchCities = async () => {
+  //   setIsLoadingState(true);
+  //   try {
+  //     const response = await axios.post(
+  //       "https://countriesnow.space/api/v0.1/countries/state/cities",
+  //       {
+  //         country: countryValue,
+  //         state: stateValue,
+  //       }
+  //     );
 
-      if (response.data && response.data.data) {
-        // console.log("Cities of", formData.state, ":", response.data.data);
-        setCities(response.data.data);
-      } else {
-        console.log("No cities found for", stateValue);
-      }
-    } catch (error) {
-      console.error("Error fetching cities:", error);
-    } finally {
-      setIsLoadingState(false);
-    }
-  };
+  //     if (response.data && response.data.data) {
+  //       // console.log("Cities of", formData.state, ":", response.data.data);
+  //       setCities(response.data.data);
+  //     } else {
+  //       console.log("No cities found for", stateValue);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching cities:", error);
+  //   } finally {
+  //     setIsLoadingState(false);
+  //   }
+  // };
 
-  const fetchCountries = async () => {
-    try {
-      console.log("Fetching countries...");
-      const response = await fetch("https://restcountries.com/v3.1/all?fields=name");
-      const data = await response.json();
+  // const fetchCountries = async () => {
+  //   try {
+  //     console.log("Fetching countries...");
+  //     const response = await fetch("https://restcountries.com/v3.1/all?fields=name");
+  //     const data = await response.json();
 
-      console.log("Fetched Countries:", data);
+  //     console.log("Fetched Countries:", data);
 
-      if (Array.isArray(data)) {
-        const countryNames = data.map((item) => item.name.common);
-        const sortedCountries = countryNames.sort((a, b) => a.localeCompare(b));
+  //     if (Array.isArray(data)) {
+  //       const countryNames = data.map((item) => item.name.common);
+  //       const sortedCountries = countryNames.sort((a, b) => a.localeCompare(b));
 
-        setCountries(sortedCountries);
-        console.log("Countries:", sortedCountries);
+  //       setCountries(sortedCountries);
+  //       console.log("Countries:", sortedCountries);
 
-        // Set initial country value if profile has country data
-        if (profile?.country) {
-          setCountryValue(profile.country);
-        }
-      } else {
-        console.log("No countries found.");
-      }
-    } catch (error) {
-      console.error("Error fetching countries:", error);
-    }
-  };
+  //       // Set initial country value if profile has country data
+  //       if (profile?.country) {
+  //         setCountryValue(profile.country);
+  //       }
+  //     } else {
+  //       console.log("No countries found.");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching countries:", error);
+  //   }
+  // };
 
 
-  const fetchStates = async () => {
-    setIsLoadingState(true);
-    try {
-      const response = await axios.post(
-        "https://countriesnow.space/api/v0.1/countries/states",
-        { country: countryValue }
-      );
+  // const fetchStates = async () => {
+  //   setIsLoadingState(true);
+  //   try {
+  //     const response = await axios.post(
+  //       "https://countriesnow.space/api/v0.1/countries/states",
+  //       { country: countryValue }
+  //     );
 
-      if (response.data && response.data.data && response.data.data.states) {
-        console.log("States of", countryValue, ":", response.data.data.states);
-        const stateNames = response.data.data.states.map(state => state);
-        setStates(stateNames);
+  //     if (response.data && response.data.data && response.data.data.states) {
+  //       console.log("States of", countryValue, ":", response.data.data.states);
+  //       const stateNames = response.data.data.states.map(state => state);
+  //       setStates(stateNames);
 
-        // Set initial state value if profile has state data
-        if (profile?.state) {
-          setStateValue(profile.state);
-        }
-      } else {
-        console.log("No states found for", countryValue);
-      }
-    } catch (error) {
-      console.error("Error fetching states:", error);
-    } finally {
-      setIsLoadingState(false);
-    }
-  };
+  //       // Set initial state value if profile has state data
+  //       if (profile?.state) {
+  //         setStateValue(profile.state);
+  //       }
+  //     } else {
+  //       console.log("No states found for", countryValue);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching states:", error);
+  //   } finally {
+  //     setIsLoadingState(false);
+  //   }
+  // };
 
-  // Update your handleInputChange function
-  const handleInputChange = (field, value) => {
-    // Update validation errors if needed
-    setErrors((prev) => ({
-      ...prev,
-      [field]: value ? '' : `Please select ${field}`,
-    }));
-  };
+  // // Update your handleInputChange function
+  // const handleInputChange = (field, value) => {
+  //   // Update validation errors if needed
+  //   setErrors((prev) => ({
+  //     ...prev,
+  //     [field]: value ? '' : `Please select ${field}`,
+  //   }));
+  // };
 
   const requestCameraPermission = async () => {
     if (Platform.OS === 'android') {
@@ -932,7 +939,7 @@ const ProfileScreen = ({ navigation }) => {
                       {capitalizeWords(firstName + " " + lastName)}
                     </Text>
                     <Text style={{ fontSize: 16, marginHorizontal: 10, marginTop: 5, fontWeight: style.fontWeightThin.fontWeight, color: grayColor }}>
-                      Technician
+                      {roleType === "manager" ? "Manager" : "Technician"}
                     </Text>
                   </View>
                 </View>

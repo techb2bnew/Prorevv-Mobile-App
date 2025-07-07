@@ -39,6 +39,7 @@ const CustomerInfoScreen = ({ navigation }) => {
     const [isLoading, setIsLoading] = useState(false);
     const googleRef = useRef();
     const isTablet = width >= 668 && height >= 1024;
+    const isIOsAndTablet = Platform.OS === "ios" && isTablet;
     const [viewType, setViewType] = useState('list');
     const [isAddMode, setIsAddMode] = useState(false); // false = show list, true = show form
     const [isEditMode, setIsEditMode] = useState(false); // false = show list, true = show form
@@ -234,7 +235,9 @@ const CustomerInfoScreen = ({ navigation }) => {
         const rawPhone = formData.phoneNumber || "";
 
         let formattedPhone = rawPhone;
-        if (countryCode && !rawPhone.startsWith(`+${countryCode}`)) {
+        console.log(formattedPhone);
+
+        if (countryCode && rawPhone.trim() !== "" && !rawPhone.startsWith(`+${countryCode}`)) {
             // In case it's stored as "1234567890", make it "+XX-1234567890"
             formattedPhone = `+${countryCode}-${rawPhone.trim()}`;
         }
@@ -304,6 +307,8 @@ const CustomerInfoScreen = ({ navigation }) => {
 
 
     const syncCustomerToAPI = async (customerData) => {
+        console.log(customerData);
+
         try {
             const token = await AsyncStorage.getItem("auth_token");
             if (!token) {
@@ -398,7 +403,6 @@ const CustomerInfoScreen = ({ navigation }) => {
         }
     };
 
-
     const capitalize = (str) => {
         return str ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase() : "";
     };
@@ -479,7 +483,7 @@ const CustomerInfoScreen = ({ navigation }) => {
                                                     <Text style={[styles.tableText, { width: wp(40) }]}>{capitalize(item.fullName) || '—'}</Text>
                                                     <Text style={[styles.tableText, { width: wp(40) }]}>{item.phoneNumber || '—'}</Text>
                                                     <Text style={[styles.tableText, { width: wp(60) }]}>{item.email || '—'}</Text>
-                                                    <Text style={[styles.tableText, { width: wp(70) }]} numberOfLines={1} ellipsizeMode="tail">{item.address || '—'}</Text>
+                                                    <Text style={[styles.tableText, { width: isTablet ? wp(75) : wp(70) }]} numberOfLines={1} ellipsizeMode="tail">{item.address || '—'}</Text>
                                                     <TouchableOpacity
                                                         onPress={() => {
                                                             setIsEditMode(true);
@@ -562,7 +566,7 @@ const CustomerInfoScreen = ({ navigation }) => {
                         )}
 
                         {viewType === 'grid' && (
-                            <>
+                            <View style={{ height: hp(90) }}>
                                 <FlatList
                                     data={customers}
                                     keyExtractor={(item, index) => index.toString()}
@@ -630,12 +634,12 @@ const CustomerInfoScreen = ({ navigation }) => {
                                                     borderTopRightRadius: 15,
                                                     justifyContent: "space-between"
                                                 }}>
-                                                    <View style={[flexDirectionRow, alignItemsCenter, { width: "78%" }]}>
+                                                    <View style={[flexDirectionRow, alignItemsCenter, { width: isTablet ? '90%' : "78%" }]}>
                                                         <View style={{
                                                             backgroundColor: whiteColor,
-                                                            width: wp(10),
+                                                            width: isIOsAndTablet ? wp(6) : isTablet ? wp(8.5) : wp(10),
                                                             height: Platform.OS === "ios" ? hp(4.5) : hp(5),
-                                                            borderRadius: 20,
+                                                            borderRadius: isTablet ? 50 : 20,
                                                             alignItems: 'center',
                                                             justifyContent: 'center',
                                                             marginRight: spacings.large,
@@ -733,10 +737,9 @@ const CustomerInfoScreen = ({ navigation }) => {
                                 >
                                     <Ionicons name="person-add" size={28} color={whiteColor} />
                                 </TouchableOpacity>
-                            </>
+                            </View>
                         )
                         }
-
                     </>
                 ) : (
                     // 👇 Add Customer Form
@@ -801,10 +804,18 @@ const CustomerInfoScreen = ({ navigation }) => {
                                         fetchDetails={true}
                                         onPress={(data, details = null) => {
                                             console.log('Selected:', data?.description);
-                                            handleInputChange("address", data?.description)
+                                            handleInputChange("address", data?.description);
+                                            // googleRef.current?.setAddressText(data?.description);
+
                                         }}
+                                        // textInputProps={{
+                                        //     onChangeText: (text) => {
+                                        //         handleInputChange("address", text);
+                                        //     },
+                                        //     placeholder: "Enter your address",
+                                        // }}
                                         enablePoweredByContainer={false}
-                                        keepResultsAfterBlur={true}
+                                        // keepResultsAfterBlur={Platform.OS === "android" ? false : true}
                                         query={{
                                             key: GOOGLE_MAP_API_KEY,
                                             language: 'en',
@@ -856,7 +867,6 @@ const CustomerInfoScreen = ({ navigation }) => {
                     loading={submitLoading}
                     disabled={submitLoading}
                 />
-
             </View>}
         </View>
     );

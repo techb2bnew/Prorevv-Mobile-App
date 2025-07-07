@@ -397,7 +397,7 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
                 </Text>
               </View>
 
-              <View style={[styles.rowItem, { paddingHorizontal: 10 }]}>
+              <View style={[styles.rowItem, { paddingHorizontal: 10,marginTop:spacings.large }]}>
                 {!!vehicle.vin && (
                   <View style={styles.leftCol}>
                     <Text style={styles.label}>VIN</Text>

@@ -830,7 +830,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                     setStartDate(new Date(data?.vehicle?.vehicle?.startDate));
                     setEndDate(new Date(data?.vehicle?.vehicle?.endDate));
                     setTechnicians(data?.vehicle?.vehicle?.assignedTechnicians);
-                    // Format jobDescription properly
+                    setSelectedCustomer(data?.vehicle?.vehicle.customerId)
                     setNotes(data?.vehicle?.vehicle?.notes)
                     if (data?.vehicle?.vehicle?.images?.length > 0) {
                         setImageUris(data.vehicle.vehicle.images);
@@ -861,7 +861,6 @@ const WorkOrderScreenTwo = ({ route }) => {
             fetchVehileData(route?.params?.vehicleId);
         }
     }, [route?.params?.vehicleId]);
-
 
     const updateTechnicianField = (id, field, value) => {
         const updatedTechs = technicians.map((tech) => {
@@ -898,8 +897,6 @@ const WorkOrderScreenTwo = ({ route }) => {
         });
         setTechnicians(updatedTechs);
     };
-
-
 
     return (
         <KeyboardAvoidingView

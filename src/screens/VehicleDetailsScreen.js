@@ -465,7 +465,7 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
                         )}
                     </View>
 
-                    {!loading && (
+                    {!loading && vehicleDetails?.vehicleStatus === false  &&(
                         <Pressable
                             style={[styles.completeButton, alignItemsCenter]}
                             onPress={() => handelCompleteWorkOrder(vehicleId, setSuccessModalVisible)}
