@@ -125,8 +125,10 @@ const CustomerInfoScreen = ({ navigation }) => {
 
             setIsLoading(true);
             const apiUrl = technicianType === "manager"
-                ? `${API_BASE_URL}/fetchAllCustomer?page=${pageNum}&userId=${technicianId}&limit=10&roleType=${technicianType}`
-                : `${API_BASE_URL}/fetchCustomer?page=${pageNum}&userId=${technicianId}&limit=10`;
+                ? `${API_BASE_URL}/fetchAllCustomer?page=${pageNum}&userId=${technicianId}&limit=${viewType === 'list' ? "20" : "10"}&roleType=${technicianType}`
+                : technicianType === "ifs"
+                    ? `${API_BASE_URL}/fetchCustomer?page=${pageNum}&userId=${technicianId}&limit=10` :
+                    `${API_BASE_URL}/fetchCustomer?page=${pageNum}&userId=${technicianId}&limit=${viewType === 'list' ? "20" : "10"}&roleType=${technicianType}`;
 
             const response = await axios.get(
                 apiUrl,
@@ -152,7 +154,8 @@ const CustomerInfoScreen = ({ navigation }) => {
             console.log("newCustomers", customers);
 
         } catch (error) {
-            console.error("Error fetching customers:", error.response?.data || error.message);
+            console.error("Error fetching customers aaaa:", error.response?.data || error.message);
+            setIsLoading(false);
         } finally {
             setIsLoading(false);
         }
@@ -514,10 +517,10 @@ const CustomerInfoScreen = ({ navigation }) => {
                                                     fetchCustomers(page + 1);
                                                 }
                                             }}
-                                            onEndReachedThreshold={0.5}
+                                            onEndReachedThreshold={0.3}
                                             ListFooterComponent={() =>
                                                 isLoading ? (
-                                                    <View style={{ paddingVertical: 10, alignItems: "center", width: wp(120), height: hp(50), justifyContent: "center" }}>
+                                                    <View style={{ paddingVertical: 10, alignItems: "center", width: wp(100), height: hp(50), justifyContent: "center" }}>
                                                         <ActivityIndicator size="small" color="#0000ff" />
                                                     </View>
                                                 ) : null

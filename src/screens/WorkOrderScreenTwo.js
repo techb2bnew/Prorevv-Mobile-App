@@ -1268,7 +1268,7 @@ const WorkOrderScreenTwo = ({ route }) => {
 
                                     {/* {technicianType === "ifs" && vehicleTypeError && storedPayRate === "Pay Per Vehicles" && (<Text style={{ color: 'red' }}>{vehicleTypeError}</Text>)} */}
 
-                                    {technicianType === "single-technician" &&
+                                    {/* {technicianType === "single-technician" &&
                                         <CustomTextInput
                                             label={"R/I R/R (Labour/Service Cost)"}
                                             placeholder="Enter R/I R/R (Labour/Service Cost)"
@@ -1276,7 +1276,19 @@ const WorkOrderScreenTwo = ({ route }) => {
                                             keyboardType="numeric"
                                             maxLength={5} // Maximum 5 digits
                                             onChangeText={(text) => setLabourCost(text)} />
-                                    }
+                                    } */}
+                                    
+                                    {technicianType === "single-technician" && <View style={{ marginTop: spacings.xxLarge }}>
+                                        <Text style={styles.label}>R/I R/R (Labour/Service Cost)</Text>
+                                        <TextInput
+                                            style={[styles.input, { height: isTablet ? hp(3.5) : hp(5.5), marginTop: 5 }]}
+                                            placeholder="Enter R/I R/R (Labour/Service Cost)"
+                                            value={labourCost}
+                                            onChangeText={setLabourCost}
+                                            keyboardType="numeric"
+                                            maxLength={5}
+                                        />
+                                    </View>}
 
                                     <View style={{ paddingTop: spacings.large }}>
                                         {/* Filter & Date Picker */}

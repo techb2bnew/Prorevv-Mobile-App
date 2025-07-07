@@ -186,9 +186,16 @@ const HomeScreen = ({ navigation }) => {
       const token = await AsyncStorage.getItem("auth_token");
       if (!token || !technicianId || !technicianType) return;
 
+      // const apiUrl = technicianType === "manager"
+      //   ? `${API_BASE_URL}/fetchAllCustomer?page=${pageNum}&userId=${technicianId}&limit=10&roleType=${technicianType}`
+      //   : `${API_BASE_URL}/fetchCustomer?page=${pageNum}&userId=${technicianId}&limit=10`;
+
       const apiUrl = technicianType === "manager"
         ? `${API_BASE_URL}/fetchAllCustomer?page=${pageNum}&userId=${technicianId}&limit=10&roleType=${technicianType}`
-        : `${API_BASE_URL}/fetchCustomer?page=${pageNum}&userId=${technicianId}&limit=10`;
+        : technicianType === "ifs"
+          ? `${API_BASE_URL}/fetchCustomer?page=${pageNum}&userId=${technicianId}&limit=10` :
+          `${API_BASE_URL}/fetchCustomer?page=${pageNum}&userId=${technicianId}&limit=10&roleType=${technicianType}`;
+
 
       const response = await axios.get(
         apiUrl,

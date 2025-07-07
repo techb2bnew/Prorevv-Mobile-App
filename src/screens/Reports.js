@@ -62,98 +62,6 @@ const Reports = ({ navigation }) => {
         setModalVisible(!isModalVisible);
     };
 
-    // const handleSort = (order, type) => {
-    //     let sortedData;
-
-    //     if (activeTab === 'Jobs') {
-    //         sortedData = [...filteredJobs];
-    //     } else if (activeTab === 'WorkOrders') {
-    //         sortedData = [...filteredWorkOrders];
-    //     } else if (activeTab === 'Customers') {
-    //         sortedData = [...filteredCustomer];
-    //     }
-
-    //     if (activeTab === 'Customers') {
-    //         sortedData = [...customerJobs];
-
-    //         if (type === "name") {
-    //             sortedData.sort((a, b) => {
-    //                 const nameA = a?.fullName?.toLowerCase() || '';
-    //                 const nameB = b?.fullName?.toLowerCase() || '';
-    //                 return order === "asc" ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
-    //             });
-    //         }
-
-    //         else if (type === "date") {
-    //             sortedData.sort((a, b) => {
-    //                 const aDate = a.jobs?.[0]?.createdAt ? new Date(a.jobs[0].createdAt) : new Date(0);
-    //                 const bDate = b.jobs?.[0]?.createdAt ? new Date(b.jobs[0].createdAt) : new Date(0);
-    //                 return order === "oldest" ? aDate - bDate : bDate - aDate;
-    //             });
-    //         }
-
-    //         else if (type === "modified") {
-    //             sortedData.sort((a, b) => {
-    //                 const aUpdated = a.jobs?.length
-    //                     ? Math.max(...a.jobs.map(j => new Date(j.updatedAt)))
-    //                     : 0;
-    //                 const bUpdated = b.jobs?.length
-    //                     ? Math.max(...b.jobs.map(j => new Date(j.updatedAt)))
-    //                     : 0;
-    //                 return order === "oldest" ? aUpdated - bUpdated : bUpdated - aUpdated;
-    //             });
-    //         }
-
-    //         else if (type === "count") {
-    //             sortedData.sort((a, b) =>
-    //                 order === "asc"
-    //                     ? (a.jobs?.length || 0) - (b.jobs?.length || 0)
-    //                     : (b.jobs?.length || 0) - (a.jobs?.length || 0)
-    //             );
-    //         }
-
-    //         setCustomerJobs(sortedData); // 👈 Apply sorted result
-    //     } else {
-    //         if (type === "date") {
-    //             sortedData.sort((a, b) => {
-    //                 return order === "oldest"
-    //                     ? new Date(a?.createdAt) - new Date(b?.createdAt)
-    //                     : new Date(b?.createdAt) - new Date(a?.createdAt);
-    //             });
-    //         } else if (type === "modified") {
-    //             sortedData.sort((a, b) => {
-    //                 return order === "oldest"
-    //                     ? new Date(a?.updatedAt) - new Date(b?.updatedAt)
-    //                     : new Date(b?.updatedAt) - new Date(a?.updatedAt);
-    //             });
-    //         } else if (type === "name") {
-    //             sortedData.sort((a, b) => {
-    //                 return order === "asc"
-    //                     ? a?.jobName?.localeCompare(b?.jobName)
-    //                     : b?.jobName?.localeCompare(a?.jobName);
-    //             });
-    //         } else if (type === "status") {
-    //             sortedData.sort((a, b) => {
-    //                 const statusA = a?.jobStatus || a?.vehicleStatus ? "Complete" : "InProgress";
-    //                 const statusB = b?.jobStatus || b?.vehicleStatus ? "Complete" : "InProgress";
-
-    //                 return order === "asc"
-    //                     ? statusA.localeCompare(statusB)
-    //                     : statusB.localeCompare(statusA);
-    //             });
-    //         }
-
-    //         if (activeTab === 'Jobs') {
-    //             setFilteredJobs(sortedData);
-    //         } else {
-    //             setFilteredWorkOrders(sortedData);
-    //         }
-    //     }
-
-    //     setSortOrder(order);
-    //     setSortType(type);
-    //     setModalVisible(false);
-    // };
     const handleSort = (order, type) => {
         let sortedData = [];
 
@@ -262,117 +170,6 @@ const Reports = ({ navigation }) => {
         setModalVisible(false);
     };
 
-    // const handleSort = (order, type) => {
-    //     let sortedData;
-
-    //     if (activeTab === 'Jobs') {
-    //         sortedData = [...filteredJobs];
-    //     } else if (activeTab === 'WorkOrders') {
-    //         sortedData = [...filteredWorkOrders];
-    //     } else if (activeTab === 'Customers') {
-    //         sortedData = [...customerJobs];
-
-    //         if (type === "name") {
-    //             sortedData.sort((a, b) => {
-    //                 const nameA = a?.fullName?.toLowerCase() || '';
-    //                 const nameB = b?.fullName?.toLowerCase() || '';
-    //                 return order === "asc" ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
-    //             });
-    //         } else if (type === "date") {
-    //             sortedData.sort((a, b) => {
-    //                 const aDate = a.jobs?.[0]?.createdAt ? new Date(a.jobs[0].createdAt) : new Date(0);
-    //                 const bDate = b.jobs?.[0]?.createdAt ? new Date(b.jobs[0].createdAt) : new Date(0);
-    //                 return order === "oldest" ? aDate - bDate : bDate - aDate;
-    //             });
-    //         } else if (type === "modified") {
-    //             sortedData.sort((a, b) => {
-    //                 const aUpdated = a.jobs?.length
-    //                     ? Math.max(...a.jobs.map(j => new Date(j.updatedAt)))
-    //                     : 0;
-    //                 const bUpdated = b.jobs?.length
-    //                     ? Math.max(...b.jobs.map(j => new Date(j.updatedAt)))
-    //                     : 0;
-    //                 return order === "oldest" ? aUpdated - bUpdated : bUpdated - aUpdated;
-    //             });
-    //         } else if (type === "startDate") {
-    //             sortedData.sort((a, b) => {
-    //                 const aStart = a.jobs?.[0]?.startDate ? new Date(a.jobs[0].startDate) : new Date(0);
-    //                 const bStart = b.jobs?.[0]?.startDate ? new Date(b.jobs[0].startDate) : new Date(0);
-    //                 return order === "oldest" ? aStart - bStart : bStart - aStart;
-    //             });
-    //         } else if (type === "endDate") {
-    //             sortedData.sort((a, b) => {
-    //                 const aEnd = a.jobs?.[0]?.endDate ? new Date(a.jobs[0].endDate) : new Date(0);
-    //                 const bEnd = b.jobs?.[0]?.endDate ? new Date(b.jobs[0].endDate) : new Date(0);
-    //                 return order === "oldest" ? aEnd - bEnd : bEnd - aEnd;
-    //             });
-    //         } else if (type === "count") {
-    //             sortedData.sort((a, b) =>
-    //                 order === "asc"
-    //                     ? (a.jobs?.length || 0) - (b.jobs?.length || 0)
-    //                     : (b.jobs?.length || 0) - (a.jobs?.length || 0)
-    //             );
-    //         }
-
-    //         setCustomerJobs(sortedData);
-    //     } else {
-    //         if (type === "date") {
-    //             sortedData.sort((a, b) =>
-    //                 order === "oldest"
-    //                     ? new Date(a?.createdAt) - new Date(b?.createdAt)
-    //                     : new Date(b?.createdAt) - new Date(a?.createdAt)
-    //             );
-    //         } else if (type === "modified") {
-    //             sortedData.sort((a, b) =>
-    //                 order === "oldest"
-    //                     ? new Date(a?.updatedAt) - new Date(b?.updatedAt)
-    //                     : new Date(b?.updatedAt) - new Date(a?.updatedAt)
-    //             );
-    //         } else if (type === "startDate") {
-    //             sortedData.sort((a, b) =>
-    //                 order === "oldest"
-    //                     ? new Date(a?.startDate) - new Date(b?.startDate)
-    //                     : new Date(b?.startDate) - new Date(a?.startDate)
-    //             );
-    //         } else if (type === "endDate") {
-    //             sortedData.sort((a, b) =>
-    //                 order === "oldest"
-    //                     ? new Date(a?.endDate) - new Date(b?.endDate)
-    //                     : new Date(b?.endDate) - new Date(a?.endDate)
-    //             );
-    //         } else if (type === "name") {
-    //             sortedData.sort((a, b) =>
-    //                 order === "asc"
-    //                     ? a?.jobName?.localeCompare(b?.jobName)
-    //                     : b?.jobName?.localeCompare(a?.jobName)
-    //             );
-    //         } else if (type === "status") {
-    //             const getStatus = (item) => item?.jobStatus || item?.vehicleStatus ? "Complete" : "InProgress";
-    //             sortedData.sort((a, b) =>
-    //                 order === "asc"
-    //                     ? getStatus(a).localeCompare(getStatus(b))
-    //                     : getStatus(b).localeCompare(getStatus(a))
-    //             );
-    //         }
-
-    //         if (activeTab === 'Jobs') {
-    //             setFilteredJobs(sortedData);
-    //         } else {
-    //             setFilteredWorkOrders(sortedData);
-    //         }
-    //     }
-
-    //     setSortOrder(order);
-    //     setSortType(type);
-    //     setModalVisible(false);
-    // };
-
-    // useEffect(() => {
-    //     const today = new Date();
-    //     const lastMonth = new Date();
-    //     lastMonth.setMonth(today.getMonth() - 1); // 👈 1 month before today
-    //     setStartDate(lastMonth);
-    // }, []);
     useFocusEffect(
         useCallback(() => {
             const today = new Date();
@@ -411,7 +208,6 @@ const Reports = ({ navigation }) => {
 
         getTechnicianDetail();
     }, []);
-
 
     useFocusEffect(
         useCallback(() => {
@@ -452,7 +248,7 @@ const Reports = ({ navigation }) => {
                 console.error("No token found");
                 return;
             }
-            // console.log("token", token);
+            // console.log("token", technicianId);
             const apiUrl = technicianType === "manager"
                 ? `${API_BASE_URL}/fetchAllJobs?roleType=${technicianType}&page=${newPage}&limit=10`
                 : technicianType === "single-technician"
@@ -627,17 +423,6 @@ const Reports = ({ navigation }) => {
                 setCustomerHasMore(false);
                 return;
             }
-
-            //             let apiUrl = "";
-            //             if (technicianType === "manager") {
-            //                 apiUrl = `${API_BASE_URL}/fetchCustomer?roleType=${technicianType}&page=${newPage}&limit=10`;
-            //             } else if (technicianType === "single-technician") {
-            //                 apiUrl = `${API_BASE_URL}/fetchCustomer?userId=${technicianId}&roleType=${technicianType}&page=${newPage}&limit=10`;
-            //             } else {
-            //                 apiUrl = `${API_BASE_URL}/fetchAllJobs?userId=${technicianId}&page=${newPage}&limit=10`;
-            //             }
-            // console.log(apiUrl,technicianId);
-
             const response = await axios.get(`${API_BASE_URL}/fetchCustomer?userId=${technicianId}&roleType=${technicianType}&page=${newPage}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -664,10 +449,22 @@ const Reports = ({ navigation }) => {
 
     const filterByStatus = useCallback((data, status, tab) => {
         return data?.filter(item => {
-            const field =
-                tab === "Jobs"
-                    ? (item?.jobStatus)
-                    : tab === "Customers" ? (item?.jobStatus) : (item?.vehicleStatus);
+            // const field =
+            //     tab === "Jobs"
+            //         ? (item?.jobStatus)
+            //         : tab === "Customers" ? (item?.jobStatus) : (item?.vehicleStatus);
+
+            let field;
+
+
+            if (tab === "Jobs") {
+                field = item?.jobStatus;
+            } else if (tab === "WorkOrders") {
+                field = item?.vehicleStatus;
+            } else if (tab === "Customers") {
+                field = item?.jobs?.[0]?.jobStatus; // ✅ get status from first job
+            }
+
 
             if (status === "Completed") return field === true || field === "completed";
             if (status === "InProgress") return field === false || field === "inprogress";
@@ -681,9 +478,8 @@ const Reports = ({ navigation }) => {
         const customerFiltered = filterByStatus(customerJobs, activeStatus, 'Customers');
         setFilteredJobs(filteredJob);
         setFilteredWorkOrders(filteredWork);
-        // console.log("customerFiltered", customerFiltered);
 
-        setFilteredCustomer(customerFiltered);
+        setFilteredCustomer(customerJobs); 
 
     }, [activeStatus, jobsRawData, workOrdersRawData, customerJobs]);
 
@@ -700,7 +496,7 @@ const Reports = ({ navigation }) => {
     useEffect(() => {
         const jobFiltered = filterByStatus(jobsRawData, activeStatus, 'Jobs');
         const workOrderFiltered = filterByStatus(workOrdersRawData, activeStatus, 'WorkOrders');
-        const customerFiltered = filterByStatus(customerJobs, activeStatus, 'Customers');
+        // const customerFiltered = filterByStatus(customerJobs, activeStatus, 'Customers');
 
         const searchLower = search.toLowerCase();
 
@@ -714,8 +510,8 @@ const Reports = ({ navigation }) => {
             item?.jobName?.toLowerCase().includes(searchLower)
         );
 
-        const filteredCustomer = customerFiltered.filter(item =>
-            item?.customer?.fullName?.toLowerCase().includes(searchLower)
+        const filteredCustomer = customerJobs.filter(item =>
+            item?.fullName?.toLowerCase().includes(searchLower)
         );
         setFilteredJobs(filteredJob);
         setFilteredWorkOrders(filteredWork);
@@ -971,7 +767,7 @@ const Reports = ({ navigation }) => {
 
             {/* WorkOrders */}
             {activeTab === 'WorkOrders' && viewType === 'grid' ? (
-                <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(62.5) : hp(53) : isIOSAndTablet ? hp(61) : hp(49)}}>
+                <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(62.5) : hp(53) : isIOSAndTablet ? hp(61) : hp(49) }}>
                     <FlatList
                         data={filteredWorkOrders}
                         keyExtractor={(item, index) => index.toString()}
@@ -1086,7 +882,7 @@ const Reports = ({ navigation }) => {
 
                 </View>
             ) : activeTab === 'WorkOrders' && viewType === 'list' ? (
-                <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(62.5) : hp(53) : isIOSAndTablet ? hp(60) : hp(49)}}>
+                <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(62.5) : hp(53) : isIOSAndTablet ? hp(60) : hp(49) }}>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                         <View>
                             {/* Header Row */}
@@ -1140,7 +936,7 @@ const Reports = ({ navigation }) => {
                                                 {/* <Text style={[styles.text, { width: wp(30) }]}> ${Array.isArray(item?.jobDescription) && item?.jobDescription?.length > 0
                                                     ? item?.jobDescription?.reduce((total, job) => total + Number(job?.cost || 0), 0)
                                                     : '0'}</Text> */}
-                                                <View style={[getStatusStyle(item?.vehicleStatus), alignJustifyCenter, { height: 'auto' }]}>
+                                                <View style={[getStatusStyle(item?.vehicleStatus), alignJustifyCenter, { height: hp(4) }]}>
                                                     <Text
                                                         style={{
                                                             color: getStatusText(item?.vehicleStatus) === "Complete" ?
@@ -1208,9 +1004,9 @@ const Reports = ({ navigation }) => {
 
                     </View>
 
-                    <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(69) : hp(63) : isIOSAndTablet ? hp(67) : hp(57)}}>
+                    <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(69) : hp(63) : isIOSAndTablet ? hp(67) : hp(57) }}>
                         <FlatList
-                            data={customerJobs}
+                            data={filteredCustomer}
                             keyExtractor={(item, index) => item?.vin || index.toString()}
                             showsVerticalScrollIndicator={false}
                             refreshing={customerRefreshing}

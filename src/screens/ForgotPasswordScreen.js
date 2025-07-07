@@ -138,7 +138,6 @@ const ForgotPasswordScreen = ({ navigation }) => {
             });
 
             const data = await response.json();
-            console.log("response", response);
 
             if (response.ok) {
                 setCurrentStep("otp");
@@ -267,7 +266,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
                             : () => navigation.goBack()
                 } />
             <ScrollView
-                contentContainerStyle={{ height:hp(70) }}
+                contentContainerStyle={{ height: hp(70) }}
                 keyboardShouldPersistTaps="handled"
                 bounces={false}
             >

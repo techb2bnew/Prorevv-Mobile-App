@@ -63,16 +63,11 @@ const CreateJobScreen = ({ route }) => {
     const [jobDetails, setJobDetails] = useState();
     const [simpleFlatRate, setSimpleFlatRate] = useState('');
     const [estimatedCost, setEstimatedCost] = useState('');
-
     const [rirValue, setRirValue] = useState('');
     const [startDate, setStartDate] = useState(new Date());
     const [endDate, setEndDate] = useState(new Date());
     const [isStartPickerOpen, setIsStartPickerOpen] = useState(false);
     const [isEndPickerOpen, setIsEndPickerOpen] = useState(false);
-
-    // const toggleExpanded = (id) => {
-    //     setExpandedTechId(prev => prev === id ? null : id);
-    // };
 
     useFocusEffect(
         useCallback(() => {
@@ -417,23 +412,6 @@ const CreateJobScreen = ({ route }) => {
         }
     };
 
-    // const toggleTechnicianSelection = (technician) => {
-    //     const exists = selectedTechnicians.some(t => t.id === technician.id);
-
-    //     if (exists) {
-    //         // Deselect
-    //         setSelectedTechnicians(prev =>
-    //             prev.filter(t => t.id !== technician.id)
-    //         );
-    //     } else {
-    //         // Select
-    //         setSelectedTechnicians(prev => [...prev, technician]);
-    //     }
-    // };
-
-    // const isTechnicianSelected = (technicianId) => {
-    //     return selectedTechnicians.some(t => t.id === technicianId);
-    // };
 
     const isNormalTechnicianSelected = (technicianId) => {
         return selectedNormalTechnicians.some(t => t.id === technicianId);
@@ -460,120 +438,6 @@ const CreateJobScreen = ({ route }) => {
             setSelectedRrTechnicians(prev => [...prev, tech]);
         }
     };
-
-    // const handleRateChange = (techId, key, value) => {
-    //     const updated = selectedTechnicians.map((tech) => {
-    //         if (tech.id === techId) {
-    //             // 1. Percentage or Pay Per Job using amountPercentage (not used now for Pay Per Job)
-    //             if (key === 'amountPercentage') {
-    //                 return {
-    //                     ...tech,
-    //                     [key]: value,
-    //                 };
-    //             }
-
-    //             // 2. All rates stored in simpleFlatRate (including Pay Per Job's technician field)
-    //             const currentRates = tech.simpleFlatRate ? JSON.parse(tech.simpleFlatRate) : {};
-    //             currentRates[key] = value;
-
-    //             return {
-    //                 ...tech,
-    //                 simpleFlatRate: JSON.stringify(currentRates),
-    //             };
-    //         }
-    //         return tech;
-    //     });
-
-    //     console.log(updated);
-    //     setSelectedTechnicians(updated);
-    // };
-
-    // const handleSubmitJob = async () => {
-    //     setCustomerError('');
-    //     setJobNameError('');
-    //     setTechnicianError('');
-
-    //     let valid = true;
-
-    //     if (!selectedCustomer || !selectedCustomer.id) {
-    //         setCustomerError("Please select a customer.");
-    //         valid = false;
-    //     }
-
-    //     if (!jobName.trim()) {
-    //         setJobNameError("Please enter a job name.");
-    //         valid = false;
-    //     }
-
-    //     // ✅ Validate technicians only if the role is 'manager'
-    //     if (technicianType === 'manager' && selectedTechnicians.length === 0) {
-    //         setTechnicianError("Please select at least one technician.");
-    //         valid = false;
-    //     }
-
-    //     if (!valid) return;
-
-    //     try {
-    //         setLoading(true);
-
-    //         // Get local storage values
-    //         const token = await AsyncStorage.getItem('auth_token');
-
-
-    //         // console.log("technicianCreateJob", requestBody);
-
-
-    //         const requestBody = {
-    //             jobName: jobName,
-    //             assignCustomer: selectedCustomer.id,
-    //             // assignTechnician: selectedTechnicians.map(tech => tech.id),
-    //             assignTechnician:
-    //                 technicianType === 'manager'
-    //                     ? selectedTechnicians.map(tech => tech.id)
-    //                     : [technicianId],
-    //             createdBy: 'app',
-    //             roleType: technicianType,
-    //             estimatedBy: technicianName,
-    //             selectedTechnicians: selectedTechnicians.map(tech => ({
-    //                 id: tech.id,
-    //                 payRate: tech.payRate,
-    //                 payVehicleType: tech.payVehicleType,
-    //                 simpleFlatRate: typeof tech.simpleFlatRate === 'string' ? tech.simpleFlatRate : JSON.stringify(tech.simpleFlatRate),
-    //                 amountPercentage: tech.amountPercentage,
-    //             })),
-    //         };
-    //         console.log("requestBodyrequestBody>>", requestBody);
-
-    //         const endpoint = `${API_BASE_URL}/technicianCreateJob`;
-    //         const response = await fetch(endpoint, {
-    //             method: 'POST',
-    //             headers: {
-    //                 Authorization: `Bearer ${token}`,
-    //                 'Content-Type': 'application/json',
-    //             },
-    //             body: JSON.stringify(requestBody),
-    //         });
-
-    //         const result = await response.json();
-
-    //         if (response.ok) {
-    //             if (route?.params?.jobId) {
-    //                 Toast.show("Job Updated successfully");
-    //                 navigation.goBack();
-    //             }
-    //             Toast.show("Job created successfully");
-    //             navigation.goBack();
-    //         } else {
-    //             console.error("error>>>", result.error);
-
-    //         }
-
-    //     } catch (error) {
-    //         console.error("Submission failed:", error);
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
 
     const handleSubmitJob = async () => {
         setCustomerError('');
@@ -621,18 +485,18 @@ const CreateJobScreen = ({ route }) => {
                 estimatedBy: technicianName,
                 startDate: startDate ? startDate.toISOString() : null,
                 endDate: endDate ? endDate.toISOString() : null,
-                selectedTechnicians: [
-                    ...selectedNormalTechnicians?.map(tech => ({
-                        userId: tech?.id,
-                        techFlatRate: simpleFlatRate,
-                        // rRate: rirValue
-                    })),
-                    ...selectedRrTechnicians?.map(tech => ({
-                        userId: tech?.id,
-                        // technicianFlatRate: simpleFlatRate,
-                        rRate: rirValue
-                    }))
-                ],
+                selectedTechnicians: technicianType === 'single-technician'
+                    ? [{ userId: technicianId }]
+                    : [
+                        ...selectedNormalTechnicians?.map(tech => ({
+                            userId: tech?.id,
+                            techFlatRate: simpleFlatRate,
+                        })),
+                        ...selectedRrTechnicians?.map(tech => ({
+                            userId: tech?.id,
+                            rRate: rirValue,
+                        }))
+                    ],
                 estimatedCost: estimatedCost
             };
 
@@ -723,9 +587,69 @@ const CreateJobScreen = ({ route }) => {
                                 <Text style={{ color: 'red', marginTop: 4, fontSize: 12 }}>{jobNameError}</Text>
                             ) : null}
 
+                            <View style={{ paddingTop: spacings.large}}>
+                                {/* Filter & Date Picker */}
+                                <View style={styles.datePickerContainer}>
+                                    <View style={{ width: "45%" }}>
+                                        <Text style={styles.label}>Start Date</Text>
+                                    </View>
+                                    <View style={{ width: "45%" }}>
+                                        <Text style={styles.label}>End Date</Text>
+                                    </View>
+                                </View>
+                                <View style={[styles.datePickerContainer]}>
+                                    <TouchableOpacity onPress={() => setIsStartPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter]}>
+                                        <Text style={styles.dateText}>
+                                            {startDate?.toLocaleDateString("en-US", {
+                                                month: "long",
+                                                day: "numeric",
+                                                year: "numeric",
+                                            })}
+                                        </Text>
+                                        <Feather name="calendar" size={20} color={blackColor} />
+                                    </TouchableOpacity>
+                                    <TouchableOpacity onPress={() => setIsEndPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter]}>
+                                        <Text style={styles.dateText}>
+                                            {endDate?.toLocaleDateString("en-US", {
+                                                month: "long",
+                                                day: "numeric",
+                                                year: "numeric",
+                                            })}
+                                        </Text>
+                                        <Feather name="calendar" size={20} color={blackColor} />
+                                    </TouchableOpacity>
+                                </View>
+
+                                <DatePicker
+                                    modal
+                                    open={isStartPickerOpen}
+                                    date={startDate}
+                                    mode="datetime"
+                                    onConfirm={(date) => {
+                                        setStartDate(date);
+                                        setIsStartPickerOpen(false);
+                                    }}
+                                    onCancel={() => setIsStartPickerOpen(false)}
+                                />
+
+                                <DatePicker
+                                    modal
+                                    open={isEndPickerOpen}
+                                    date={endDate}
+                                    mode="datetime"
+                                    minimumDate={startDate}
+                                    onConfirm={(date) => {
+                                        const newEndDate = date;
+                                        setEndDate(newEndDate);
+                                        setIsEndPickerOpen(false);
+                                    }}
+                                    onCancel={() => setIsEndPickerOpen(false)}
+                                />
+
+                            </View>
+
                             {technicianType === "manager" &&
                                 <>
-                                    {/* Tech Pay Rate (enabled only if payRate is Simple Flat Rate) */}
                                     <CustomTextInput
                                         label="Tech Pay rate"
                                         placeholder="Enter Tech Pay rate"
@@ -735,7 +659,7 @@ const CreateJobScreen = ({ route }) => {
                                         maxLength={5}
                                     />
 
-                                  {rrTechnicians.length > 0 &&  <CustomTextInput
+                                    {rrTechnicians.length > 0 && <CustomTextInput
                                         label="R/I/R"
                                         placeholder="Enter R/I/R"
                                         value={rirValue}
@@ -744,71 +668,7 @@ const CreateJobScreen = ({ route }) => {
                                         maxLength={5}
                                     />}
 
-                                    <View style={{ paddingTop: spacings.large }}>
-                                        {/* Filter & Date Picker */}
-                                        <View style={styles.datePickerContainer}>
-                                            <View style={{ width: "45%" }}>
-                                                <Text style={styles.label}>Start Date</Text>
-                                            </View>
-                                            <View style={{ width: "45%" }}>
-                                                <Text style={styles.label}>End Date</Text>
-                                            </View>
-                                        </View>
-                                        <View style={[styles.datePickerContainer, { marginBottom: 15, color: blackColor }]}>
-                                            <TouchableOpacity onPress={() => setIsStartPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter]}>
-                                                <Text style={styles.dateText}>
-                                                    {startDate?.toLocaleDateString("en-US", {
-                                                        month: "long",
-                                                        day: "numeric",
-                                                        year: "numeric",
-                                                    })}
-                                                </Text>
-                                                <Feather name="calendar" size={20} color={blackColor} />
-                                            </TouchableOpacity>
-                                            <TouchableOpacity onPress={() => setIsEndPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter]}>
-                                                <Text style={styles.dateText}>
-                                                    {endDate?.toLocaleDateString("en-US", {
-                                                        month: "long",
-                                                        day: "numeric",
-                                                        year: "numeric",
-                                                    })}
-                                                </Text>
-                                                <Feather name="calendar" size={20} color={blackColor} />
-                                            </TouchableOpacity>
-                                        </View>
-
-                                        <DatePicker
-                                            modal
-                                            open={isStartPickerOpen}
-                                            date={startDate}
-                                            mode="datetime"
-                                            // minimumDate={new Date()}
-                                            onConfirm={(date) => {
-                                                setStartDate(date);
-                                                setIsStartPickerOpen(false);
-                                            }}
-                                            onCancel={() => setIsStartPickerOpen(false)}
-                                        />
-
-                                        <DatePicker
-                                            modal
-                                            open={isEndPickerOpen}
-                                            date={endDate}
-                                            mode="datetime"
-                                            minimumDate={startDate}
-                                            // maximumDate={new Date()}
-                                            onConfirm={(date) => {
-                                                const newEndDate = date;
-                                                setEndDate(newEndDate);
-                                                setIsEndPickerOpen(false);
-                                            }}
-                                            onCancel={() => setIsEndPickerOpen(false)}
-                                        />
-
-                                    </View>
-
-
-                                    <View style={{ marginTop: 5 }}>
+                                    <View style={{ marginTop: spacings.xxLarge }}>
                                         <Text style={styles.label}>Select Technicians</Text>
                                         <View style={{
                                             borderWidth: 1,
@@ -854,104 +714,7 @@ const CreateJobScreen = ({ route }) => {
                                         ) : null}
                                     </View>
 
-                                    {/* {selectedTechnicians.length > 0 && (
-                                        <View style={{ marginTop: 16 }}>
-                                            <Text style={[styles.label, { marginBottom: 8 }]}>Pay Rates:</Text>
 
-                                            {selectedTechnicians.map((tech) => {
-                                                const isExpanded = expandedTechId === tech.id;
-
-                                                return (
-                                                    <View key={tech.id} style={{ marginBottom: 10, borderWidth: 1, borderColor: '#ddd', borderRadius: 10 }}>
-                                                        <TouchableOpacity
-                                                            style={{
-                                                                flexDirection: 'row',
-                                                                justifyContent: 'space-between',
-                                                                alignItems: 'center',
-                                                                padding: 12,
-                                                                backgroundColor: '#F0F4FF',
-                                                                borderTopLeftRadius: 10,
-                                                                borderTopRightRadius: 10,
-                                                            }}
-                                                            onPress={() => toggleExpanded(tech.id)}
-                                                        >
-                                                            <Text style={{ fontSize: 16, fontWeight: '600' }}>
-                                                                {capitalize(tech.firstName)} {capitalize(tech.lastName)}
-                                                            </Text>
-
-                                                            <Icon
-                                                                name={isExpanded ? 'chevron-up' : 'chevron-down'}
-                                                                type="Feather"
-                                                                size={22}
-                                                                color="#333"
-                                                            />
-                                                        </TouchableOpacity>
-
-                                                        {isExpanded && (
-                                                            <View style={{ paddingHorizontal: spacings.large, paddingBottom: spacings.xxLarge }}>
-
-                                                                <View style={styles.flexRowInputBox}>
-                                                                    <Text style={[styles.inputLabel, { width: "50%" }]}>Pay Rate</Text>
-                                                                    <Text style={styles.inputValue}>{tech?.payRate}</Text>
-                                                                </View>
-
-                                                                {tech.payRate === "Simple Percentage" && (
-                                                                    <View style={styles.flexRowInputBox}>
-                                                                        <Text style={styles.inputLabel}>Simple Percentage (%)</Text>
-                                                                        <TextInput
-                                                                            value={tech?.amountPercentage?.toString() || "0"}
-                                                                            onChangeText={(text) => handleRateChange(tech?.id, 'amountPercentage', text)}
-                                                                            style={styles.inputEditable}
-                                                                            keyboardType="numeric"
-                                                                            placeholder="Enter % commission"
-                                                                            placeholderTextColor="#999"
-                                                                        />
-                                                                    </View>
-                                                                )}
-
-                                                                {(tech?.payRate === "Simple Flat Rate" || tech?.payRate === "Pay Per Vehicles") &&
-                                                                    tech?.simpleFlatRate &&
-                                                                    Object.entries(JSON.parse(tech?.simpleFlatRate)).map(([type, rate], idx) => (
-                                                                        <View key={idx} style={styles.flexRowInputBox}>
-                                                                            {tech?.payRate === "Pay Per Vehicles" ? (
-                                                                                <Text style={styles.inputLabel}>{type}</Text>
-                                                                            ) : (
-                                                                                <Text style={styles.inputLabel}>Simple Flat Rate</Text>
-                                                                            )}
-                                                                            <TextInput
-                                                                                value={rate.toString()}
-                                                                                onChangeText={(text) => handleRateChange(tech?.id, type, text)}
-                                                                                style={styles.inputEditable}
-                                                                                keyboardType="numeric"
-                                                                                placeholder={`Enter rate for ${type}`}
-                                                                                placeholderTextColor="#999"
-                                                                            />
-                                                                        </View>
-                                                                    ))}
-
-                                                                {tech?.payRate === "Pay Per Job" && (
-                                                                    <View style={styles.flexRowInputBox}>
-                                                                        <Text style={styles.inputLabel}>Enter Amount</Text>
-                                                                        <TextInput
-                                                                            value={JSON.parse(tech?.simpleFlatRate || "{}")?.technician?.toString() || ""}
-                                                                            onChangeText={(text) => handleRateChange(tech?.id, 'technician', text)}
-                                                                            style={styles.inputEditable}
-                                                                            keyboardType="numeric"
-                                                                            placeholder="Enter flat job amount"
-                                                                            placeholderTextColor="#999"
-                                                                        />
-                                                                    </View>
-                                                                )}
-
-                                                            </View>
-                                                        )}
-                                                        
-
-                                                    </View>
-                                                );
-                                            })}
-                                        </View>
-                                    )} */}
 
                                     {rrTechnicians.length > 0 && <View style={{ marginTop: 5 }}>
                                         <Text style={styles.label}>Select R Technicians</Text>
@@ -999,104 +762,6 @@ const CreateJobScreen = ({ route }) => {
                                         ) : null}
                                     </View>}
 
-                                    {/* {selectedTechnicians.length > 0 && (
-                                        <View style={{ marginTop: 16 }}>
-                                            <Text style={[styles.label, { marginBottom: 8 }]}>Pay Rates:</Text>
-
-                                            {selectedTechnicians.map((tech) => {
-                                                const isExpanded = expandedTechId === tech.id;
-
-                                                return (
-                                                    <View key={tech.id} style={{ marginBottom: 10, borderWidth: 1, borderColor: '#ddd', borderRadius: 10 }}>
-                                                        <TouchableOpacity
-                                                            style={{
-                                                                flexDirection: 'row',
-                                                                justifyContent: 'space-between',
-                                                                alignItems: 'center',
-                                                                padding: 12,
-                                                                backgroundColor: '#F0F4FF',
-                                                                borderTopLeftRadius: 10,
-                                                                borderTopRightRadius: 10,
-                                                            }}
-                                                            onPress={() => toggleExpanded(tech.id)}
-                                                        >
-                                                            <Text style={{ fontSize: 16, fontWeight: '600' }}>
-                                                                {capitalize(tech.firstName)} {capitalize(tech.lastName)}
-                                                            </Text>
-
-                                                            <Icon
-                                                                name={isExpanded ? 'chevron-up' : 'chevron-down'}
-                                                                type="Feather"
-                                                                size={22}
-                                                                color="#333"
-                                                            />
-                                                        </TouchableOpacity>
-
-                                                        {isExpanded && (
-                                                            <View style={{ paddingHorizontal: spacings.large, paddingBottom: spacings.xxLarge }}>
-
-                                                                <View style={styles.flexRowInputBox}>
-                                                                    <Text style={[styles.inputLabel, { width: "50%" }]}>Pay Rate</Text>
-                                                                    <Text style={styles.inputValue}>{tech?.payRate}</Text>
-                                                                </View>
-
-                                                                {tech.payRate === "Simple Percentage" && (
-                                                                    <View style={styles.flexRowInputBox}>
-                                                                        <Text style={styles.inputLabel}>Simple Percentage (%)</Text>
-                                                                        <TextInput
-                                                                            value={tech?.amountPercentage?.toString() || "0"}
-                                                                            onChangeText={(text) => handleRateChange(tech?.id, 'amountPercentage', text)}
-                                                                            style={styles.inputEditable}
-                                                                            keyboardType="numeric"
-                                                                            placeholder="Enter % commission"
-                                                                            placeholderTextColor="#999"
-                                                                        />
-                                                                    </View>
-                                                                )}
-
-                                                                {(tech?.payRate === "Simple Flat Rate" || tech?.payRate === "Pay Per Vehicles") &&
-                                                                    tech?.simpleFlatRate &&
-                                                                    Object.entries(JSON.parse(tech?.simpleFlatRate)).map(([type, rate], idx) => (
-                                                                        <View key={idx} style={styles.flexRowInputBox}>
-                                                                            {tech?.payRate === "Pay Per Vehicles" ? (
-                                                                                <Text style={styles.inputLabel}>{type}</Text>
-                                                                            ) : (
-                                                                                <Text style={styles.inputLabel}>Simple Flat Rate</Text>
-                                                                            )}
-                                                                            <TextInput
-                                                                                value={rate.toString()}
-                                                                                onChangeText={(text) => handleRateChange(tech?.id, type, text)}
-                                                                                style={styles.inputEditable}
-                                                                                keyboardType="numeric"
-                                                                                placeholder={`Enter rate for ${type}`}
-                                                                                placeholderTextColor="#999"
-                                                                            />
-                                                                        </View>
-                                                                    ))}
-
-                                                                {tech?.payRate === "Pay Per Job" && (
-                                                                    <View style={styles.flexRowInputBox}>
-                                                                        <Text style={styles.inputLabel}>Enter Amount</Text>
-                                                                        <TextInput
-                                                                            value={JSON.parse(tech?.simpleFlatRate || "{}")?.technician?.toString() || ""}
-                                                                            onChangeText={(text) => handleRateChange(tech?.id, 'technician', text)}
-                                                                            style={styles.inputEditable}
-                                                                            keyboardType="numeric"
-                                                                            placeholder="Enter flat job amount"
-                                                                            placeholderTextColor="#999"
-                                                                        />
-                                                                    </View>
-                                                                )}
-
-                                                            </View>
-                                                        )}
-                                                        
-
-                                                    </View>
-                                                );
-                                            })}
-                                        </View>
-                                    )} */}
                                 </>
                             }
 

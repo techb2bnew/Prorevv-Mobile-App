@@ -292,8 +292,8 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
                       { color: jobDetails?.jobStatus ? 'green' : 'red' }
                     ]}
                   >
-                    {/* {jobDetails?.jobStatus ? "Complete" : "In Progress"} */}
-                    {(() => {
+                    {jobDetails?.jobStatus ? "Complete" : "In Progress"}
+                    {/* {(() => {
                       const allVehiclesComplete = jobDetails?.vehicles?.every(v => v?.vehicleStatus === true);
                       const isJobComplete = jobDetails?.jobStatus || allVehiclesComplete;
 
@@ -308,7 +308,7 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
                           {isJobComplete ? "Complete" : "In Progress"}
                         </Text>
                       );
-                    })()}
+                    })()} */}
                   </Text>
                 </View>
                 {technicianType != 'ifs' && <View style={styles.rightCol}>
@@ -339,7 +339,7 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
                   </Text>
                 </View>
               </View>
-              {Array.isArray(jobDetails.technicians) && jobDetails.technicians.length > 0 && (
+              {Array.isArray(jobDetails.technicians) && jobDetails.technicians.length > 0 && technicianType === "manager" && (
                 <View >
                   <Text style={[styles.label, { marginBottom: 6 }]}>Assigned Technicians</Text>
 
@@ -397,7 +397,7 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
                 </Text>
               </View>
 
-              <View style={[styles.rowItem, { paddingHorizontal: 10,marginTop:spacings.large }]}>
+              <View style={[styles.rowItem, { paddingHorizontal: 10, marginTop: spacings.large }]}>
                 {!!vehicle.vin && (
                   <View style={styles.leftCol}>
                     <Text style={styles.label}>VIN</Text>
@@ -457,54 +457,51 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
                 )}
               </View>
 
-              {Array.isArray(vehicle.jobDescription) && vehicle.jobDescription.length > 0 && (
-                <View style={{ padding: 10 }}>
-                  {/* Heading */}
-                  <View style={[flexDirectionRow, justifyContentSpaceBetween]}>
-                    <View style={styles.leftCol}>
-                      <Text style={styles.label}>Work Description</Text>
-                    </View>
-                    {/* <View style={styles.rightCol}>
-                      <Text style={styles.label}>Cost</Text>
-                    </View> */}
-                  </View>
-
-                  {/* List of Work Items */}
-                  {vehicle.jobDescription.map((desc, i) => {
-                    const isObject = typeof desc === 'object' && desc !== null;
-                    const description = isObject ? desc.jobDescription : desc;
-                    const cost = isObject ? desc.cost : '';
-
-                    if (!description && !cost) return null;
-
-                    return (
-                      <View key={i} style={[flexDirectionRow, justifyContentSpaceBetween]}>
-                        <View style={styles.leftCol}>
-                          <Text style={styles.value}>• {description || '—'}</Text>
-                        </View>
-                        {/* <View style={styles.rightCol}>
-                          <Text style={styles.value}>• {cost ? `$${cost}` : '—'}</Text>
-                        </View> */}
+              {Array.isArray(vehicle.jobDescription) &&
+                vehicle.jobDescription.filter(desc => {
+                  if (typeof desc === 'object' && desc !== null) {
+                    return desc.jobDescription || desc.cost;
+                  }
+                  return !!desc; // in case it's a plain string
+                }).length > 0 && (
+                  <View style={{ padding: 10 }}>
+                    {/* Heading */}
+                    <View style={[flexDirectionRow, justifyContentSpaceBetween]}>
+                      <View style={styles.leftCol}>
+                        <Text style={styles.label}>Work Description</Text>
                       </View>
-                    );
-                  })}
+                    </View>
 
-                  {/* <View style={{ height: 1, marginVertical: 8 }} />
+                    {/* List of Work Items */}
+                    {vehicle.jobDescription.map((desc, i) => {
+                      const isObject = typeof desc === 'object' && desc !== null;
+                      const description = isObject ? desc.jobDescription : desc;
+                      const cost = isObject ? desc.cost : '';
 
-                  {/* Total Block */}
-                  {/* <View style={{ paddingVertical: 10 }}>
-                    <Text style={[styles.label, { marginBottom: 4 }]}>Total</Text>
+                      if (!description && !cost) return null;
+
+                      return (
+                        <View key={i} style={[flexDirectionRow, justifyContentSpaceBetween]}>
+                          <View style={styles.leftCol}>
+                            <Text style={styles.value}>• {description || '—'}</Text>
+                          </View>
+                        </View>
+                      );
+                    })}
+                  </View>
+                )}
+
+
+              {technicianType === "single-technician" && vehicle?.labourCost
+                ? (
+                  <View style={{ padding: 10 }}>
+                    <Text style={[styles.label, { marginBottom: 4 }]}>Labour Cost</Text>
                     <Text style={[styles.value, { fontWeight: '600' }]}>
-                      $
-                      {vehicle.jobDescription.reduce((total, desc) => {
-                        const isObject = typeof desc === 'object' && desc !== null;
-                        const cost = isObject ? parseFloat(desc.cost) : 0;
-                        return total + (isNaN(cost) ? 0 : cost);
-                      }, 0).toFixed(2)}
+                      ${vehicle.labourCost}
                     </Text>
-                  </View>  */}
-                </View>
-              )}
+                  </View>
+                ) : null}
+
 
               {/* Notes */}
               {!!vehicle.notes?.trim() && (
@@ -569,7 +566,7 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
                 </View>
               </View>
 
-              {Array.isArray(vehicle.assignedTechnicians) && vehicle.assignedTechnicians.length > 0 && (
+              {technicianType === "manager" && Array.isArray(vehicle.assignedTechnicians) && vehicle.assignedTechnicians.length > 0 && (
                 <View style={{ padding: 10 }}>
                   <Text style={[styles.label, { marginBottom: 6 }]}>Assigned Technicians</Text>
 

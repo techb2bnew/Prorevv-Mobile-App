@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Alert, Pressable, TextInput, Image } from 'react-native';
 import * as ImagePicker from "react-native-image-picker";
 import CustomDropdown from "../componets/CustomDropdown";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import Ionicons from 'react-native-vector-icons/dist/Ionicons';
 import { BaseStyle } from '../constans/Style';
 import { spacings, style } from '../constans/Fonts';
@@ -36,6 +36,8 @@ const FeedbackScreen = () => {
     const [modalVisible, setModalVisible] = useState(false);
     const issueTypes = ["Issue", "Feedback"];
     const priorityLevels = ["Low", "Medium", "High"];
+    const [technicianType, setTechnicianType] = useState();
+
 
     const compressImage = async (uri) => {
         try {
@@ -51,6 +53,23 @@ const FeedbackScreen = () => {
             return uri; // Agar error aaye toh original image return kare
         }
     };
+
+    useFocusEffect(
+        useCallback(() => {
+            const getTechnicianDetail = async () => {
+                try {
+                    const storedData = await AsyncStorage.getItem('userDeatils');
+                    if (storedData) {
+                        const parsedData = JSON.parse(storedData);
+                        setTechnicianType(parsedData.types)
+                    }
+                } catch (error) {
+                    console.error("Error fetching stored user:", error);
+                }
+            };
+            getTechnicianDetail();
+        }, [])
+    );
 
 
     const handleSubmit = async () => {
@@ -87,6 +106,8 @@ const FeedbackScreen = () => {
         formData.append("subject", subject);
         formData.append("description", description);
         formData.append("priorityLevel", priority);
+        formData.append("roleType", technicianType);
+
 
         if (image) {
             const newUri = Platform.OS === "ios" ? image.replace("file://", "") : image;

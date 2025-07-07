@@ -282,6 +282,13 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
                     //         value: `$${totalCost?.toFixed(2)}`
                     //     }]
                     //     : []),
+
+                    ...(technicianType === "single-technician"
+                        ? [{
+                            label: "Labour Cost",
+                            value: `$${vehicleDetails?.labourCost}`,
+                        }]
+                        : []),
                 ]
             }] : []),
             {
@@ -325,14 +332,14 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
                     data: [{ label: "Attachments", images: vehicleDetails?.images }]
                 }]
                 : []),
-            ...(vehicleDetails?.assignedTechnicians?.length
+            ...(technicianType === "manager" && vehicleDetails?.assignedTechnicians?.length
                 ? [{
                     groupTitle: "Assigned Technicians",
                     data: vehicleDetails.assignedTechnicians.flatMap((tech, index) => {
                         const name = `${capitalize(tech.firstName)} ${capitalize(tech.lastName)}`;
                         const techTypeRaw = tech?.techType?.toLowerCase();
-                        const shouldShowType = techTypeRaw.includes('r') || techTypeRaw.includes('rb');
-                        const techType = shouldShowType ? ` (${tech.techType.toUpperCase()})` : '';
+                        const shouldShowType = techTypeRaw?.includes('r') || techTypeRaw?.includes('rb');
+                        const techType = shouldShowType ? ` (${tech.techType?.toUpperCase()})` : '';
                         const flatRate = tech?.VehicleTechnician?.techFlatRate;
                         const rRate = tech?.VehicleTechnician?.rRate;
 
@@ -465,7 +472,7 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
                         )}
                     </View>
 
-                    {!loading && vehicleDetails?.vehicleStatus === false  &&(
+                    {!loading && vehicleDetails?.vehicleStatus === false && (
                         <Pressable
                             style={[styles.completeButton, alignItemsCenter]}
                             onPress={() => handelCompleteWorkOrder(vehicleId, setSuccessModalVisible)}

@@ -443,13 +443,13 @@ const VinListScreen = ({ navigation, route }) => {
             </View>
             {/* Tabs */}
             <View style={[styles.tabContainer, flexDirectionRow]}>
-                <TouchableOpacity style={[styles.tab, activeTab === 'workOrder' && styles.activeTab,alignJustifyCenter]} onPress={() => setActiveTab('workOrder')}>
-                    <Text style={[styles.tabText, { color: activeTab === 'workOrder' ? whiteColor : blackColor,textAlign:"center" }]}>Work Order</Text>
+                <TouchableOpacity style={[styles.tab, activeTab === 'workOrder' && styles.activeTab, alignJustifyCenter]} onPress={() => setActiveTab('workOrder')}>
+                    <Text style={[styles.tabText, { color: activeTab === 'workOrder' ? whiteColor : blackColor, textAlign: "center" }]}>Work Order</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={[styles.tab, activeTab === 'partnerOrder' && styles.activeTab,alignJustifyCenter]} 
+                <TouchableOpacity style={[styles.tab, activeTab === 'partnerOrder' && styles.activeTab, alignJustifyCenter]}
                 // onPress={() => setActiveTab('partnerOrder')}
                 >
-                    <Text style={[styles.tabText, { color: activeTab === 'partnerOrder' ? whiteColor : blackColor,fontSize:11,textAlign:"center" }]}>W.O With Partner(coming soon)</Text>
+                    <Text style={[styles.tabText, { color: activeTab === 'partnerOrder' ? whiteColor : blackColor, fontSize: 11, textAlign: "center" }]}>W.O With Partner(coming soon)</Text>
                 </TouchableOpacity>
             </View>
 
@@ -594,7 +594,7 @@ const VinListScreen = ({ navigation, route }) => {
                 </View>
             </ScrollView>}
 
-            {viewType === "grid" && <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(66) : hp(51) : isIOSAndTablet ? hp(65) : hp(48)}}>
+            {viewType === "grid" && <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(66) : hp(51) : isIOSAndTablet ? hp(65) : hp(48) }}>
                 <FlatList
                     data={filteredData}
                     keyExtractor={(item, index) => index.toString()}

@@ -18,6 +18,7 @@ if (Platform.OS === 'android') {
 const HowToPlayScreen = () => {
     const [expandedStep, setExpandedStep] = useState(0);
     const [businessLogo, setBusinessLogo] = useState(null);
+    const [technicianType, setTechnicianType] = useState();
 
     const steps = [
         {
@@ -168,6 +169,22 @@ const HowToPlayScreen = () => {
             if (logoUrl) setBusinessLogo(logoUrl);
         };
         fetchBusinessLogo();
+    }, []);
+
+    useEffect(() => {
+        const getTechnicianDetail = async () => {
+            try {
+                const storedData = await AsyncStorage.getItem("userDeatils");
+                if (storedData) {
+                    const parsedData = JSON.parse(storedData);
+                    setTechnicianType(parsedData?.types)
+                }
+            } catch (error) {
+                console.error("Error fetching stored user:", error);
+            }
+        };
+
+        getTechnicianDetail();
     }, []);
 
     const toggleStep = (index) => {
