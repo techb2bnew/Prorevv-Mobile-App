@@ -296,23 +296,23 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
                 data: [
                     {
                         label: "Start Date",
-                        value: vehicleDetails?.createdAt
-                            ? new Date(vehicleDetails.startDate).toLocaleDateString("en-US", {
+                        value: vehicleDetails?.startDate
+                            ? new Date(vehicleDetails?.startDate).toLocaleDateString("en-US", {
                                 month: "long",    // e.g., June
                                 day: "numeric",   // e.g., 23
                                 year: "numeric",  // e.g., 2025
                             })
-                            : "N/A"
+                            : "-"
                     },
                     {
                         label: "End Date",
-                        value: vehicleDetails?.createdAt
-                            ? new Date(vehicleDetails.endDate).toLocaleDateString("en-US", {
+                        value: vehicleDetails?.endDate
+                            ? new Date(vehicleDetails?.endDate).toLocaleDateString("en-US", {
                                 month: "long",    // e.g., June
                                 day: "numeric",   // e.g., 23
                                 year: "numeric",  // e.g., 2025
                             })
-                            : "N/A"
+                            : "-"
                     },
                     { label: "Status", value: vehicleDetails?.vehicleStatus === false ? "In-Progress" : "Completed" },
                 ]

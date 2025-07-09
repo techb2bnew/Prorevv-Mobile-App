@@ -199,11 +199,9 @@ const VinListScreen = ({ navigation, route }) => {
                 }
             });
 
-            const { response: resData } = response.data;
-            console.log("response.data", response.data?.response);
+            const { response: resData } = response?.data?.jobs || response.data?.response;
 
             const newVehicles = response?.data?.jobs?.vehicles || response.data?.response?.vehicles || [];
-            console.log("resss", newVehicles);
 
             // Update vehicle data
             if (pageNumber === 1) {
@@ -213,8 +211,13 @@ const VinListScreen = ({ navigation, route }) => {
             }
 
             // Handle pagination
-            const morePagesAvailable = pageNumber < resData?.totalPages;
+            const morePagesAvailable = pageNumber < response?.data?.jobs?.totalPages||response?.data?.response?.totalPages; // Check if currentPage < totalPages
+            console.log("More Pages Available:", morePagesAvailable);
+
+            // Update the `hasMore` state based on the response
             setHasMore(morePagesAvailable);
+
+            // Update the current page number
             setPage(pageNumber);
         } catch (error) {
             console.error("Failed to fetch vehicle info:", error);
@@ -442,7 +445,7 @@ const VinListScreen = ({ navigation, route }) => {
 
             </View>
             {/* Tabs */}
-            <View style={[styles.tabContainer, flexDirectionRow]}>
+            {/* <View style={[styles.tabContainer, flexDirectionRow]}>
                 <TouchableOpacity style={[styles.tab, activeTab === 'workOrder' && styles.activeTab, alignJustifyCenter]} onPress={() => setActiveTab('workOrder')}>
                     <Text style={[styles.tabText, { color: activeTab === 'workOrder' ? whiteColor : blackColor, textAlign: "center" }]}>Work Order</Text>
                 </TouchableOpacity>
@@ -451,7 +454,7 @@ const VinListScreen = ({ navigation, route }) => {
                 >
                     <Text style={[styles.tabText, { color: activeTab === 'partnerOrder' ? whiteColor : blackColor, fontSize: 11, textAlign: "center" }]}>W.O With Partner(coming soon)</Text>
                 </TouchableOpacity>
-            </View>
+            </View> */}
 
             {/* Search */}
             <View style={[flexDirectionRow]}>
@@ -496,7 +499,7 @@ const VinListScreen = ({ navigation, route }) => {
 
                     </View>
 
-                    <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(63) : hp(44) : isIOSAndTablet ? hp(62) : hp(42) }}>
+                    <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(68.5) : hp(55) : isIOSAndTablet ? hp(67) : hp(52) }}>
                         <FlatList
                             data={filteredData}
                             keyExtractor={(item, index) => index.toString()}
@@ -516,20 +519,27 @@ const VinListScreen = ({ navigation, route }) => {
                                         <Text style={[styles.tableText, { width: wp(50) }]}>{item?.vin}</Text>
                                         <Text style={[styles.tableText, { width: wp(35) }]}>{item?.make}</Text>
                                         <Text style={[styles.tableText, { width: wp(35) }]}>{item?.model}</Text>
-                                        <Text style={[styles.tableText, { width: wp(35) }]}> {new Date(item?.startDate).toLocaleDateString("en-US", {
-                                            month: "long",
-                                            day: "numeric",
-                                            year: "numeric"
-                                        })}
+                                        <Text style={[styles.tableText, { width: wp(35) }]}>
+                                            {item?.startDate
+                                                ? new Date(item.startDate).toLocaleDateString("en-US", {
+                                                    month: "long",
+                                                    day: "numeric",
+                                                    year: "numeric",
+                                                })
+                                                : "-"}
                                         </Text>
-                                        <Text style={[styles.tableText, { width: wp(35) }]}> {new Date(item?.endDate).toLocaleDateString("en-US", {
-                                            month: "long",
-                                            day: "numeric",
-                                            year: "numeric"
-                                        })}
+
+                                        <Text style={[styles.tableText, { width: wp(35) }]}>
+                                            {item?.endDate
+                                                ? new Date(item.endDate).toLocaleDateString("en-US", {
+                                                    month: "long",
+                                                    day: "numeric",
+                                                    year: "numeric",
+                                                })
+                                                : "-"}
                                         </Text>
                                         {technicianType === "manager" && (
-                                            <Text style={[styles.tableText, { width: wp(50),paddingRight:10 }]}>
+                                            <Text style={[styles.tableText, { width: wp(50), paddingRight: 10 }]}>
                                                 {item?.assignedTechnicians
                                                     // ?.filter(tech => tech?.id !== technicianId)
                                                     ?.map(tech => {
@@ -543,13 +553,6 @@ const VinListScreen = ({ navigation, route }) => {
                                                     .join(', ') || '—'}
                                             </Text>
                                         )}
-
-                                        {/* <Text style={[styles.tableText, { width: wp(45) }]}>
-                                            ${Array.isArray(item?.jobDescription) && item?.jobDescription?.length > 0
-                                                ? item?.jobDescription?.reduce((total, job) => total + Number(job?.cost || 0), 0)
-                                                : '0'}
-                                        </Text> */}
-
                                         <View style={{ flexDirection: "row", alignItems: "center", width: wp(45) }} >
                                             <Pressable onPress={() => navigation.navigate("VehicleDetailsScreen", {
                                                 vehicleId: item.id,
@@ -585,7 +588,10 @@ const VinListScreen = ({ navigation, route }) => {
                             }}
                             onEndReached={() => {
                                 if (!loading && hasMore) {
-                                    fetchVehicalInfo(page + 1);
+                                    console.log("Fetching page:", page + 1);  // Log the page number being fetched
+                                    fetchVehicalInfo(page + 1);  // Fetch the next page
+                                } else {
+                                    console.log("No more pages to fetch.");
                                 }
                             }}
                             onEndReachedThreshold={0.5}
@@ -594,7 +600,7 @@ const VinListScreen = ({ navigation, route }) => {
                 </View>
             </ScrollView>}
 
-            {viewType === "grid" && <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(66) : hp(51) : isIOSAndTablet ? hp(65) : hp(48) }}>
+            {viewType === "grid" && <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(72) : hp(61) : isIOSAndTablet ? hp(70) : hp(56) }}>
                 <FlatList
                     data={filteredData}
                     keyExtractor={(item, index) => index.toString()}
@@ -645,20 +651,26 @@ const VinListScreen = ({ navigation, route }) => {
                                 </View>
                                 <View style={{ width: '48%', marginBottom: 10 }}>
                                     <Text style={{ color: '#555', fontSize: 11 }}>Start Date</Text>
-                                    <Text >{new Date(item?.startDate).toLocaleDateString("en-US", {
-                                        month: "long",
-                                        day: "numeric",
-                                        year: "numeric"
-                                    })}
+                                    <Text style={[styles.tableText, { width: wp(35) }]}>
+                                        {item?.startDate
+                                            ? new Date(item.startDate).toLocaleDateString("en-US", {
+                                                month: "long",
+                                                day: "numeric",
+                                                year: "numeric",
+                                            })
+                                            : "-"}
                                     </Text>
                                 </View>
                                 <View style={{ width: '48%', marginBottom: 10 }}>
                                     <Text style={{ color: '#555', fontSize: 11 }}>End Date</Text>
-                                    <Text >{new Date(item?.endDate).toLocaleDateString("en-US", {
-                                        month: "long",
-                                        day: "numeric",
-                                        year: "numeric"
-                                    })}
+                                    <Text style={[styles.tableText, { width: wp(35) }]}>
+                                        {item?.endDate
+                                            ? new Date(item.endDate).toLocaleDateString("en-US", {
+                                                month: "long",
+                                                day: "numeric",
+                                                year: "numeric",
+                                            })
+                                            : "-"}
                                     </Text>
                                 </View>
                                 {activeTab === 'partnerOrder' && (<View style={{ width: '48%', marginBottom: 10 }}>
@@ -689,10 +701,13 @@ const VinListScreen = ({ navigation, route }) => {
                     )}
                     onEndReached={() => {
                         if (!loading && hasMore) {
-                            fetchVehicalInfo(page + 1);
+                            console.log("Fetching page:", page + 1);  // Log the page number being fetched
+                            fetchVehicalInfo(page + 1);  // Fetch the next page
+                        } else {
+                            console.log("No more pages to fetch.");
                         }
                     }}
-                    onEndReachedThreshold={0.3}
+                    onEndReachedThreshold={0.5}
                     ListFooterComponent={() =>
                         loading ? (
                             <View style={{ paddingVertical: 10, alignItems: "center", width: "100%", height: hp(50), justifyContent: "center" }}>

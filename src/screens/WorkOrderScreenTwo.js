@@ -53,12 +53,6 @@ const WorkOrderScreenTwo = ({ route }) => {
     const [labourCost, setLabourCost] = useState('');
     const [textInputHeights, setTextInputHeights] = useState({});
     const [vTypeopen, setVTypeOpen] = useState(false);
-    // const [selectedVehicleType, setSelectedVehicleType] = useState(null);
-    // const [vehicleTypeError, setVehicleTypeError] = useState();
-    // const [storedVehicles, setStoredVehicles] = useState([]);
-    // const [storedPayRate, setStoredPayRate] = useState('');
-    // const [storedSimpleFlatRate, setStoredSimpleFlatRate] = useState(null);
-    // const [storedAmountPercentage, setStoredAmountPercentage] = useState(null);
     const inputRefs = useRef([]);
     const [step, setStep] = useState(route?.params?.vehicleId ? 2 : 1);
     const [selectedJobName, setSelectedJobName] = useState("");
@@ -75,10 +69,11 @@ const WorkOrderScreenTwo = ({ route }) => {
     const [technicians, setTechnicians] = useState([]);
     const [selectedTechnicians, setSelectedTechnicians] = useState([]); // store selected IDs
     const [vehicleDetails, setVehicleDetails] = useState(false);
-    const [startDate, setStartDate] = useState(new Date());
-    const [endDate, setEndDate] = useState(new Date());
+    const [startDate, setStartDate] = useState(null);
+    const [endDate, setEndDate] = useState(null);
     const [isStartPickerOpen, setIsStartPickerOpen] = useState(false);
     const [isEndPickerOpen, setIsEndPickerOpen] = useState(false);
+    const [duplicatePopupSource, setDunplicatePopupSource] = useState("");
 
     const [modalData, setModalData] = useState({
         visible: false,
@@ -388,7 +383,7 @@ const WorkOrderScreenTwo = ({ route }) => {
             }
         } catch (error) {
             if (error.response?.status === 409 && error.response?.data?.status === false) {
-                const msg = error.response.data.message; // e.g., ❗ Duplicate VIN detected: VIN WAUNE78P28A492843 already exists in the job Tajmahel1 for customer Suraj moters.
+                const msg = error.response.data.message;
 
                 const vinMatch = msg.match(/VIN (\w+)/);
                 const jobMatch = msg.match(/job (\w+)/);
@@ -608,8 +603,13 @@ const WorkOrderScreenTwo = ({ route }) => {
             // formData.append("cost", item.cost);
         });
 
-        formData.append("startDate", startDate ? startDate.toISOString() : null);
-        formData.append("endDate", endDate ? endDate.toISOString() : null);
+        if (startDate) {
+            formData.append("startDate", startDate.toISOString());
+        }
+
+        if (endDate) {
+            formData.append("endDate", endDate.toISOString());
+        }
         selectedTechnicians.forEach((tech, index) => {
             // console.log(`Technician ${index}:`, tech); // 👈 Technician object console me print karega
             formData.append(`technicians[${index}][id]`, tech.id);
@@ -625,29 +625,6 @@ const WorkOrderScreenTwo = ({ route }) => {
             formData.append("technicianid[0]", technicianId || '');
         }
 
-
-        // if (technicianType === "ifs") {
-        //     // 👉 Single Technician (self)
-        //     let parsedRate = {};
-        //     try {
-        //         parsedRate = JSON.parse(storedSimpleFlatRate || "{}");
-        //     } catch (e) {
-        //         console.error("Invalid JSON in storedSimpleFlatRate", e);
-        //     }
-
-        //     const selRate = {
-        //         [selectedVehicleType]: parsedRate[selectedVehicleType],
-        //     };
-
-        //     const finalRate = parsedRate[selectedVehicleType] !== undefined
-        //         ? JSON.stringify(selRate)
-        //         : storedSimpleFlatRate || "{}";
-
-        //     formData.append("technicians[0][payRate]", storedPayRate);
-        //     formData.append("technicians[0][payVehicleType]", selectedVehicleType);
-        //     formData.append("technicians[0][simpleFlatRate]", finalRate);
-        //     formData.append("technicians[0][amountPercentage]", storedAmountPercentage);
-        // }
         if (route?.params?.vehicleId) {
             console.log("Vehicle ID present:", route.params.vehicleId);
 
@@ -731,11 +708,27 @@ const WorkOrderScreenTwo = ({ route }) => {
                     Toast.show((route?.params?.vehicleId) ? "Vehicle update successfully!" : "Vehicle add successfully!");
                 }
             } else {
-                console.warn("Submission failed:", responseJson?.error);
-                setError(responseJson?.error)
+                const msg = responseJson?.error || "";
 
+                // Check if the error contains duplicate VIN format
+                if (msg.includes("already exists in the job")) {
+                    const vinMatch = msg.match(/VIN (\w+)/);
+                    const jobMatch = msg.match(/job (\w+)/);
+                    const customerMatch = msg.match(/customer (.+)\./); // till dot
+                    setDunplicatePopupSource("submit")
+                    setDuplicateVinModal(true);
+                    setIsLoadingCarDetails(false);
+
+                    setDuplicateVinMessage(msg); // for reference
+
+                    setExtractedVin(vinMatch ? vinMatch[1] : "");
+                    setExtractedJob(jobMatch ? jobMatch[1] : "");
+                    setExtractedCustomer(customerMatch ? customerMatch[1] : "");
+                } else {
+                    console.warn("Submission failed:", msg);
+                    setError(msg); // Show default error
+                }
             }
-
         } catch (error) {
             console.error("Error create vehicle:", error);
         } finally {
@@ -896,6 +889,57 @@ const WorkOrderScreenTwo = ({ route }) => {
             return tech;
         });
         setTechnicians(updatedTechs);
+    };
+
+
+    const handleConfirmDuplicateVin = async () => {
+        setIsSubmitting(true);  // Start loading
+        try {
+            const token = await AsyncStorage.getItem("auth_token");
+
+            if (!token) {
+                console.error("Token is missing!");
+                Toast.show("Authentication error. Please log in again.");
+                setIsSubmitting(false);
+                return;
+            }
+
+            if (!newFormData) {
+                console.error("FormData is missing!");
+                Toast.show("Something went wrong. Please try again.");
+                setIsSubmitting(false);
+                return;
+            }
+
+            console.log("Sending FormData:", newFormData);
+
+            const response = await axios.post(
+                `${API_BASE_URL}/createVinDetails`,
+                newFormData,
+                {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            console.log("API Response:", response);
+
+
+            if (response.status === 201) {
+                Toast.show("Vehicle add successfully!");
+                setDuplicateVinModal(false);
+                navigation.navigate("Home")
+            } else {
+                Toast.show("Failed to override job.");
+            }
+        } catch (error) {
+            console.error("Error overriding job:", error);
+            Toast.show("Something went wrong.");
+        } finally {
+            setIsSubmitting(false); // Stop loading after request completes
+        }
     };
 
     return (
@@ -1277,7 +1321,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                             maxLength={5} // Maximum 5 digits
                                             onChangeText={(text) => setLabourCost(text)} />
                                     } */}
-                                    
+
                                     {technicianType === "single-technician" && <View style={{ marginTop: spacings.xxLarge }}>
                                         <Text style={styles.label}>R/I R/R (Labour/Service Cost)</Text>
                                         <TextInput
@@ -1303,21 +1347,21 @@ const WorkOrderScreenTwo = ({ route }) => {
                                         <View style={[styles.datePickerContainer, { marginBottom: 15, color: blackColor }]}>
                                             <TouchableOpacity onPress={() => setIsStartPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter]}>
                                                 <Text style={styles.dateText}>
-                                                    {startDate?.toLocaleDateString("en-US", {
+                                                    {startDate ? startDate.toLocaleDateString("en-US", {
                                                         month: "long",
                                                         day: "numeric",
                                                         year: "numeric",
-                                                    })}
+                                                    }) : "Select Start Date"}
                                                 </Text>
                                                 <Feather name="calendar" size={20} color={blackColor} />
                                             </TouchableOpacity>
                                             <TouchableOpacity onPress={() => setIsEndPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter]}>
                                                 <Text style={styles.dateText}>
-                                                    {endDate?.toLocaleDateString("en-US", {
+                                                    {endDate ? endDate.toLocaleDateString("en-US", {
                                                         month: "long",
                                                         day: "numeric",
                                                         year: "numeric",
-                                                    })}
+                                                    }) : "Select End Date"}
                                                 </Text>
                                                 <Feather name="calendar" size={20} color={blackColor} />
                                             </TouchableOpacity>
@@ -1326,7 +1370,8 @@ const WorkOrderScreenTwo = ({ route }) => {
                                         <DatePicker
                                             modal
                                             open={isStartPickerOpen}
-                                            date={startDate}
+                                            // date={startDate}
+                                            date={startDate || new Date()}
                                             mode="datetime"
                                             // maximumDate={new Date()}
                                             onConfirm={(date) => {
@@ -1339,7 +1384,8 @@ const WorkOrderScreenTwo = ({ route }) => {
                                         <DatePicker
                                             modal
                                             open={isEndPickerOpen}
-                                            date={endDate}
+                                            // date={endDate}
+                                            date={endDate || new Date()}
                                             mode="datetime"
                                             minimumDate={startDate}
                                             // maximumDate={new Date()}
@@ -1576,7 +1622,9 @@ const WorkOrderScreenTwo = ({ route }) => {
                                 <View style={styles.modalContent}>
                                     <Image source={ALERT_IMAGE} style={{ width: 80, height: 80, marginBottom: 10 }} />
                                     <Text style={styles.modalText}>
-                                        Duplicate VIN found.
+                                        {duplicatePopupSource === "submit"
+                                            ? "Are you sure you want to proceed and add this vehicle with the same VIN to the job?"
+                                            : "Duplicate VIN found."}
                                     </Text>
                                     <Text style={[textAlign]}>
                                         VIN{' '}
@@ -1591,17 +1639,21 @@ const WorkOrderScreenTwo = ({ route }) => {
                                         <TouchableOpacity
                                             style={styles.confirmButton}
                                             // onPress={handleConfirmDuplicateVin}
-                                            onPress={() => {
-                                                setDuplicateVinModal(false);
-                                                fetchCarDetails(vin, true);
-                                            }}
+                                            onPress={
+                                                duplicatePopupSource === "submit"
+                                                    ? handleConfirmDuplicateVin // agar source "submit" hai, toh yeh function chale
+                                                    : () => {
+                                                        setDuplicateVinModal(false);        // popup close karo
+                                                        fetchCarDetails(vin, true);         // scan wale case mein VIN dubara fetch karo
+                                                    }
+                                            }
 
                                             disabled={isSubmitting}
                                         >
                                             {isSubmitting ? (
                                                 <ActivityIndicator size="small" color="#fff" />
                                             ) : (
-                                                <Text style={styles.buttonText}>Create Again</Text>
+                                                <Text style={styles.buttonText}>{duplicatePopupSource === "submit" ? "Yes" : "Create Again"}</Text>
                                             )}
                                         </TouchableOpacity>
                                         <TouchableOpacity
@@ -1613,7 +1665,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                                 setStep(1);
                                             }}
                                         >
-                                            <Text style={styles.buttonText}>Re-Scan</Text>
+                                            <Text style={styles.buttonText}>{duplicatePopupSource === "submit" ? "No" : "Re-Scan"}</Text>
                                         </TouchableOpacity>
                                     </View>
                                 </View>

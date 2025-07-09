@@ -265,9 +265,6 @@ const Reports = ({ navigation }) => {
             const updatedJobs = newPage === 1 ? newJobs : [...jobsRawData, ...newJobs];
 
             setJobsRawData(updatedJobs);
-            // await AsyncStorage.setItem("jobHistoryData", JSON.stringify(updatedJobs));
-            // console.log("fetchJobHistory", updatedJobs);
-
             setHasMore(newJobs.length > 0);
             setJobPage(newPage);
         } catch (error) {
@@ -362,6 +359,52 @@ const Reports = ({ navigation }) => {
         }
     };
 
+    // const fetchVehicalInfo = async (pageNumber = 1) => {
+    //     if (!hasMore && pageNumber !== 1) return;
+
+    //     try {
+    //         setLoading(true);
+    //         const token = await AsyncStorage.getItem("auth_token");
+    //         if (!token) {
+    //             console.error("Token not found!");
+    //             return;
+    //         }
+    //         // const apiUrl = technicianType === "manager"
+    //         //     ? `${API_BASE_URL}/fetchVehicleInfo?page=${pageNumber}&roleType=${technicianType}`
+    //         //     : `${API_BASE_URL}/fetchtechVehicleInfo?page=${pageNumber}&userId=${technicianId}`;
+    //         const apiUrl = technicianType === "manager"
+    //             ? `${API_BASE_URL}/fetchVehicalInfo?page=${pageNumber}&roleType=${technicianType}`
+    //             : `${API_BASE_URL}/fetchVehicalInfo?page=${pageNumber}&roleType=${technicianType}&userId=${technicianId}`;
+
+    //         const response = await axios.get(apiUrl, {
+    //             headers: {
+    //                 Authorization: `Bearer ${token}`
+    //             }
+    //         });
+
+    //         const { response: resData } = response.data;
+    //         const newVehicles = response?.data?.jobs?.vehicles || [];
+    //         console.log("fetchVehicalInfo::::", newVehicles);
+
+    //         // Update vehicle data
+    //         if (pageNumber === 1) {
+    //             setWorkOrdersRawData(newVehicles);
+    //         } else {
+    //             setWorkOrdersRawData(prev => [...prev, ...newVehicles]);
+    //         }
+
+    //         // Handle pagination
+    //         const morePagesAvailable = pageNumber < resData?.totalPages;
+    //         setHasMore(morePagesAvailable);
+    //         setPage(pageNumber);
+    //         // console.log("work::", workOrdersRawData);
+
+    //     } catch (error) {
+    //         console.error("Failed to fetch vehicle info:", error);
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
     const fetchVehicalInfo = async (pageNumber = 1) => {
         if (!hasMore && pageNumber !== 1) return;
 
@@ -372,12 +415,11 @@ const Reports = ({ navigation }) => {
                 console.error("Token not found!");
                 return;
             }
-            // const apiUrl = technicianType === "manager"
-            //     ? `${API_BASE_URL}/fetchVehicleInfo?page=${pageNumber}&roleType=${technicianType}`
-            //     : `${API_BASE_URL}/fetchtechVehicleInfo?page=${pageNumber}&userId=${technicianId}`;
             const apiUrl = technicianType === "manager"
                 ? `${API_BASE_URL}/fetchVehicalInfo?page=${pageNumber}&roleType=${technicianType}`
-                : `${API_BASE_URL}/fetchVehicalInfo?page=${pageNumber}&roleType=${technicianType}&userId=${technicianId}`;
+                : technicianType === "ifs"
+                    ? `${API_BASE_URL}/fetchtechVehicleInfo?page=${pageNumber}&userId=${technicianId}`
+                    : `${API_BASE_URL}/fetchVehicalInfo?page=${pageNumber}&roleType=${technicianType}&userId=${technicianId}`;
 
             const response = await axios.get(apiUrl, {
                 headers: {
@@ -386,29 +428,24 @@ const Reports = ({ navigation }) => {
             });
 
             const { response: resData } = response.data;
-            const newVehicles = response?.data?.jobs?.vehicles || [];
-            console.log("fetchVehicalInfo::::", newVehicles);
+            const newVehicles = response?.data?.jobs?.vehicles || response.data?.response?.vehicles || [];
 
-            // Update vehicle data
             if (pageNumber === 1) {
                 setWorkOrdersRawData(newVehicles);
             } else {
                 setWorkOrdersRawData(prev => [...prev, ...newVehicles]);
             }
 
-            // Handle pagination
-            const morePagesAvailable = pageNumber < resData?.totalPages;
+            const morePagesAvailable = pageNumber < response?.data?.jobs?.totalPages || response?.data?.response?.totalPages;
             setHasMore(morePagesAvailable);
             setPage(pageNumber);
-            // console.log("work::", workOrdersRawData);
-
         } catch (error) {
             console.error("Failed to fetch vehicle info:", error);
         } finally {
             setLoading(false);
         }
     };
-
+    
     const fetchCustomerJobHistory = async (newPage = 1, isPagination = false) => {
         if (isPagination) {
             setCustomerLoadingMore(true);
@@ -428,7 +465,7 @@ const Reports = ({ navigation }) => {
             });
 
             const newJobs = response?.data?.customers?.customers || [];
-            console.log("Customer Jobs Fetched:", response?.data?.customers?.customers);
+            console.log("Customer Jobs Fetched:", response?.data);
 
             const updatedJobs = newPage === 1 ? newJobs : [...customerJobs, ...newJobs];
 
@@ -479,7 +516,7 @@ const Reports = ({ navigation }) => {
         setFilteredJobs(filteredJob);
         setFilteredWorkOrders(filteredWork);
 
-        setFilteredCustomer(customerJobs); 
+        setFilteredCustomer(customerJobs);
 
     }, [activeStatus, jobsRawData, workOrdersRawData, customerJobs]);
 
@@ -544,6 +581,13 @@ const Reports = ({ navigation }) => {
         setCustomerRefreshing(true);
         await fetchCustomerJobHistory(1, false);
         setCustomerRefreshing(false);
+    };
+
+    const handleLoadMore = () => {
+        if (hasMore && !loadingMore) {
+            const nextPage = jobPage + 1;
+            fetchJobHistory(nextPage, true);  // Trigger next page fetch
+        }
     };
 
     return (
@@ -725,6 +769,8 @@ const Reports = ({ navigation }) => {
                             showsVerticalScrollIndicator={false}
                             refreshing={refreshingJob}
                             onRefresh={handleRefreshJob}
+                            onEndReached={handleLoadMore}  // Trigger next page fetch when reaching end
+                            onEndReachedThreshold={0.5}
                             renderItem={({ item, index }) => {
                                 const rowStyle = {
                                     backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor,
@@ -760,6 +806,13 @@ const Reports = ({ navigation }) => {
                                     No data found.
                                 </Text>
                             )}
+                            ListFooterComponent={() => {
+                                return loadingMore ? (
+                                    <View style={{ paddingVertical: 20 }}>
+                                        <ActivityIndicator size="large" color="#0000ff" />
+                                    </View>
+                                ) : null;
+                            }}
                         />
                     </View>
                 </>
@@ -797,7 +850,7 @@ const Reports = ({ navigation }) => {
 
                                     </Pressable>
                                     <View style={{ width: '48%', marginBottom: 9 }}>
-                                        <Text style={{ color: '#555', fontSize: 10 }}>JobName</Text>
+                                        <Text style={{ color: '#555', fontSize: 10 }}>Job Name</Text>
                                         <Text >{item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}</Text>
                                     </View>
                                     <View style={{ width: '48%', marginBottom: 9 }}>
@@ -814,22 +867,30 @@ const Reports = ({ navigation }) => {
                                     </View>
                                     <View style={{ width: '48%', marginBottom: 9 }}>
                                         <Text style={{ color: '#555', fontSize: 10 }}>Start Date</Text>
-                                        <Text >{new Date(item?.startDate).toLocaleDateString("en-US", {
-                                            month: "long",
-                                            day: "numeric",
-                                            year: "numeric"
-                                        })}</Text>
+                                        <Text >
+                                            {item?.startDate
+                                                ? new Date(item?.startDate).toLocaleDateString("en-US", {
+                                                    month: "long",
+                                                    day: "numeric",
+                                                    year: "numeric",
+                                                })
+                                                : "-"}
+                                        </Text>
                                     </View>
                                     <View style={{ width: '48%', marginBottom: 9 }}>
                                         <Text style={{ color: '#555', fontSize: 10 }}>End Date</Text>
-                                        <Text >{new Date(item?.endDate).toLocaleDateString("en-US", {
-                                            month: "long",
-                                            day: "numeric",
-                                            year: "numeric"
-                                        })}</Text>
+                                        <Text >
+                                            {item?.endDate
+                                                ? new Date(item?.endDate).toLocaleDateString("en-US", {
+                                                    month: "long",
+                                                    day: "numeric",
+                                                    year: "numeric",
+                                                })
+                                                : "-"}
+                                        </Text>
                                     </View>
                                     <View style={{ width: '48%', marginBottom: 9 }}>
-                                        <Text style={{ color: '#555', fontSize: 10 }}>AssignedTech</Text>
+                                        <Text style={{ color: '#555', fontSize: 10 }}>Assigned Tech</Text>
                                         <Text style={[styles.text, { width: wp(30) }]}>
                                             {item?.assignedTechnicians?.length > 0
                                                 ? item?.assignedTechnicians
@@ -887,11 +948,11 @@ const Reports = ({ navigation }) => {
                         <View>
                             {/* Header Row */}
                             <View style={[styles.tableHeaderRow, { backgroundColor: blueColor }]}>
-                                <Text style={[styles.tableHeader, { width: wp(30) }]}>JobName</Text>
+                                <Text style={[styles.tableHeader, { width: wp(30) }]}>Job Name</Text>
                                 <Text style={[styles.tableHeader, { width: wp(55) }]}>VIN</Text>
                                 <Text style={[styles.tableHeader, { width: wp(35) }]}>Make</Text>
                                 <Text style={[styles.tableHeader, { width: wp(30) }]}>Model</Text>
-                                <Text style={[styles.tableHeader, { width: wp(35) }]}>AssignedTech</Text>
+                                <Text style={[styles.tableHeader, { width: wp(35) }]}>Assigned Tech</Text>
                                 <Text style={[styles.tableHeader, { width: wp(35) }]}>Start Date</Text>
                                 <Text style={[styles.tableHeader, { width: wp(35) }]}>End Date</Text>
 
@@ -923,16 +984,20 @@ const Reports = ({ navigation }) => {
                                                             .join(', ')
                                                         : '-'}
                                                 </Text>
-                                                <Text style={[styles.text, { width: wp(35) }]}>{new Date(item?.startDate).toLocaleDateString("en-US", {
-                                                    month: "long",
-                                                    day: "numeric",
-                                                    year: "numeric"
-                                                })}</Text>
-                                                <Text style={[styles.text, { width: wp(35) }]}>{new Date(item?.endDate).toLocaleDateString("en-US", {
-                                                    month: "long",
-                                                    day: "numeric",
-                                                    year: "numeric"
-                                                })}</Text>
+                                                <Text style={[styles.text, { width: wp(35) }]}> {item?.startDate
+                                                    ? new Date(item?.startDate).toLocaleDateString("en-US", {
+                                                        month: "long",
+                                                        day: "numeric",
+                                                        year: "numeric",
+                                                    })
+                                                    : "-"}</Text>
+                                                <Text style={[styles.text, { width: wp(35) }]}>{item?.endDate
+                                                    ? new Date(item?.endDate).toLocaleDateString("en-US", {
+                                                        month: "long",
+                                                        day: "numeric",
+                                                        year: "numeric",
+                                                    })
+                                                    : "-"}</Text>
                                                 {/* <Text style={[styles.text, { width: wp(30) }]}> ${Array.isArray(item?.jobDescription) && item?.jobDescription?.length > 0
                                                     ? item?.jobDescription?.reduce((total, job) => total + Number(job?.cost || 0), 0)
                                                     : '0'}</Text> */}

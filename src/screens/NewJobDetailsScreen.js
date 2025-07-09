@@ -16,7 +16,6 @@ import Header from '../componets/Header';
 import { useFocusEffect } from '@react-navigation/native';
 import { API_BASE_URL } from '../constans/Constants';
 
-
 const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween, textAlign, justifyContentCenter, justifyContentSpaceEvenly } = BaseStyle;
 
 const NewJobDetailsScreen = ({ navigation, route }) => {
@@ -30,8 +29,6 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
   const isTablet = width >= 668 && height >= 1024;
   const [customerJobs, setCustomerJobs] = useState([]);
   const [selectedJob, setSelectedJob] = useState(null);
-
-
 
   useFocusEffect(
     useCallback(() => {
@@ -54,7 +51,6 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
     setSelectedImage(img);
     setImageModalVisible(true);
   };
-
 
   const fetchJobData = async (jobId) => {
     try {
@@ -151,12 +147,10 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
 
   };
 
-
   const capitalize = (text) => {
     if (!text || typeof text !== 'string') return '';
     return text.charAt(0).toUpperCase() + text.slice(1);
   };
-
 
   return (
     <View style={{ flex: 1 }}>
@@ -313,7 +307,9 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
                 </View>
                 {technicianType != 'ifs' && <View style={styles.rightCol}>
                   <Text style={styles.label}>Job Estimated Cost</Text>
-                  <Text style={styles.value}>${jobDetails?.estimatedCost}</Text>
+                  <Text style={styles.value}>
+                    {jobDetails?.estimatedCost ? `$${jobDetails.estimatedCost}` : '—'}
+                  </Text>
                 </View>}
 
               </View>
@@ -321,23 +317,33 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
                 <View style={styles.leftCol}>
                   <Text style={styles.label}>Start Date</Text>
                   <Text style={styles.value}>
-                    {new Date(jobDetails?.startDate).toLocaleDateString('en-US', {
-                      month: 'long',
-                      day: '2-digit',
-                      year: 'numeric',
-                    })}
+                    {jobDetails?.startDate
+                      ? new Date(jobDetails?.startDate).toLocaleDateString("en-US", {
+                        month: "long",
+                        day: "numeric",
+                        year: "numeric",
+                      })
+                      : "-"}
                   </Text>
                 </View>
                 <View style={styles.rightCol}>
                   <Text style={styles.label}>End Date</Text>
                   <Text style={styles.value}>
-                    {new Date(jobDetails?.endDate).toLocaleDateString('en-US', {
-                      month: 'long',
-                      day: '2-digit',
-                      year: 'numeric',
-                    })}
+                    {jobDetails?.endDate
+                      ? new Date(jobDetails?.endDate).toLocaleDateString("en-US", {
+                        month: "long",
+                        day: "numeric",
+                        year: "numeric",
+                      })
+                      : "-"}
                   </Text>
                 </View>
+              </View>
+              <View style={{ marginBottom: spacings.large }} >
+                <Text style={styles.label}>Notes</Text>
+                <Text style={styles.value}>
+                  {jobDetails?.notes || '—'}
+                </Text>
               </View>
               {Array.isArray(jobDetails.technicians) && jobDetails.technicians.length > 0 && technicianType === "manager" && (
                 <View >
@@ -532,21 +538,21 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
                   <View style={styles.leftCol}>
                     <Text style={styles.label}>Start Date</Text>
                     <Text style={styles.value}>
-                      {new Date(vehicle?.startDate).toLocaleDateString('en-US', {
+                      {(vehicle?.startDate) ? new Date(vehicle?.startDate).toLocaleDateString('en-US', {
                         month: 'long',
                         day: '2-digit',
                         year: 'numeric',
-                      })}
+                      }) : "-"}
                     </Text>
                   </View>
                   <View style={styles.rightCol}>
                     <Text style={styles.label}>End Date</Text>
                     <Text style={styles.value}>
-                      {new Date(vehicle?.endDate).toLocaleDateString('en-US', {
+                      {(vehicle?.endDate) ? new Date(vehicle?.endDate).toLocaleDateString('en-US', {
                         month: 'long',
                         day: '2-digit',
                         year: 'numeric',
-                      })}
+                      }) : "-"}
                     </Text>
                   </View>
                 </View>
@@ -687,164 +693,3 @@ const styles = StyleSheet.create({
     right: 20,
   }
 })
-
-
-// import React, { useCallback, useEffect, useState } from 'react';
-// import {
-//   View,
-//   Text,
-//   ScrollView,
-//   StyleSheet,
-//   TouchableOpacity,
-//   Image,
-//   Modal,
-//   Dimensions,
-//   ActivityIndicator
-// } from 'react-native';
-// import Ionicons from 'react-native-vector-icons/Ionicons';
-// import Header from '../componets/Header';
-// import AsyncStorage from '@react-native-async-storage/async-storage';
-// import { API_BASE_URL } from '../constans/Constants';
-// import { blackColor, whiteColor, grayColor, blueColor, greenColor, redColor } from '../constans/Color';
-
-// const { width, height } = Dimensions.get("window");
-// const isTablet = width >= 668 && height >= 1024;
-
-// const NewJobDetailsScreen = ({ navigation, route }) => {
-//   const { jobId } = route.params;
-//   const [loading, setLoading] = useState(true);
-//   const [jobDetails, setJobDetails] = useState(null);
-//   const [selectedImage, setSelectedImage] = useState(null);
-//   const [imageModalVisible, setImageModalVisible] = useState(false);
-
-//   const fetchJobData = async (jobId) => {
-//     try {
-//       setLoading(true);
-//       const token = await AsyncStorage.getItem("auth_token");
-//       const headers = { "Content-Type": "application/json" };
-//       if (token) headers["Authorization"] = `Bearer ${token}`;
-
-//       const response = await fetch(`${API_BASE_URL}/fetchSingleJobs?jobid=${jobId}`, {
-//         method: 'POST',
-//         headers,
-//       });
-
-//       const data = await response.json();
-//       if (response.ok && data.jobs) setJobDetails(data.jobs);
-//     } catch (error) {
-//       console.error("Error fetching job data:", error);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   useEffect(() => {
-//     fetchJobData(jobId);
-//   }, [jobId]);
-
-//   const capitalize = (text) => text ? text.charAt(0).toUpperCase() + text.slice(1) : '';
-
-//   return (
-//     <View style={{ flex: 1 }}>
-//       <Header title={capitalize(jobDetails?.jobName)} />
-//       {loading ? (
-//         <View style={styles.loader}><ActivityIndicator size="large" color={blueColor} /></View>
-//       ) : (
-//         <ScrollView contentContainerStyle={{ padding: 16 }}>
-//           <View style={styles.section}>
-//             <Text style={styles.sectionTitle}>Job Info</Text>
-//             <InfoRow label="Job Name" value={capitalize(jobDetails?.jobName)} />
-//             <InfoRow label="Customer Name" value={capitalize(jobDetails?.customer?.fullName)} />
-//             <InfoRow label="Email" value={jobDetails?.customer?.email} />
-//             <InfoRow label="Phone" value={jobDetails?.customer?.phoneNumber} />
-//           </View>
-
-//           {jobDetails?.vehicles?.map((vehicle, index) => (
-//             <View key={vehicle.id} style={styles.section}>
-//               <Text style={styles.sectionTitle}>Vehicle {index + 1}</Text>
-//               <InfoRow label="VIN" value={vehicle.vin} />
-//               <InfoRow label="Make" value={vehicle.make} />
-//               <InfoRow label="Model" value={vehicle.model} />
-//               <InfoRow label="Year" value={vehicle.modelYear} />
-//               <InfoRow label="Color" value={capitalize(vehicle.color)} />
-//               <InfoRow label="Manufacturer" value={vehicle.manufacturerName} />
-//               <InfoRow label="Status" value={vehicle.vehicleStatus ? "Complete" : "In Progress"} status={vehicle.vehicleStatus} />
-//               <InfoRow label="Created" value={new Date(vehicle.createdAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })} />
-
-//               {vehicle.jobDescription?.length > 0 && (
-//                 <View style={{ marginTop: 10 }}>
-//                   <Text style={styles.label}>Job Description</Text>
-//                   {vehicle.jobDescription.map((desc, i) => (
-//                     <View key={i} style={styles.descRow}>
-//                       <Text style={styles.descText}>• {desc.jobDescription || '—'}</Text>
-//                       <Text style={styles.descText}>${desc.cost || '0.00'}</Text>
-//                     </View>
-//                   ))}
-//                 </View>
-//               )}
-
-//               {!!vehicle.notes && (
-//                 <View style={{ marginTop: 10 }}>
-//                   <Text style={styles.label}>Notes</Text>
-//                   <Text style={styles.value}>{vehicle.notes}</Text>
-//                 </View>
-//               )}
-
-//               {!!vehicle.images?.length && (
-//                 <View style={{ marginTop: 10 }}>
-//                   <Text style={styles.label}>Images</Text>
-//                   <View style={styles.imageWrap}>
-//                     {vehicle.images.map((img, i) => (
-//                       <TouchableOpacity key={i} onPress={() => {
-//                         setSelectedImage(img);
-//                         setImageModalVisible(true);
-//                       }}>
-//                         <Image source={{ uri: img }} style={styles.imageThumb} />
-//                       </TouchableOpacity>
-//                     ))}
-//                   </View>
-//                 </View>
-//               )}
-//             </View>
-//           ))}
-
-//           <Modal visible={imageModalVisible} transparent animationType="fade">
-//             <View style={styles.modalContainer}>
-//               <TouchableOpacity onPress={() => setImageModalVisible(false)} style={styles.closeButton}>
-//                 <Ionicons name="close-circle-sharp" size={35} color="#fff" />
-//               </TouchableOpacity>
-//               {selectedImage && (
-//                 <Image source={{ uri: selectedImage }} style={styles.fullImage} resizeMode="contain" />
-//               )}
-//             </View>
-//           </Modal>
-//         </ScrollView>
-//       )}
-//     </View>
-//   );
-// };
-
-// const InfoRow = ({ label, value, status }) => (
-//   <View style={styles.rowItem}>
-//     <Text style={styles.label}>{label}</Text>
-//     <Text style={[styles.value, status !== undefined && { color: status ? greenColor : redColor }]}> {value}</Text>
-//   </View>
-// );
-
-// const styles = StyleSheet.create({
-//   loader: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-//   section: { backgroundColor: whiteColor, padding: 16, borderRadius: 12, marginBottom: 15, elevation: 1 },
-//   sectionTitle: { fontSize: 16, fontWeight: '600', marginBottom: 10, color: blackColor },
-//   rowItem: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-//   label: { color: grayColor, fontSize: 13 },
-//   value: { color: blackColor, fontSize: 14 },
-//   descRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 2 },
-//   descText: { color: blackColor },
-//   imageWrap: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 8 },
-//   imageThumb: { width: 60, height: 60, marginRight: 8, marginBottom: 8, borderRadius: 6 },
-//   modalContainer: { flex: 1, backgroundColor: 'rgba(0,0,0,0.9)', justifyContent: 'center', alignItems: 'center' },
-//   fullImage: { width: '90%', height: '80%' },
-//   closeButton: { position: 'absolute', top: 40, right: 20 },
-// });
-
-// export default NewJobDetailsScreen;

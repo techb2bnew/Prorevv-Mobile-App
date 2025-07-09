@@ -27,6 +27,8 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import DatePicker from "react-native-date-picker";
 import CustomerDropdown from '../componets/CustomerDropdown';
 import Feather from 'react-native-vector-icons/Feather';
+import AntDesign from 'react-native-vector-icons/AntDesign';
+
 
 const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween, textAlign } = BaseStyle;
 
@@ -63,10 +65,21 @@ const CreateJobScreen = ({ route }) => {
     const [simpleFlatRate, setSimpleFlatRate] = useState('');
     const [estimatedCost, setEstimatedCost] = useState('');
     const [rirValue, setRirValue] = useState('');
-    const [startDate, setStartDate] = useState(new Date());
-    const [endDate, setEndDate] = useState(new Date());
+    const [startDate, setStartDate] = useState(null);  // Set initial state to null
+    const [endDate, setEndDate] = useState(null);
     const [isStartPickerOpen, setIsStartPickerOpen] = useState(false);
     const [isEndPickerOpen, setIsEndPickerOpen] = useState(false);
+    const [jobsRawData, setJobsRawData] = useState([])
+    const [jobPage, setJobPage] = useState(1);
+    const [hasMoreJob, setHasMoreJob] = useState(true);
+    const [isAddMode, setIsAddMode] = useState(false);
+    const [viewType, setViewType] = useState('list');
+    const [isJobLoading, setIsJobLoading] = useState(false);
+    const [isJobLoadingMore, setIsJobLoadingMore] = useState(false);
+    const isIOsAndTablet = Platform.OS === "ios" && isTablet;
+    const [notes, setNotes] = useState("");
+    const [editableJobId, setEditableJobId] = useState(null);
+
 
     useFocusEffect(
         useCallback(() => {
@@ -257,6 +270,11 @@ const CreateJobScreen = ({ route }) => {
         fetchTechnicians(1);
     }, []);
 
+    useEffect(() => {
+        fetchJobHistory(1, false);
+    }, [technicianId, isAddMode])
+
+
     const fetchJobData = async (jobId) => {
         if (!jobId) {
             console.warn("Invalid job ID");
@@ -279,7 +297,7 @@ const CreateJobScreen = ({ route }) => {
             });
 
             const data = await response.json();
-            // console.log("fetchSingleJobs API Response Data :", data.jobs);
+            console.log("fetchSingleJobs API Response Data :", data.jobs);
 
             if (response.ok && data.jobs) {
                 const job = data.jobs;
@@ -287,7 +305,8 @@ const CreateJobScreen = ({ route }) => {
                 // ✅ 1. Set job details and jobName
                 setJobDetails(job);
                 setJobName(job?.jobName);
-                setEstimatedCost(job?.estimatedCost)
+                setEstimatedCost(job?.estimatedCost);
+                setNotes(job?.notes)
 
                 // ✅ 2. Set start and end dates (parse ISO string to Date)
                 setStartDate(new Date(job.startDate));
@@ -324,9 +343,62 @@ const CreateJobScreen = ({ route }) => {
         }
     };
 
+    const fetchJobHistory = async (newPage = 1, isPagination = false) => {
+        if (!technicianId) {
+            console.warn("No Technician ID found. Exiting function.");
+            return;
+        }
+
+        // Show loading indicators based on request type
+        if (isPagination) {
+            setIsJobLoadingMore(true);
+        } else {
+            setIsJobLoading(true);
+        }
+
+        try {
+            const token = await AsyncStorage.getItem("auth_token");
+            if (!token) {
+                console.error("No token found");
+                return;
+            }
+            // console.log("token", technicianId);
+            const apiUrl = technicianType === "manager"
+                ? `${API_BASE_URL}/fetchAllJobs?roleType=${technicianType}&page=${newPage}&limit=${viewType === 'list' ? "20" : "10"}`
+                : technicianType === "single-technician"
+                    ? `${API_BASE_URL}/fetchAllJobs?userId=${technicianId}&roleType=${technicianType}&page=${newPage}&limit=${viewType === 'list' ? "20" : "10"}`
+                    : `${API_BASE_URL}/fetchAllJobs?userId=${technicianId}&page=${newPage}&limit=${viewType === 'list' ? "20" : "10"}`;
+            const response = await axios.get(
+                apiUrl,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            const newJobs = (technicianType === "manager") ? (response?.data?.jobs?.jobs) : (response?.data?.jobs?.jobs) || [];
+
+            const updatedJobs = newPage === 1 ? newJobs : [...jobsRawData, ...newJobs];
+            console.log("fetchJobHistory", updatedJobs);
+
+            setJobsRawData(updatedJobs);
+
+
+            setHasMoreJob(newJobs.length > 0);
+            setJobPage(newPage);
+        } catch (error) {
+            console.error("Error fetching job history:", error);
+        } finally {
+            if (isPagination) {
+                setIsJobLoadingMore(false);
+            } else {
+                setIsJobLoading(false);
+            }
+        }
+    };
+
     useEffect(() => {
         if (route?.params?.jobId) {
             fetchJobData(route?.params?.jobId);
+            setEditableJobId(route?.params?.jobId)
+            setIsAddMode(true)
         }
     }, [route?.params?.jobId]);
 
@@ -498,7 +570,7 @@ const CreateJobScreen = ({ route }) => {
             const requestBody = {
                 jobName: jobName,
                 assignCustomer: selectedCustomer?.id,
-                jobId: route?.params?.jobId || undefined,
+                jobId: route?.params?.jobId || editableJobId || undefined,
                 assignTechnician: technicianType === 'manager'
                     ? selectedNormalTechnicians?.map(tech => tech?.id)
                     : [technicianId],
@@ -520,11 +592,12 @@ const CreateJobScreen = ({ route }) => {
                             rRate: rirValue,
                         }))
                     ],
-                estimatedCost: estimatedCost
+                estimatedCost: estimatedCost,
+                notes: notes
             };
 
             // ✅ If editing, include jobId and change endpoint
-            const endpoint = route?.params?.jobId ? `${API_BASE_URL}/updateJob` : `${API_BASE_URL}/technicianCreateJob`;
+            const endpoint = route?.params?.jobId || editableJobId ? `${API_BASE_URL}/updateJob` : `${API_BASE_URL}/technicianCreateJob`;
 
             console.log("requestBody>>", requestBody);
 
@@ -542,18 +615,21 @@ const CreateJobScreen = ({ route }) => {
 
             //  const result = await response.text();
             if (response.ok) {
-                if (route?.params?.jobId) {
+                if (route?.params?.jobId || editableJobId) {
                     Toast.show("Job updated successfully");
+                    navigation.goBack();
                 } else {
                     Toast.show("Job created successfully");
+                    setIsAddMode(false)
                 }
-                navigation.goBack();
             } else {
                 console.error("error>>>", result.error);
+                setError(result.error)
             }
 
         } catch (error) {
             console.error("Submission failed:", error);
+            setError(error)
         } finally {
             setLoading(false);
         }
@@ -561,256 +637,586 @@ const CreateJobScreen = ({ route }) => {
 
     return (
         <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            style={{ flex: 1 }}
+            style={[flex]}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                <View style={{ flex: 1 }}>
-                    <Header title={route?.params?.jobId ? "Update Job" : "Create Job"} onBack={() => navigation.navigate("Home")} />
-                    <ScrollView
-                        contentContainerStyle={{
-                            flexGrow: 1,
-                            backgroundColor: whiteColor,
-                            paddingBottom: hp(18),
-                            paddingHorizontal: spacings.xxLarge,
-                        }}
-                        keyboardShouldPersistTaps="handled"
-                        showsVerticalScrollIndicator={false}
-                    >
-                        <View style={styles.sectionContainer}>
-                            <Text style={styles.label}>
-                                Customer <Text style={{ color: "red" }}>*</Text>
-                            </Text>
+            {/* <TouchableWithoutFeedback onPress={Keyboard.dismiss}> */}
 
-                            {/* Custom Dropdown */}
-                            <CustomerDropdown
-                                data={customers}
-                                selectedValue={customerDetails}
-                                onSelect={handleCustomerSelect}
-                                showIcon={true}
-                                defaultValue={jobDetails}
-                                rightIcon={true}
-                                titleText="Select Customer"
-                                handleLoadMore={handleLoadMore}
-                                isLoading={isCustomerLoading}
-                                disabled={route?.params?.jobId}
-                            />
-                            {customerError ? (
-                                <Text style={{ color: 'red', marginTop: 4, fontSize: 12 }}>{customerError}</Text>
-                            ) : null}
+            <View style={{ flex: 1 }}>
+                <Header title={route?.params?.jobId ? "Update Job" : !isAddMode ? "Jobs" : "Create Job"} onBack={() => navigation.navigate("Home")} />
+                {!isAddMode && <View style={{
+                    flexDirection: 'row',
+                    position: "absolute",
+                    top: Platform.OS === "android" ? isTablet ? hp(1) : 10 : isTablet ? 20 : 13,
+                    right: 10,
+                    zIndex: 10
+                }}>
 
-                            <CustomTextInput
-                                label="Job Name"
-                                placeholder="Enter Job name"
-                                value={jobName}
-                                onChangeText={(text) => setJobName(text)}
-                                required={true}
-                                maxLength={50}
-                            />
-                            {jobNameError ? (
-                                <Text style={{ color: 'red', marginTop: 4, fontSize: 12 }}>{jobNameError}</Text>
-                            ) : null}
+                    <TouchableOpacity
+                        onPress={() => setViewType('list')}
+                        style={[{
+                            backgroundColor: viewType === 'list' ? blueColor : whiteColor,
+                            width: isTablet ? wp(8) : wp(12),
+                            height: hp(4.5),
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            borderRadius: 5,
+                            marginRight: 10,
 
-                            <View style={{ paddingTop: spacings.large }}>
-                                {/* Filter & Date Picker */}
-                                <View style={styles.datePickerContainer}>
-                                    <View style={{ width: "45%" }}>
-                                        <Text style={styles.label}>Start Date</Text>
+                        }]}>
+                        <Ionicons name="list" size={isTablet ? 35 : 20} color={viewType === 'list' ? whiteColor : blackColor} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        onPress={() => setViewType('grid')}
+                        style={[, {
+                            backgroundColor: viewType === 'grid' ? blueColor : whiteColor,
+                            width: isTablet ? wp(8) : wp(12),
+                            height: hp(4.5),
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            borderRadius: 5,
+                        }]}>
+                        <Ionicons name="grid-sharp" size={isTablet ? 35 : 20} color={viewType === 'grid' ? whiteColor : blackColor} />
+                    </TouchableOpacity>
+
+                </View>}
+                {!isAddMode ? (
+                    <>
+                        {viewType === 'list' && (
+                            <>
+                                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                                    <View style={{ backgroundColor: whiteColor }}>
+                                        {/* Table Header */}
+                                        <View style={[styles.tableHeader, flexDirectionRow]}>
+                                            <Text style={[styles.tableHeaderText, { width: wp(40) }]}>Job Title</Text>
+                                            <Text style={[styles.tableHeaderText, { width: wp(40) }]}>Number of W.O</Text>
+                                            <Text style={[styles.tableHeaderText, { width: wp(40) }]}>Customer Name</Text>
+                                            <Text style={[styles.tableHeaderText, { width: wp(40) }]}>Estimated Cost</Text>
+                                            <Text style={[styles.tableHeaderText, { width: wp(40) }]}>Start Date</Text>
+                                            <Text style={[styles.tableHeaderText, { width: wp(40) }]}>End Date</Text>
+                                            <Text style={[styles.tableHeaderText, { width: wp(25) }]}>Action</Text>
+                                        </View>
+
+                                        {/* Table Rows */}
+                                        {isJobLoading ? (
+                                            <View style={{ width: wp(100), justifyContent: 'center', alignItems: 'center', paddingVertical: 20 }}>
+                                                <ActivityIndicator size="large" color={blueColor} />
+                                                <Text style={{ marginTop: 10, color: '#555' }}>Loading jobs...</Text>
+                                            </View>
+                                        ) : (
+                                            <FlatList
+                                                data={jobsRawData}
+                                                keyExtractor={(item, index) => index.toString()}
+                                                renderItem={({ item, index }) => (
+                                                    <View
+                                                        style={[
+                                                            styles.tableRow,
+                                                            flexDirectionRow,
+                                                            {
+                                                                backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor,
+                                                            },
+                                                        ]}
+                                                    >
+                                                        <Text style={[styles.tableText, { width: wp(50) }]}>{capitalize(item.jobName) || '—'}</Text>
+                                                        <Text style={[styles.tableText, { width: wp(30) }]}>{item?.vehicles?.length}</Text>
+                                                        <Text style={[styles.tableText, { width: wp(40) }]}>{capitalize(item.customer?.fullName) || '—'}</Text>
+                                                        <Text style={[styles.tableText, { width: wp(40) }]}>
+                                                            {item.estimatedCost ? `$${item.estimatedCost}` : '—'}
+                                                        </Text>
+                                                        <Text style={[styles.tableText, { width: wp(40) }]}>
+                                                            {item.startDate
+                                                                ? new Date(item.startDate).toLocaleDateString('en-US', {
+                                                                    month: 'long',
+                                                                    day: '2-digit',
+                                                                    year: 'numeric',
+                                                                })
+                                                                : '—'}
+                                                        </Text>
+                                                        <Text style={[styles.tableText, { width: wp(40) }]}>
+                                                            {item.endDate
+                                                                ? new Date(item.endDate).toLocaleDateString('en-US', {
+                                                                    month: 'long',
+                                                                    day: '2-digit',
+                                                                    year: 'numeric',
+                                                                })
+                                                                : '—'}
+                                                        </Text>
+                                                        <Pressable onPress={() => navigation.navigate("NewJobDetailsScreen", {
+                                                            jobId: item?.id
+                                                        })}>
+                                                            <Text style={styles.viewText}>View</Text>
+                                                        </Pressable>
+                                                        <Pressable onPress={() => {
+                                                            fetchJobData(item?.id);
+                                                            setEditableJobId(item?.id)
+                                                            setIsAddMode(true);
+                                                        }}>
+                                                            <Text style={styles.viewText}>Edit</Text>
+                                                        </Pressable>
+                                                    </View>
+                                                )}
+                                                onEndReached={() => {
+                                                    if (!isJobLoading && hasMoreJob) {
+                                                        fetchJobHistory(jobPage + 1, true);
+                                                    }
+                                                }}
+                                                onEndReachedThreshold={0.3}
+                                                ListFooterComponent={() =>
+                                                    isJobLoadingMore ? (
+                                                        <View style={{ paddingVertical: 10, alignItems: "center", justifyContent: "center" }}>
+                                                            <ActivityIndicator size="small" color="#0000ff" />
+                                                        </View>
+                                                    ) : null
+                                                }
+                                                ListEmptyComponent={() =>
+                                                    !isJobLoading && (
+                                                        <View style={styles.emptyContainer}>
+                                                            <Text style={styles.emptyText}>No Jobs found</Text>
+                                                        </View>
+                                                    )
+                                                }
+                                            />)}
                                     </View>
-                                    <View style={{ width: "45%" }}>
-                                        <Text style={styles.label}>End Date</Text>
-                                    </View>
-                                </View>
-                                <View style={[styles.datePickerContainer]}>
-                                    <TouchableOpacity onPress={() => setIsStartPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter]}>
-                                        <Text style={styles.dateText}>
-                                            {startDate?.toLocaleDateString("en-US", {
-                                                month: "long",
-                                                day: "numeric",
-                                                year: "numeric",
-                                            })}
-                                        </Text>
-                                        <Feather name="calendar" size={20} color={blackColor} />
-                                    </TouchableOpacity>
-                                    <TouchableOpacity onPress={() => setIsEndPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter]}>
-                                        <Text style={styles.dateText}>
-                                            {endDate?.toLocaleDateString("en-US", {
-                                                month: "long",
-                                                day: "numeric",
-                                                year: "numeric",
-                                            })}
-                                        </Text>
-                                        <Feather name="calendar" size={20} color={blackColor} />
-                                    </TouchableOpacity>
-                                </View>
+                                </ScrollView>
 
-                                <DatePicker
-                                    modal
-                                    open={isStartPickerOpen}
-                                    date={startDate}
-                                    mode="datetime"
-                                    onConfirm={(date) => {
-                                        setStartDate(date);
-                                        setIsStartPickerOpen(false);
+                                {/* Floating Add Button */}
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        setIsAddMode(true);  // Enable add mode
+                                        // Clear job-related states
+                                        setJobName('');
+                                        setNotes('');
+                                        setEstimatedCost('');
+                                        setSimpleFlatRate('');
+                                        setRirValue('');
+                                        // setSelectedCustomer(null);
+                                        setSelectedNormalTechnicians([]);
+                                        setSelectedRrTechnicians([]);
+                                        setStartDate(null);
+                                        setEndDate(null);
                                     }}
-                                    onCancel={() => setIsStartPickerOpen(false)}
-                                />
-
-                                <DatePicker
-                                    modal
-                                    open={isEndPickerOpen}
-                                    date={endDate}
-                                    mode="datetime"
-                                    minimumDate={startDate}
-                                    onConfirm={(date) => {
-                                        const newEndDate = date;
-                                        setEndDate(newEndDate);
-                                        setIsEndPickerOpen(false);
+                                    style={{
+                                        position: 'absolute',
+                                        bottom: hp(8),
+                                        right: wp(8),
+                                        backgroundColor: blueColor,
+                                        width: 60,
+                                        height: 60,
+                                        borderRadius: 30,
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        elevation: 5,
+                                        shadowColor: "#000",
+                                        shadowOffset: { width: 0, height: 2 },
+                                        shadowOpacity: 0.25,
+                                        shadowRadius: 3.84,
                                     }}
-                                    onCancel={() => setIsEndPickerOpen(false)}
-                                />
+                                >
+                                    <Ionicons name="add-outline" size={28} color={whiteColor} />
+                                </TouchableOpacity>
+                            </>
+                        )}
 
+                        {viewType === 'grid' && (
+                            <View style={{ flex: 1, backgroundColor: whiteColor, paddingBottom: hp(5), backgroundColor: whiteColor }}>
+                                <FlatList
+                                    data={jobsRawData}
+                                    keyExtractor={(item, index) => index.toString()}
+                                    contentContainerStyle={{ padding: 10 }}
+                                    showsVerticalScrollIndicator={false}
+                                    renderItem={({ item, index }) => (
+                                        <Pressable style={{
+                                            backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor,
+                                            borderRadius: 10,
+                                            padding: 10,
+                                            marginBottom: 10,
+                                            //  marginHorizontal: 10,
+                                            borderWidth: 1,
+                                            borderColor: blueColor
+                                        }}
+                                            onPress={() => navigation.navigate("NewJobDetailsScreen", {
+                                                jobId: item?.id
+                                            })}
+                                        >
+                                            <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+                                                <Pressable
+                                                    onPress={() => {
+                                                        fetchJobData(item?.id);
+                                                        setEditableJobId(item?.id)
+                                                        setIsAddMode(true);
+                                                    }}
+                                                    style={{ position: "absolute", right: -5, top: -10, zIndex: 999 }}>
+                                                    <AntDesign name="edit" size={20} color={blackColor} />
+
+                                                </Pressable>
+                                                <View style={{ width: '48%', marginBottom: 10 }}>
+                                                    <Text style={{ color: '#555', fontSize: 11 }}>JobName</Text>
+                                                    <Text>{item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}</Text>
+                                                </View>
+                                                <View style={{ width: '48%', marginBottom: 10 }}>
+                                                    <Text style={{ color: '#555', fontSize: 11 }}>Number of W.O</Text>
+                                                    <Text >{item?.vehicles?.length}</Text>
+                                                </View>
+                                                <View style={{ width: '48%', marginBottom: 10 }}>
+                                                    <Text style={{ color: '#555', fontSize: 11 }}>Customer Name</Text>
+                                                    <Text >{capitalize(item.customer?.fullName) || '—'}</Text>
+                                                </View>
+                                                <View style={{ width: '48%', marginBottom: 10 }}>
+                                                    <Text style={{ color: '#555', fontSize: 11 }}>Estimated Cost</Text>
+                                                    <Text >{item.estimatedCost ? `$${item.estimatedCost}` : '—'}</Text>
+                                                </View>
+                                                <View style={{ width: '48%', marginBottom: 10 }}>
+                                                    <Text style={{ color: '#555', fontSize: 11 }}>Start Date</Text>
+                                                    <Text >{item.startDate
+                                                        ? new Date(item.startDate).toLocaleDateString('en-US', {
+                                                            month: 'long',
+                                                            day: '2-digit',
+                                                            year: 'numeric',
+                                                        })
+                                                        : '—'}
+                                                    </Text>
+                                                </View>
+                                                <View style={{ width: '48%', marginBottom: 10 }}>
+                                                    <Text style={{ color: '#555', fontSize: 11 }}>End Date</Text>
+                                                    <Text >{item.endDate
+                                                        ? new Date(item.endDate).toLocaleDateString('en-US', {
+                                                            month: 'long',
+                                                            day: '2-digit',
+                                                            year: 'numeric',
+                                                        })
+                                                        : '—'}
+                                                    </Text>
+                                                </View>
+
+                                            </View>
+
+                                        </Pressable>
+                                    )}
+
+                                    onEndReached={() => {
+                                        if (!isJobLoading && hasMoreJob) {
+                                            fetchJobHistory(jobPage + 1, true);
+                                        }
+                                    }}
+                                    onEndReachedThreshold={0.3}
+                                    ListFooterComponent={() =>
+                                        isJobLoadingMore ? (
+                                            <View style={{ paddingVertical: 10, alignItems: "center", justifyContent: "center" }}>
+                                                <ActivityIndicator size="small" color="#0000ff" />
+                                            </View>
+                                        ) : null
+                                    }
+                                    ListEmptyComponent={() =>
+                                        !isJobLoading && (
+                                            <View style={styles.emptyContainer}>
+                                                <Text style={styles.emptyText}>No Jobs found</Text>
+                                            </View>
+                                        )
+                                    }
+                                />
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        setIsAddMode(true);  // Enable add mode
+                                        // Clear job-related states
+                                        setJobName('');
+                                        setNotes('');
+                                        setEstimatedCost('');
+                                        setSimpleFlatRate('');
+                                        setRirValue('');
+                                        // setSelectedCustomer(null);
+                                        setSelectedNormalTechnicians([]);
+                                        setSelectedRrTechnicians([]);
+                                        setStartDate(null);
+                                        setEndDate(null);
+                                    }}
+                                    style={{
+                                        position: 'absolute',
+                                        bottom: hp(5),
+                                        right: wp(8),
+                                        backgroundColor: blueColor,
+                                        width: 60,
+                                        height: 60,
+                                        borderRadius: 30,
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        elevation: 5,
+                                        shadowColor: "#000",
+                                        shadowOffset: { width: 0, height: 2 },
+                                        shadowOpacity: 0.25,
+                                        shadowRadius: 3.84,
+                                    }}
+                                >
+                                    <Ionicons name="add-outline" size={28} color={whiteColor} />
+                                </TouchableOpacity>
                             </View>
+                        )
+                        }
+                    </>
+                ) : (
+                    <>
+                        {/* <TouchableWithoutFeedback onPress={Keyboard.dismiss}> */}
+                        <ScrollView
+                            contentContainerStyle={{
+                                flexGrow: 1,
+                                backgroundColor: whiteColor,
+                                paddingBottom: hp(18),
+                                paddingHorizontal: spacings.xxLarge,
+                            }}
+                            keyboardShouldPersistTaps="handled"
+                            showsVerticalScrollIndicator={false}
+                        >
+                            <View style={styles.sectionContainer}>
+                                <Text style={styles.label}>
+                                    Customer <Text style={{ color: "red" }}>*</Text>
+                                </Text>
 
-                            {technicianType === "manager" &&
-                                <>
-                                    <CustomTextInput
-                                        label="Tech Pay rate"
-                                        placeholder="Enter Tech Pay rate"
-                                        value={simpleFlatRate}
-                                        onChangeText={(text) => setSimpleFlatRate(text)}
-                                        keyboardType="numeric"
-                                        maxLength={5}
+                                {/* Custom Dropdown */}
+                                <CustomerDropdown
+                                    data={customers}
+                                    selectedValue={customerDetails}
+                                    onSelect={handleCustomerSelect}
+                                    showIcon={true}
+                                    defaultValue={jobDetails}
+                                    rightIcon={true}
+                                    titleText="Select Customer"
+                                    handleLoadMore={handleLoadMore}
+                                    isLoading={isCustomerLoading}
+                                    disabled={route?.params?.jobId}
+                                />
+                                {customerError ? (
+                                    <Text style={{ color: 'red', marginTop: 4, fontSize: 12 }}>{customerError}</Text>
+                                ) : null}
+
+                                <CustomTextInput
+                                    label="Job Name"
+                                    placeholder="Enter Job name"
+                                    value={jobName}
+                                    onChangeText={(text) => setJobName(text)}
+                                    required={true}
+                                    maxLength={50}
+                                />
+                                {jobNameError ? (
+                                    <Text style={{ color: 'red', marginTop: 4, fontSize: 12 }}>{jobNameError}</Text>
+                                ) : null}
+
+                                <View style={{ paddingTop: spacings.large }}>
+                                    {/* Filter & Date Picker */}
+                                    <View style={styles.datePickerContainer}>
+                                        <View style={{ width: "45%" }}>
+                                            <Text style={styles.label}>Start Date</Text>
+                                        </View>
+                                        <View style={{ width: "45%" }}>
+                                            <Text style={styles.label}>End Date</Text>
+                                        </View>
+                                    </View>
+                                    <View style={[styles.datePickerContainer]}>
+                                        <TouchableOpacity onPress={() => setIsStartPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter]}>
+                                            <Text style={styles.dateText}>
+                                                {startDate ? startDate.toLocaleDateString("en-US", {
+                                                    month: "long",
+                                                    day: "numeric",
+                                                    year: "numeric",
+                                                }) : "Select Start Date"}
+                                            </Text>
+                                            <Feather name="calendar" size={20} color={blackColor} />
+                                        </TouchableOpacity>
+                                        <TouchableOpacity onPress={() => setIsEndPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter]}>
+                                            <Text style={styles.dateText}>
+                                                {endDate ? endDate.toLocaleDateString("en-US", {
+                                                    month: "long",
+                                                    day: "numeric",
+                                                    year: "numeric",
+                                                }) : "Select End Date"}
+                                            </Text>
+                                            <Feather name="calendar" size={20} color={blackColor} />
+                                        </TouchableOpacity>
+                                    </View>
+
+                                    <DatePicker
+                                        modal
+                                        open={isStartPickerOpen}
+                                        // date={startDate}
+                                        date={startDate || new Date()}  // Avoid showing today's date if no endDate selected
+                                        mode="datetime"
+                                        onConfirm={(date) => {
+                                            setStartDate(date);
+                                            setIsStartPickerOpen(false);
+                                        }}
+                                        onCancel={() => setIsStartPickerOpen(false)}
                                     />
 
-                                    {rrTechnicians.length > 0 && <CustomTextInput
-                                        label="R/I/R"
-                                        placeholder="Enter R/I/R"
-                                        value={rirValue}
-                                        onChangeText={(text) => setRirValue(text)}
-                                        keyboardType="numeric"
-                                        maxLength={5}
-                                    />}
+                                    <DatePicker
+                                        modal
+                                        open={isEndPickerOpen}
+                                        date={endDate || new Date()}  // Avoid showing today's date if no endDate selected
+                                        mode="datetime"
+                                        minimumDate={startDate}
+                                        onConfirm={(date) => {
+                                            const newEndDate = date;
+                                            setEndDate(newEndDate);
+                                            setIsEndPickerOpen(false);
+                                        }}
+                                        onCancel={() => setIsEndPickerOpen(false)}
+                                    />
 
-                                    <View style={{ marginTop: spacings.xxLarge }}>
-                                        <Text style={styles.label}>Select Technicians</Text>
-                                        <View style={{
-                                            borderWidth: 1,
-                                            borderColor: blueColor,
-                                            borderRadius: 8,
-                                            maxHeight: hp(20),
-                                            overflow: "hidden",
-                                            // marginBottom: 16,
-                                        }}>
-                                            <FlatList
-                                                nestedScrollEnabled={true}
-                                                data={technicians}
-                                                keyExtractor={(item) => item.id.toString()}
-                                                renderItem={({ item }) => {
-                                                    const selected = isNormalTechnicianSelected(item.id);
-                                                    return (
-                                                        <TouchableOpacity
-                                                            style={[styles.techItem, flexDirectionRow, justifyContentSpaceBetween, alignItemsCenter, {
-                                                                backgroundColor: selected ? lightBlueColor : "#fff"
-                                                            }]}
-                                                            onPress={() => toggleNormalTechnicianSelection(item)}
-                                                        >
-                                                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                                                <Text style={{ fontSize: 16 }}>{capitalize(item.firstName)} {capitalize(item.lastName)}</Text>
-                                                            </View>
-                                                            <Icon
-                                                                name={selected ? "checkbox-marked" : "checkbox-blank-outline"}
-                                                                size={24}
-                                                                color={selected ? blueColor : "#ccc"}
-                                                                type="MaterialCommunityIcons"
-                                                            />
-                                                        </TouchableOpacity>
-                                                    );
-                                                }}
-                                                onEndReached={handleLoadMoreTechnicians}
-                                                onEndReachedThreshold={0.3}
-                                                showsVerticalScrollIndicator={false}
-                                                ListFooterComponent={isTechnicianLoading ? <ActivityIndicator /> : null}
-                                            />
+                                </View>
+
+                                {technicianType === "manager" &&
+                                    <>
+                                        <CustomTextInput
+                                            label="Tech Pay rate($)"
+                                            placeholder="Enter Tech Pay rate"
+                                            value={simpleFlatRate}
+                                            onChangeText={(text) => setSimpleFlatRate(text)}
+                                            keyboardType="numeric"
+                                            maxLength={5}
+                                        />
+
+                                        {rrTechnicians.length > 0 && <CustomTextInput
+                                            label="R/I/R($)"
+                                            placeholder="Enter R/I/R"
+                                            value={rirValue}
+                                            onChangeText={(text) => setRirValue(text)}
+                                            keyboardType="numeric"
+                                            maxLength={5}
+                                        />}
+
+                                        <View style={{ marginTop: spacings.xxLarge }}>
+                                            <Text style={styles.label}>Select Technicians</Text>
+                                            <View style={{
+                                                borderWidth: 1,
+                                                borderColor: blueColor,
+                                                borderRadius: 8,
+                                                maxHeight: hp(20),
+                                                overflow: "hidden",
+                                                // marginBottom: 16,
+                                            }}>
+                                                <FlatList
+                                                    nestedScrollEnabled={true}
+                                                    data={technicians}
+                                                    keyExtractor={(item) => item.id.toString()}
+                                                    renderItem={({ item }) => {
+                                                        const selected = isNormalTechnicianSelected(item.id);
+                                                        return (
+                                                            <TouchableOpacity
+                                                                style={[styles.techItem, flexDirectionRow, justifyContentSpaceBetween, alignItemsCenter, {
+                                                                    backgroundColor: selected ? lightBlueColor : "#fff"
+                                                                }]}
+                                                                onPress={() => toggleNormalTechnicianSelection(item)}
+                                                            >
+                                                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                                    <Text style={{ fontSize: 16 }}>{capitalize(item.firstName)} {capitalize(item.lastName)}</Text>
+                                                                </View>
+                                                                <Icon
+                                                                    name={selected ? "checkbox-marked" : "checkbox-blank-outline"}
+                                                                    size={24}
+                                                                    color={selected ? blueColor : "#ccc"}
+                                                                    type="MaterialCommunityIcons"
+                                                                />
+                                                            </TouchableOpacity>
+                                                        );
+                                                    }}
+                                                    onEndReached={handleLoadMoreTechnicians}
+                                                    onEndReachedThreshold={0.3}
+                                                    showsVerticalScrollIndicator={false}
+                                                    ListFooterComponent={isTechnicianLoading ? <ActivityIndicator /> : null}
+                                                />
+                                            </View>
+                                            {technicianError ? (
+                                                <Text style={{ color: 'red', marginTop: 5, fontSize: 12 }}>{technicianError}</Text>
+                                            ) : null}
                                         </View>
-                                        {technicianError ? (
-                                            <Text style={{ color: 'red', marginTop: 5, fontSize: 12 }}>{technicianError}</Text>
-                                        ) : null}
-                                    </View>
 
 
 
-                                    {rrTechnicians.length > 0 && <View style={{ marginTop: 5 }}>
-                                        <Text style={styles.label}>Select R Technicians</Text>
-                                        <View style={{
-                                            borderWidth: 1,
-                                            borderColor: blueColor,
-                                            borderRadius: 8,
-                                            maxHeight: hp(20),
-                                            overflow: "hidden",
-                                            // marginBottom: 16,
-                                        }}>
-                                            <FlatList
-                                                nestedScrollEnabled={true}
-                                                data={rrTechnicians}
-                                                keyExtractor={(item) => item.id.toString()}
-                                                renderItem={({ item }) => {
-                                                    const selected = isRrTechnicianSelected(item.id);
-                                                    return (
-                                                        <TouchableOpacity
-                                                            style={[styles.techItem, flexDirectionRow, justifyContentSpaceBetween, alignItemsCenter, {
-                                                                backgroundColor: selected ? lightBlueColor : "#fff"
-                                                            }]}
-                                                            onPress={() => toggleRrTechnicianSelection(item)}
-                                                        >
-                                                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                                                <Text style={{ fontSize: 16 }}>{capitalize(item.firstName)} {capitalize(item.lastName)}</Text>
-                                                            </View>
-                                                            <Icon
-                                                                name={selected ? "checkbox-marked" : "checkbox-blank-outline"}
-                                                                size={24}
-                                                                color={selected ? blueColor : "#ccc"}
-                                                                type="MaterialCommunityIcons"
-                                                            />
-                                                        </TouchableOpacity>
-                                                    );
-                                                }}
-                                                onEndReached={handleLoadMoreTechnicians}
-                                                onEndReachedThreshold={0.5}
-                                                showsVerticalScrollIndicator={false}
-                                                ListFooterComponent={isTechnicianLoading ? <ActivityIndicator /> : null}
-                                            />
-                                        </View>
-                                        {rrTechnicianError ? (
-                                            <Text style={{ color: 'red', marginTop: 5, fontSize: 12 }}>{rrTechnicianError}</Text>
-                                        ) : null}
-                                    </View>}
+                                        {rrTechnicians.length > 0 && <View style={{ marginTop: 5 }}>
+                                            <Text style={styles.label}>Select R Technicians</Text>
+                                            <View style={{
+                                                borderWidth: 1,
+                                                borderColor: blueColor,
+                                                borderRadius: 8,
+                                                maxHeight: hp(20),
+                                                overflow: "hidden",
+                                                // marginBottom: 16,
+                                            }}>
+                                                <FlatList
+                                                    nestedScrollEnabled={true}
+                                                    data={rrTechnicians}
+                                                    keyExtractor={(item) => item.id.toString()}
+                                                    renderItem={({ item }) => {
+                                                        const selected = isRrTechnicianSelected(item.id);
+                                                        return (
+                                                            <TouchableOpacity
+                                                                style={[styles.techItem, flexDirectionRow, justifyContentSpaceBetween, alignItemsCenter, {
+                                                                    backgroundColor: selected ? lightBlueColor : "#fff"
+                                                                }]}
+                                                                onPress={() => toggleRrTechnicianSelection(item)}
+                                                            >
+                                                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                                    <Text style={{ fontSize: 16 }}>{capitalize(item.firstName)} {capitalize(item.lastName)}</Text>
+                                                                </View>
+                                                                <Icon
+                                                                    name={selected ? "checkbox-marked" : "checkbox-blank-outline"}
+                                                                    size={24}
+                                                                    color={selected ? blueColor : "#ccc"}
+                                                                    type="MaterialCommunityIcons"
+                                                                />
+                                                            </TouchableOpacity>
+                                                        );
+                                                    }}
+                                                    onEndReached={handleLoadMoreTechnicians}
+                                                    onEndReachedThreshold={0.5}
+                                                    showsVerticalScrollIndicator={false}
+                                                    ListFooterComponent={isTechnicianLoading ? <ActivityIndicator /> : null}
+                                                />
+                                            </View>
+                                            {rrTechnicianError ? (
+                                                <Text style={{ color: 'red', marginTop: 5, fontSize: 12 }}>{rrTechnicianError}</Text>
+                                            ) : null}
+                                        </View>}
 
-                                </>
-                            }
+                                    </>
+                                }
 
-                            <CustomTextInput
-                                label="Job Estimated Cost"
-                                placeholder="Enter Estimated Cost"
-                                value={estimatedCost}
-                                onChangeText={(text) => setEstimatedCost(text)}
-                                keyboardType="numeric"
-                                maxLength={8}
+                                <CustomTextInput
+                                    label="Job Estimated Cost($)"
+                                    placeholder="Enter Estimated Cost"
+                                    value={estimatedCost}
+                                    onChangeText={(text) => setEstimatedCost(text)}
+                                    keyboardType="numeric"
+                                    maxLength={8}
+                                />
+
+                                <View style={styles.sectionContainer}>
+                                    <Text style={styles.label}>Notes</Text>
+                                    <TextInput
+                                        placeholder="Write your notes here..."
+                                        style={styles.notesInput}
+                                        multiline={true}
+                                        numberOfLines={4}
+                                        textAlignVertical="top"
+                                        onChangeText={(text) => setNotes(text)}
+                                        value={notes}
+                                    />
+                                </View>
+
+                            </View>
+                             {error ? (
+                                    <Text style={{ color: 'red', marginTop: 4, fontSize: 12 }}>{error}</Text>
+                                ) : null}
+                        </ScrollView>
+                        <View style={{ padding: hp(2), backgroundColor: whiteColor }}>
+                            <CustomButton
+                                title={route?.params?.jobId || editableJobId ? "Update Job" : "Create Job"}
+                                onPress={handleSubmitJob}
+                                loading={loading}
+                                disabled={loading}
                             />
                         </View>
-                    </ScrollView>
-
-                    <View style={{ padding: hp(2), backgroundColor: whiteColor }}>
-                        <CustomButton
-                            title={route?.params?.jobId ? "Update Job" : "Create Job"}
-                            onPress={handleSubmitJob}
-                            loading={loading}
-                            disabled={loading}
-                        />
-                    </View>
-
-                </View>
-            </TouchableWithoutFeedback >
+                        {/* </TouchableWithoutFeedback> */}
+                    </>)}
+            </View>
+            {/* </TouchableWithoutFeedback> */}
         </KeyboardAvoidingView >
     );
 };
@@ -931,6 +1337,53 @@ const styles = StyleSheet.create({
         marginRight: spacings.small2x,
         fontSize: style.fontSizeNormal.fontSize,
     },
-
+    tableHeader: {
+        padding: spacings.xxLarge,
+        backgroundColor: whiteColor,
+        elevation: 25,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 4,
+        backgroundColor: blueColor
+    },
+    tableHeaderText: {
+        fontWeight: style.fontWeightThin1x.fontWeight,
+        textAlign: "left",
+        color: whiteColor
+    },
+    tableRow: {
+        padding: spacings.large,
+        alignItems: 'center',
+        borderBottomWidth: 1,
+        borderBottomColor: '#E6E6E6'
+    },
+    emptyContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 40,
+    },
+    emptyText: {
+        fontSize: 16,
+        color: mediumGray
+    },
+    viewText: {
+        marginLeft: 5,
+        fontSize: style.fontSizeSmall1x.fontSize,
+        color: blackColor,
+        borderColor: blackColor,
+        borderWidth: 1,
+        padding: 4,
+        borderRadius: 2,
+    },
+    notesInput: {
+        borderWidth: 1,
+        borderColor: blueColor,
+        borderRadius: 8,
+        padding: 10,
+        fontSize: 14,
+        minHeight: 80,
+        textAlignVertical: "top",
+    },
 
 });
