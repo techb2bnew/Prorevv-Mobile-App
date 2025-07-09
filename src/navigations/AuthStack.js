@@ -49,13 +49,13 @@ export default function AuthStack() {
       {isFirstLaunch && (
         <Stack.Screen name="OnBoard" component={OnboardingScreen} />
       )}
-      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="Login" component={LoginScreen}options={{ gestureEnabled: false }}/>
       {/* <Stack.Screen name="JoinAs" component={JoinAsScreen} /> */}
-      <Stack.Screen name="Register" component={SignUpScreen} />
-      <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
-      <Stack.Screen name="MainNavigator" component={MainNavigator} />
-      <Stack.Screen name="ManagerNavigator" component={ManagerNavigator} />
-      <Stack.Screen name="HowToPlay" component={HowToPlayScreen} />
+      <Stack.Screen name="Register" component={SignUpScreen} options={{ gestureEnabled: false }}/>
+      <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} options={{ gestureEnabled: false }} />
+      <Stack.Screen name="MainNavigator" component={MainNavigator} options={{ gestureEnabled: false }}/>
+      <Stack.Screen name="ManagerNavigator" component={ManagerNavigator} options={{ gestureEnabled: false }}/>
+      <Stack.Screen name="HowToPlay" component={HowToPlayScreen} options={{ gestureEnabled: false }}/>
     </Stack.Navigator>
   );
 }

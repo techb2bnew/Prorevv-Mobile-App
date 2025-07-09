@@ -415,7 +415,7 @@ const VinListScreen = ({ navigation, route }) => {
                     open={isStartPickerOpen}
                     date={startDate}
                     mode="date"
-                    maximumDate={new Date()} // ⛔ prevents selecting future dates
+                    // maximumDate={new Date()} // ⛔ prevents selecting future dates
                     onConfirm={(date) => {
                         setStartDate(date);
                         setIsStartPickerOpen(false);
@@ -429,7 +429,7 @@ const VinListScreen = ({ navigation, route }) => {
                     open={isEndPickerOpen}
                     date={endDate}
                     mode="date"
-                    minimumDate={startDate}       // ✅ StartDate se pehle ki date disable
+                    // minimumDate={startDate}       // ✅ StartDate se pehle ki date disable
                     // maximumDate={new Date()} // ⛔ prevents selecting future dates
                     onConfirm={(date) => {
                         const newEndDate = date;
@@ -488,8 +488,8 @@ const VinListScreen = ({ navigation, route }) => {
                         <Text style={[styles.tableHeaderText, { width: wp(35) }]}>Start Date</Text>
                         <Text style={[styles.tableHeaderText, { width: wp(35) }]}>End Date</Text>
 
-                        {activeTab === 'partnerOrder' && (
-                            <Text style={[styles.tableHeaderText, { width: wp(25) }]}>Partner</Text>
+                        {technicianType === "manager" && (
+                            <Text style={[styles.tableHeaderText, { width: wp(50) }]}>Assigned Technicians</Text>
                         )}
                         {/* <Text style={[styles.tableHeaderText, { width: wp(45) }]}>Cost Estimate</Text> */}
                         <Text style={[styles.tableHeaderText, { width: wp(45), }]}>Action</Text>
@@ -528,10 +528,10 @@ const VinListScreen = ({ navigation, route }) => {
                                             year: "numeric"
                                         })}
                                         </Text>
-                                        {activeTab === 'partnerOrder' && (
-                                            <Text style={[styles.tableText, { width: wp(25) }]}>
+                                        {technicianType === "manager" && (
+                                            <Text style={[styles.tableText, { width: wp(50),paddingRight:10 }]}>
                                                 {item?.assignedTechnicians
-                                                    ?.filter(tech => tech?.id !== technicianId)
+                                                    // ?.filter(tech => tech?.id !== technicianId)
                                                     ?.map(tech => {
                                                         const firstName = tech?.firstName || '';
                                                         const lastName = tech?.lastName || '';

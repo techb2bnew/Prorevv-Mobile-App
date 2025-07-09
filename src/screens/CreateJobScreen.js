@@ -54,7 +54,6 @@ const CreateJobScreen = ({ route }) => {
     const [isTechnicianLoading, setIsTechnicianLoading] = useState(false);
     const [technicianPage, setTechnicianPage] = useState(1);
     const [hasMoreTechnicians, setHasMoreTechnicians] = useState(true);
-    // const [selectedTechnicians, setSelectedTechnicians] = useState([]);
     const [selectedNormalTechnicians, setSelectedNormalTechnicians] = useState([]);
     const [selectedRrTechnicians, setSelectedRrTechnicians] = useState([]);
     const [technicianError, setTechnicianError] = useState('');
@@ -343,8 +342,6 @@ const CreateJobScreen = ({ route }) => {
 
         setIsTechnicianLoading(true);
         try {
-            const netState = await NetInfo.fetch();
-
             const token = await AsyncStorage.getItem("auth_token");
             if (!token) {
                 console.error("Token not found!");
@@ -364,38 +361,62 @@ const CreateJobScreen = ({ route }) => {
             const data = await response.json();
 
             const newTechs = data?.technician?.technicians || [];
-            console.log(newTechs);
+            console.log("Fetched Page:", page, "Techs Count:", newTechs.length);
 
+            // if (data.status && newTechs.length > 0) {
+            //     const updatedList = page === 1 ? newTechs : [...technicians, ...newTechs];
+            //     // setTechnicians(updatedList);
+            //     console.log("data:::::", updatedList);
+            //     const rrList = updatedList.filter(
+            //         tech => tech?.techType?.toLowerCase() !== 'technician'
+            //     );
+            //     const technicianList = updatedList.filter(
+            //         tech => tech?.techType?.toLowerCase() === 'technician'
+            //     );
+
+            //     setTechnicians(technicianList);
+            //     setRrTechnicians(rrList);
+
+            //     if (technicianList.length === 1) {
+            //         setSelectedNormalTechnicians([technicianList[0]]);
+            //     }
+            //     if (rrList.length === 1) {
+            //         setSelectedRrTechnicians([rrList[0]]);
+            //     }
+            //     console.log("RR Technicians:", rrList);
+            //     console.log("Other Technicians:", technicianList);
+            //     await AsyncStorage.setItem('technicianList', JSON.stringify(updatedList));
+
+            //     // if (newTechs.length >= 10) {
+            //     //     setTechnicianPage(prev => prev + 1);
+            //     // } else {
+            //     //     setHasMoreTechnicians(false);
+            //     // }
+            //     setTechnicianPage(page);
+            //     setHasMoreTechnicians(newTechs.length >= 10);
+
+            // } 
             if (data.status && newTechs.length > 0) {
-                const updatedList = page === 1 ? newTechs : [...technicians, ...newTechs];
-                // setTechnicians(updatedList);
-                // console.log("data", updatedList);
-                const rrList = updatedList.filter(
-                    tech => tech?.techType?.toLowerCase() !== 'technician'
-                );
+                const newRrList = newTechs.filter(tech => tech?.techType?.toLowerCase() !== 'technician');
+                const newTechnicianList = newTechs.filter(tech => tech?.techType?.toLowerCase() === 'technician');
 
-                const technicianList = updatedList.filter(
-                    tech => tech?.techType?.toLowerCase() === 'technician'
-                );
-
-                setTechnicians(technicianList);
-                setRrTechnicians(rrList);
-
-                if (technicianList.length === 1) {
-                    setSelectedNormalTechnicians([technicianList[0]]);
-                }
-                if (rrList.length === 1) {
-                    setSelectedRrTechnicians([rrList[0]]);
-                }
-                console.log("RR Technicians:", rrList);
-                console.log("Other Technicians:", technicianList);
-                await AsyncStorage.setItem('technicianList', JSON.stringify(updatedList));
-
-                if (newTechs.length >= 10) {
-                    setTechnicianPage(prev => prev + 1);
+                if (page === 1) {
+                    setTechnicians(newTechnicianList);
+                    setRrTechnicians(newRrList);
                 } else {
-                    setHasMoreTechnicians(false);
+                    setTechnicians(prev => [...prev, ...newTechnicianList]);
+                    setRrTechnicians(prev => [...prev, ...newRrList]);
                 }
+
+                if (newTechnicianList.length === 1 && page === 1) {
+                    setSelectedNormalTechnicians([newTechnicianList[0]]);
+                }
+                if (newRrList.length === 1 && page === 1) {
+                    setSelectedRrTechnicians([newRrList[0]]);
+                }
+
+                setTechnicianPage(page);
+                setHasMoreTechnicians(newTechs.length >= 10);
             } else {
                 setHasMoreTechnicians(false);
             }
@@ -408,10 +429,12 @@ const CreateJobScreen = ({ route }) => {
 
     const handleLoadMoreTechnicians = () => {
         if (!isTechnicianLoading && hasMoreTechnicians) {
-            fetchTechnicians(technicianPage);
+            // fetchTechnicians(technicianPage);
+            console.log("Calling fetch for Page:", technicianPage + 1);
+            fetchTechnicians(technicianPage + 1);
+
         }
     };
-
 
     const isNormalTechnicianSelected = (technicianId) => {
         return selectedNormalTechnicians.some(t => t.id === technicianId);
@@ -582,12 +605,13 @@ const CreateJobScreen = ({ route }) => {
                                 value={jobName}
                                 onChangeText={(text) => setJobName(text)}
                                 required={true}
+                                maxLength={50}
                             />
                             {jobNameError ? (
                                 <Text style={{ color: 'red', marginTop: 4, fontSize: 12 }}>{jobNameError}</Text>
                             ) : null}
 
-                            <View style={{ paddingTop: spacings.large}}>
+                            <View style={{ paddingTop: spacings.large }}>
                                 {/* Filter & Date Picker */}
                                 <View style={styles.datePickerContainer}>
                                     <View style={{ width: "45%" }}>
@@ -752,7 +776,7 @@ const CreateJobScreen = ({ route }) => {
                                                     );
                                                 }}
                                                 onEndReached={handleLoadMoreTechnicians}
-                                                onEndReachedThreshold={0.3}
+                                                onEndReachedThreshold={0.5}
                                                 showsVerticalScrollIndicator={false}
                                                 ListFooterComponent={isTechnicianLoading ? <ActivityIndicator /> : null}
                                             />

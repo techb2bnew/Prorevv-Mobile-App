@@ -443,8 +443,8 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
                                                         ))}
                                                     </ScrollView>
                                                 ) :
-                                                    item.label === "Job Descriptions" || item.label === "Job Costs" ? (
-                                                        <Text style={[styles.value, { marginVertical: 4, lineHeight: 20 }]}>
+                                                    item.label === "Work Descriptions" || item.label === "Job Costs" ? (
+                                                        <Text style={[styles.value, { marginVertical: 4, lineHeight: 20, width: technicianType === "single-technician" ? "100%" : wp(80) }]}>
                                                             {item.value}
                                                         </Text>
                                                     )
@@ -485,7 +485,7 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
                         onClose={() => setSuccessModalVisible(false)}
                         headingText={"Congratulations"}
                         buttonText={"Ok"}
-                        text={"You've successfully Complete This Work Order."}
+                        text={"You've successfully completed this work order."}
                         onPressContinue={() => {
                             setSuccessModalVisible(false);
                             navigation.navigate("ReportsScreen", { vehicleCompleted: true });

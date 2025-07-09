@@ -22,21 +22,21 @@ const Stack = createStackNavigator();
 export default function VinListStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="VinListScreen" component={VinListScreen} />
-      <Stack.Screen name="CustomerInfo" component={CustomerInfoScreen} />
-      <Stack.Screen name="AddVehicle" component={AddVehicleScreen} />
-      <Stack.Screen name="NewJob" component={NewJobScreen} />
-      <Stack.Screen name="ScannerScreen" component={ScannerScreen} />
-      <Stack.Screen name="JobHistory" component={JobHistoryScreen} />
-      <Stack.Screen name="JobDetails" component={JobDetailsScreen} />
-      <Stack.Screen name="HowToPlay" component={HowToPlayScreen} />
-      <Stack.Screen name="WorkOrderScreen" component={WorkOrderScreen} />
-      <Stack.Screen name="WorkOrderScreenTwo" component={WorkOrderScreenTwo} />
-      <Stack.Screen name="VehicleDetailsScreen" component={VehicleDetailsScreen} />
-      <Stack.Screen name="NewJobDetailsScreen" component={NewJobDetailsScreen} />
-      <Stack.Screen name="ReportsScreen" component={Reports} />
-      <Stack.Screen name="CreateJobScreen" component={CreateJobScreen} />
-      <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen name="VinListScreen" component={VinListScreen} options={{ gestureEnabled: false }}/>
+      <Stack.Screen name="CustomerInfo" component={CustomerInfoScreen} options={{ gestureEnabled: false }}/>
+      <Stack.Screen name="AddVehicle" component={AddVehicleScreen} options={{ gestureEnabled: false }}/>
+      <Stack.Screen name="NewJob" component={NewJobScreen} options={{ gestureEnabled: false }}/>
+      <Stack.Screen name="ScannerScreen" component={ScannerScreen} options={{ gestureEnabled: false }}/>
+      <Stack.Screen name="JobHistory" component={JobHistoryScreen} options={{ gestureEnabled: false }}/>
+      <Stack.Screen name="JobDetails" component={JobDetailsScreen} options={{ gestureEnabled: false }}/>
+      <Stack.Screen name="HowToPlay" component={HowToPlayScreen} options={{ gestureEnabled: false }}/>
+      <Stack.Screen name="WorkOrderScreen" component={WorkOrderScreen} options={{ gestureEnabled: false }}/>
+      <Stack.Screen name="WorkOrderScreenTwo" component={WorkOrderScreenTwo} options={{ gestureEnabled: false }}/>
+      <Stack.Screen name="VehicleDetailsScreen" component={VehicleDetailsScreen} options={{ gestureEnabled: false }}/>
+      <Stack.Screen name="NewJobDetailsScreen" component={NewJobDetailsScreen} options={{ gestureEnabled: false }}/>
+      <Stack.Screen name="ReportsScreen" component={Reports} options={{ gestureEnabled: false }}/>
+      <Stack.Screen name="CreateJobScreen" component={CreateJobScreen}options={{ gestureEnabled: false }} />
+      <Stack.Screen name="Home" component={HomeScreen} options={{ gestureEnabled: false }}/>
 
     </Stack.Navigator>
   );

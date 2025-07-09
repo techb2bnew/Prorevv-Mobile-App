@@ -15,14 +15,14 @@ const Stack = createStackNavigator();
 export default function ProfileStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Profile" component={ProfileScreen} />
-      <Stack.Screen name="JobHistory" component={JobHistoryScreen} />
-      <Stack.Screen name="JobDetails" component={JobDetailsScreen} />
-      <Stack.Screen name="FeedBackScreen" component={FeedbackScreen} />
-      <Stack.Screen name="AuthStack" component={AuthStack} />
-      <Stack.Screen name="HowToPlay" component={HowToPlayScreen} />
-      <Stack.Screen name="NewJob" component={NewJobScreen} />
-      <Stack.Screen name="VehicleDetailsScreen" component={VehicleDetailsScreen} />
+      <Stack.Screen name="Profile" component={ProfileScreen} options={{ gestureEnabled: false }}/>
+      <Stack.Screen name="JobHistory" component={JobHistoryScreen} options={{ gestureEnabled: false }}/>
+      <Stack.Screen name="JobDetails" component={JobDetailsScreen} options={{ gestureEnabled: false }}/>
+      <Stack.Screen name="FeedBackScreen" component={FeedbackScreen} options={{ gestureEnabled: false }}/>
+      <Stack.Screen name="AuthStack" component={AuthStack} options={{ gestureEnabled: false }}/>
+      <Stack.Screen name="HowToPlay" component={HowToPlayScreen} options={{ gestureEnabled: false }}/>
+      <Stack.Screen name="NewJob" component={NewJobScreen} options={{ gestureEnabled: false }}/>
+      <Stack.Screen name="VehicleDetailsScreen" component={VehicleDetailsScreen} options={{ gestureEnabled: false }}/>
 
     </Stack.Navigator>
   );

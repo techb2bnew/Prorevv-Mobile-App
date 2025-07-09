@@ -800,7 +800,6 @@ const CustomerInfoScreen = ({ navigation }) => {
                                     Address
                                 </Text>
                                 <View style={{ flex: 1, position: 'relative', zIndex: 999 }}>
-
                                     <GooglePlacesAutocomplete
                                         ref={googleRef}
                                         placeholder="Enter Your Address"

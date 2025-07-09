@@ -962,7 +962,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                                 }
                                             }}
                                             autoCapitalize="characters"
-                                            maxLength={20}
+                                            maxLength={17}
                                             placeholderTextColor={mediumGray}
 
                                         />

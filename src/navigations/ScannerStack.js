@@ -19,13 +19,13 @@ const Stack = createStackNavigator();
 export default function ScannerStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="ScannerScreen" component={ScannerScreen} />
-      <Stack.Screen name="JobHistory" component={JobHistoryScreen} />
-      <Stack.Screen name="JobDetails" component={JobDetailsScreen} />
-      <Stack.Screen name="WorkOrderScreen" component={WorkOrderScreen} />
-      <Stack.Screen name="WorkOrderScreenTwo" component={WorkOrderScreenTwo} />
-      <Stack.Screen name="VinListScreen" component={VinListScreen} />
-      <Stack.Screen name="ReportsScreen" component={Reports} />
+      <Stack.Screen name="ScannerScreen" component={ScannerScreen} options={{ gestureEnabled: false }}/>
+      <Stack.Screen name="JobHistory" component={JobHistoryScreen} options={{ gestureEnabled: false }}/>
+      <Stack.Screen name="JobDetails" component={JobDetailsScreen} options={{ gestureEnabled: false }}/>
+      <Stack.Screen name="WorkOrderScreen" component={WorkOrderScreen} options={{ gestureEnabled: false }}/>
+      <Stack.Screen name="WorkOrderScreenTwo" component={WorkOrderScreenTwo} options={{ gestureEnabled: false }}/>
+      <Stack.Screen name="VinListScreen" component={VinListScreen} options={{ gestureEnabled: false }}/>
+      <Stack.Screen name="ReportsScreen" component={Reports} options={{ gestureEnabled: false }}/>
     </Stack.Navigator>
   );
 }

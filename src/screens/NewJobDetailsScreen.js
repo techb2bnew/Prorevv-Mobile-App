@@ -268,7 +268,7 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
         />
 
       ) : (
-        <ScrollView contentContainerStyle={{ padding: 16 }}>
+        <ScrollView contentContainerStyle={{ padding: 16 }} showsVerticalScrollIndicator={false}>
           {/* Job Info */}
           {jobDetails?.jobName && jobDetails?.customer?.fullName && (
             <View style={[styles.card, { borderColor: blueColor, borderWidth: 1 }]}>
@@ -482,9 +482,9 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
 
                       return (
                         <View key={i} style={[flexDirectionRow, justifyContentSpaceBetween]}>
-                          <View style={styles.leftCol}>
-                            <Text style={styles.value}>• {description || '—'}</Text>
-                          </View>
+                          {/* <View style={styles.leftCol}> */}
+                          <Text style={[styles.value]}>• {description || '—'}</Text>
+                          {/* </View> */}
                         </View>
                       );
                     })}
