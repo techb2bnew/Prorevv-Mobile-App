@@ -889,7 +889,7 @@ const Reports = ({ navigation }) => {
                                                 : "-"}
                                         </Text>
                                     </View>
-                                    <View style={{ width: '48%', marginBottom: 9 }}>
+                                    {technicianType === "manager" && <View style={{ width: '48%', marginBottom: 9 }}>
                                         <Text style={{ color: '#555', fontSize: 10 }}>Assigned Tech</Text>
                                         <Text style={[styles.text, { width: wp(30) }]}>
                                             {item?.assignedTechnicians?.length > 0
@@ -898,7 +898,7 @@ const Reports = ({ navigation }) => {
                                                     .join(', ')
                                                 : '-'}
                                         </Text>
-                                    </View>
+                                    </View>}
 
                                     {/* <View style={{ width: '48%', marginBottom: 9 }}>
                                         <Text style={{ color: '#555', fontSize: 10 }}>Cost Estimate</Text>
@@ -952,7 +952,7 @@ const Reports = ({ navigation }) => {
                                 <Text style={[styles.tableHeader, { width: wp(55) }]}>VIN</Text>
                                 <Text style={[styles.tableHeader, { width: wp(35) }]}>Make</Text>
                                 <Text style={[styles.tableHeader, { width: wp(30) }]}>Model</Text>
-                                <Text style={[styles.tableHeader, { width: wp(35) }]}>Assigned Tech</Text>
+                                {technicianType === "manager" && <Text style={[styles.tableHeader, { width: wp(35) }]}>Assigned Tech</Text>}
                                 <Text style={[styles.tableHeader, { width: wp(35) }]}>Start Date</Text>
                                 <Text style={[styles.tableHeader, { width: wp(35) }]}>End Date</Text>
 
@@ -977,13 +977,13 @@ const Reports = ({ navigation }) => {
                                                 <Text style={[styles.text, { width: wp(55) }]}>{item?.vin || '-'}</Text>
                                                 <Text style={[styles.text, { width: wp(35) }]}>{item?.make || '-'}</Text>
                                                 <Text style={[styles.text, { width: wp(30) }]}>{item?.model || '-'}</Text>
-                                                <Text style={[styles.text, { width: isTablet ? wp(35) : wp(30) }]}>
+                                                {technicianType === "manager" && <Text style={[styles.text, { width: isTablet ? wp(35) : wp(30) }]}>
                                                     {item?.assignedTechnicians?.length > 0
                                                         ? item?.assignedTechnicians
                                                             .map(tech => `${tech.firstName} ${tech.lastName}`)
                                                             .join(', ')
                                                         : '-'}
-                                                </Text>
+                                                </Text>}
                                                 <Text style={[styles.text, { width: wp(35) }]}> {item?.startDate
                                                     ? new Date(item?.startDate).toLocaleDateString("en-US", {
                                                         month: "long",

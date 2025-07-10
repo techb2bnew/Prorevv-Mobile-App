@@ -635,6 +635,7 @@ const CreateJobScreen = ({ route }) => {
         }
     };
 
+
     return (
         <KeyboardAvoidingView
             style={[flex]}
@@ -746,13 +747,13 @@ const CreateJobScreen = ({ route }) => {
                                                         })}>
                                                             <Text style={styles.viewText}>View</Text>
                                                         </Pressable>
-                                                        <Pressable onPress={() => {
+                                                        {item.jobStatus !== true && (<Pressable onPress={() => {
                                                             fetchJobData(item?.id);
                                                             setEditableJobId(item?.id)
                                                             setIsAddMode(true);
                                                         }}>
                                                             <Text style={styles.viewText}>Edit</Text>
-                                                        </Pressable>
+                                                        </Pressable>)}
                                                     </View>
                                                 )}
                                                 onEndReached={() => {
@@ -839,7 +840,7 @@ const CreateJobScreen = ({ route }) => {
                                             })}
                                         >
                                             <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-                                                <Pressable
+                                                {item.jobStatus !== true && (<Pressable
                                                     onPress={() => {
                                                         fetchJobData(item?.id);
                                                         setEditableJobId(item?.id)
@@ -848,7 +849,7 @@ const CreateJobScreen = ({ route }) => {
                                                     style={{ position: "absolute", right: -5, top: -10, zIndex: 999 }}>
                                                     <AntDesign name="edit" size={20} color={blackColor} />
 
-                                                </Pressable>
+                                                </Pressable>)}
                                                 <View style={{ width: '48%', marginBottom: 10 }}>
                                                     <Text style={{ color: '#555', fontSize: 11 }}>JobName</Text>
                                                     <Text>{item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}</Text>
@@ -1201,9 +1202,9 @@ const CreateJobScreen = ({ route }) => {
                                 </View>
 
                             </View>
-                             {error ? (
-                                    <Text style={{ color: 'red', marginTop: 4, fontSize: 12 }}>{error}</Text>
-                                ) : null}
+                            {error ? (
+                                <Text style={{ color: 'red', marginTop: 4, fontSize: 12 }}>{error}</Text>
+                            ) : null}
                         </ScrollView>
                         <View style={{ padding: hp(2), backgroundColor: whiteColor }}>
                             <CustomButton

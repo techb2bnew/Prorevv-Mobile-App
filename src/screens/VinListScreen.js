@@ -211,7 +211,7 @@ const VinListScreen = ({ navigation, route }) => {
             }
 
             // Handle pagination
-            const morePagesAvailable = pageNumber < response?.data?.jobs?.totalPages||response?.data?.response?.totalPages; // Check if currentPage < totalPages
+            const morePagesAvailable = pageNumber < response?.data?.jobs?.totalPages || response?.data?.response?.totalPages; // Check if currentPage < totalPages
             console.log("More Pages Available:", morePagesAvailable);
 
             // Update the `hasMore` state based on the response
@@ -338,6 +338,16 @@ const VinListScreen = ({ navigation, route }) => {
         setSortType(type);
         setModalVisible(false);
     };
+
+    // const getStatusStyle = (status) => {
+    //     if (status === true || status === "completed") return [styles.statusPill, styles.statusCompleted];
+    //     if (status === false || status === "inprogress") return [styles.statusPill, styles.statusInProgress];
+    // };
+
+    // const getStatusText = (status) => {
+    //     if (status === true || status === "completed") return 'Complete';
+    //     if (status === false || status === "inprogress") return 'In Progress';
+    // };
 
     return (
         <View style={{ width: wp(100), height: hp(100), backgroundColor: whiteColor }}>
@@ -494,6 +504,8 @@ const VinListScreen = ({ navigation, route }) => {
                         {technicianType === "manager" && (
                             <Text style={[styles.tableHeaderText, { width: wp(50) }]}>Assigned Technicians</Text>
                         )}
+                        {/* <Text style={[styles.tableHeaderText, { width: wp(35) }]}>Status</Text> */}
+
                         {/* <Text style={[styles.tableHeaderText, { width: wp(45) }]}>Cost Estimate</Text> */}
                         <Text style={[styles.tableHeaderText, { width: wp(45), }]}>Action</Text>
 
@@ -553,6 +565,18 @@ const VinListScreen = ({ navigation, route }) => {
                                                     .join(', ') || '—'}
                                             </Text>
                                         )}
+
+                                        {/* <View style={[getStatusStyle(item?.vehicleStatus), alignJustifyCenter, { height: hp(4), }]}>
+                                            <Text
+                                                style={{
+                                                    color: getStatusText(item?.vehicleStatus) === "Complete" ?
+                                                        greenColor : getStatusText(item?.vehicleStatus) === "inprogress" ?
+                                                            redColor :
+                                                            goldColor
+                                                }}>
+                                                {getStatusText(item?.vehicleStatus)}
+                                            </Text>
+                                        </View> */}
                                         <View style={{ flexDirection: "row", alignItems: "center", width: wp(45) }} >
                                             <Pressable onPress={() => navigation.navigate("VehicleDetailsScreen", {
                                                 vehicleId: item.id,
@@ -560,13 +584,16 @@ const VinListScreen = ({ navigation, route }) => {
                                             })}>
                                                 <Text style={styles.viewText}>View</Text>
                                             </Pressable>
-                                            <Pressable
-                                                onPress={() => navigation.navigate("WorkOrderScreenTwo", {
-                                                    vehicleId: item.id,
-                                                    // from: activeTab === "partnerOrder" ? "partner" : "workOrder"
-                                                })}>
-                                                <Text style={styles.viewText}>Edit</Text>
-                                            </Pressable>
+                                            {item.vehicleStatus !== true && (
+                                                <Pressable
+                                                    onPress={() =>
+                                                        navigation.navigate("WorkOrderScreenTwo", {
+                                                            vehicleId: item.id,
+                                                        })
+                                                    }>
+                                                    <Text style={styles.viewText}>Edit</Text>
+                                                </Pressable>
+                                            )}
                                         </View>
                                     </View>
                                 );
@@ -624,7 +651,7 @@ const VinListScreen = ({ navigation, route }) => {
                             })}
                         >
                             <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-                                <Pressable
+                                {item.vehicleStatus !== true && (<Pressable
                                     onPress={() => navigation.navigate("WorkOrderScreenTwo", {
                                         vehicleId: item.id,
                                     })}
@@ -632,7 +659,7 @@ const VinListScreen = ({ navigation, route }) => {
                                     {/* <Text style={styles.viewText}>Edit</Text> */}
                                     <AntDesign name="edit" size={20} color={blackColor} />
 
-                                </Pressable>
+                                </Pressable>)}
                                 <View style={{ width: '48%', marginBottom: 10 }}>
                                     <Text style={{ color: '#555', fontSize: 11 }}>JobName</Text>
                                     <Text>{item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}</Text>

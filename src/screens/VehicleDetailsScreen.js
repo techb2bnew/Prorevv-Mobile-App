@@ -27,6 +27,8 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
     const [imageModalVisible, setImageModalVisible] = useState(false);
     const [technicianType, setTechnicianType] = useState();
     const [technicianId, setTechnicianId] = useState();
+    const [technicianName, setTechnicianName] = useState();
+
 
     const { width, height } = Dimensions.get("window");
     const isTablet = width >= 668 && height >= 1024;
@@ -39,9 +41,13 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
                     const storedData = await AsyncStorage.getItem('userDeatils');
                     if (storedData) {
                         const parsedData = JSON.parse(storedData);
-                        // console.log("parsedData:::::", parsedData.types);
                         setTechnicianType(parsedData.types);
-                        setTechnicianId(parsedData.id)
+                        setTechnicianId(parsedData.id);
+                        const storedName = await AsyncStorage.getItem('technicianName');
+                        if (storedName) {
+                            setTechnicianName(storedName);
+                            console.log("parsedData:::::", storedName);
+                        }
                     }
                 } catch (error) {
                     console.error("Error fetching stored user:", error);
@@ -115,6 +121,7 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
             const body = new URLSearchParams();
             body.append("vehicleId", vehicleId);
             body.append("vehicleStatus", "true");
+            body.append("completedBy", technicianName);
 
             const response = await fetch(apiUrl, {
                 method: "POST",
@@ -251,7 +258,17 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
                             ? vehicleDetails?.color.charAt(0).toUpperCase() + vehicleDetails.color.slice(1)
                             : null, // yahan "N/A" ki jagah null diya taki filter me remove ho jaye
                     },
-                ].filter(item => !!item?.value && item.value.toString().trim() !== "")
+                ].filter(item => {
+                    const val = item?.value;
+                    return (
+                        val !== null &&
+                        val !== undefined &&
+                        val !== "" &&
+                        val !== "null" &&
+                        val !== "undefined" &&
+                        val.toString().trim() !== ""
+                    );
+                })
             },
 
             ...(validJobDescriptions?.length ? [{
@@ -315,6 +332,12 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
                             : "-"
                     },
                     { label: "Status", value: vehicleDetails?.vehicleStatus === false ? "In-Progress" : "Completed" },
+                    ...(technicianType === "manager"
+                        ? [{
+                            label: "Completed By",
+                            value: capitalize(vehicleDetails?.completedBy),
+                        }]
+                        : [])
                 ]
             },
             ...(vehicleDetails?.notes?.trim()

@@ -597,7 +597,7 @@ const WorkOrderScreenTwo = ({ route }) => {
         formData.append("notes", notes || " ");
         formData.append("color", selectedColor);
         formData.append("createdBy", "app");
-        formData.append("estiatedBy", technicianName);
+        formData.append("estimatedBy", technicianName);
         jobDescription.forEach((item) => {
             formData.append("jobDescription[]", item.jobDescription);
             // formData.append("cost", item.cost);
@@ -890,7 +890,6 @@ const WorkOrderScreenTwo = ({ route }) => {
         });
         setTechnicians(updatedTechs);
     };
-
 
     const handleConfirmDuplicateVin = async () => {
         setIsSubmitting(true);  // Start loading
