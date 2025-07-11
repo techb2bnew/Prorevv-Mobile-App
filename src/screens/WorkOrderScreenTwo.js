@@ -149,62 +149,6 @@ const WorkOrderScreenTwo = ({ route }) => {
         "Manufacturer Name",
     ];
 
-    // useFocusEffect(
-    //     useCallback(() => {
-    //         const checkTechnicianStatus = async () => {
-    //             try {
-    //                 const token = await AsyncStorage.getItem("auth_token");
-    //                 const storedData = await AsyncStorage.getItem('userDeatils');
-
-    //                 if (!token || !storedData) {
-    //                     console.log("❌ Token or user details missing!");
-    //                     return;
-    //                 }
-
-    //                 const parsedData = JSON.parse(storedData);
-    //                 const technicianId = parsedData?.id;
-
-    //                 if (!technicianId) {
-    //                     console.log("❌ Technician ID not found in stored user details");
-    //                     return;
-    //                 }
-
-    //                 const response = await fetch(`${API_BASE_URL}/fetchSingleTechnician?technicianId=${technicianId}`, {
-    //                     method: "POST",
-    //                     headers: {
-    //                         "Authorization": `Bearer ${token}`,
-    //                         "Content-Type": "application/json"
-    //                     }
-    //                 });
-    //                 const textResponse = await response.text();
-    //                 const data = JSON.parse(textResponse);
-    //                 const technician = data?.technician;
-    //                 console.log("technicia::::::", technician);
-
-    //                 // Save only 4 values
-    //                 await AsyncStorage.setItem('payRate', technician?.payRate);
-    //                 await AsyncStorage.setItem('simpleFlatRate', technician?.simpleFlatRate);
-    //                 await AsyncStorage.setItem('amountPercentage', technician?.amountPercentage);
-
-    //                 if (technician?.payVehicleType) {
-    //                     const vehicleList = technician.payVehicleType
-    //                         .split(',')
-    //                         .filter(item => item.trim() !== '');
-    //                     const vehicleArray = vehicleList.map(vehicle => ({
-    //                         label: vehicle.trim(),
-    //                         value: vehicle.trim()
-    //                     }));
-    //                     await AsyncStorage.setItem('allowedVehicles', JSON.stringify(vehicleArray));
-    //                 }
-
-    //             } catch (error) {
-    //                 console.error("🚨 Error in checkTechnicianStatus:", error);
-    //             }
-    //         };
-
-    //         checkTechnicianStatus();
-    //     }, [])
-    // );
 
     useFocusEffect(
         React.useCallback(() => {
@@ -218,6 +162,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                     setSelectedJobId(parsed.id);
                     setSelectedCustomer(parsed.assignCustomer);
                     setTechnicians(parsed.technicians);
+                    setSelectedTechnicians(parsed.technicians); // store full technician objects
                 }
             };
 
@@ -252,35 +197,7 @@ const WorkOrderScreenTwo = ({ route }) => {
         }, [])
     );
 
-    // Tech Assigned Vehicle
-    // useEffect(() => {
-    //     AsyncStorage.getItem('allowedVehicles').then(data => {
-    //         if (data) {
-    //             setStoredVehicles(JSON.parse(data));
-    //         }
-    //     });
-    // }, []);
-
-    // Tech Pay Rate
-    // useEffect(() => {
-    //     const fetchPayRate = async () => {
-    //         const rate = await AsyncStorage.getItem('payRate');
-    //         const simpleFlatRate = await AsyncStorage.getItem('simpleFlatRate');
-    //         const amountPercentage = await AsyncStorage.getItem('amountPercentage');
-
-    //         if (rate) {
-    //             setStoredPayRate(rate);
-    //         }
-    //         if (simpleFlatRate) {
-    //             setStoredSimpleFlatRate(simpleFlatRate);
-    //         }
-
-    //         if (amountPercentage) {
-    //             setStoredAmountPercentage(amountPercentage);
-    //         }
-    //     };
-    //     fetchPayRate();
-    // }, [])
+ 
 
     //Vin
     useEffect(() => {
@@ -611,7 +528,7 @@ const WorkOrderScreenTwo = ({ route }) => {
             formData.append("endDate", endDate.toISOString());
         }
         selectedTechnicians.forEach((tech, index) => {
-            // console.log(`Technician ${index}:`, tech); // 👈 Technician object console me print karega
+            console.log(`Technician ${index}:`, tech); // 👈 Technician object console me print karega
             formData.append(`technicians[${index}][id]`, tech.id);
             formData.append(`technicians[${index}][techFlatRate]`, tech?.UserJob?.techFlatRate || tech?.VehicleTechnician?.techFlatRate || "");
             formData.append(`technicians[${index}][rRate]`, tech?.UserJob?.rRate || tech?.VehicleTechnician?.rRate || "");
@@ -678,7 +595,6 @@ const WorkOrderScreenTwo = ({ route }) => {
         setJobDescriptionError("");
         try {
             const apiUrlEndPoint = route?.params?.vehicleId ? `${API_BASE_URL}/updateVehicleInfo` : `${API_BASE_URL}/addVehicleInfo`
-            console.log("apiUrlEndPoint>>", apiUrlEndPoint);
 
             const response = await fetch(apiUrlEndPoint, {
                 method: 'POST',
@@ -782,11 +698,11 @@ const WorkOrderScreenTwo = ({ route }) => {
         return selectedTechnicians.some((tech) => tech.id === id);
     };
 
-    useEffect(() => {
-        if (technicians?.length > 0) {
-            setSelectedTechnicians(technicians); // store full technician objects
-        }
-    }, [technicians]);
+    // useEffect(() => {
+    //     if (technicians?.length > 0) {
+    //         setSelectedTechnicians(technicians); // store full technician objects
+    //     }
+    // }, [technicians]);
 
 
     const fetchVehileData = async (vehicleId) => {
@@ -823,6 +739,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                     setStartDate(new Date(data?.vehicle?.vehicle?.startDate));
                     setEndDate(new Date(data?.vehicle?.vehicle?.endDate));
                     setTechnicians(data?.vehicle?.vehicle?.assignedTechnicians);
+                    setSelectedTechnicians(data?.vehicle?.vehicle?.assignedTechnicians);
                     setSelectedCustomer(data?.vehicle?.vehicle.customerId)
                     setNotes(data?.vehicle?.vehicle?.notes)
                     if (data?.vehicle?.vehicle?.images?.length > 0) {
@@ -856,6 +773,8 @@ const WorkOrderScreenTwo = ({ route }) => {
     }, [route?.params?.vehicleId]);
 
     const updateTechnicianField = (id, field, value) => {
+        console.log("value:::", value);
+
         const updatedTechs = technicians.map((tech) => {
             if (tech.id === id) {
                 // Prioritize updating in the correct source
@@ -888,7 +807,15 @@ const WorkOrderScreenTwo = ({ route }) => {
             }
             return tech;
         });
+
         setTechnicians(updatedTechs);
+        // ✅ Update only selected technicians with updated values
+        const updatedSelected = selectedTechnicians.map((tech) => {
+            const updated = updatedTechs.find((t) => t.id === tech.id);
+            return updated || tech;
+        });
+
+        setSelectedTechnicians(updatedSelected);
     };
 
     const handleConfirmDuplicateVin = async () => {
@@ -940,6 +867,52 @@ const WorkOrderScreenTwo = ({ route }) => {
             setIsSubmitting(false); // Stop loading after request completes
         }
     };
+
+    const fetchTechnicians = async () => {
+        try {
+            const token = await AsyncStorage.getItem("auth_token");
+            if (!token) {
+                console.error("Token not found!");
+                return;
+            }
+
+            const url = `${API_BASE_URL}/fetchTechnicianJob?types=${technicianType}`;
+
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            const data = await response.json();
+            const jobTechs = data?.technician?.technicians || [];
+
+            if (data.status && jobTechs.length > 0) {
+                const processedTechs = jobTechs.map(tech => ({
+                    ...tech,
+                    UserJob: {
+                        techFlatRate: null,
+                        rRate: null,
+                    }
+                }));
+
+                // ✅ Filter out duplicates
+                const filteredNewTechs = processedTechs.filter(
+                    tech => !technicians.some(existing => existing.id === tech.id)
+                );
+
+                // ✅ Append to existing list
+                setTechnicians(prev => [...prev, ...filteredNewTechs]);
+            } else {
+                console.log("No technicians found.");
+            }
+        } catch (error) {
+            console.error("Technician Joby Fetch Error:", error);
+        }
+    };
+
 
     return (
         <KeyboardAvoidingView
@@ -1208,10 +1181,6 @@ const WorkOrderScreenTwo = ({ route }) => {
                                             <View style={{ width: "100%" }}>
                                                 <Text style={[styles.label, { marginBottom: 0 }]}>Work Description</Text>
                                             </View>
-                                            {/* <View style={{ width: jobDescription.length > 1 ? "33%" : "30%" }}>
-                                                <Text style={[styles.label, { marginBottom: 0 }]}>Cost</Text>
-                                            </View> */}
-
                                         </View>
 
                                         <FlatList
@@ -1236,15 +1205,6 @@ const WorkOrderScreenTwo = ({ route }) => {
                                                             onContentSizeChange={(e) => handleContentSizeChange(index, e)}
 
                                                         />
-                                                        {/* <TextInput
-                                                            style={[styles.input, { width: jobDescription.length > 1 ? "26%" : "30%", height: isTablet ? hp(3.5) : hp(6) }]}
-                                                            placeholder="$0"
-                                                            keyboardType="number-pad"
-                                                            value={item.cost}
-                                                            placeholderTextColor={mediumGray}
-                                                            maxLength={5} // Maximum 5 digits
-                                                            onChangeText={(text) => handleInputChange(text, index, "cost")}
-                                                        /> */}
                                                         {jobDescription.length > 1 && (
                                                             <TouchableOpacity onPress={() => handleDelete(index)}>
                                                                 <Ionicons name="trash-outline" size={18} color="red" />
@@ -1274,52 +1234,6 @@ const WorkOrderScreenTwo = ({ route }) => {
                                             )}
                                         </View>
                                     </View>
-
-
-                                    {/* {technicianType === "ifs" && storedPayRate === "Pay Per Vehicles" && (<Text style={[styles.label, { marginTop: 5 }]}>Vehicle Type </Text>)}
-                                    {technicianType === "ifs" && storedPayRate === "Pay Per Vehicles" && (
-                                        <DropDownPicker
-                                            open={vTypeopen}
-                                            value={selectedVehicleType} // ✅ this should match the value in your items array
-                                            items={storedVehicles}
-                                            setOpen={(val) => {
-                                                if (val) Keyboard.dismiss();
-                                                setVTypeOpen(val);
-                                            }}
-                                            setValue={(callback) => {
-                                                const val = callback();
-                                                setSelectedVehicleType(val);
-                                                setVehicleTypeError('');
-                                            }}
-                                            placeholder="Select a Vehicle Type"
-                                            style={{
-                                                borderColor: blueColor,
-                                                borderWidth: 1,
-                                                marginBottom: 10,
-                                                borderRadius: 10,
-                                            }}
-                                            dropDownContainerStyle={{
-                                                borderColor: blueColor,
-                                                borderWidth: 1,
-                                                // zIndex: 1000,
-                                                backgroundColor: lightBlueColor,
-                                                maxHeight: hp(15)
-                                            }}
-                                            listMode="SCROLLVIEW"
-                                        />
-                                    )} */}
-
-                                    {/* {technicianType === "ifs" && vehicleTypeError && storedPayRate === "Pay Per Vehicles" && (<Text style={{ color: 'red' }}>{vehicleTypeError}</Text>)} */}
-
-                                    {/* {technicianType === "single-technician" &&
-                                        <CustomTextInput
-                                            label={"R/I R/R (Labour/Service Cost)"}
-                                            placeholder="Enter R/I R/R (Labour/Service Cost)"
-                                            value={labourCost}
-                                            keyboardType="numeric"
-                                            maxLength={5} // Maximum 5 digits
-                                            onChangeText={(text) => setLabourCost(text)} />
-                                    } */}
 
                                     {technicianType === "single-technician" && <View style={{ marginTop: spacings.xxLarge }}>
                                         <Text style={styles.label}>R/I R/R (Labour/Service Cost)</Text>
@@ -1462,7 +1376,6 @@ const WorkOrderScreenTwo = ({ route }) => {
                                         />
                                     </View>
 
-
                                     {technicianType === 'manager' && technicians?.length > 0 &&
                                         <View style={{ marginTop: 20 }}>
                                             <Text style={styles.label}>Selected Technician</Text>
@@ -1479,11 +1392,9 @@ const WorkOrderScreenTwo = ({ route }) => {
                                                     data={technicians}
                                                     keyExtractor={(item) => item.id.toString()}
                                                     renderItem={({ item }) => {
-                                                        const selected = isTechnicianSelected(item.id);
-                                                        const userJob = item.UserJob || item.VehicleTechnician;
 
-                                                        const showFlatRate = userJob.techFlatRate !== '';
-                                                        const showRRate = !showFlatRate && userJob.rRate !== '';
+                                                        const selected = isTechnicianSelected(item.id);
+                                                        const userJob = item.UserJob ?? item.VehicleTechnician ?? {};
 
                                                         return (
                                                             <View
@@ -1556,13 +1467,15 @@ const WorkOrderScreenTwo = ({ route }) => {
                                                     }}
                                                 />
                                             </View>
-                                            {/* <TouchableOpacity style={[flexDirectionRow, alignJustifyCenter, { backgroundColor: blueColor, borderRadius: 10, width: wp(33),alignSelf:"flex-end" }]} onPress={addNewField}>
+                                            <TouchableOpacity
+                                                style={[flexDirectionRow, alignJustifyCenter, { backgroundColor: blueColor, borderRadius: 10, width: wp(35), alignSelf: "flex-end" }]}
+                                                onPress={() => {
+                                                    fetchTechnicians(1);
+                                                }}
+                                            >
                                                 <Ionicons name="add-circle-outline" size={18} color={whiteColor} />
                                                 <Text style={styles.addMoreText}>Add technician</Text>
-                                            </TouchableOpacity> */}
-                                            {/* {technicianError ? (
-                                            <Text style={{ color: 'red', marginTop: 6, fontSize: 12 }}>{technicianError}</Text>
-                                        ) : null} */}
+                                            </TouchableOpacity>
                                         </View>}
 
                                     {error && <Text style={{ color: 'red', marginTop: 10 }}>{error}</Text>}

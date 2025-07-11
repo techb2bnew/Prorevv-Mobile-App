@@ -263,9 +263,9 @@ const VinListScreen = ({ navigation, route }) => {
                     },
                 }
             );
-            console.log("response?.data", response?.data);
+            console.log("response?.data", response?.data?.vehicles);
 
-            const vehicles = response?.data?.vehicles || [];
+            const vehicles = response?.data?.vehicles?.updatedVehicles || [];
             setVehicleData(vehicles);
 
         } catch (error) {

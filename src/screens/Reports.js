@@ -349,7 +349,7 @@ const Reports = ({ navigation }) => {
                 );
                 console.log("response?.data", response?.data);
 
-                const vehicles = response?.data?.vehicles || [];
+                const vehicles = response?.data?.vehicles?.updatedVehicles || [];
                 setWorkOrdersRawData(vehicles);
             }
         } catch (error) {
