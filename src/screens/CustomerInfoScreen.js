@@ -15,7 +15,6 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import MaterialCommunityIcons from 'react-native-vector-icons/dist/MaterialCommunityIcons';
 import Toast from 'react-native-simple-toast';
-import CustomDropdown from "../componets/CustomDropdown";
 import NetInfo from "@react-native-community/netinfo";
 import Header from "../componets/Header";
 import { useFocusEffect } from "@react-navigation/native";

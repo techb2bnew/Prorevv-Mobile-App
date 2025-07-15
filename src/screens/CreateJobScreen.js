@@ -22,7 +22,6 @@ import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import NetInfo from "@react-native-community/netinfo";
 import { EventRegister } from 'react-native-event-listeners';
 import Header from '../componets/Header';
-import CustomDropdown from '../componets/CustomDropdown';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import DatePicker from "react-native-date-picker";
 import CustomerDropdown from '../componets/CustomerDropdown';

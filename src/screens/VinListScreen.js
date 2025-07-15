@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Image, Platform, Dimensions, Modal, ScrollView, ActivityIndicator, TouchableWithoutFeedback, Pressable } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Image, Platform, Dimensions, Modal, ScrollView, ActivityIndicator, TouchableWithoutFeedback, Pressable, Keyboard } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { whiteColor, lightGrayColor, blueColor, redColor, goldColor, greenColor, verylightGrayColor, grayColor, blackColor, orangeColor, mediumGray } from '../constans/Color'
+import { whiteColor, lightGrayColor, blueColor, redColor, goldColor, greenColor, verylightGrayColor, grayColor, blackColor, orangeColor, mediumGray, lightBlueColor } from '../constans/Color'
 import Header from '../componets/Header';
 import { BaseStyle } from '../constans/Style';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from '../utils';
@@ -14,6 +14,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import DatePicker from "react-native-date-picker";
+import JobDropdown from '../componets/jobDropdown';
 
 
 const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween, textAlign } = BaseStyle;
@@ -42,6 +43,11 @@ const VinListScreen = ({ navigation, route }) => {
     const [isStartPickerOpen, setIsStartPickerOpen] = useState(false);
     const [isEndPickerOpen, setIsEndPickerOpen] = useState(false);
     const [selectedJobName, setSelectedJobName] = useState("");
+    const [selectedJobId, setSelectedJobId] = useState(null); // selected value
+    const [jobPage, setJobPage] = useState(1);
+    const [hasMoreJob, setHasMoreJob] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [jobsRawData, setJobsRawData] = useState([])
 
     const sortedData = React.useMemo(() => {
         let data = [...vehicleData];
@@ -68,13 +74,11 @@ const VinListScreen = ({ navigation, route }) => {
                 if (savedJob) {
                     const parsed = JSON.parse(savedJob);
                     setSelectedJobName(parsed.jobName);
-
+                    setSelectedJobId(parsed.id);
                 }
             };
-
             loadSelectedJob();
 
-            // cleanup if needed
             return () => { };
         }, [])
     );
@@ -103,12 +107,6 @@ const VinListScreen = ({ navigation, route }) => {
         return true;
     });
 
-    // useEffect(() => {
-    //     const today = new Date();
-    //     const lastMonth = new Date();
-    //     lastMonth.setMonth(today.getMonth() - 1); // 👈 1 month before today
-    //     setStartDate(lastMonth);
-    // }, []);
     useFocusEffect(
         useCallback(() => {
             const today = new Date();
@@ -171,6 +169,7 @@ const VinListScreen = ({ navigation, route }) => {
         useCallback(() => {
             if (technicianType) {
                 fetchVehicalInfo(1);
+                fetchJobHistory()
             }
         }, [technicianType])
     );
@@ -202,6 +201,7 @@ const VinListScreen = ({ navigation, route }) => {
             const { response: resData } = response?.data?.jobs || response.data?.response;
 
             const newVehicles = response?.data?.jobs?.vehicles || response.data?.response?.vehicles || [];
+            console.log("newVehicles", newVehicles);
 
             // Update vehicle data
             if (pageNumber === 1) {
@@ -339,15 +339,60 @@ const VinListScreen = ({ navigation, route }) => {
         setModalVisible(false);
     };
 
-    // const getStatusStyle = (status) => {
-    //     if (status === true || status === "completed") return [styles.statusPill, styles.statusCompleted];
-    //     if (status === false || status === "inprogress") return [styles.statusPill, styles.statusInProgress];
-    // };
+    const fetchJobHistory = async (newPage = 1, isPagination = false) => {
+        if (!technicianId) {
+            console.warn("No Technician ID found. Exiting function.");
+            return;
+        }
 
-    // const getStatusText = (status) => {
-    //     if (status === true || status === "completed") return 'Complete';
-    //     if (status === false || status === "inprogress") return 'In Progress';
-    // };
+        // Show loading indicators based on request type
+        if (isPagination) {
+            setLoadingMore(true);
+        } else {
+            setLoading(true);
+        }
+
+        try {
+            const token = await AsyncStorage.getItem("auth_token");
+            if (!token) {
+                console.error("No token found");
+                return;
+            }
+            // console.log("token", technicianId);
+            const apiUrl = technicianType === "manager"
+                ? `${API_BASE_URL}/fetchAllJobs?roleType=${technicianType}&page=${newPage}&limit=10`
+                : technicianType === "single-technician"
+                    ? `${API_BASE_URL}/fetchAllJobs?userId=${technicianId}&roleType=${technicianType}&page=${newPage}&limit=10`
+                    : `${API_BASE_URL}/fetchAllJobs?userId=${technicianId}&page=${newPage}&limit=10`;
+            const response = await axios.get(
+                apiUrl,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            const newJobs = (technicianType === "manager") ? (response?.data?.jobs?.jobs) : (response?.data?.jobs?.jobs) || [];
+            console.log("fetchJobHistory", response?.data);
+
+            const updatedJobs = newPage === 1 ? newJobs : [...jobsRawData, ...newJobs];
+
+            setJobsRawData(updatedJobs);
+            setHasMoreJob(newJobs.length > 0);
+            setJobPage(newPage);
+        } catch (error) {
+            console.error("Error fetching job history:", error);
+        } finally {
+            if (isPagination) {
+                setLoadingMore(false);
+            } else {
+                setLoading(false);
+            }
+        }
+    };
+
+    const selectedJobVehicles = React.useMemo(() => {
+        if (!selectedJobId || !jobsRawData.length) return [];
+        const foundJob = jobsRawData.find(job => job.id === selectedJobId);
+        return foundJob?.vehicles || [];
+    }, [selectedJobId, jobsRawData]);
 
     return (
         <View style={{ width: wp(100), height: hp(100), backgroundColor: whiteColor }}>
@@ -388,6 +433,20 @@ const VinListScreen = ({ navigation, route }) => {
                 </TouchableOpacity>
 
             </View>
+            <Text style={[styles.label]}> Filter Vehicles by Job </Text>
+
+            <JobDropdown
+                jobs={jobsRawData}
+                selectedJobId={selectedJobId}
+                setSelectedJobId={(id) => {
+                    setSelectedJobId(id);
+                }}
+                isLoading={loading}
+                loadingMore={loadingMore}
+                hasMore={hasMoreJob}
+                onEndReached={() => fetchJobHistory(jobPage + 1, true)}
+                getJobName={(item) => item?.jobName}
+            />
 
             <View style={{ paddingHorizontal: spacings.large, paddingTop: spacings.large }}>
                 {/* Filter & Date Picker */}
@@ -498,6 +557,7 @@ const VinListScreen = ({ navigation, route }) => {
                         <Text style={[styles.tableHeaderText, { width: wp(50) }]}>VIN No.</Text>
                         <Text style={[styles.tableHeaderText, { width: wp(35) }]}>Make</Text>
                         <Text style={[styles.tableHeaderText, { width: wp(35) }]}>Model</Text>
+                        <Text style={[styles.tableHeaderText, { width: wp(35) }]}>Job Name</Text>
                         <Text style={[styles.tableHeaderText, { width: wp(35) }]}>Start Date</Text>
                         <Text style={[styles.tableHeaderText, { width: wp(35) }]}>End Date</Text>
 
@@ -511,26 +571,31 @@ const VinListScreen = ({ navigation, route }) => {
 
                     </View>
 
-                    <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(68.5) : hp(55) : isIOSAndTablet ? hp(67) : hp(52) }}>
+                    <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(62) : hp(44) : isIOSAndTablet ? hp(60) : hp(43) }}>
                         <FlatList
-                            data={filteredData}
+                            data={selectedJobId ? selectedJobVehicles : filteredData}
                             keyExtractor={(item, index) => index.toString()}
                             showsVerticalScrollIndicator={false}
                             refreshing={refreshing}
                             onRefresh={handleRefresh}
                             renderItem={({ item, index }) => {
                                 return (
-                                    <View
+                                    <Pressable
                                         style={[
                                             styles.tableRow,
                                             flexDirectionRow,
                                             { backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor },
                                         ]}
+                                        onPress={() => navigation.navigate("VehicleDetailsScreen", {
+                                            vehicleId: item.id,
+                                            from: activeTab === "partnerOrder" ? "partner" : "workOrder"
+                                        })}
                                     >
                                         {/* <Text style={[styles.tableText, { width: wp(30), paddingLeft: spacings.small }]}>{item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}</Text> */}
                                         <Text style={[styles.tableText, { width: wp(50) }]}>{item?.vin}</Text>
                                         <Text style={[styles.tableText, { width: wp(35) }]}>{item?.make}</Text>
                                         <Text style={[styles.tableText, { width: wp(35) }]}>{item?.model}</Text>
+                                        <Text style={[styles.tableText, { width: wp(35) }]}>{item?.jobName}</Text>
                                         <Text style={[styles.tableText, { width: wp(35) }]}>
                                             {item?.startDate
                                                 ? new Date(item.startDate).toLocaleDateString("en-US", {
@@ -595,7 +660,7 @@ const VinListScreen = ({ navigation, route }) => {
                                                 </Pressable>
                                             )}
                                         </View>
-                                    </View>
+                                    </Pressable>
                                 );
                             }}
                             ListFooterComponent={() =>
@@ -627,9 +692,9 @@ const VinListScreen = ({ navigation, route }) => {
                 </View>
             </ScrollView>}
 
-            {viewType === "grid" && <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(72) : hp(61) : isIOSAndTablet ? hp(70) : hp(56) }}>
+            {viewType === "grid" && <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(65) : hp(50) : isIOSAndTablet ? hp(63) : hp(48) }}>
                 <FlatList
-                    data={filteredData}
+                    data={selectedJobId ? selectedJobVehicles : filteredData}
                     keyExtractor={(item, index) => index.toString()}
                     showsVerticalScrollIndicator={false}
                     contentContainerStyle={{ paddingVertical: 10 }}
@@ -1108,6 +1173,12 @@ const styles = StyleSheet.create({
         color: blackColor,
         marginRight: spacings.small2x,
         fontSize: style.fontSizeNormal.fontSize,
+    },
+    label: {
+        fontSize: style.fontSizeNormal2x.fontSize,
+        fontWeight: style.fontWeightThin1x.fontWeight,
+        padding: spacings.large,
+        color: blackColor
     },
 
 });

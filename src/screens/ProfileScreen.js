@@ -16,7 +16,6 @@ import axios from 'axios';
 import MaterialCommunityIcons from 'react-native-vector-icons/dist/MaterialCommunityIcons';
 import { ScrollView } from 'react-native-gesture-handler';
 import PhoneInput from 'react-native-phone-number-input';
-import CustomDropdown from '../componets/CustomDropdown';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import { Image as ImageCompressor } from 'react-native-compressor';
 import { API_BASE_URL, SUPPORT_EMAIL, SUPPORT_MOBILE } from '../constans/Constants';

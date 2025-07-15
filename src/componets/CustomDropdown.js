@@ -14,13 +14,6 @@ const CustomDropdown = ({ data, country, selectedValue, onSelect, showIcon, righ
     const userPressed = useRef(false);
     const [dropdownHeight, setDropdownHeight] = useState(0);
     const dropdownRef = useRef(null);
-
-    // useEffect(() => {
-    //     Toast.show(`isvivible:::${visible}`);
-
-    // }, [visible])
-
-
     const handleOpenDropdown = () => {
         userPressed.current = true;
         setVisible(true);
@@ -35,13 +28,6 @@ const CustomDropdown = ({ data, country, selectedValue, onSelect, showIcon, righ
         <View style={[styles.container, { height: isTablet ? heightPercentageToDP(4) : heightPercentageToDP(6) }]}>
             <Pressable style={styles.dropdownButton}
                 onPress={handleOpenDropdown}>
-                {/* onPress={() => {
-                    if (!state && (!data || data.length === 0)) {
-                        Toast.show("Please select state first");
-                    } else if (data && data.length > 0) {
-                        setVisible(true);
-                    }
-                }}> */}
                 {showIcon && <MaterialCommunityIcons name={"flag"} size={22} color={mediumGray} />}
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContainer}>
                     <Text style={[styles.selectedText, { color: selectedValue ? blackColor : grayColor }]} numberOfLines={1} ellipsizeMode="tail">
@@ -99,15 +85,15 @@ const CustomDropdown = ({ data, country, selectedValue, onSelect, showIcon, righ
                                 <Text style={styles.itemText}>{state ? item.name : item}</Text>
                             </Pressable>
                         )}
-                        ListEmptyComponent={<Text style={styles.emptyText}>   
-                        {country
-                            ? "No Country available"
-                            : state
-                                ? "No states available"
-                                : data?.length === 0
-                                    ? "No city available"
-                                    : "Please select state first"
-                        }</Text>}
+                        ListEmptyComponent={<Text style={styles.emptyText}>
+                            {country
+                                ? "No Country available"
+                                : state
+                                    ? "No states available"
+                                    : data?.length === 0
+                                        ? "No city available"
+                                        : "Please select state first"
+                            }</Text>}
                         showsVerticalScrollIndicator={true}
                     />
                 </View>

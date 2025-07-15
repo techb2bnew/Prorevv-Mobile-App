@@ -22,7 +22,6 @@ import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import NetInfo from "@react-native-community/netinfo";
 import { EventRegister } from 'react-native-event-listeners';
 import Header from '../componets/Header';
-import CustomDropdown from '../componets/CustomDropdown';
 import CustomerDropdown from '../componets/CustomerDropdown';
 
 const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween, textAlign } = BaseStyle;

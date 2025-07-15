@@ -445,7 +445,7 @@ const Reports = ({ navigation }) => {
             setLoading(false);
         }
     };
-    
+
     const fetchCustomerJobHistory = async (newPage = 1, isPagination = false) => {
         if (isPagination) {
             setCustomerLoadingMore(true);
@@ -777,8 +777,10 @@ const Reports = ({ navigation }) => {
                                 };
 
                                 return (
-                                    <View style={[styles.listItem, rowStyle]}
-
+                                    <Pressable style={[styles.listItem, rowStyle]}
+                                        onPress={() => navigation.navigate("NewJobDetailsScreen", {
+                                            jobId: item?.id
+                                        })}
                                     >
                                         <Text style={[styles.text, { width: "49%" }]}>
                                             {item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}
@@ -798,7 +800,7 @@ const Reports = ({ navigation }) => {
                                                 <Text style={styles.viewText}>Edit</Text>
                                             </Pressable>}
                                         </View>
-                                    </View>
+                                    </Pressable>
                                 );
                             }}
                             ListEmptyComponent={() => (
@@ -1086,9 +1088,12 @@ const Reports = ({ navigation }) => {
                                 const rowStyle = {
                                     backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor,
                                 };
-
                                 return (
-                                    <View style={[styles.listItem, rowStyle]}>
+                                    <Pressable style={[styles.listItem, rowStyle]}
+                                        onPress={() => navigation.navigate("NewJobDetailsScreen", {
+                                            customerId: item?.id,
+                                            from: "customer"
+                                        })}>
                                         <Text style={[styles.text, { width: "49%" }]}>
                                             {item?.fullName?.charAt(0).toUpperCase() + item?.fullName?.slice(1)}
                                         </Text>
@@ -1108,11 +1113,11 @@ const Reports = ({ navigation }) => {
                                                 <Text style={styles.viewText}>Edit</Text>
                                             </Pressable> */}
                                         </View>
-                                    </View>
+                                    </Pressable>
                                 );
                             }}
                             ListEmptyComponent={() => {
-                                if (customerLoading) return null; // 👈 Loading ke time kuch mat dikhao
+                                if (customerLoading) return null; 
                                 return (
                                     <Text style={[styles.text, textAlign, { margin: hp(10), fontWeight: "500", color: grayColor }]}>
                                         No data found.

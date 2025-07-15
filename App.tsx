@@ -146,20 +146,20 @@ function App(): React.JSX.Element {
       //   // console.log("✅ Saved allowed vehicle types:", vehicleArray);
       // }
 
-      if (technician.isApproved === "reject") {
+      if (technician?.isApproved === "reject") {
         Toast.show("❌ Technician access revoked. Logging out...");
       }
 
-      if (technician.accountStatus === false) {
+      if (technician?.accountStatus === false) {
         Toast.show("⚠️ Your technician account is inactive. Please contact support.");
       }
 
-      if (technician.deletedStatus === true) {
+      if (technician?.deletedStatus === true) {
         Toast.show("⚠️ Your technician account has been deleted. Please contact support.");
       }
 
       // Logout process if any of the conditions are met
-      if (technician.isApproved === "reject" || !technician.accountStatus || technician.deletedStatus) {
+      if (technician?.isApproved === "reject" || !technician?.accountStatus || technician?.deletedStatus) {
         const keyToKeep = "alreadyLaunched";
         const allKeys = await AsyncStorage.getAllKeys();
         const keysToDelete = allKeys.filter(key => key !== keyToKeep);

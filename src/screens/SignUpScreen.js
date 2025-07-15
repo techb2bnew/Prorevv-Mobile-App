@@ -13,7 +13,6 @@ import PhoneInput from "react-native-phone-number-input";
 import Toast from 'react-native-simple-toast';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
-import CustomDropdown from "../componets/CustomDropdown";
 import DocumentPicker from 'react-native-document-picker';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import { Image as ImageCompressor } from 'react-native-compressor';
@@ -846,91 +845,6 @@ const SignUpScreen = ({ navigation }) => {
                     </View>
                 </View>
                 {errors.address && <Text style={styles.error}>{errors.address}</Text>}
-                {/* <CustomTextInput
-                    label="Address"
-                    placeholder="Enter your address"
-                    value={formData.address}
-                    onChangeText={(text) => handleInputChange("address", text)}
-                    required={true}
-                />
-                {errors.address && <Text style={styles.error}>{errors.address}</Text>}
-
-                <View style={[flexDirectionRow, justifyContentSpaceBetween]}>
-                    <View style={[styles.phoneContainer, { width: "49%" }]}>
-                        <Text style={styles.label}>
-                            Country<Text style={styles.asterisk}> *</Text>
-                        </Text>
-                        <CustomDropdown
-                            data={countries}
-                            country={true}
-                            selectedValue={countryValue}
-                            onSelect={(value) => {
-                                setCountryValue(value);
-                                handleInputChange("country", value);
-                                // fetchStates(value)
-                                // setStateValue("");
-                                // setCityValue("");
-                                // setStates([]);
-                                // setCities([]);
-                            }}
-                            titleText="Select a Country"
-                            rightIcon={true}
-                        />
-                        {errors.country && <Text style={styles.error}>{errors.country}</Text>}
-                    </View>
-                    <View style={[{ width: "48%" }]}>
-                       
-                        <CustomTextInput
-                            label="State"
-                            placeholder="Enter State"
-                            value={formData.state}
-                            onChangeText={(text) => handleInputChange("state", text)}
-                            style={[styles.halfInput, { width: isTablet ? wp(44.5) : wp(42.5) }]}
-                            required={true}
-                            multiline={false} // Ensures single line
-                            numberOfLines={1} // Keeps text in one line
-                        />
-                        {errors.state && <Text style={styles.error}>{errors.state}</Text>}
-                    </View>
-                </View>
-
-
-                <View style={[flexDirectionRow, justifyContentSpaceBetween]}>
-                    <View
-                        style={[styles.phoneContainer, { width: isTablet ? wp(44.5) : wp(42.5), marginRight: 10, marginTop: isTablet ? 2 : 1 }]}
-                    >
-                        <CustomTextInput
-                            label="City"
-                            placeholder="Enter City"
-                            value={formData.city}
-                            onChangeText={(text) => handleInputChange("city", text)}
-                            style={[styles.halfInput, { width: isTablet ? wp(44.5) : wp(42.5) }]}
-                            required={true}
-                            multiline={false} // Ensures single line
-                            numberOfLines={1} // Keeps text in one line
-                        />
-                        {errors.city && <Text style={styles.error}>{errors.city}</Text>}
-                    </View>
-                    <View>
-                        <CustomTextInput
-                            label="Zip Code"
-                            placeholder="Enter zip code"
-                            value={formData.zipCode}
-                            onChangeText={(text) => handleInputChange("zipCode", text)}
-                            style={[styles.halfInput, { width: isTablet ? wp(44.5) : wp(42.5) }]}
-                            required={true}
-                            multiline={false} // Ensures single line
-                            numberOfLines={1}
-                            maxLength={10}
-                        />
-                        {errors.zipCode && <Text style={styles.error}>{errors.zipCode}</Text>}
-                    </View>
-                </View> */}
-
-                {/* <CustomButton title="Next" onPress={handleNext} style={styles.button} /> */}
-                {/* </>)} */}
-                {/* {isSecondStep && (
-                    <> */}
                 <CustomTextInput
                     label="Secondary Email (Optional)"
                     placeholder="Enter your secondary email"

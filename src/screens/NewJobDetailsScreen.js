@@ -27,6 +27,7 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
   const [technicianType, setTechnicianType] = useState();
   const { width, height } = Dimensions.get("window");
   const isTablet = width >= 668 && height >= 1024;
+  const isIOsAndTablet = Platform.OS === "ios" && isTablet;
   const [customerJobs, setCustomerJobs] = useState([]);
   const [selectedJob, setSelectedJob] = useState(null);
 
@@ -144,13 +145,29 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
   const handleJobSelect = (job) => {
     setSelectedJob(job);
     fetchJobData(job?.id);
-
   };
 
   const capitalize = (text) => {
     if (!text || typeof text !== 'string') return '';
     return text.charAt(0).toUpperCase() + text.slice(1);
   };
+
+  const renderItem = ({ item, index }) => (
+    <Pressable
+      onPress={() => navigation.navigate('VehicleDetailsScreen', { vehicleId: item.id })}
+      style={[styles.row, { backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor },]}
+    >
+      <Text style={[styles.cell, { width: isIOsAndTablet ? "40%" : "44%", paddingLeft: spacings.small2x }]}>{item.vin || 'N/A'}</Text>
+      <Text style={[styles.cell, { color: item.vehicleStatus ? 'green' : 'red', width: isIOsAndTablet ? "43%" : "38%", }]}>
+        {item.vehicleStatus ? 'Complete' : 'In Progress'}
+      </Text>
+      <Pressable onPress={() => navigation.navigate("VehicleDetailsScreen", {
+        vehicleId: item.id,
+      })}>
+        <Text style={styles.viewText}>View</Text>
+      </Pressable>
+    </Pressable>
+  );
 
   return (
     <View style={{ flex: 1 }}>
@@ -167,105 +184,149 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
       />
       {loading ? (
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', padding: 10 }}>
-          {/* {Array.from({ length: 13 }).map((_, index) => (
-            <View key={index} style={{ width: '48%', marginBottom: 10 }}>
-              <SkeletonPlaceholder borderRadius={5}>
-                <SkeletonPlaceholder.Item flexDirection="column" alignItems="flex-start">
-                  <SkeletonPlaceholder.Item width={120} height={20} marginTop={5} />
-                  <SkeletonPlaceholder.Item width={80} height={15} marginTop={10} />
-                  <SkeletonPlaceholder.Item width={100} height={20} marginTop={5} />
-                </SkeletonPlaceholder.Item>
-              </SkeletonPlaceholder>
-            </View>
-          ))} */}
           <View style={[alignJustifyCenter, { width: wp(100), height: hp(85) }]}>
             <ActivityIndicator size={'large'} color={blueColor} />
           </View>
         </View>
       ) : customerId && !selectedJob ? (
+        // <FlatList
+        //   data={customerJobs?.jobs}
+        //   keyExtractor={(item) => item.id.toString()}
+        //   contentContainerStyle={{ paddingBottom: 20 }}
+        //   showsVerticalScrollIndicator={false}
+        //   ListHeaderComponent={() => (
+        //     <View style={{ padding: 16, backgroundColor: lightBlueColor, margin: 10, borderRadius: 10, borderColor: blueColor, borderWidth: 1 }}>
+        //       <View style={styles.rowItem}>
+        //         <View style={styles.leftCol}>
+        //           <Text style={styles.label}>Customer</Text>
+        //           <Text style={styles.value}>{capitalize(customerJobs?.fullName || "-")}</Text>
+        //         </View>
+        //         <View style={styles.rightCol}>
+        //           <Text style={styles.label}>Customer Email</Text>
+        //           <Text style={styles.value}>{customerJobs?.email || "-"}</Text>
+        //         </View>
+        //       </View>
+        //       <View style={styles.leftCol}>
+        //         <Text style={styles.label}>Customer Phone</Text>
+        //         <Text style={styles.value}>{customerJobs?.phoneNumber || "-"}</Text>
+        //       </View>
+        //     </View>
+        //   )}
+        //   renderItem={({ item, index }) => {
+        //     const rowStyle = {
+        //       backgroundColor: index % 2 === 0 ? whiteColor : lightBlueColor,
+        //     };
+
+        //     return (
+        //       <TouchableOpacity
+        //         style={[styles.card, { marginHorizontal: 10, borderColor: blueColor, borderWidth: 1 }, rowStyle]}
+        //         onPress={() => handleJobSelect(item)}
+        //       >
+        //         <View style={styles.rowItem}>
+        //           <View style={styles.leftCol}>
+        //             <Text style={styles.label}>Job Title</Text>
+        //             <Text style={styles.value}>{capitalize(item?.jobName || "-")}</Text>
+        //           </View>
+        //           <View style={styles.rightCol}>
+        //             <Text style={styles.label}>Estimated By</Text>
+        //             <Text style={styles.value}>{capitalize(item?.estimatedBy || "-")}</Text>
+        //           </View>
+        //         </View>
+        //         <View style={styles.rowItem}>
+        //           <View style={styles.leftCol}>
+        //             <Text style={styles.label}>Number of W.O</Text>
+        //             <Text style={styles.value}>
+        //               {item?.vehicles?.length}
+        //             </Text>
+        //           </View>
+        //           <View style={styles.rightCol}>
+        //             <Text style={styles.label}>Status</Text>
+        //             <Text style={[styles.value, { color: item?.jobStatus ? 'green' : 'red' }]}>
+        //               {item?.jobStatus ? "Complete" : "In Progress"}
+        //             </Text>
+        //           </View>
+        //         </View>
+
+        //       </TouchableOpacity>
+        //     );
+        //   }}
+        //   ListEmptyComponent={() => (
+        //     <Text style={{ textAlign: 'center', marginTop: 20 }}>No jobs found.</Text>
+        //   )}
+        // />
         <FlatList
-          data={customerJobs?.jobs}
+          data={customerJobs?.jobs || []}
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={{ paddingBottom: 20 }}
           showsVerticalScrollIndicator={false}
           ListHeaderComponent={() => (
-            <View style={{ padding: 16, backgroundColor: lightBlueColor, margin: 10, borderRadius: 10, borderColor: blueColor, borderWidth: 1 }}>
-              <View style={styles.rowItem}>
+            <>
+              {/* Customer Info Box */}
+              <View style={{
+                padding: 16,
+                backgroundColor: lightBlueColor,
+                margin: 10,
+                borderRadius: 10,
+                borderColor: blueColor,
+                borderWidth: 1
+              }}>
+                <View style={styles.rowItem}>
+                  <View style={styles.leftCol}>
+                    <Text style={styles.label}>Customer</Text>
+                    <Text style={styles.value}>{capitalize(customerJobs?.fullName || "-")}</Text>
+                  </View>
+                  <View style={styles.rightCol}>
+                    <Text style={styles.label}>Customer Email</Text>
+                    <Text style={styles.value}>{customerJobs?.email || "-"}</Text>
+                  </View>
+                </View>
                 <View style={styles.leftCol}>
-                  <Text style={styles.label}>Customer</Text>
-                  <Text style={styles.value}>{capitalize(customerJobs?.fullName || "-")}</Text>
-                </View>
-                <View style={styles.rightCol}>
-                  <Text style={styles.label}>Customer Email</Text>
-                  <Text style={styles.value}>{customerJobs?.email || "-"}</Text>
+                  <Text style={styles.label}>Customer Phone</Text>
+                  <Text style={styles.value}>{customerJobs?.phoneNumber || "-"}</Text>
                 </View>
               </View>
-              <View style={styles.leftCol}>
-                <Text style={styles.label}>Customer Phone</Text>
-                <Text style={styles.value}>{customerJobs?.phoneNumber || "-"}</Text>
+
+              {/* Jobs Table Header */}
+              <View style={[styles.row, styles.headerRow]}>
+                <Text style={[styles.cell, styles.headerText, { width: "30%" }]}>Job Title</Text>
+                <Text style={[styles.cell, styles.headerText, { width: "38%" }]}>Number of W.O.</Text>
+                <Text style={[styles.cell, styles.headerText, { width: "33%" }]}>Status</Text>
               </View>
-            </View>
+            </>
           )}
-          renderItem={({ item, index }) => {
-            const rowStyle = {
-              backgroundColor: index % 2 === 0 ? whiteColor : lightBlueColor, // white / light blue
-            };
-
-            return (
-              <TouchableOpacity
-                style={[styles.card, { marginHorizontal: 10, borderColor: blueColor, borderWidth: 1 }, rowStyle]}
-                onPress={() => handleJobSelect(item)}
+          renderItem={({ item, index }) => (
+            <TouchableOpacity
+              style={{
+                flexDirection: 'row',
+                paddingVertical: 12,
+                // paddingHorizontal: 10,
+                backgroundColor: index % 2 === 0 ? whiteColor : lightBlueColor,
+              }}
+              onPress={() => handleJobSelect(item)}
+            >
+              <Text style={[styles.cell, { width: "30%" }]}>{capitalize(item?.jobName || "-")}</Text>
+              <Text style={[styles.cell, { width: "38%", textAlign: 'center' }]}>{item?.vehicles?.length}</Text>
+              <Text
+                style={[
+                  styles.cell,
+                  { width: "33%", color: item?.jobStatus ? 'green' : 'red', textAlign: 'center' }
+                ]}
               >
-                <View style={styles.rowItem}>
-                  <View style={styles.leftCol}>
-                    <Text style={styles.label}>Job Title</Text>
-                    <Text style={styles.value}>{capitalize(item?.jobName || "-")}</Text>
-                  </View>
-                  <View style={styles.rightCol}>
-                    <Text style={styles.label}>Estimated By</Text>
-                    <Text style={styles.value}>{capitalize(item?.estimatedBy || "-")}</Text>
-                  </View>
-                </View>
-                <View style={styles.rowItem}>
-                  <View style={styles.leftCol}>
-                    <Text style={styles.label}>Created At</Text>
-                    <Text style={styles.value}>
-                      {item?.createdAt
-                        ? new Date(item.createdAt).toLocaleDateString("en-US", {
-                          month: "long",
-                          day: "numeric",
-                          year: "numeric",
-                        })
-                        : "-"}
-                    </Text>
-                  </View>
-                  <View style={styles.rightCol}>
-                    <Text style={styles.label}>Status</Text>
-                    <Text style={[styles.value, { color: item?.jobStatus ? 'green' : 'red' }]}>
-                      {item?.jobStatus ? "Complete" : "In Progress"}
-                    </Text>
-                  </View>
-                </View>
-                <View style={styles.leftCol}>
-                  <Text style={styles.label}>Number of W.O</Text>
-                  <Text style={styles.value}>
-                    {item?.vehicles?.length}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            );
-          }}
-
+                {item?.jobStatus ? "Complete" : "In Progress"}
+              </Text>
+            </TouchableOpacity>
+          )}
           ListEmptyComponent={() => (
             <Text style={{ textAlign: 'center', marginTop: 20 }}>No jobs found.</Text>
           )}
         />
 
+
       ) : (
-        <ScrollView contentContainerStyle={{ padding: 16 }} showsVerticalScrollIndicator={false}>
+        <ScrollView showsVerticalScrollIndicator={false}>
           {/* Job Info */}
           {jobDetails?.jobName && jobDetails?.customer?.fullName && (
-            <View style={[styles.card, { borderColor: blueColor, borderWidth: 1 }]}>
+            <View style={[styles.card, { borderColor: blueColor, borderWidth: 1, margin: 10 }]}>
               <View style={styles.rowItem}>
                 <View style={styles.leftCol}>
                   <Text style={styles.label}>Job Title</Text>
@@ -287,22 +348,6 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
                     ]}
                   >
                     {jobDetails?.jobStatus ? "Complete" : "In Progress"}
-                    {/* {(() => {
-                      const allVehiclesComplete = jobDetails?.vehicles?.every(v => v?.vehicleStatus === true);
-                      const isJobComplete = jobDetails?.jobStatus || allVehiclesComplete;
-
-                      return (
-                        <Text
-                          style={[
-                            styles.value,
-                            { fontWeight: '600' },
-                            { color: isJobComplete ? 'green' : 'red' }
-                          ]}
-                        >
-                          {isJobComplete ? "Complete" : "In Progress"}
-                        </Text>
-                      );
-                    })()} */}
                   </Text>
                 </View>
                 {technicianType != 'ifs' && <View style={styles.rightCol}>
@@ -386,10 +431,8 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
           )}
 
           {/* Vehicles */}
-          {jobDetails?.vehicles?.map((vehicle, index) => (
+          {/* {jobDetails?.vehicles?.map((vehicle, index) => (
             <View key={vehicle.id} style={[styles.card, { borderColor: blueColor, borderWidth: 1, padding: 0 }]}>
-              {/* <Text style={[styles.sectionTitle,{backgroundColor:blueColor,color:whiteColor}]}>Vehicle {index + 1}</Text> */}
-              {/* <View style={{ height: 1, backgroundColor: '#ccc', marginBottom: 10 }} /> */}
               <View style={{
                 backgroundColor: blueColor,
                 borderTopLeftRadius: 10,
@@ -471,14 +514,12 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
                   return !!desc; // in case it's a plain string
                 }).length > 0 && (
                   <View style={{ padding: 10 }}>
-                    {/* Heading */}
                     <View style={[flexDirectionRow, justifyContentSpaceBetween]}>
                       <View style={styles.leftCol}>
                         <Text style={styles.label}>Work Description</Text>
                       </View>
                     </View>
 
-                    {/* List of Work Items */}
                     {vehicle.jobDescription.map((desc, i) => {
                       const isObject = typeof desc === 'object' && desc !== null;
                       const description = isObject ? desc.jobDescription : desc;
@@ -488,9 +529,7 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
 
                       return (
                         <View key={i} style={[flexDirectionRow, justifyContentSpaceBetween]}>
-                          {/* <View style={styles.leftCol}> */}
                           <Text style={[styles.value]}>• {description || '—'}</Text>
-                          {/* </View> */}
                         </View>
                       );
                     })}
@@ -509,7 +548,6 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
                 ) : null}
 
 
-              {/* Notes */}
               {!!vehicle.notes?.trim() && (
                 <View style={{ padding: 10 }}>
                   <Text style={styles.label}>Notes</Text>
@@ -517,7 +555,6 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
                 </View>
               )}
 
-              {/* Images */}
               {Array.isArray(vehicle.images) && vehicle.images.length > 0 && (
                 <View style={{ marginTop: 10, padding: 10 }}>
                   <Text style={styles.label}>Attachments</Text>
@@ -611,7 +648,32 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
               )}
 
             </View>
-          ))}
+          ))} */}
+          {jobDetails?.vehicles?.length > 0 ? (
+            <>
+              {/* Header Row */}
+              <View style={[styles.row, styles.headerRow]}>
+                <Text style={[styles.cell, styles.headerText, { width: "40%" }]}>VIN</Text>
+                <Text style={[styles.cell, styles.headerText, { width: "40%" }]}>Status</Text>
+                <Text style={[styles.cell, styles.headerText, { width: "20%" }]}>Action</Text>
+              </View>
+
+              {/* List */}
+              <FlatList
+                data={jobDetails?.vehicles || []}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={renderItem}
+                ItemSeparatorComponent={() => <View style={styles.separator} />}
+              />
+            </>
+          ) : (
+            // 👉 Show this when vehicle list is empty
+            <View style={{ paddingVertical: 20, alignItems: 'center' }}>
+              <Text style={{ fontSize: 14, color: '#999' }}>No Vehicle Found in this Job</Text>
+            </View>
+          )}
+
+
 
           {/* Image Modal */}
           <Modal visible={imageModalVisible} transparent animationType="fade">
@@ -691,5 +753,36 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 40,
     right: 20,
-  }
+  },
+  row: {
+    flexDirection: 'row',
+    paddingVertical: spacings.large,
+  },
+  cell: {
+    textAlign: 'center',
+    fontSize: style.fontSizeNormal.fontSize
+  },
+  headerRow: {
+    borderBottomWidth: 1,
+    borderColor: '#ccc',
+    backgroundColor: blueColor
+  },
+  headerText: {
+    fontWeight: style.fontWeightThin1x.fontWeight,
+    fontSize: style.fontSizeNormal1x.fontSize,
+    color: whiteColor
+  },
+  separator: {
+    height: 1,
+    backgroundColor: '#eee',
+  },
+  viewText: {
+    marginLeft: spacings.small2x,
+    fontSize: style.fontSizeSmall1x.fontSize,
+    color: blackColor,
+    borderColor: blackColor,
+    borderWidth: 1,
+    padding: 4,
+    borderRadius: 2,
+  },
 })
