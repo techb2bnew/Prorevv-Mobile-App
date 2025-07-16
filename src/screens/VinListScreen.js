@@ -264,9 +264,28 @@ const VinListScreen = ({ navigation, route }) => {
                 }
             );
             console.log("response?.data", response?.data?.vehicles);
+            console.log("selectedJobId", selectedJobId);
 
             const vehicles = response?.data?.vehicles?.updatedVehicles || [];
-            setVehicleData(vehicles);
+            if (selectedJobId) {
+                const matchedVehicles = vehicles.filter(item => item.jobId === selectedJobId);
+
+                // ✅ Update job data also so selectedJobVehicles works
+                setJobsRawData(prevJobs => {
+                    return prevJobs.map(job => {
+                        if (job.id === selectedJobId) {
+                            return { ...job, vehicles: matchedVehicles };
+                        }
+                        return job;
+                    });
+                });
+
+                setVehicleData(matchedVehicles);
+            } else {
+                setVehicleData(vehicles);
+            }
+
+
 
         } catch (error) {
             console.error("Error fetching filtered data:", error);
@@ -393,6 +412,80 @@ const VinListScreen = ({ navigation, route }) => {
         const foundJob = jobsRawData.find(job => job.id === selectedJobId);
         return foundJob?.vehicles || [];
     }, [selectedJobId, jobsRawData]);
+
+
+    const finalVehicleList = React.useMemo(() => {
+        console.log("vehicleData",vehicleData);
+        
+        const baseData = selectedJobId ? selectedJobVehicles : vehicleData;
+
+        // Step 1: Apply search filter
+        const filtered = baseData.filter(item => {
+            const matchesSearch = searchVin
+                ? (
+                    item.vin?.toLowerCase().includes(searchVin.toLowerCase()) ||
+                    item.make?.toLowerCase().includes(searchVin.toLowerCase()) ||
+                    item.model?.toLowerCase().includes(searchVin.toLowerCase()) ||
+                    item.jobName?.toLowerCase().includes(searchVin.toLowerCase())
+                )
+                : true;
+
+            if (!matchesSearch) return false;
+
+            const hasPartner = (item?.assignedTechnicians || []).some(tech => tech?.id !== technicianId);
+
+            if (activeTab === 'partnerOrder') {
+                return hasPartner;
+            }
+
+            return true;
+        });
+
+        // Step 2: Apply sort
+        const sorted = [...filtered];
+        if (sortType === "date") {
+            sorted.sort((a, b) =>
+                sortOrder === "oldest"
+                    ? new Date(a.createdAt) - new Date(b.createdAt)
+                    : new Date(b.createdAt) - new Date(a.createdAt)
+            );
+        } else if (sortType === "modified") {
+            sorted.sort((a, b) =>
+                sortOrder === "oldest"
+                    ? new Date(a.updatedAt) - new Date(b.updatedAt)
+                    : new Date(b.updatedAt) - new Date(a.updatedAt)
+            );
+        } else if (sortType === "startDate") {
+            sorted.sort((a, b) =>
+                sortOrder === "oldest"
+                    ? new Date(a?.startDate) - new Date(b?.startDate)
+                    : new Date(b?.startDate) - new Date(a?.startDate)
+            );
+        } else if (sortType === "endDate") {
+            sorted.sort((a, b) =>
+                sortOrder === "oldest"
+                    ? new Date(a?.endDate) - new Date(b?.endDate)
+                    : new Date(b?.endDate) - new Date(a?.endDate)
+            );
+        } else if (sortType === "name") {
+            sorted.sort((a, b) =>
+                sortOrder === "asc"
+                    ? a?.jobName?.localeCompare(b?.jobName)
+                    : b?.jobName?.localeCompare(a?.jobName)
+            );
+        } else if (sortType === "status") {
+            sorted.sort((a, b) => {
+                const statusA = a?.jobStatus ? "Complete" : "InProgress";
+                const statusB = b?.jobStatus ? "Complete" : "InProgress";
+                return sortOrder === "asc"
+                    ? statusA.localeCompare(statusB)
+                    : statusB.localeCompare(statusA);
+            });
+        }
+
+        return sorted;
+    }, [selectedJobId, selectedJobVehicles, vehicleData, searchVin, sortType, sortOrder, technicianId, activeTab]);
+
 
     return (
         <View style={{ width: wp(100), height: hp(100), backgroundColor: whiteColor }}>
@@ -573,7 +666,8 @@ const VinListScreen = ({ navigation, route }) => {
 
                     <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(62) : hp(44) : isIOSAndTablet ? hp(60) : hp(43) }}>
                         <FlatList
-                            data={selectedJobId ? selectedJobVehicles : filteredData}
+                            // data={selectedJobId ? selectedJobVehicles : filteredData}
+                            data={finalVehicleList}
                             keyExtractor={(item, index) => index.toString()}
                             showsVerticalScrollIndicator={false}
                             refreshing={refreshing}
@@ -630,18 +724,6 @@ const VinListScreen = ({ navigation, route }) => {
                                                     .join(', ') || '—'}
                                             </Text>
                                         )}
-
-                                        {/* <View style={[getStatusStyle(item?.vehicleStatus), alignJustifyCenter, { height: hp(4), }]}>
-                                            <Text
-                                                style={{
-                                                    color: getStatusText(item?.vehicleStatus) === "Complete" ?
-                                                        greenColor : getStatusText(item?.vehicleStatus) === "inprogress" ?
-                                                            redColor :
-                                                            goldColor
-                                                }}>
-                                                {getStatusText(item?.vehicleStatus)}
-                                            </Text>
-                                        </View> */}
                                         <View style={{ flexDirection: "row", alignItems: "center", width: wp(45) }} >
                                             <Pressable onPress={() => navigation.navigate("VehicleDetailsScreen", {
                                                 vehicleId: item.id,
@@ -694,7 +776,8 @@ const VinListScreen = ({ navigation, route }) => {
 
             {viewType === "grid" && <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(65) : hp(50) : isIOSAndTablet ? hp(63) : hp(48) }}>
                 <FlatList
-                    data={selectedJobId ? selectedJobVehicles : filteredData}
+                    // data={selectedJobId ? selectedJobVehicles : filteredData}
+                    data={finalVehicleList}
                     keyExtractor={(item, index) => index.toString()}
                     showsVerticalScrollIndicator={false}
                     contentContainerStyle={{ paddingVertical: 10 }}

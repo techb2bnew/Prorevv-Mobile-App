@@ -8,6 +8,7 @@ import FeedbackScreen from "../screens/FeedbackScreen";
 import HowToPlayScreen from "../screens/HowToPlayScreen";
 import NewJobScreen from "../screens/NewJobScreen";
 import VehicleDetailsScreen from "../screens/VehicleDetailsScreen";
+import InvoiceScreen from "../screens/InvoiceScreen";
 
 
 const Stack = createStackNavigator();
@@ -23,6 +24,8 @@ export default function ProfileStack() {
       <Stack.Screen name="HowToPlay" component={HowToPlayScreen} options={{ gestureEnabled: false }}/>
       <Stack.Screen name="NewJob" component={NewJobScreen} options={{ gestureEnabled: false }}/>
       <Stack.Screen name="VehicleDetailsScreen" component={VehicleDetailsScreen} options={{ gestureEnabled: false }}/>
+       <Stack.Screen name="InvoiceScreen" component={InvoiceScreen} options={{ gestureEnabled: false }}/>
+
 
     </Stack.Navigator>
   );

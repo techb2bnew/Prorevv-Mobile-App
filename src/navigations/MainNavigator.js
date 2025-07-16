@@ -40,6 +40,7 @@ export default function MainNavigator() {
             || routeName === "VehicleDetailsScreen"
             || routeName === "NewJobDetailsScreen"
             || routeName === "CreateJobScreen"
+            || routeName === "InvoiceScreen"
             || isTabBarHidden;
     };
 

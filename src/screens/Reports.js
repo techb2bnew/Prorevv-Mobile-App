@@ -1,10 +1,10 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, Text, TextInput, FlatList, Pressable, StyleSheet, TouchableOpacity, ActivityIndicator, Image, Platform, Modal, Dimensions, TouchableWithoutFeedback, ScrollView } from 'react-native';
+import { View, Text, TextInput, FlatList, Pressable, StyleSheet, TouchableOpacity, ActivityIndicator, Image, Platform, Modal, Dimensions, TouchableWithoutFeedback, ScrollView, Alert } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
-import Fontisto from 'react-native-vector-icons/Fontisto';
+import Entypo from 'react-native-vector-icons/Entypo';
 import Feather from 'react-native-vector-icons/Feather';
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from '../utils';
+import { widthPercentageToDP as wp, heightPercentageToDP as hp, exportToCSV } from '../utils';
 import { blackColor, whiteColor, grayColor, mediumGray, orangeColor, greenColor, redColor, lightGrayColor, blueColor, lightBlueColor, verylightGrayColor, goldColor } from '../constans/Color';
 import { BaseStyle } from '../constans/Style';
 import { spacings, style } from '../constans/Fonts';
@@ -17,6 +17,8 @@ import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import NetInfo from "@react-native-community/netinfo";
 import Header from '../componets/Header';
 import { API_BASE_URL } from '../constans/Constants';
+import Share from 'react-native-share';
+
 
 const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween, textAlign, justifyContentCenter, justifyContentSpaceEvenly } = BaseStyle;
 
@@ -590,6 +592,58 @@ const Reports = ({ navigation }) => {
         }
     };
 
+    const formatDate = (date) => {
+        return date
+            ? new Date(date).toLocaleDateString('en-US', {
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric',
+            })
+            : '-';
+    };
+    const shareCSVFile = async (filePath) => {
+        try {
+            const shareOptions = {
+                title: 'Export CSV',
+                url: `file://${filePath}`, // ⚠️ must include file://
+                type: 'text/csv',
+            };
+
+            await Share.open(shareOptions);
+        } catch (err) {
+            console.log('Sharing error:', err);
+        }
+    };
+
+    const handleExport = async () => {
+        const exportData = filteredWorkOrders.map(item => ({
+            jobName: item?.jobName ?? '',
+            vin: item?.vin ?? '',
+            make: item?.make ?? '',
+            model: item?.model ?? '',
+            startDate: formatDate(item?.startDate),
+            endDate: formatDate(item?.endDate),
+            assignedTechnicians: item?.assignedTechnicians?.length > 0
+                ? item.assignedTechnicians.map(tech => `${tech.firstName} ${tech.lastName}`).join(', ')
+                : '-',
+
+            status: getStatusText(item?.vehicleStatus),
+        }));
+        const filePath = await exportToCSV(
+            exportData,
+            ['jobName', 'vin', 'make', 'model', 'startDate', 'endDate', 'status', 'assignedTechnicians'],
+            'work_orders.csv'
+        );
+
+        if (filePath && Platform.OS === 'ios') {
+            shareCSVFile(filePath); // ✅ Only iOS will share
+        } else if (filePath && Platform.OS === 'android') {
+            console.log("✅ File exported to:", filePath);
+            Alert.alert("Export Successful", `CSV saved to:\n${filePath}`);
+        }
+        // exportToCSV(exportData, ['jobName', 'vin', 'make', 'model', 'startDate', 'endDate', 'status', 'assignedTechnicians'], 'work_orders.csv');
+    };
+
     return (
         <View style={[flex, styles.container]}>
             {/* Header */}
@@ -611,8 +665,14 @@ const Reports = ({ navigation }) => {
                     </TouchableOpacity>
                     <TouchableOpacity
                         onPress={() => setViewType('grid')}
-                        style={[styles.tabButton, { backgroundColor: viewType === 'grid' ? blueColor : whiteColor, width: isTablet ? wp(8) : wp(12), height: hp(4.5) }]}>
+                        style={[styles.tabButton, { backgroundColor: viewType === 'grid' ? blueColor : whiteColor, width: isTablet ? wp(8) : wp(12), height: hp(4.5),marginRight: 10}]}>
                         <Ionicons name="grid-sharp" size={isTablet ? 35 : 20} color={viewType === 'grid' ? whiteColor : blackColor} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        onPress={handleExport}
+                        style={[{ backgroundColor: blueColor, width: isTablet ? wp(8) : wp(12), height: hp(4.5), marginRight: 20, borderRadius: 5, borderWidth: 1, alignItems: "center", justifyContent: "center" }]}>
+                        {/* <Ionicons name="print-outline" size={isTablet ? 35 : 20} color={whiteColor} /> */}
+                        <Text style={{ color: whiteColor }}>Print</Text>
                     </TouchableOpacity>
                 </View>
             }
@@ -686,11 +746,11 @@ const Reports = ({ navigation }) => {
                     width:
                         Platform.OS === "android"
                             ? isTablet
-                                ? wp(87) // Android tablet
-                                : wp(78) // Android phone
+                                ? wp(87)
+                                : wp(78)
                             : isTablet
-                                ? wp(88) // iOS tablet
-                                : wp(80), // iOS phone
+                                ? wp(88)
+                                : wp(80),
                 }]}>
                     <TextInput
                         style={[styles.searchInput, flex]}
@@ -706,6 +766,7 @@ const Reports = ({ navigation }) => {
                     >
                         <Image source={SORT_IMAGE} resizeMode='contain' style={{ width: isTablet ? wp(7) : wp(10), height: hp(3.2) }} />
                     </TouchableOpacity>
+
                 </View>
 
                 {/* Tabs */}
@@ -720,7 +781,6 @@ const Reports = ({ navigation }) => {
                         <Text style={[styles.tabText, activeTab === 'Customers' && styles.activeTabText]}>Customers</Text>
                     </TouchableOpacity>}
                 </View>
-
                 {/* Status Filters */}
                 <View style={styles.statusFilterContainer}>
                     {['Completed', 'InProgress'].map(status => {
@@ -901,13 +961,6 @@ const Reports = ({ navigation }) => {
                                                 : '-'}
                                         </Text>
                                     </View>}
-
-                                    {/* <View style={{ width: '48%', marginBottom: 9 }}>
-                                        <Text style={{ color: '#555', fontSize: 10 }}>Cost Estimate</Text>
-                                        <Text > ${Array.isArray(item?.jobDescription) && item?.jobDescription?.length > 0
-                                            ? item?.jobDescription?.reduce((total, job) => total + Number(job?.cost || 0), 0)
-                                            : '0'}</Text>
-                                    </View> */}
                                     <View style={{ width: '48%', marginBottom: 9 }}>
                                         <Text style={{ color: '#555', fontSize: 10 }}>Status</Text>
 
@@ -915,7 +968,6 @@ const Reports = ({ navigation }) => {
                                             {getStatusText(item?.vehicleStatus)}
                                         </Text>
                                     </View>
-
                                 </View>
 
                             </Pressable>
@@ -1117,7 +1169,7 @@ const Reports = ({ navigation }) => {
                                 );
                             }}
                             ListEmptyComponent={() => {
-                                if (customerLoading) return null; 
+                                if (customerLoading) return null;
                                 return (
                                     <Text style={[styles.text, textAlign, { margin: hp(10), fontWeight: "500", color: grayColor }]}>
                                         No data found.
