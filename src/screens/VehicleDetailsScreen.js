@@ -511,7 +511,8 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
                         text={"You've successfully completed this work order."}
                         onPressContinue={() => {
                             setSuccessModalVisible(false);
-                            navigation.navigate("ReportsScreen", { vehicleCompleted: true });
+                            navigation.goBack();
+                            // navigation.navigate("ReportsScreen", { vehicleCompleted: true });
                         }}
                     />}
                     {/* Image Modal */}

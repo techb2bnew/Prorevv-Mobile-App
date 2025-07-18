@@ -6,6 +6,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/dist/MaterialCommu
 const { width, height } = Dimensions.get('window');
 import Feather from 'react-native-vector-icons/Feather';
 import Toast from 'react-native-simple-toast';
+import { spacings } from "../constans/Fonts";
 
 const CustomerDropdown = ({ data, selectedValue, onSelect, showIcon, rightIcon, titleText, handleLoadMore, isLoading, disabled }) => {
     const [visible, setVisible] = useState(false);
@@ -126,7 +127,7 @@ const styles = StyleSheet.create({
     dropdownButton: {
         borderWidth: 1,
         borderColor: blueColor,
-        padding: 10,
+        padding: 8,
         borderRadius: 10,
         backgroundColor: "#fff",
         flexDirection: "row",

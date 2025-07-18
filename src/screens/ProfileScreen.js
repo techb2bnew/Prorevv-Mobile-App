@@ -1019,7 +1019,7 @@ const ProfileScreen = ({ navigation }) => {
 
                 <TouchableOpacity style={[{ width: wp(100), height: 'auto', paddingLeft: spacings.xLarge }, flexDirectionRow]} onPress={() => navigation.navigate("InvoiceScreen")}>
                   <View style={{ padding: spacings.xLarge }}>
-                    <MaterialIcons name="support-agent" size={24} color={blueColor} />
+                    <MaterialIcons name="request-page" size={24} color={blueColor} />
                   </View>
                   <View style={{ paddingVertical: spacings.xLarge }}>
                     <Text style={[styles.text, { fontSize: style.fontSizeNormal1x.fontSize, paddingTop: 3, fontWeight: style.fontWeightThin1x.fontWeight }]}>Invoice</Text>

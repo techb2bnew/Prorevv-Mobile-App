@@ -338,10 +338,10 @@ const HomeScreen = ({ navigation }) => {
   return (
     <View style={[styles.container, flex]}>
       <View style={[styles.logoContainer, alignItemsCenter, {
-        height: Platform.OS === "android" ? isTablet ? hp(12) : hp(19) : isIOSAndTablet ? hp(12) : hp(16),
+        height: Platform.OS === "android" ? isTablet ? hp(12) : hp(17) : isIOSAndTablet ? hp(12) : hp(14),
       }]}>
         <Text style={[styles.title, textAlign]}>👋 Hi, {capitalizetext(technicianName)}</Text>
-        <Pressable style={[styles.searchTextInput, { height: isTablet ? hp(4) : hp(5.5), }]}
+        <Pressable style={[styles.searchTextInput, { height: isTablet ? hp(4) : hp(4.8), }]}
           onPress={async () => {
             if (technicianType === "ifs") {
               try {

@@ -12,7 +12,7 @@ import {
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { Feather } from "@expo/vector-icons";
 import { blackColor, blueColor, grayColor, mediumGray, lightBlueColor } from "../constans/Color";
-import { spacings } from "../constans/Fonts";
+import { spacings, style } from "../constans/Fonts";
 
 const { width } = Dimensions.get("window");
 
@@ -44,14 +44,14 @@ const JobDropdown = ({
                     borderColor: blueColor,
                     borderWidth: 1,
                     borderRadius: 10,
-                    padding: isTablet ? spacings.xxLarge : spacings.large,
+                    padding: isTablet ? spacings.xxLarge : 8,
                     flexDirection: "row",
                     alignItems: "center",
                     justifyContent: "space-between",
                 }}
                 onPress={() => setVisible(true)}
             >
-                <Text style={{ color: selectedJob ? blackColor : grayColor }}>
+                <Text style={{ color: selectedJob ? blackColor : grayColor, fontSize: 16 }}>
                     {selectedJob ? getJobName(selectedJob) : "Select a Job"}
                 </Text>
                 <MaterialCommunityIcons name="chevron-down" size={22} color={blackColor} />
@@ -70,7 +70,7 @@ const JobDropdown = ({
                     <View
                         style={{
                             backgroundColor: "white",
-                            padding: 16,
+                            paddingVertical: spacings.xxxxLarge,
                             borderTopLeftRadius: 20,
                             borderTopRightRadius: 20,
                             maxHeight: "60%",
@@ -78,7 +78,7 @@ const JobDropdown = ({
                     >
                         <Text
                             style={{
-                                fontSize: 16,
+                                fontSize: style.fontSizeNormal2x.fontSize,
                                 fontWeight: "bold",
                                 marginBottom: 10,
                                 textAlign: "center",
@@ -95,8 +95,7 @@ const JobDropdown = ({
                                 return (
                                     <Pressable
                                         style={{
-                                            paddingVertical: 12,
-                                            paddingHorizontal: 10,
+                                            padding: spacings.xxLarge,
                                             backgroundColor: isSelected ? "#e6f0ff" : "white",
                                             borderBottomColor: "#ccc",
                                             borderBottomWidth: 1,
