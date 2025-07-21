@@ -4,7 +4,6 @@ import ProfileStack from "./ProfileStack";
 import HomeStack from "./HomeStack";
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from "../utils";
 import { blackColor, blueColor, grayColor, lightBlueColor, orangeColor, whiteColor } from "../constans/Color";
-import { HOME_FOCUSED_IMAGE, HOME_IMAGE, JOB_FOCUSED_IMAGE, JOB_IMAGE, PROFILE_FOCUSED_IMAGE, PROFILE_IMAGE, SETTING_FOCUSED_IMAGE, SETTING_IMAGE } from "../assests/images";
 import { Dimensions, Image, Platform, View } from "react-native";
 import { getFocusedRouteNameFromRoute } from "@react-navigation/native";
 import JobHistoryStack from "./JobHistoryStack";
@@ -13,7 +12,6 @@ import Feather from 'react-native-vector-icons/Feather';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useTabBar } from "../TabBarContext";
 import ReportStack from "./ReportsStack";
-import ScannerStack from "./ScannerStack";
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import VinListStack from "./VinListStack";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -21,9 +19,9 @@ import InvoiceStack from "./InvoiceStack";
 
 const Tab = createBottomTabNavigator();
 const { width, height } = Dimensions.get("window");
-
 // Function to check if the device is a tablet
 const isTablet = width >= 668 && height >= 1024;
+
 export default function MainNavigator() {
     const { isTabBarHidden } = useTabBar();
     const [technicianType, setTechnicianType] = React.useState(null);
@@ -67,7 +65,6 @@ export default function MainNavigator() {
 
     if (technicianType === null) return null;
 
-
     return (
         <Tab.Navigator
             screenOptions={({ route }) => ({
@@ -94,7 +91,7 @@ export default function MainNavigator() {
                         iconName = focused ? "list" : "list";
                     } else if (route.name === "Invoice") {
                         IconComponent = MaterialIcons;
-                        iconName = focused ? "list-alt" : "list-alt";
+                        iconName = focused ? "post-add" : "post-add";
                     }
 
                     return (
@@ -199,7 +196,6 @@ export default function MainNavigator() {
                     },
                 })}
             />
-
 
             {technicianType != "single-technician" && (<Tab.Screen
                 name="Account"

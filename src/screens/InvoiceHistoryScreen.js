@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, Text, TextInput, FlatList, Pressable, StyleSheet, TouchableOpacity, ActivityIndicator, Image, Platform, Modal, Dimensions, TouchableWithoutFeedback, ScrollView, Alert, Linking } from 'react-native';
+import { View, Text, TextInput, FlatList, Pressable, StyleSheet, TouchableOpacity, ActivityIndicator, Image, Platform, Modal, Dimensions, TouchableWithoutFeedback, ScrollView, Alert, Linking, PermissionsAndroid } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Entypo from 'react-native-vector-icons/Entypo';
@@ -26,45 +26,24 @@ import Toast from 'react-native-simple-toast';
 
 const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween, textAlign, justifyContentCenter, justifyContentSpaceEvenly } = BaseStyle;
 
-const InvoiceHistoryScreen = ({ navigation }) => {
+const InvoiceHistoryScreen = ({ navigation,
+    viewType,
+    setViewType,
+    isFilterModalVisible,
+    setIsFilterModalVisible }) => {
     const { width, height } = Dimensions.get("window");
     const isTablet = width >= 668 && height >= 1024;
     const isIOSAndTablet = Platform.OS === "ios" && isTablet;
     const [technicianId, setTechnicianId] = useState();
     const [technicianType, setTechnicianType] = useState();
     const [selectedVehicles, setSelectedVehicles] = useState([]);
-    const [workOrdersRawData, setWorkOrdersRawData] = useState([
-        {
-            invoiceId: "458XYZ",
-            customerName: "Barbie",
-            jobName: "Dent Repair",
-            grandTotal: "600",
-            invoiceCreatedDate: "2025-07-15T00:00:00Z",
-            invoiceStatus: false
-        },
-        {
-            invoiceId: "123ABC",
-            customerName: "John Doe",
-            jobName: "Oil Change",
-            grandTotal: "250",
-            invoiceCreatedDate: "2025-07-10T00:00:00Z",
-            invoiceStatus: true
-        },
-        {
-            invoiceId: "456XYZ",
-            customerName: "Alice",
-            jobName: "Engine Repair",
-            grandTotal: "600",
-            invoiceCreatedDate: "2025-07-15T00:00:00Z",
-            invoiceStatus: false
-        }
-    ]);
+    const [workOrdersRawData, setWorkOrdersRawData] = useState([]);
     const [loading, setLoading] = useState(false);
     const [startDate, setStartDate] = useState(new Date());
     const [endDate, setEndDate] = useState(new Date());
     const [isStartPickerOpen, setIsStartPickerOpen] = useState(false);
     const [isEndPickerOpen, setIsEndPickerOpen] = useState(false);
-    const [viewType, setViewType] = useState('list');
+    // const [viewType, setViewType] = useState('list');
     const [customers, setCustomers] = useState([]);
     const [pageNumber, setPageNumber] = useState(1);
     const [hasMoreCustomer, setHasMoreCustomer] = useState(true);
@@ -77,7 +56,7 @@ const InvoiceHistoryScreen = ({ navigation }) => {
     const [selectedJobEstimated, setSelectedJobEstimated] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
     const [isDateFilterActive, setIsDateFilterActive] = useState(false);
-    const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
+    // const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
     const [invoiceStatusFilter, setInvoiceStatusFilter] = useState('all');
     const [searchText, setSearchText] = useState('');
     const [dateSortOrder, setDateSortOrder] = useState(null); // 'asc' | 'desc' | null
@@ -85,8 +64,34 @@ const InvoiceHistoryScreen = ({ navigation }) => {
     const [paidDates, setPaidDates] = useState({});
     const [selectedInvoiceId, setSelectedInvoiceId] = useState(null);
     const [isPaidDatePickerOpen, setIsPaidDatePickerOpen] = useState(false);
-  
-
+    const [refreshing, setRefreshing] = useState(false); // for top refresh
+    const [loadingMore, setLoadingMore] = useState(false); // for bottom loader
+    // const [workOrdersRawData, setWorkOrdersRawData] = useState([
+    //     {
+    //         invoiceId: "458XYZ",
+    //         customerName: "Barbie",
+    //         jobName: "Dent Repair",
+    //         grandTotal: "600",
+    //         invoiceCreatedDate: "2025-07-15T00:00:00Z",
+    //         invoiceStatus: false
+    //     },
+    //     {
+    //         invoiceId: "123ABC",
+    //         customerName: "John Doe",
+    //         jobName: "Oil Change",
+    //         grandTotal: "250",
+    //         invoiceCreatedDate: "2025-07-10T00:00:00Z",
+    //         invoiceStatus: true
+    //     },
+    //     {
+    //         invoiceId: "456XYZ",
+    //         customerName: "Alice",
+    //         jobName: "Engine Repair",
+    //         grandTotal: "600",
+    //         invoiceCreatedDate: "2025-07-15T00:00:00Z",
+    //         invoiceStatus: false
+    //     }
+    // ]);
 
     useEffect(() => {
         const getTechnicianDetail = async () => {
@@ -110,35 +115,35 @@ const InvoiceHistoryScreen = ({ navigation }) => {
     // }, [technicianId])
 
 
-    useFocusEffect(
-        useCallback(() => {
-            const today = new Date();
+    // useFocusEffect(
+    //     useCallback(() => {
+    //         const today = new Date();
 
-            console.log("Focus effect ran on screen focus");
-            console.log("endDate:", endDate.toISOString());
-            console.log("today:", today.toISOString());
+    //         console.log("Focus effect ran on screen focus");
+    //         console.log("endDate:", endDate.toISOString());
+    //         console.log("today:", today.toISOString());
 
-            if (endDate > today) {
-                console.log("Resetting endDate to today");
-                setEndDate(today);
-            }
+    //         if (endDate > today) {
+    //             console.log("Resetting endDate to today");
+    //             setEndDate(today);
+    //         }
 
-            const lastMonth = new Date();
-            lastMonth.setMonth(today.getMonth() - 1);
-            console.log("Resetting startDate to last month");
-            setStartDate(lastMonth);
+    //         const lastMonth = new Date();
+    //         lastMonth.setMonth(today.getMonth() - 1);
+    //         console.log("Resetting startDate to last month");
+    //         setStartDate(lastMonth);
 
-        }, []) // <-- keep this empty so it only runs on focus
-    );
+    //     }, []) // <-- keep this empty so it only runs on focus
+    // );
 
     // Function to handle selection/deselection of vehicles
     const toggleSelection = (item) => {
         setSelectedVehicles(prevSelected => {
-            const alreadySelected = prevSelected.some(v => v.invoiceId === item.invoiceId);
+            const alreadySelected = prevSelected.some(v => v.id === item.id);
 
             if (alreadySelected) {
                 // remove from selection
-                return prevSelected.filter(v => v.invoiceId !== item.invoiceId);
+                return prevSelected.filter(v => v.id !== item.id);
             } else {
                 // add to selection
                 return [...prevSelected, item];
@@ -176,18 +181,19 @@ const InvoiceHistoryScreen = ({ navigation }) => {
             return;
         }
         const exportData = selectedVehicles.map((item, index) => ({
-            InvoiceId: item?.invoiceId ?? '',
-            CustomerName: item?.customerName ?? '',
-            JobName: item?.jobName ?? '',
+            InvoiceNumber: item?.invoiceNumber ?? '',
+            CustomerName: item?.customer?.fullName ?? '',
+            JobName: item?.job?.jobName ?? '',
             GrandTotal: `${item?.grandTotal}` ?? '',
-            InvoiceCreatedDate: formatDate(item?.invoiceCreatedDate),
-            Status: getStatusText(item?.invoiceStatus),
+            InvoiceCreatedDate: formatDate(item?.createdAt),
+            Status: getStatusText(item?.status),
         }));
         const filePath = await exportToCSV(
             exportData,
-            ['InvoiceId', 'JobName', 'CustomerName', 'GrandTotal', 'InvoiceCreatedDate', 'Status'],
+            ['InvoiceNumber', 'JobName', 'CustomerName', 'GrandTotal', 'InvoiceCreatedDate', 'Status'],
             'Sent_invoice.csv'
         );
+        console.log("file::", filePath);
 
         if (filePath && Platform.OS === 'ios') {
             shareCSVFile(filePath); // ✅ Only iOS will share
@@ -365,56 +371,38 @@ const InvoiceHistoryScreen = ({ navigation }) => {
     };
 
     const filteredVehicles = workOrdersRawData?.filter(vehicle => {
+        console.log(`🚗 Vehicle:`, vehicle); // 👈 Log each vehicle object
+
         // --- Status Filter ---
         const statusMatch =
             invoiceStatusFilter === 'all' ||
-            (invoiceStatusFilter.toLowerCase() === 'paid' && (vehicle.invoiceStatus === true || vehicle.invoiceStatus === 'Paid')) ||
-            (invoiceStatusFilter.toLowerCase() === 'unpaid' && (vehicle.invoiceStatus === false || vehicle.invoiceStatus === 'UnPaid'));
+            (invoiceStatusFilter.toLowerCase() === 'paid' && (vehicle?.status === true || vehicle?.status === 'Paid')) ||
+            (invoiceStatusFilter.toLowerCase() === 'unpaid' && (vehicle?.status === false || vehicle?.status === 'UnPaid'));
 
 
         const lowerSearch = searchText.toLowerCase();
 
         const matchesSearch =
-            vehicle?.invoiceId?.toLowerCase().includes(lowerSearch) ||
-            vehicle?.customerName?.toLowerCase().includes(lowerSearch) ||
-            vehicle?.jobName?.toLowerCase().includes(lowerSearch);
-
-        // if (!isDateFilterActive) {
-        //     // 🔄 Don't apply date filter if user hasn’t changed date
-        //     return statusMatch && matchesSearch;
-        // }
-
-        // // --- Date Filter ---
-        // const vehicleStartDate = new Date(vehicle?.startDate);
-        // const vehicleEndDate = new Date(vehicle?.endDate);
-        // const start = new Date(startDate.setHours(0, 0, 0, 0));
-        // const end = new Date(endDate.setHours(23, 59, 59, 999));
-
-        // const isWithinDateRange =
-        //     (!isNaN(vehicleStartDate) && !isNaN(vehicleEndDate)) &&
-        //     (
-        //         (vehicleStartDate >= start && vehicleStartDate <= end) ||
-        //         (vehicleEndDate >= start && vehicleEndDate <= end) ||
-        //         (vehicleStartDate <= start && vehicleEndDate >= end)
-        //     );
+            vehicle?.invoiceNumber?.toLowerCase().includes(lowerSearch) ||
+            vehicle?.customer?.fullName?.toLowerCase().includes(lowerSearch) ||
+            vehicle?.job?.jobName?.toLowerCase().includes(lowerSearch);
 
         return statusMatch && matchesSearch;
-        // && isWithinDateRange;
     })?.sort((a, b) => {
         let result = 0;
 
         // 🕒 Sort by Date (if selected)
         if (dateSortOrder) {
-            const dateA = new Date(a.invoiceCreatedDate);
-            const dateB = new Date(b.invoiceCreatedDate);
+            const dateA = new Date(a.createdAt);
+            const dateB = new Date(b.createdAt);
 
             result = dateSortOrder === 'asc' ? dateA - dateB : dateB - dateA;
         }
 
         // 🔤 If date is equal or no date sort, sort by name
         if (result === 0 && nameSortOrder) {
-            const nameA = a.customerName?.toLowerCase() || '';
-            const nameB = b.customerName?.toLowerCase() || '';
+            const nameA = a.customer?.fullName?.toLowerCase() || '';
+            const nameB = b.customer?.fullName?.toLowerCase() || '';
 
             result = nameSortOrder === 'asc'
                 ? nameA.localeCompare(nameB)
@@ -429,10 +417,57 @@ const InvoiceHistoryScreen = ({ navigation }) => {
         setIsPaidDatePickerOpen(true);
     };
 
+    useEffect(() => {
+        if (technicianId && technicianType) fetchInvoices(1);
+    }, [technicianId, technicianType]);
+
+    const fetchInvoices = async (page = 1, isRefresh = false) => {
+        if (isRefresh) {
+            setRefreshing(true);
+        } else {
+            setLoadingMore(true);
+        }
+
+        try {
+            const token = await AsyncStorage.getItem("auth_token");
+            const url = `${API_BASE_URL}/fetchInvoice?page=${page}&roleType=${technicianType}&userId=${technicianId}&limit=15`;
+            const response = await axios.get(url, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (response?.data?.response) {
+                const newInvoices = response.data?.response?.invoice;
+
+                setWorkOrdersRawData(prev =>
+                    page === 1 ? newInvoices : [...prev, ...newInvoices]
+                );
+                setPageNumber(page + 1);
+                console.log(newInvoices?.length);
+
+                setHasMoreCustomer(newInvoices?.length > 0);
+            } else {
+                setHasMoreCustomer(false);
+            }
+        } catch (err) {
+            console.error("API fetch error:", err);
+        } finally {
+            if (isRefresh) {
+                setRefreshing(false);
+            } else {
+                setLoadingMore(false);
+            }
+        }
+    };
+
+    const handleRefresh = () => {
+        setPageNumber(1);
+        fetchInvoices(1, true); // true = isRefresh
+    };
+
     return (
         <View style={[flex, styles.container]}>
             {/* Header */}
-            <Header title={"Invoice History"} />
+            {/* <Header title={"Invoice History"} />
 
             <View style={{
                 flexDirection: 'row', position: "absolute",
@@ -458,7 +493,7 @@ const InvoiceHistoryScreen = ({ navigation }) => {
                     }} style={[{ backgroundColor: blueColor, width: isTablet ? wp(8) : wp(12), height: hp(4.5), marginRight: 20, borderRadius: 5, borderWidth: 1, alignItems: "center", justifyContent: "center" }]}>
                     <Text style={{ color: whiteColor }}>Filter</Text>
                 </TouchableOpacity>
-            </View>
+            </View> */}
 
             <View style={{
                 paddingHorizontal: spacings.large,
@@ -490,7 +525,7 @@ const InvoiceHistoryScreen = ({ navigation }) => {
                 </View>
             </View>
 
-            {viewType === 'list' && <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(62.5) : hp(79) : isIOSAndTablet ? hp(60) : hp(73) }}>
+            {viewType === 'list' && <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(62.5) : hp(77) : isIOSAndTablet ? hp(60) : hp(73) }}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                     <View>
                         {/* Header Row */}
@@ -509,14 +544,16 @@ const InvoiceHistoryScreen = ({ navigation }) => {
                         <ScrollView style={{ height: Platform.OS === "android" ? hp(42) : hp(39) }} showsVerticalScrollIndicator={false}>
                             <FlatList
                                 data={filteredVehicles}
-                                keyExtractor={(item, index) => index.toString()}
+                                keyExtractor={(item, index) => item.id?.toString() || index.toString()}
                                 showsVerticalScrollIndicator={false}
                                 renderItem={({ item, index }) => {
                                     const rowStyle = { backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor };
-                                    const isSelected = selectedVehicles.some(v => v.invoiceId === item.invoiceId);
+                                    const isSelected = selectedVehicles.some(v => v.id === item.id);
+                                    // console.log("📦 Rendering item:", item);
+
                                     return (
                                         <Pressable key={index.toString()} style={[styles.listItem, rowStyle, { flexDirection: 'row' }]}
-                                            onPress={() => navigation.navigate("InvoiceDetailsScreen", { invoiceId: item?.invoiceId })}
+                                            onPress={() => navigation.navigate("InvoiceDetailsScreen", { invoiceId: item?.id })}
                                         >
                                             <TouchableOpacity onPress={() => toggleSelection(item)} style={{ width: wp(15) }}>
                                                 <MaterialIcons
@@ -525,24 +562,24 @@ const InvoiceHistoryScreen = ({ navigation }) => {
                                                     color={isSelected ? blueColor : 'gray'}
                                                 />
                                             </TouchableOpacity>
-                                            <Text style={[styles.text, { width: wp(35) }]}>{item?.invoiceId || '-'}</Text>
-                                            <Text style={[styles.text, { width: wp(35) }]}>{item?.customerName || '-'}</Text>
-                                            <Text style={[styles.text, { width: wp(35) }]}>{item?.jobName || '-'}</Text>
+                                            <Text style={[styles.text, { width: wp(35) }]}>{item?.invoiceNumber || '-'}</Text>
+                                            <Text style={[styles.text, { width: wp(35) }]}>{item?.customer?.fullName || '-'}</Text>
+                                            <Text style={[styles.text, { width: wp(35) }]}>{item?.job?.jobName || '-'}</Text>
 
 
                                             <Text style={[styles.text, { width: wp(35) }]}>
                                                 {item?.grandTotal ? `$${item.grandTotal}` : '-'}
                                             </Text>
 
-                                            <Text style={[styles.text, { width: wp(45) }]}> {item?.invoiceCreatedDate
-                                                ? new Date(item?.invoiceCreatedDate).toLocaleDateString("en-US", {
+                                            <Text style={[styles.text, { width: wp(45) }]}> {item?.createdAt
+                                                ? new Date(item?.createdAt).toLocaleDateString("en-US", {
                                                     month: "long",
                                                     day: "numeric",
                                                     year: "numeric",
                                                 })
                                                 : "-"}</Text>
                                             <TouchableOpacity
-                                                onPress={() => openPaidDatePicker(item.invoiceId)}
+                                                onPress={() => openPaidDatePicker(item?.id)}
                                                 style={{
                                                     width: wp(35),
                                                     paddingRight: spacings.xxxxLarge
@@ -553,13 +590,13 @@ const InvoiceHistoryScreen = ({ navigation }) => {
                                                     paddingVertical: 4,
                                                     paddingHorizontal: 8,
                                                     borderWidth: 1,
-                                                    borderColor: lightGrayColor, // use your defined color or "#ccc"
+                                                    borderColor: blueColor, // use your defined color or "#ccc"
                                                     borderRadius: 8,
                                                     backgroundColor: whiteColor,
                                                     justifyContent: 'center'
                                                 }}>
-                                                    {paidDates[item.invoiceId]
-                                                        ? new Date(paidDates[item.invoiceId]).toLocaleDateString("en-US", {
+                                                    {paidDates[item.id]
+                                                        ? new Date(paidDates[item.id]).toLocaleDateString("en-US", {
                                                             month: "long",
                                                             day: "numeric",
                                                             year: "numeric",
@@ -568,15 +605,18 @@ const InvoiceHistoryScreen = ({ navigation }) => {
                                                 </Text>
                                             </TouchableOpacity>
 
-                                            <View style={[getStatusStyle(item?.invoiceStatus), alignJustifyCenter, { height: hp(4) }]}>
+                                            <View style={[getStatusStyle(item?.status), alignJustifyCenter, { height: hp(4) }]}>
                                                 <Text
                                                     style={{
-                                                        color: getStatusText(item?.invoiceStatus) === "Paid" ?
-                                                            greenColor : getStatusText(item?.invoiceStatus) === "UnPaid" ?
-                                                                goldColor :
-                                                                redColor
+                                                        color: item?.status
+                                                            ? getStatusText(item?.status) === "Paid"
+                                                                ? greenColor
+                                                                : getStatusText(item?.status) === "UnPaid"
+                                                                    ? goldColor
+                                                                    : redColor
+                                                            : grayColor
                                                     }}>
-                                                    {getStatusText(item?.invoiceStatus)}
+                                                    {item?.status ? getStatusText(item?.status) : "-"}
                                                 </Text>
                                             </View>
 
@@ -585,21 +625,26 @@ const InvoiceHistoryScreen = ({ navigation }) => {
                                 }}
 
                                 ListEmptyComponent={() => {
-                                    let message = '';
-                                    if (!customerDetails?.id && !selectedJobId) {
-                                        message = "Please select customer and job";
-                                    } else if (customerDetails?.id && !selectedJobId) {
-                                        message = "Please select a job";
-                                    } else {
-                                        message = "No vehicle list found";
-                                    }
-
                                     return (
                                         <View style={styles.emptyContainer}>
-                                            <Text style={styles.emptyText}>{message}</Text>
+                                            <Text style={styles.emptyText}>No Invoice list found</Text>
                                         </View>
                                     );
                                 }}
+
+                                refreshing={refreshing}
+                                onRefresh={handleRefresh}
+                                onEndReached={() => {
+                                    if (hasMoreCustomer && !loadingMore) {
+                                        fetchInvoices(pageNumber);
+                                    }
+                                }}
+                                onEndReachedThreshold={0.5}
+                                ListFooterComponent={
+                                    loadingMore ? (
+                                        <ActivityIndicator size="small" color={blueColor} style={{ marginVertical: 10 }} />
+                                    ) : null
+                                }
                             />
                         </ScrollView>
                     </View>
@@ -634,7 +679,7 @@ const InvoiceHistoryScreen = ({ navigation }) => {
                         showsVerticalScrollIndicator={false}
                         contentContainerStyle={{ paddingVertical: 10 }}
                         renderItem={({ item, index }) => {
-                            const isSelected = selectedVehicles.some(v => v.invoiceId === item.invoiceId);
+                            const isSelected = selectedVehicles.some(v => v.id === item.id);
 
                             return (
                                 <Pressable style={{
@@ -646,7 +691,7 @@ const InvoiceHistoryScreen = ({ navigation }) => {
                                     borderWidth: 1,
                                     borderColor: blueColor
                                 }}
-                                    onPress={() => navigation.navigate("InvoiceDetailsScreen", { invoiceId: item?.invoiceId })}
+                                    onPress={() => navigation.navigate("InvoiceDetailsScreen", { invoiceId: item?.id })}
                                 >
                                     <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
                                         <TouchableOpacity onPress={() => toggleSelection(item)} style={{ position: "absolute", right: -5, top: -10, zIndex: 999 }}>
@@ -658,16 +703,16 @@ const InvoiceHistoryScreen = ({ navigation }) => {
                                         </TouchableOpacity>
 
                                         <View style={{ width: '48%', marginBottom: 9 }}>
-                                            <Text style={{ color: '#555', fontSize: 10 }}>Invoice Id</Text>
-                                            <Text >{item?.invoiceId}</Text>
+                                            <Text style={{ color: '#555', fontSize: 10 }}>Invoice Number</Text>
+                                            <Text >{item?.invoiceNumber}</Text>
                                         </View>
                                         <View style={{ width: '48%', marginBottom: 9 }}>
                                             <Text style={{ color: '#555', fontSize: 10 }}>Customer Name</Text>
-                                            <Text >{item?.customerName}</Text>
+                                            <Text >{item?.customer?.fullName}</Text>
                                         </View>
                                         <View style={{ width: '48%', marginBottom: 9 }}>
                                             <Text style={{ color: '#555', fontSize: 10 }}>Job Name</Text>
-                                            <Text >{item?.jobName}</Text>
+                                            <Text >{item?.job?.jobName}</Text>
                                         </View>
                                         <View style={{ width: '48%', marginBottom: 9 }}>
                                             <Text style={{ color: '#555', fontSize: 10 }}>Grand Total($)</Text>
@@ -675,8 +720,8 @@ const InvoiceHistoryScreen = ({ navigation }) => {
                                         </View>
                                         <View style={{ width: '48%', marginBottom: 9 }}>
                                             <Text style={{ color: '#555', fontSize: 10 }}>Invoice Created Date</Text>
-                                            <Text >{item?.invoiceCreatedDate
-                                                ? new Date(item?.invoiceCreatedDate).toLocaleDateString("en-US", {
+                                            <Text >{item?.createdAt
+                                                ? new Date(item?.createdAt).toLocaleDateString("en-US", {
                                                     month: "long",
                                                     day: "numeric",
                                                     year: "numeric",
@@ -688,16 +733,16 @@ const InvoiceHistoryScreen = ({ navigation }) => {
                                             <TouchableOpacity
                                                 onPress={() => openPaidDatePicker(item.invoiceId)}
                                                 style={{
-                                                    width: wp(35),
+                                                    width: "100%",
                                                     paddingRight: spacings.xxxxLarge
                                                 }}
                                             >
                                                 <Text style={{
                                                     color: blackColor, fontSize: 14,
                                                     paddingVertical: 4,
-                                                    paddingHorizontal: 10,
+                                                    paddingHorizontal: 8,
                                                     borderWidth: 1,
-                                                    borderColor: lightGrayColor,
+                                                    borderColor: blueColor,
                                                     borderRadius: 8,
                                                     backgroundColor: whiteColor,
                                                     justifyContent: 'center'
@@ -730,29 +775,31 @@ const InvoiceHistoryScreen = ({ navigation }) => {
                                 </Pressable>
                             )
                         }}
-
-
                         ListEmptyComponent={() => {
-                            let message = '';
-                            if (!customerDetails?.id && !selectedJobId) {
-                                message = "Please select customer and job";
-                            } else if (customerDetails?.id && !selectedJobId) {
-                                message = "Please select a job";
-                            } else {
-                                message = "No vehicle list found";
-                            }
-
                             return (
                                 <View style={styles.emptyContainer}>
-                                    <Text style={styles.emptyText}>{message}</Text>
+                                    <Text style={styles.emptyText}>No Invoice list found</Text>
                                 </View>
                             );
                         }}
+                        refreshing={refreshing}
+                        onRefresh={handleRefresh}
+                        onEndReached={() => {
+                            if (hasMoreCustomer && !loadingMore) {
+                                fetchInvoices(pageNumber);
+                            }
+                        }}
+                        onEndReachedThreshold={0.5}
+                        ListFooterComponent={
+                            loadingMore ? (
+                                <ActivityIndicator size="small" color={blueColor} style={{ marginVertical: 10 }} />
+                            ) : null
+                        }
                     />
 
                 </View>)}
 
-            <TouchableOpacity
+            {/* <TouchableOpacity
                 onPress={() => navigation.navigate("GenerateInvoiceScreen")}
                 style={{
                     position: 'absolute',
@@ -772,7 +819,7 @@ const InvoiceHistoryScreen = ({ navigation }) => {
                 }}
             >
                 <MaterialIcons name="post-add" size={28} color={whiteColor} />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
             {selectedVehicles.length > 0 && <View style={{ position: "absolute", bottom: 0, backgroundColor: whiteColor, width: wp(100), flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: spacings.large }}>
                 <CustomButton

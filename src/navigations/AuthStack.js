@@ -5,12 +5,9 @@ import LoginScreen from "../screens/LoginScreen";
 import SignUpScreen from "../screens/SignUpScreen";
 import ForgotPasswordScreen from "../screens/ForgotPasswordScreen";
 import MainNavigator from "./MainNavigator";
-import HomeStack from "./HomeStack";
-import JoinAsScreen from "../screens/JoinAsScreen";
 import OnboardingScreen from "../screens/onBoardingScreen";
 import { ActivityIndicator, View } from "react-native";
 import HowToPlayScreen from "../screens/HowToPlayScreen";
-import ManagerNavigator from "./ManagerNavigator";
 
 const Stack = createStackNavigator();
 
@@ -54,7 +51,6 @@ export default function AuthStack() {
       <Stack.Screen name="Register" component={SignUpScreen} options={{ gestureEnabled: false }}/>
       <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} options={{ gestureEnabled: false }} />
       <Stack.Screen name="MainNavigator" component={MainNavigator} options={{ gestureEnabled: false }}/>
-      <Stack.Screen name="ManagerNavigator" component={ManagerNavigator} options={{ gestureEnabled: false }}/>
       <Stack.Screen name="HowToPlay" component={HowToPlayScreen} options={{ gestureEnabled: false }}/>
     </Stack.Navigator>
   );

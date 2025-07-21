@@ -343,18 +343,18 @@ const HomeScreen = ({ navigation }) => {
         height: Platform.OS === "android" ? isTablet ? hp(12) : hp(17) : isIOSAndTablet ? hp(12) : hp(14),
       }]}>
         <Text style={[styles.title, textAlign]}>👋 Hi, {capitalizetext(technicianName)}</Text>
-        <Pressable
+        {technicianType === "single-technician" && <Pressable
           onPress={() => navigation.navigate("ProfileStackScreen")}
           style={{
             // backgroundColor: lightGrayColor,
             borderRadius: 30,
-            position:"absolute",
-            right:10,
-            top:10
+            position: "absolute",
+            right: 10,
+            top: 10
           }}
         >
           <Feather name="user" size={30} color={whiteColor} />
-        </Pressable>
+        </Pressable>}
         <Pressable style={[styles.searchTextInput, { height: isTablet ? hp(4) : hp(4.8), }]}
           onPress={async () => {
             if (technicianType === "ifs") {

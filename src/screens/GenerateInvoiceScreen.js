@@ -24,11 +24,16 @@ import JobDropdown from '../componets/jobDropdown';
 import CustomButton from '../componets/CustomButton';
 import Toast from 'react-native-simple-toast';
 import RNFS from 'react-native-fs';
+import { generateFilePath } from 'react-native-compressor';
 
 
 const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween, textAlign, justifyContentCenter, justifyContentSpaceEvenly } = BaseStyle;
 
-const GenerateInvoiceScreen = ({ navigation }) => {
+const GenerateInvoiceScreen = ({ navigation,
+    viewType,
+    setViewType,
+    isFilterModalVisible,
+    setIsFilterModalVisible }) => {
     const { width, height } = Dimensions.get("window");
     const isTablet = width >= 668 && height >= 1024;
     const isIOSAndTablet = Platform.OS === "ios" && isTablet;
@@ -42,7 +47,7 @@ const GenerateInvoiceScreen = ({ navigation }) => {
     const [endDate, setEndDate] = useState(new Date());
     const [isStartPickerOpen, setIsStartPickerOpen] = useState(false);
     const [isEndPickerOpen, setIsEndPickerOpen] = useState(false);
-    const [viewType, setViewType] = useState('list');
+    // const [viewType, setViewType] = useState('list');
     const [customers, setCustomers] = useState([]);
     const [pageNumber, setPageNumber] = useState(1);
     const [hasMoreCustomer, setHasMoreCustomer] = useState(true);
@@ -55,13 +60,14 @@ const GenerateInvoiceScreen = ({ navigation }) => {
     const [selectedJobEstimated, setSelectedJobEstimated] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
     const [isDateFilterActive, setIsDateFilterActive] = useState(false);
-    const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
+    // const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
     const [invoiceStatusFilter, setInvoiceStatusFilter] = useState('all'); // all, paid, unpaid
     const [searchText, setSearchText] = useState('');
     const [showDateModal, setShowDateModal] = useState(false);
     const [selectedDate, setSelectedDate] = useState(null);
     const [showDatePicker, setShowDatePicker] = useState(false);
-
+    const [submitLoading, setSubmitLoading] = useState(false);
+    const [cancelLoading, setCancelLoading] = useState(false);
 
     useEffect(() => {
         const getTechnicianDetail = async () => {
@@ -121,126 +127,130 @@ const GenerateInvoiceScreen = ({ navigation }) => {
         });
     };
 
-    const shareCSVFile = async (filePath) => {
-        try {
-            const shareOptions = {
-                title: 'Export CSV',
-                url: `file://${filePath}`, // ⚠️ must include file://
-                type: 'text/csv',
-            };
+    // const shareCSVFile = async (filePath) => {
+    //     try {
+    //         const shareOptions = {
+    //             title: 'Export CSV',
+    //             url: `file://${filePath}`, // ⚠️ must include file://
+    //             type: 'text/csv',
+    //         };
 
-            await Share.open(shareOptions);
-        } catch (err) {
-            console.log('Sharing error:', err);
-        }
-    };
+    //         await Share.open(shareOptions);
+    //     } catch (err) {
+    //         console.log('Sharing error:', err);
+    //     }
+    // };
 
-    const formatDate = (date) => {
-        return date
-            ? new Date(date).toLocaleDateString('en-US', {
-                month: 'long',
-                day: 'numeric',
-                year: 'numeric',
-            })
-            : '-';
-    };
-
-    const handleExport = async () => {
-        if (selectedVehicles.length === 0) {
-            Alert.alert("No Selection", "Please select at least one vehicle to export.");
-            return;
-        }
-        console.log(selectedVehicles, customerDetails.fullName);
-
-        const exportData = selectedVehicles.map((item, index) => ({
-            No: index + 1,
-            Vin: item?.vin ?? '',
-            Make: item?.make ?? '',
-            Model: item?.model ?? '',
-            JobName: item?.jobName ?? '',
-            CustomerName: customerDetails?.fullName ?? '',
-            LabourCost: item?.labourCost ?? '',
-            JobEstimatedCost: selectedJobEstimated ?? '',
-            StartDate: formatDate(item?.startDate),
-            EndDate: formatDate(item?.endDate),
-            Status: getStatusText(item?.vehicleStatus),
-        }));
-        const filePath = await exportToCSV(
-            exportData,
-            ['JobName', 'CustomerName', 'Vin', 'Make', 'Model', 'LabourCost', 'JobEstimatedCost', 'StartDate', 'EndDate', 'Status'],
-            'work_orders_invoice.csv'
-        );
-
-        if (filePath && Platform.OS === 'ios') {
-            shareCSVFile(filePath); // ✅ Only iOS will share
-        } else if (filePath && Platform.OS === 'android') {
-            console.log("✅ File exported to:", filePath);
-            Alert.alert("Export Successful", `CSV saved to:\n${filePath}`);
-        }
-    };
+    // const formatDate = (date) => {
+    //     return date
+    //         ? new Date(date).toLocaleDateString('en-US', {
+    //             month: 'long',
+    //             day: 'numeric',
+    //             year: 'numeric',
+    //         })
+    //         : '-';
+    // };
 
     // const handleExport = async () => {
     //     if (selectedVehicles.length === 0) {
     //         Alert.alert("No Selection", "Please select at least one vehicle to export.");
     //         return;
     //     }
+    //     console.log(selectedVehicles, customerDetails.fullName);
 
-    //     const mappedVehicles = selectedVehicles.map((vehicle) => ({
-    //         vehicleId: vehicle?.id,
-    //         jobId: vehicle?.jobId,
-    //         customerId: vehicle?.customerId,
+    //     const exportData = selectedVehicles.map((item, index) => ({
+    //         No: index + 1,
+    //         Vin: item?.vin ?? '',
+    //         Make: item?.make ?? '',
+    //         Model: item?.model ?? '',
+    //         JobName: item?.jobName ?? '',
+    //         CustomerName: customerDetails?.fullName ?? '',
+    //         LabourCost: item?.labourCost ?? '',
+    //         JobEstimatedCost: selectedJobEstimated ?? '',
+    //         StartDate: formatDate(item?.startDate),
+    //         EndDate: formatDate(item?.endDate),
+    //         Status: getStatusText(item?.vehicleStatus),
     //     }));
+    //     const filePath = await exportToCSV(
+    //         exportData,
+    //         ['JobName', 'CustomerName', 'Vin', 'Make', 'Model', 'LabourCost', 'JobEstimatedCost', 'StartDate', 'EndDate', 'Status'],
+    //         'work_orders_invoice.csv'
+    //     );
 
-    //     setisLoading(true);
-
-    //     try {
-    //         const token = await AsyncStorage.getItem("auth_token");
-
-    //         const response = await axios.post(
-    //             `${API_BASE_URL}/createInvoice`,
-    //             { vehicles: mappedVehicles },
-    //             {
-    //                 headers: {
-    //                     Authorization: `Bearer ${token}`,
-    //                     "Content-Type": "application/json",
-    //                 },
-    //             }
-    //         );
-
-    //         if (response.status === 200 || response.status === 201) {
-    //             const invoiceUrl = response?.data?.invoice?.invoiceUrl;
-
-    //             // 1. Get file extension
-    //             const fileName = `invoice-${Date.now()}.pdf`;
-    //             const filePath = `${RNFS.DocumentDirectoryPath}/${fileName}`;
-
-    //             // 2. Download PDF to local file
-    //             const downloadResult = await RNFS.downloadFile({
-    //                 fromUrl: invoiceUrl,
-    //                 toFile: filePath,
-    //             }).promise;
-
-    //             if (downloadResult.statusCode === 200) {
-    //                 console.log("✅ PDF downloaded at:", filePath);
-
-    //                 // 3. Share the file
-    //                 await Share.open({
-    //                     url: `file://${filePath}`,
-    //                     type: 'application/pdf',
-    //                     title: 'Invoice PDF',
-    //                 });
-    //             } else {
-    //                 console.log("Download Failed", "Could not download the invoice PDF.");
-    //             }
-    //         } else {
-    //             console.log("Error", "Failed to generate invoice.");
-    //         }
-    //     } catch (err) {
-    //         console.error("Export error:", err);
-    //     } finally {
-    //         setisLoading(false);
+    //     if (filePath && Platform.OS === 'ios') {
+    //         shareCSVFile(filePath); // ✅ Only iOS will share
+    //     } else if (filePath && Platform.OS === 'android') {
+    //         console.log("✅ File exported to:", filePath);
+    //         Alert.alert("Export Successful", `CSV saved to:\n${filePath}`);
     //     }
     // };
+
+    const handleExport = async () => {
+        if (selectedVehicles.length === 0) {
+            Alert.alert("No Selection", "Please select at least one vehicle to export.");
+            return;
+        }
+
+        const mappedVehicles = selectedVehicles.map((vehicle) => ({
+            vehicleId: vehicle?.id,
+            jobId: vehicle?.jobId,
+            customerId: vehicle?.customerId,
+            generateInvoiceDate: selectedDate?.toString() || new Date()?.toString(),
+            userId: technicianId,
+            roleType: technicianType,
+        }));
+        console.log("mappedVehicles", mappedVehicles);
+
+        setisLoading(true);
+
+        try {
+            const token = await AsyncStorage.getItem("auth_token");
+
+            const response = await axios.post(
+                `${API_BASE_URL}/createInvoice`,
+                { vehicles: mappedVehicles },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+
+            if (response.status === 200 || response.status === 201) {
+                const invoiceUrl = response?.data?.invoice?.invoiceUrl;
+
+                // 1. Get file extension
+                const fileName = `invoice-${Date.now()}.pdf`;
+                const filePath = `${RNFS.DocumentDirectoryPath}/${fileName}`;
+
+                // 2. Download PDF to local file
+                const downloadResult = await RNFS.downloadFile({
+                    fromUrl: invoiceUrl,
+                    toFile: filePath,
+                }).promise;
+
+                if (downloadResult.statusCode === 200) {
+                    console.log("✅ PDF downloaded at:", filePath);
+
+                    // 3. Share the file
+                    await Share.open({
+                        url: `file://${filePath}`,
+                        type: 'application/pdf',
+                        title: 'Invoice PDF',
+                    });
+                } else {
+                    console.log("Download Failed", "Could not download the invoice PDF.");
+                }
+            } else {
+                console.log("Error", "Failed to generate invoice.");
+            }
+        } catch (err) {
+            console.error("Export error:", err);
+        } finally {
+            setisLoading(false);
+        }
+    };
 
     const fetchCustomers = async (page) => {
         if (!hasMoreCustomer) return;
@@ -453,122 +463,146 @@ const GenerateInvoiceScreen = ({ navigation }) => {
     });
 
 
-    //         const handleGenerateInvoice = async () => {
-    //             const mappedVehicles = selectedVehicles.map((vehicle) => ({
-    //                 vehicleId: vehicle?.id,
-    //                 jobId: vehicle?.jobId,
-    //                 customerId: vehicle?.customerId,
-    //             }));
-
-    //             console.log("🚗 Mapped Vehicles for API:", mappedVehicles);
-
-    //             setLoading(true); // Start loader
-
-    //             try {
-    //                 const token = await AsyncStorage.getItem("auth_token");
-
-    //                 const response = await axios.post(
-    //                     `${API_BASE_URL}/createInvoice?roleType=${technicianType}`,
-    //                     {
-    //                         vehicles: mappedVehicles,
-    //                     },
-    //                     {
-    //                         headers: {
-    //                             Authorization: `Bearer ${token}`,
-    //                             "Content-Type": "application/json",
-    //                         },
-    //                     }
-    //                 );
-
-    //                 if (response.status === 200 || response.status === 201) {
-    //                     const invoiceUrl = response?.data?.invoice?.invoiceUrl;
-    //                     console.log("✅ Invoice Generated:", invoiceUrl);
-
-    //                     const email = "";
-    //                     const subject = "Invoice for Your Work Order";
-
-    //                     const bodyText = `Dear Customer,
-
-    // Please find your invoice here:
-    // ${invoiceUrl}
-
-    // Thanks`;
-
-    //                     const body = encodeURIComponent(bodyText);
-    //                     const url = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${body}`;
-
-    //                     if (Platform.OS === 'android') {
-    //                         try {
-    //                             await Linking.openURL(url);
-    //                         } catch (error) {
-    //                             // fallback to Gmail
-    //                             const gmailIntent = `intent://mail/#Intent;action=android.intent.action.SENDTO;data=mailto:${email};package=com.google.android.gm;end`;
-    //                             try {
-    //                                 await Linking.openURL(gmailIntent);
-    //                             } catch (err) {
-    //                                 Alert.alert("Could not open Gmail", "Please check your email app.");
-    //                             }
-    //                         }
-    //                     } else {
-    //                         const canOpen = await Linking.canOpenURL(url);
-    //                         if (canOpen) {
-    //                             Linking.openURL(url);
-    //                         } else {
-    //                             Alert.alert("No mail app found", "Please install or configure a mail app.");
-    //                         }
-    //                     }
-    //                 } else {
-    //                     console.log("❌ Failed:", response.data);
-    //                 }
-    //             } catch (error) {
-    //                 console.error("Invoice Error:", error?.response || error?.message);
-    //             } finally {
-    //                 setLoading(false); // Stop loader
-    //             }
-    //         };
-
     const handleGenerateInvoice = async (date) => {
         console.log("📅 Selected Invoice Date:", date?.toString());
+        const mappedVehicles = selectedVehicles.map((vehicle) => ({
+            vehicleId: vehicle?.id,
+            jobId: vehicle?.jobId,
+            customerId: vehicle?.customerId,
+            generateInvoiceDate: date?.toString(),
+            userId: technicianId,
+            roleType: technicianType,
+        }));
 
-        const invoiceUrl = "https://example.com/invoice/INV12345"; // Static invoice link
-        const subject = encodeURIComponent("Invoice for Your Work Order");
-        const body = encodeURIComponent(`Dear Customer,\n\nPlease find your invoice here:\n${invoiceUrl}\n\nThanks`);
+        console.log("🚗 Mapped Vehicles for API:", mappedVehicles);
 
-        const email = ""; // No email provided
-
-        const url = `mailto:${email}?subject=${subject}&body=${body}`;
+        setLoading(true);
 
         try {
-            if (Platform.OS === 'android') {
-                try {
-                    await Linking.openURL(url); // Try default mail client
-                } catch (error) {
-                    // Fallback to Gmail app
-                    const gmailIntent = `intent://mail/#Intent;action=android.intent.action.SENDTO;data=mailto:${email};package=com.google.android.gm;end`;
+            const token = await AsyncStorage.getItem("auth_token");
+
+            const response = await axios.post(
+                `${API_BASE_URL}/createInvoice?roleType=${technicianType}`,
+                {
+                    vehicles: mappedVehicles,
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+
+            if (response.status === 200 || response.status === 201) {
+                const invoiceUrl = response?.data?.invoice?.invoiceUrl;
+                console.log("✅ Invoice Generated:", invoiceUrl);
+
+                const email = "";
+                const subject = "Invoice for Your Work Order";
+
+                const bodyText = `Dear Customer,\n\nPlease find your invoice here:\n${invoiceUrl}\n\nThanks`;
+
+                const body = encodeURIComponent(bodyText);
+                const url = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${body}`;
+
+                if (Platform.OS === 'android') {
                     try {
-                        await Linking.openURL(gmailIntent);
-                    } catch (err) {
-                        Alert.alert("Could not open Gmail", "Please check your email app.");
+                        await Linking.openURL(url);
+                    } catch (error) {
+                        // fallback to Gmail
+                        const gmailIntent = `intent://mail/#Intent;action=android.intent.action.SENDTO;data=mailto:${email};package=com.google.android.gm;end`;
+                        try {
+                            await Linking.openURL(gmailIntent);
+                        } catch (err) {
+                            Alert.alert("Could not open Gmail", "Please check your email app.");
+                        }
+                    }
+                } else {
+                    const canOpen = await Linking.canOpenURL(url);
+                    if (canOpen) {
+                        Linking.openURL(url);
+                    } else {
+                        Alert.alert("No mail app found", "Please install or configure a mail app.");
                     }
                 }
             } else {
-                const canOpen = await Linking.canOpenURL(url);
-                if (canOpen) {
-                    Linking.openURL(url);
-                } else {
-                    Alert.alert("No mail app found", "Please install or configure a mail app.");
-                }
+                console.log("❌ Failed:", response.data);
             }
         } catch (error) {
-            console.error("Error opening mail client:", error);
-            Alert.alert("Error", "Unable to open mail client.");
+            console.error("Invoice Error:", error?.response || error?.message);
+        } finally {
+            setLoading(false); // Stop loader
         }
     };
+
+    const handleSubmitDate = async () => {
+        try {
+            setSubmitLoading(true);
+            const dateToUse = selectedDate || new Date();
+            await handleGenerateInvoice(dateToUse);
+            setShowDateModal(false);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setSubmitLoading(false);
+        }
+    };
+
+    const handleCancelDate = async () => {
+        try {
+            setCancelLoading(true);
+            const today = new Date();
+            await handleGenerateInvoice(today);
+            setShowDateModal(false);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setCancelLoading(false);
+        }
+    };
+    // const handleGenerateInvoice = async (date) => {
+    //     console.log("📅 Selected Invoice Date:", date?.toString());
+
+    //     const invoiceUrl = "https://example.com/invoice/INV12345"; // Static invoice link
+    //     const subject = encodeURIComponent("Invoice for Your Work Order");
+    //     const body = encodeURIComponent(`Dear Customer,\n\nPlease find your invoice here:\n${invoiceUrl}\n\nThanks`);
+
+    //     const email = ""; // No email provided
+
+    //     const url = `mailto:${email}?subject=${subject}&body=${body}`;
+
+    //     try {
+    //         if (Platform.OS === 'android') {
+    //             try {
+    //                 await Linking.openURL(url); // Try default mail client
+    //             } catch (error) {
+    //                 // Fallback to Gmail app
+    //                 const gmailIntent = `intent://mail/#Intent;action=android.intent.action.SENDTO;data=mailto:${email};package=com.google.android.gm;end`;
+    //                 try {
+    //                     await Linking.openURL(gmailIntent);
+    //                 } catch (err) {
+    //                     Alert.alert("Could not open Gmail", "Please check your email app.");
+    //                 }
+    //             }
+    //         } else {
+    //             const canOpen = await Linking.canOpenURL(url);
+    //             if (canOpen) {
+    //                 Linking.openURL(url);
+    //             } else {
+    //                 Alert.alert("No mail app found", "Please install or configure a mail app.");
+    //             }
+    //         }
+    //     } catch (error) {
+    //         console.error("Error opening mail client:", error);
+    //         Alert.alert("Error", "Unable to open mail client.");
+    //     }
+    // };
 
     return (
         <View style={[flex, styles.container]}>
             {/* Header */}
-            <Header title={"Generate Invoice"} />
+            {/* <Header title={"Generate Invoice"} />
 
             <View style={{
                 flexDirection: 'row', position: "absolute",
@@ -599,9 +633,8 @@ const GenerateInvoiceScreen = ({ navigation }) => {
                         }
                     }} style={[{ backgroundColor: blueColor, width: isTablet ? wp(8) : wp(12), height: hp(4.5), marginRight: 20, borderRadius: 5, borderWidth: 1, alignItems: "center", justifyContent: "center" }]}>
                     <Text style={{ color: whiteColor }}>Filter</Text>
-                    {/* <Image source={SORT_IMAGE} resizeMode='contain' style={{ width: isTablet ? wp(7) : wp(10), height: hp(3.2) }} /> */}
                 </TouchableOpacity>
-            </View>
+            </View> */}
 
             <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
                 <View style={{ paddingHorizontal: spacings.large, width: "50%" }} >
@@ -663,107 +696,6 @@ const GenerateInvoiceScreen = ({ navigation }) => {
             </View>
 
 
-            {/* <View style={{ paddingHorizontal: spacings.large, paddingTop: spacings.large }}>
-               
-                <View style={styles.datePickerContainer}>
-                    <View style={{ width: wp(38) }}>
-                        <Text style={styles.dateText}>From</Text>
-                    </View>
-                    <View style={{ width: wp(38) }}>
-                        <Text style={styles.dateText}>To</Text>
-                    </View>
-                </View>
-                <View style={[styles.datePickerContainer]}>
-                    <TouchableOpacity onPress={() => setIsStartPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter]}>
-                        <Text style={styles.dateText}>
-                            {startDate.toLocaleDateString("en-US", {
-                                month: "long",
-                                day: "numeric",
-                                year: "numeric",
-                            })}
-                        </Text>
-                        <Feather name="calendar" size={20} color={blackColor} />
-
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => setIsEndPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter]}>
-                        <Text style={styles.dateText}>
-                            {endDate.toLocaleDateString("en-US", {
-                                month: "long",
-                                day: "numeric",
-                                year: "numeric",
-                            })}
-                        </Text>
-                        <Feather name="calendar" size={20} color={blackColor} />
-                    </TouchableOpacity>
-                </View>
-
-                <DatePicker
-                    modal
-                    open={isStartPickerOpen}
-                    date={startDate}
-                    mode="date"
-                    onConfirm={(date) => {
-                        setStartDate(date);
-                        setIsStartPickerOpen(false);
-                        setIsDateFilterActive(true); // activate filtering
-                    }}
-                    onCancel={() => setIsStartPickerOpen(false)}
-                />
-
-                <DatePicker
-                    modal
-                    open={isEndPickerOpen}
-                    date={endDate}
-                    mode="date"
-                    minimumDate={startDate}
-                    onConfirm={(date) => {
-                        const newEndDate = date;
-                        setEndDate(newEndDate);
-                        setIsEndPickerOpen(false);
-                        setIsDateFilterActive(true); // activate filtering
-                    }}
-                    onCancel={() => setIsEndPickerOpen(false)}
-                />
-
-            </View>
-
-            <View style={{ flexDirection: 'row', marginTop: spacings.xxLarge, paddingHorizontal: spacings.large }}>
-                <TouchableOpacity
-                    onPress={() => setStatusFilter('all')}
-                    style={{
-                        paddingVertical: 8,
-                        paddingHorizontal: 20,
-                        backgroundColor: statusFilter === 'all' ? blueColor : lightGrayColor,
-                        borderRadius: 10,
-                        marginRight: 10
-                    }}>
-                    <Text style={{ color: statusFilter === 'all' ? whiteColor : blackColor }}>All</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    onPress={() => setStatusFilter('inprogress')}
-                    style={{
-                        paddingVertical: 8,
-                        paddingHorizontal: 20,
-                        backgroundColor: statusFilter === 'inprogress' ? blueColor : lightGrayColor,
-                        borderRadius: 10,
-                        marginRight: 10
-                    }}>
-                    <Text style={{ color: statusFilter === 'inprogress' ? whiteColor : blackColor }}>In Progress</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    onPress={() => setStatusFilter('completed')}
-                    style={{
-                        paddingVertical: 8,
-                        paddingHorizontal: 20,
-                        backgroundColor: statusFilter === 'completed' ? blueColor : lightGrayColor,
-                        borderRadius: 10
-                    }}>
-                    <Text style={{ color: statusFilter === 'completed' ? whiteColor : blackColor }}>Completed</Text>
-                </TouchableOpacity>
-            </View> */}
-
             {viewType === 'list' && <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(62.5) : hp(79) : isIOSAndTablet ? hp(60) : hp(73), marginTop: spacings.large }}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                     <View>
@@ -774,7 +706,7 @@ const GenerateInvoiceScreen = ({ navigation }) => {
                             <Text style={[styles.tableHeader, { width: wp(30) }]}>Make</Text>
                             <Text style={[styles.tableHeader, { width: wp(30) }]}>Model</Text>
                             <Text style={[styles.tableHeader, { width: wp(35) }]}>Labour Cost($)</Text>
-                            <Text style={[styles.tableHeader, { width: wp(35) }]}>Estimated Cost($)</Text>
+                            <Text style={[styles.tableHeader, { width: wp(25) }]}>Est Cost($)</Text>
                             <Text style={[styles.tableHeader, { width: wp(35) }]}>Start Date</Text>
                             <Text style={[styles.tableHeader, { width: wp(35) }]}>End Date</Text>
                             <Text style={[styles.tableHeader, { paddingRight: isTablet ? 30 : 0, width: isIOSAndTablet ? wp(8) : wp(35) }]}>Status</Text>
@@ -806,7 +738,7 @@ const GenerateInvoiceScreen = ({ navigation }) => {
                                             <Text style={[styles.text, { width: wp(35) }]}>
                                                 {item?.labourCost ? `$${item.labourCost}` : '-'}
                                             </Text>
-                                            <Text style={[styles.text, { width: wp(35) }]}>
+                                            <Text style={[styles.text, { width: wp(25) }]}>
                                                 {selectedJobEstimated ? `$${selectedJobEstimated}` : '-'}
                                             </Text>
                                             <Text style={[styles.text, { width: wp(35) }]}> {item?.startDate
@@ -976,8 +908,8 @@ const GenerateInvoiceScreen = ({ navigation }) => {
             {selectedVehicles.length > 0 && <View style={{ position: "absolute", bottom: 0, backgroundColor: whiteColor, width: wp(100), flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: spacings.large }}>
                 <CustomButton
                     title={"Print"}
-                    // loading={isLoading}
-                    // disabled={isLoading}
+                    loading={isLoading}
+                    disabled={isLoading}
                     onPress={handleExport}
                     style={{ width: "48%", marginBottom: 0 }}
                 />
@@ -991,7 +923,6 @@ const GenerateInvoiceScreen = ({ navigation }) => {
                     style={{ width: "48%", marginBottom: 0 }}
                 />
             </View>}
-
 
             {showDateModal && (
                 <View
@@ -1071,42 +1002,35 @@ const GenerateInvoiceScreen = ({ navigation }) => {
                         <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 10 }}>
                             <CustomButton
                                 title="Cancel"
-                                onPress={() => {
-                                    setShowDateModal(false);
-                                    const today = new Date();
-                                    console.log(today);
-
-                                    handleGenerateInvoice(today);
-                                }}
+                                onPress={handleCancelDate}
                                 style={{
                                     width: "48%",
                                     backgroundColor: lightGrayColor,
                                     borderRadius: 10,
                                     marginBottom: 0
                                 }}
+                                loading={cancelLoading}
+                                disabled={cancelLoading}
                                 textStyle={{ color: blackColor }}
                             />
 
                             <CustomButton
                                 title="Submit"
-                                onPress={() => {
-                                    setShowDateModal(false);
-                                    handleGenerateInvoice(selectedDate || new Date());
-                                }}
+                                onPress={handleSubmitDate}
                                 style={{
                                     width: "48%",
                                     backgroundColor: blueColor,
                                     borderRadius: 10,
                                     marginBottom: 0
                                 }}
+                                loading={submitLoading}
+                                disabled={submitLoading}
                                 textStyle={{ color: whiteColor }}
                             />
                         </View>
                     </View>
                 </View>
             )}
-
-
 
             <Modal
                 visible={isFilterModalVisible}

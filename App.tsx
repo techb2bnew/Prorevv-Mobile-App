@@ -20,7 +20,6 @@ const { flex, alignItemsCenter, alignJustifyCenter } = BaseStyle;
 const { width, height } = Dimensions.get('window');
 import Orientation from 'react-native-orientation-locker';
 import { API_BASE_URL } from './src/constans/Constants';
-import ManagerNavigator from './src/navigations/ManagerNavigator';
 
 
 function App(): React.JSX.Element {
@@ -431,9 +430,6 @@ function App(): React.JSX.Element {
         ) : (
           <TabBarProvider>
             <NavigationContainer>
-              {/* {isLoggedIn ?
-                userRole === 'manager' ? <ManagerNavigator /> : <MainNavigator />
-                : <AuthStack />} */}
               {isLoggedIn ? <MainNavigator /> : <AuthStack />}
             </NavigationContainer>
           </TabBarProvider>

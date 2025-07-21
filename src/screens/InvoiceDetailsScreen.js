@@ -13,11 +13,12 @@ import {
     FlatList,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { API_BASE_URL } from '../constants';
 import { blackColor, blueColor, lightGrayColor, mediumGray, whiteColor, redColor, greenColor, lightBlueColor } from '../constans/Color';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from '../utils';
 import Header from '../componets/Header';
 import { spacings, style } from '../constans/Fonts';
+import { API_BASE_URL } from '../constans/Constants';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const InvoiceDetailsScreen = ({ route, navigation }) => {
     const { invoiceId } = route.params;
@@ -25,59 +26,38 @@ const InvoiceDetailsScreen = ({ route, navigation }) => {
     const isTablet = width >= 668 && height >= 1024;
     const isIOsAndTablet = Platform.OS === "ios" && isTablet;
     const [loading, setLoading] = useState(false);
-    const [invoiceDetail, setInvoiceDetail] = useState({
-        invoiceId: 'INV12345',
-        customerName: 'John Doe',
-        jobName: 'John Doe',
-        invoiceCreatedDate: '2025-07-30',
-        invoiceStatus: 'Paid',
-        grandTotal: '1250',
-        vehicles: [
-            {
-                vin: '1HGCM82633A004352',
-                jobName: 'Engine Repair',
-                model: 'Honda Accord',
-                color: 'Red',
-                jobDescription: ['Change oil', 'Replace air filter'],
-                labourCost: 450,
-                images: ['https://via.placeholder.com/100', 'https://via.placeholder.com/100'],
-            },
-            {
-                vin: '2HGCM82633A004353',
-                jobName: 'Brake Fix',
-                model: 'Toyota Corolla',
-                color: 'Black',
-                jobDescription: ['Brake pad replacement', 'Fluid top-up'],
-                labourCost: 350,
-                images: ['https://via.placeholder.com/100'],
-            }
-        ]
-    });
+    const [invoiceDetail, setInvoiceDetail] = useState();
 
-    //   const fetchInvoiceDetail = async () => {
-    //     try {
-    //       setLoading(true);
-    //       const token = await AsyncStorage.getItem("auth_token");
-    //       const headers = {
-    //         'Content-Type': 'application/json',
-    //         Authorization: `Bearer ${token}`,
-    //       };
-    //       const response = await fetch(`${API_BASE_URL}/getInvoiceDetail?invoiceId=${invoiceId}`, {
-    //         method: 'GET',
-    //         headers,
-    //       });
-    //       const data = await response.json();
-    //       setInvoiceDetail(data?.invoice);
-    //     } catch (error) {
-    //       console.error('Failed to fetch invoice detail:', error);
-    //     } finally {
-    //       setLoading(false);
-    //     }
-    //   };
+    useEffect(() => {
+        fetchInvoiceDetail();
+    }, [invoiceId]);
 
-    //   useEffect(() => {
-    //     fetchInvoiceDetail();
-    //   }, [invoiceId]);
+    const fetchInvoiceDetail = async () => {
+        try {
+            setLoading(true);
+            const token = await AsyncStorage.getItem("auth_token");
+            const headers = {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            };
+            const response = await fetch(`${API_BASE_URL}/fetchSingleInvoice?invoiceId=${invoiceId}`, {
+                method: 'GET',
+                headers,
+            });
+            const data = await response.json();
+            console.log("invoicedetails::", data?.response?.invoice);
+
+            setInvoiceDetail(data?.response?.invoice);
+        } catch (error) {
+            console.error('Failed to fetch invoice detail:', error);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+
+    console.log(invoiceId);
+
 
     const formatDate = (dateStr) => {
         return new Date(dateStr).toLocaleDateString('en-US', {
@@ -128,36 +108,40 @@ const InvoiceDetailsScreen = ({ route, navigation }) => {
             <View style={[styles.card, { borderColor: blueColor, borderWidth: 1, margin: 10 }]}>
                 <View style={styles.rowItem}>
                     <View style={styles.leftCol}>
-                        <Text style={styles.label}>invoice id</Text>
-                        <Text style={styles.value}>{invoiceDetail?.invoiceId}</Text>
+                        <Text style={styles.label}>Invoice Number</Text>
+                        <Text style={styles.value}>{invoiceDetail?.invoiceNumber}</Text>
                     </View>
                     <View style={styles.rightCol}>
                         <Text style={styles.label}>Customer</Text>
-                        <Text style={styles.value}>{capitalize(invoiceDetail.customerName)}</Text>
+                        <Text style={styles.value}>{capitalize(invoiceDetail?.customer?.fullName)}</Text>
                     </View>
                 </View>
                 <View style={styles.rowItem}>
                     <View style={styles.leftCol}>
                         <Text style={styles.label}>Job Title</Text>
-                        <Text style={styles.value}>{capitalize(invoiceDetail?.jobName)}</Text>
+                        <Text style={styles.value}>{capitalize(invoiceDetail?.job?.jobName)}</Text>
                     </View>
                     <View style={styles.rightCol}>
                         <Text style={styles.label}>Grand Total</Text>
-                        <Text style={styles.value}>${invoiceDetail.grandTotal}</Text>
+                        <Text style={styles.value}>{invoiceDetail?.grandTotal
+                            ? `${invoiceDetail.grandTotal}`
+                            : "-"}
+                        </Text>
                     </View>
                 </View>
                 <View style={styles.rowItem}>
                     <View style={styles.leftCol}>
-                        <Text style={styles.label}>Creted  Date</Text>
-                        <Text style={styles.value}>{formatDate(invoiceDetail.invoiceCreatedDate)}</Text>
+                        <Text style={styles.label}>Created Date</Text>
+                        <Text style={styles.value}>{formatDate(invoiceDetail?.createdAt)}</Text>
                     </View>
                     <View style={styles.rightCol}>
                         <Text style={styles.label}>Status</Text>
-                        <Text style={{ color: invoiceDetail.invoiceStatus === 'Paid' ? greenColor : redColor }}>{invoiceDetail.invoiceStatus}</Text>                    </View>
+                        <Text style={{ color: invoiceDetail?.status === 'Paid' ? greenColor : redColor }}>{invoiceDetail?.status}</Text>
+                    </View>
                 </View>
             </View>
 
-            {invoiceDetail?.vehicles?.length > 0 ? (
+            {invoiceDetail?.job?.vehicles?.length > 0 ? (
                 <>
                     <View style={[styles.row, styles.headerRow]}>
                         <Text style={[styles.cell, styles.headerText, { width: "40%" }]}>VIN</Text>
@@ -166,7 +150,7 @@ const InvoiceDetailsScreen = ({ route, navigation }) => {
                     </View>
 
                     <FlatList
-                        data={invoiceDetail?.vehicles || []}
+                        data={invoiceDetail?.job?.vehicles || []}
                         keyExtractor={(item) => item?.id?.toString()}
                         renderItem={renderItem}
                         ItemSeparatorComponent={() => <View style={styles.separator} />}
@@ -224,9 +208,9 @@ const styles = StyleSheet.create({
         paddingVertical: spacings.large,
     },
     cell: {
-    textAlign: 'center',
-    fontSize: style.fontSizeNormal.fontSize
-  },
+        textAlign: 'center',
+        fontSize: style.fontSizeNormal.fontSize
+    },
     headerText: {
         fontWeight: style.fontWeightThin1x.fontWeight,
         fontSize: style.fontSizeNormal1x.fontSize,
