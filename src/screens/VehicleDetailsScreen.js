@@ -22,7 +22,7 @@ const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirec
 const VehicleDetailsScreen = ({ navigation, route }) => {
     const { vehicleId, from } = route.params; // Get jobId from navigation params
     const [loading, setLoading] = useState(true);
-    const [vehicleDetails, setVehicleDetails] = useState(null); // Initially null
+    const [vehicleDetails, setVehicleDetails] = useState(null);
     const [selectedImage, setSelectedImage] = useState(null);
     const [imageModalVisible, setImageModalVisible] = useState(false);
     const [technicianType, setTechnicianType] = useState();
@@ -156,20 +156,6 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
     const formatVehicleData = (vehicleDetails) => {
         if (!vehicleDetails) return [];
 
-        // let jobDescriptions = vehicleDetails.jobDescription;
-
-        // if (typeof jobDescriptions?.[0] === "string") {
-        //     try {
-        //         jobDescriptions = jobDescriptions.map(desc => JSON.parse(desc));
-        //     } catch (error) {
-        //         console.error("Error parsing jobDescription:", error);
-        //         jobDescriptions = [];
-        //     }
-        // }
-        // const validJobDescriptions = jobDescriptions?.filter(
-        //     (desc) => desc?.jobDescription?.trim() && desc?.cost?.trim()
-        // );
-
         let jobDescriptions = vehicleDetails.jobDescription;
 
         // Case: If it's array of strings (like ["Work", "Cg"])
@@ -194,43 +180,6 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
         const validJobDescriptions = jobDescriptions?.filter(
             (desc) => desc?.jobDescription?.trim()
         );
-
-        // const jobDescriptionTotal = (
-        //     jobDescriptions?.reduce(
-        //         (sum, desc) => sum + (parseFloat(desc.cost) || 0),
-        //         0
-        //     ) || 0
-        // ).toFixed(2);
-
-        // let labourCost = 0;
-        // let payRate = "N/A";
-
-        // if (vehicleDetails) {
-        //     if (technicianType === "single-technician") {
-        //         labourCost = parseFloat(vehicleDetails?.labourCost) || 0;
-        //         payRate = `$${labourCost?.toFixed(2)}`;
-        //     }
-        //     else {
-        //         if (vehicleDetails.simpleFlatRate) {
-        //             labourCost = parseFloat(vehicleDetails?.simpleFlatRate) || 0;
-        //             payRate = `$${labourCost?.toFixed(2)}`;
-        //         } else if (vehicleDetails?.amountPercentage) {
-        //             const percentage = parseFloat(vehicleDetails?.amountPercentage) || 0;
-        //             labourCost = (jobDescriptionTotal * percentage) / 100;
-        //             payRate = `${percentage}%`;
-        //         } else if (vehicleDetails?.technicians?.[0]?.amountPercentage) {
-        //             const percentage = parseFloat(vehicleDetails?.technicians?.[0]?.amountPercentage) || 0;
-        //             labourCost = (jobDescriptionTotal * percentage) / 100;
-        //             payRate = `${percentage}%`;
-        //         } else if (vehicleDetails?.technicians?.[0]?.simpleFlatRate) {
-        //             const percentage = parseFloat(vehicleDetails?.technicians?.[0]?.simpleFlatRate) || 0;
-        //             labourCost = (jobDescriptionTotal * percentage) / 100;
-        //             payRate = `$${labourCost?.toFixed(2)}`;
-        //         }
-        //     }
-        // }
-
-        // const totalCost = parseFloat(jobDescriptionTotal);
 
         // let partnerTechnician = null;
         // if (vehicleDetails?.assignedTechnicians?.length > 1 && technicianId) {
@@ -281,25 +230,6 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
                             .join('\n'),
                         isMultiLine: true
                     },
-                    // {
-                    //     label: "Cost",
-                    //     value: validJobDescriptions
-                    //         .map((desc) => `• $${(parseFloat(desc?.cost) || 0).toFixed(2)}`)
-                    //         .join('\n'),
-                    //     isMultiLine: true
-                    // },
-                    // {
-                    //     label: "Sub Total",
-                    //     value: `$${jobDescriptionTotal}`,
-                    //     isTotal: true
-                    // },
-                    // ...(totalCost > 0
-                    //     ? [{
-                    //         label: "Total Cost",
-                    //         value: `$${totalCost?.toFixed(2)}`
-                    //     }]
-                    //     : []),
-
                     ...(technicianType === "single-technician"
                         ? [{
                             label: "Labour Cost",

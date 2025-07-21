@@ -31,6 +31,7 @@ const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirec
 
 const ProfileScreen = ({ navigation }) => {
   const [technicianId, setTechnicianId] = useState(null);
+  const [technicianType, setTechnicianType] = useState(null);
   const [imageUri, setImageUri] = useState(null);
   const [profile, setProfile] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -125,6 +126,7 @@ const ProfileScreen = ({ navigation }) => {
           const technicianId = parsedData.id;
 
           setTechnicianId(technicianId);
+          setTechnicianType(parsedData.types);
 
           const token = await AsyncStorage.getItem('auth_token');
           if (!token) throw new Error('No token found');
@@ -1017,14 +1019,22 @@ const ProfileScreen = ({ navigation }) => {
 
               <View style={[styles.userdetailsBox, alignJustifyCenter,]}>
 
-                <TouchableOpacity style={[{ width: wp(100), height: 'auto', paddingLeft: spacings.xLarge }, flexDirectionRow]} onPress={() => navigation.navigate("InvoiceScreen")}>
+                {technicianType === "single-technician" && <TouchableOpacity style={[{ width: wp(100), height: 'auto', paddingLeft: spacings.xLarge }, flexDirectionRow]} onPress={() => navigation.navigate("GenerateInvoiceScreen")}>
                   <View style={{ padding: spacings.xLarge }}>
-                    <MaterialIcons name="request-page" size={24} color={blueColor} />
+                    <MaterialIcons name="post-add" size={24} color={blueColor} />
                   </View>
                   <View style={{ paddingVertical: spacings.xLarge }}>
-                    <Text style={[styles.text, { fontSize: style.fontSizeNormal1x.fontSize, paddingTop: 3, fontWeight: style.fontWeightThin1x.fontWeight }]}>Invoice</Text>
+                    <Text style={[styles.text, { fontSize: style.fontSizeNormal1x.fontSize, paddingTop: 3, fontWeight: style.fontWeightThin1x.fontWeight }]}>Generate Invoice</Text>
                   </View>
-                </TouchableOpacity>
+                </TouchableOpacity>}
+                {technicianType === "single-technician" && <TouchableOpacity style={[{ width: wp(100), height: 'auto', paddingLeft: spacings.xLarge }, flexDirectionRow]} onPress={() => navigation.navigate("InvoiceHistoryScreen")}>
+                  <View style={{ padding: spacings.xLarge }}>
+                    <MaterialIcons name="list-alt" size={24} color={blueColor} />
+                  </View>
+                  <View style={{ paddingVertical: spacings.xLarge }}>
+                    <Text style={[styles.text, { fontSize: style.fontSizeNormal1x.fontSize, paddingTop: 3, fontWeight: style.fontWeightThin1x.fontWeight }]}>Invoice History</Text>
+                  </View>
+                </TouchableOpacity>}
 
                 <TouchableOpacity style={[{ width: wp(100), height: 'auto', paddingLeft: spacings.xLarge }, flexDirectionRow]} onPress={() => setModalVisible(true)}>
                   <View style={{ padding: spacings.xLarge }}>
