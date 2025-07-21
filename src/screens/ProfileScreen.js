@@ -920,7 +920,7 @@ const ProfileScreen = ({ navigation }) => {
       </TouchableOpacity>}
       {!isEditing ?
         <View style={[styles.container]}>
-          <View style={{ height: Platform.OS === "android" ? hp(82.5) : hp(75.5), width: "100%" }}>
+          <View style={{ height: Platform.OS === "android" ? roleType === "single-technician" ? hp(90) : hp(82.5) : roleType === "single-technician" ? hp(90) : hp(75.5), width: "100%" }}>
             <ScrollView
               contentContainerStyle={{ backgroundColor: whiteColor }}
               showsVerticalScrollIndicator={false}
@@ -1019,7 +1019,7 @@ const ProfileScreen = ({ navigation }) => {
 
               <View style={[styles.userdetailsBox, alignJustifyCenter,]}>
 
-                {technicianType === "single-technician" && <TouchableOpacity style={[{ width: wp(100), height: 'auto', paddingLeft: spacings.xLarge }, flexDirectionRow]} onPress={() => navigation.navigate("GenerateInvoiceScreen")}>
+                {/* {technicianType === "single-technician" && <TouchableOpacity style={[{ width: wp(100), height: 'auto', paddingLeft: spacings.xLarge }, flexDirectionRow]} onPress={() => navigation.navigate("GenerateInvoiceScreen")}>
                   <View style={{ padding: spacings.xLarge }}>
                     <MaterialIcons name="post-add" size={24} color={blueColor} />
                   </View>
@@ -1034,7 +1034,7 @@ const ProfileScreen = ({ navigation }) => {
                   <View style={{ paddingVertical: spacings.xLarge }}>
                     <Text style={[styles.text, { fontSize: style.fontSizeNormal1x.fontSize, paddingTop: 3, fontWeight: style.fontWeightThin1x.fontWeight }]}>Invoice History</Text>
                   </View>
-                </TouchableOpacity>}
+                </TouchableOpacity>} */}
 
                 <TouchableOpacity style={[{ width: wp(100), height: 'auto', paddingLeft: spacings.xLarge }, flexDirectionRow]} onPress={() => setModalVisible(true)}>
                   <View style={{ padding: spacings.xLarge }}>

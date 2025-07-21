@@ -10,12 +10,14 @@ import { getFocusedRouteNameFromRoute } from "@react-navigation/native";
 import JobHistoryStack from "./JobHistoryStack";
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Feather from 'react-native-vector-icons/Feather';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useTabBar } from "../TabBarContext";
 import ReportStack from "./ReportsStack";
 import ScannerStack from "./ScannerStack";
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import VinListStack from "./VinListStack";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import InvoiceStack from "./InvoiceStack";
 
 const Tab = createBottomTabNavigator();
 const { width, height } = Dimensions.get("window");
@@ -43,6 +45,7 @@ export default function MainNavigator() {
             || routeName === "InvoiceHistoryScreen"
             || routeName === "GenerateInvoiceScreen"
             || routeName === "InvoiceDetailsScreen"
+            || routeName === "ProfileStackScreen"
             || isTabBarHidden;
     };
 
@@ -89,6 +92,9 @@ export default function MainNavigator() {
                     } else if (route.name === "Vin List") {
                         IconComponent = Feather;
                         iconName = focused ? "list" : "list";
+                    } else if (route.name === "Invoice") {
+                        IconComponent = MaterialIcons;
+                        iconName = focused ? "list-alt" : "list-alt";
                     }
 
                     return (
@@ -101,7 +107,7 @@ export default function MainNavigator() {
                 },
                 tabBarActiveTintColor: blueColor,
                 tabBarInactiveTintColor: grayColor,
-                tabBarStyle: shouldHideTabBar(route)
+                tabBarStyle: shouldHideTabBar(route) || route.name === "Invoice"
                     ? { display: "none" }
                     : {
                         position: "absolute",
@@ -162,6 +168,22 @@ export default function MainNavigator() {
                     })}
                 />)}
 
+            {technicianType === "single-technician" && (<Tab.Screen
+                name="Invoice"
+                component={InvoiceStack}
+                listeners={({ navigation }) => ({
+                    tabPress: e => {
+                        const state = navigation.getState();
+                        const currentRoute = state.routes.find(r => r.name === "InvoiceHistoryScreen");
+                        if (currentRoute?.state?.index > 0) {
+                            navigation.navigate("InvoiceHistoryScreen", {
+                                screen: "InvoiceHistoryScreen",
+                            });
+                        }
+                    },
+                })}
+            />)}
+
             <Tab.Screen
                 name="Reports"
                 component={ReportStack}
@@ -179,7 +201,7 @@ export default function MainNavigator() {
             />
 
 
-            <Tab.Screen
+            {technicianType != "single-technician" && (<Tab.Screen
                 name="Account"
                 component={ProfileStack}
                 listeners={({ navigation }) => ({
@@ -193,9 +215,7 @@ export default function MainNavigator() {
                         }
                     },
                 })}
-            />
-
-
+            />)}
 
         </Tab.Navigator>
     )

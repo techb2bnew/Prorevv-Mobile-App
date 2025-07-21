@@ -85,7 +85,7 @@ const InvoiceHistoryScreen = ({ navigation }) => {
     const [paidDates, setPaidDates] = useState({});
     const [selectedInvoiceId, setSelectedInvoiceId] = useState(null);
     const [isPaidDatePickerOpen, setIsPaidDatePickerOpen] = useState(false);
-
+  
 
 
     useEffect(() => {
@@ -751,6 +751,28 @@ const InvoiceHistoryScreen = ({ navigation }) => {
                     />
 
                 </View>)}
+
+            <TouchableOpacity
+                onPress={() => navigation.navigate("GenerateInvoiceScreen")}
+                style={{
+                    position: 'absolute',
+                    bottom: hp(10),
+                    right: wp(8),
+                    backgroundColor: blueColor,
+                    width: 60,
+                    height: 60,
+                    borderRadius: 30,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    elevation: 5,
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 3.84,
+                }}
+            >
+                <MaterialIcons name="post-add" size={28} color={whiteColor} />
+            </TouchableOpacity>
 
             {selectedVehicles.length > 0 && <View style={{ position: "absolute", bottom: 0, backgroundColor: whiteColor, width: wp(100), flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: spacings.large }}>
                 <CustomButton

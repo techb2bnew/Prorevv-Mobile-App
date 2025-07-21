@@ -26,11 +26,9 @@ export default function ProfileStack() {
       <Stack.Screen name="HowToPlay" component={HowToPlayScreen} options={{ gestureEnabled: false }} />
       <Stack.Screen name="NewJob" component={NewJobScreen} options={{ gestureEnabled: false }} />
       <Stack.Screen name="VehicleDetailsScreen" component={VehicleDetailsScreen} options={{ gestureEnabled: false }} />
-      <Stack.Screen name="GenerateInvoiceScreen" component={GenerateInvoiceScreen} options={{ gestureEnabled: false }} />
+      {/* <Stack.Screen name="GenerateInvoiceScreen" component={GenerateInvoiceScreen} options={{ gestureEnabled: false }} />
       <Stack.Screen name="InvoiceHistoryScreen" component={InvoiceHistoryScreen} options={{ gestureEnabled: false }} />
-      <Stack.Screen name="InvoiceDetailsScreen" component={InvoiceDetailsScreen} options={{ gestureEnabled: false }} />
-
-
+      <Stack.Screen name="InvoiceDetailsScreen" component={InvoiceDetailsScreen} options={{ gestureEnabled: false }} /> */}
     </Stack.Navigator>
   );
 }

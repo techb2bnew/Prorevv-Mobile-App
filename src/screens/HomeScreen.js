@@ -1,6 +1,6 @@
 import { Image, StyleSheet, Text, TouchableOpacity, View, Pressable, FlatList, ImageBackground, Platform, Dimensions, Alert, ToastAndroid, TextInput } from 'react-native'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { blackColor, blueColor, ExtraExtralightOrangeColor, grayColor, lightBlueColor, lightOrangeColor, orangeColor, whiteColor } from '../constans/Color';
+import { blackColor, blueColor, ExtraExtralightOrangeColor, grayColor, lightBlueColor, lightGrayColor, lightOrangeColor, orangeColor, whiteColor } from '../constans/Color';
 import { ADD_CASTUMER_BACK_IMAGE, ADD_CASTUMER_TAB_BACK_IMAGE, ADD_CASTUMER_TAB_WHITE_BACK_IMAGE, ADD_CASTUMER_WHITE_BACK_IMAGE, ADD_VEHICLE_BACK_IMAGE, ADD_VEHICLE_IMAGE, ADD_VEHICLE_TAB_BACK_IMAGE, APP_NAME_IMAGE, CAROUSAL_ONE_IMAGE, CAROUSAL_THREE_IMAGE, CAROUSAL_TWO_IMAGE, CIRLE_SCANNER_IMAGE, HOW_TO_PLAY_BACK_IMAGE, HOW_TO_PLAY_TAB_BACK_IMAGE, HOW_TO_USE_IMAGE, JOB_HISTORY_BACK_IMAGE, JOB_HISTORY_IMAGE, JOB_HISTORY_TAB_BACK_IMAGE, NEW_CLIENT_IMAGE, NEW_WORK_ORDER_IMAGE, VIN_LIST_IMAGE } from '../assests/images';
 import { BaseStyle } from '../constans/Style';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from '../utils';
@@ -10,6 +10,8 @@ import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import AntDesign from 'react-native-vector-icons/AntDesign';
+import Feather from 'react-native-vector-icons/Feather';
+
 import Toast from 'react-native-simple-toast';
 
 const { width, height } = Dimensions.get('window');
@@ -341,6 +343,18 @@ const HomeScreen = ({ navigation }) => {
         height: Platform.OS === "android" ? isTablet ? hp(12) : hp(17) : isIOSAndTablet ? hp(12) : hp(14),
       }]}>
         <Text style={[styles.title, textAlign]}>👋 Hi, {capitalizetext(technicianName)}</Text>
+        <Pressable
+          onPress={() => navigation.navigate("ProfileStackScreen")}
+          style={{
+            // backgroundColor: lightGrayColor,
+            borderRadius: 30,
+            position:"absolute",
+            right:10,
+            top:10
+          }}
+        >
+          <Feather name="user" size={30} color={whiteColor} />
+        </Pressable>
         <Pressable style={[styles.searchTextInput, { height: isTablet ? hp(4) : hp(4.8), }]}
           onPress={async () => {
             if (technicianType === "ifs") {
