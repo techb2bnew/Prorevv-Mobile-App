@@ -66,9 +66,6 @@ const LoginScreen = ({ navigation }) => {
         }, [])
     );
 
-
-
-
     const handleLogin = async () => {
         let hasError = false;
 

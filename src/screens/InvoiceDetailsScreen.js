@@ -1,20 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import {
-    View,
-    Text,
-    ScrollView,
-    TouchableOpacity,
-    Image,
-    Modal,
-    ActivityIndicator,
-    Dimensions,
-    StyleSheet,
-    Pressable,
-    FlatList,
-} from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import { View, Text, ActivityIndicator, Dimensions, StyleSheet, Pressable, FlatList } from 'react-native';
 import { blackColor, blueColor, lightGrayColor, mediumGray, whiteColor, redColor, greenColor, lightBlueColor } from '../constans/Color';
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from '../utils';
 import Header from '../componets/Header';
 import { spacings, style } from '../constans/Fonts';
 import { API_BASE_URL } from '../constans/Constants';
@@ -54,9 +40,6 @@ const InvoiceDetailsScreen = ({ route, navigation }) => {
             setLoading(false);
         }
     }
-
-
-    console.log(invoiceId);
 
 
     const formatDate = (dateStr) => {
@@ -136,7 +119,7 @@ const InvoiceDetailsScreen = ({ route, navigation }) => {
                     </View>
                     <View style={styles.rightCol}>
                         <Text style={styles.label}>Status</Text>
-                        <Text style={{ color: invoiceDetail?.status === 'Paid' ? greenColor : redColor }}>{invoiceDetail?.status}</Text>
+                        <Text style={{ color: invoiceDetail?.status === 'Paid' ? greenColor : redColor }}>{capitalize(invoiceDetail?.status)}</Text>
                     </View>
                 </View>
             </View>

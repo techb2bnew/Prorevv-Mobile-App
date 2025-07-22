@@ -361,52 +361,6 @@ const Reports = ({ navigation }) => {
         }
     };
 
-    // const fetchVehicalInfo = async (pageNumber = 1) => {
-    //     if (!hasMore && pageNumber !== 1) return;
-
-    //     try {
-    //         setLoading(true);
-    //         const token = await AsyncStorage.getItem("auth_token");
-    //         if (!token) {
-    //             console.error("Token not found!");
-    //             return;
-    //         }
-    //         // const apiUrl = technicianType === "manager"
-    //         //     ? `${API_BASE_URL}/fetchVehicleInfo?page=${pageNumber}&roleType=${technicianType}`
-    //         //     : `${API_BASE_URL}/fetchtechVehicleInfo?page=${pageNumber}&userId=${technicianId}`;
-    //         const apiUrl = technicianType === "manager"
-    //             ? `${API_BASE_URL}/fetchVehicalInfo?page=${pageNumber}&roleType=${technicianType}`
-    //             : `${API_BASE_URL}/fetchVehicalInfo?page=${pageNumber}&roleType=${technicianType}&userId=${technicianId}`;
-
-    //         const response = await axios.get(apiUrl, {
-    //             headers: {
-    //                 Authorization: `Bearer ${token}`
-    //             }
-    //         });
-
-    //         const { response: resData } = response.data;
-    //         const newVehicles = response?.data?.jobs?.vehicles || [];
-    //         console.log("fetchVehicalInfo::::", newVehicles);
-
-    //         // Update vehicle data
-    //         if (pageNumber === 1) {
-    //             setWorkOrdersRawData(newVehicles);
-    //         } else {
-    //             setWorkOrdersRawData(prev => [...prev, ...newVehicles]);
-    //         }
-
-    //         // Handle pagination
-    //         const morePagesAvailable = pageNumber < resData?.totalPages;
-    //         setHasMore(morePagesAvailable);
-    //         setPage(pageNumber);
-    //         // console.log("work::", workOrdersRawData);
-
-    //     } catch (error) {
-    //         console.error("Failed to fetch vehicle info:", error);
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
     const fetchVehicalInfo = async (pageNumber = 1) => {
         if (!hasMore && pageNumber !== 1) return;
 
@@ -601,6 +555,7 @@ const Reports = ({ navigation }) => {
             })
             : '-';
     };
+    
     const shareCSVFile = async (filePath) => {
         try {
             const shareOptions = {
@@ -1052,9 +1007,7 @@ const Reports = ({ navigation }) => {
                                                         year: "numeric",
                                                     })
                                                     : "-"}</Text>
-                                                {/* <Text style={[styles.text, { width: wp(30) }]}> ${Array.isArray(item?.jobDescription) && item?.jobDescription?.length > 0
-                                                    ? item?.jobDescription?.reduce((total, job) => total + Number(job?.cost || 0), 0)
-                                                    : '0'}</Text> */}
+
                                                 <View style={[getStatusStyle(item?.vehicleStatus), alignJustifyCenter, { height: hp(4) }]}>
                                                     <Text
                                                         style={{
@@ -1077,7 +1030,6 @@ const Reports = ({ navigation }) => {
                                                     {activeStatus != 'Completed' && <Pressable
                                                         onPress={() => navigation.navigate("WorkOrderScreenTwo", {
                                                             vehicleId: item.id,
-                                                            // from: activeTab === "partnerOrder" ? "partner" : "workOrder"
                                                         })}>
                                                         <Text style={styles.viewText}>Edit</Text>
                                                     </Pressable>}
@@ -1159,11 +1111,6 @@ const Reports = ({ navigation }) => {
                                             })}>
                                                 <Text style={styles.viewText}>View</Text>
                                             </Pressable>
-                                            {/* <Pressable onPress={() => navigation.navigate("CreateJobScreen", {
-                                                jobId: item?.id
-                                            })}>
-                                                <Text style={styles.viewText}>Edit</Text>
-                                            </Pressable> */}
                                         </View>
                                     </Pressable>
                                 );

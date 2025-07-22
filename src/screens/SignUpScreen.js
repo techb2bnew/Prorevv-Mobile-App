@@ -369,109 +369,12 @@ const SignUpScreen = ({ navigation }) => {
         fetchCountries();
     }, []);
 
-    // useEffect(() => {
-    //     fetchStates();
-    // }, [formData.country]);
-
-
-    // const fetchCountries = async () => {
-    //     try {
-    //         setIsLoadingState(true);
-    //         const response = await fetch("https://restcountries.com/v3.1/all");
-    //         const data = await response.json();
-
-    //         // Get only country names
-    //         const countryNames = data.map((item) => item.name.common);
-
-    //         // Sort the country names alphabetically
-    //         const sortedCountries = countryNames.sort((a, b) => a.localeCompare(b));
-
-    //         // Set the sorted country names
-    //         setCountries(sortedCountries);
-    //         setIsLoadingState(false);
-    //     } catch (error) {
-    //         console.error("Error fetching countries:", error);
-    //     }
-    // };
-
-    // const fetchStates = async () => {
-    //     setIsLoadingState(true);
-    //     try {
-    //         const response = await axios.post(
-    //             "https://countriesnow.space/api/v0.1/countries/states",
-    //             { country: formData.country }
-    //         );
-
-    //         if (response.data && response.data.data && response.data.data.states) {
-    //             console.log("States of", formData.country, ":", response.data.data.states);
-    //             setStates(response.data.data.states)
-    //             setIsLoadingState(false);
-    //         } else {
-    //             console.log("No states found for", formData.country);
-    //             setIsLoadingState(false);
-    //         }
-    //     } catch (error) {
-    //         console.error("Error fetching states:", error);
-    //         setIsLoadingState(false);
-
-    //     } finally {
-    //         setIsLoadingState(false)
-    //     }
-    // };
-
-    // useEffect(() => {
-    //     if (formData.country && formData.state) {
-    //         fetchCities();
-    //     }
-    // }, [formData.country, formData.state]);
-
-    // const fetchCities = async () => {
-    //     setIsLoadingState(true);
-    //     try {
-    //         const response = await axios.post(
-    //             "https://countriesnow.space/api/v0.1/countries/state/cities",
-    //             {
-    //                 country: formData.country,
-    //                 state: formData.state,
-    //             }
-    //         );
-
-    //         if (response.data && response.data.data) {
-    //             console.log("Cities of", formData.state, ":", response.data.data);
-    //             setCities(response.data.data);
-    //             setIsLoadingState(false);
-    //         } else {
-    //             console.log("No cities found for", formData.state);
-    //             setIsLoadingState(false);
-    //         }
-    //     } catch (error) {
-    //         console.error("Error fetching cities:", error);
-    //     } finally {
-    //         setIsLoadingState(false);
-    //     }
-    // };
+    
 
     useEffect(() => {
         fetchCountries();
     }, []);
 
-    // useEffect(() => {
-    //     // if (countryValue) {
-    //     fetchStates(countryValue);
-    //     // } else {
-    //     setStates([]);
-    //     setStateValue("");
-    //     // }
-    // }, [countryValue, formData.country]);
-
-    // useEffect(() => {
-    //     if (countryValue && stateValue) {
-    //         fetchCities(countryValue, stateValue);
-    //     } else {
-    //         setCities([]);
-    //         setCityValue("");
-    //     }
-    // }, [stateValue]);
 
     const fetchCountries = async () => {
         try {
@@ -557,12 +460,7 @@ const SignUpScreen = ({ navigation }) => {
             style={[flex]}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-            <Header title={"Register"} onBack={() => {
-                // if (isSecondStep) {
-                //     setIsSecondStep(false); // Second step se first step pe aayega
-                // } else {
-                navigation.goBack(); // First step pe hai toh screen close hoga
-                // }
+            <Header title={"Register"} onBack={() => { navigation.goBack(); 
             }} />
             {isLoadingState && (
                 <View style={styles.loadingOverlay}>
@@ -572,8 +470,6 @@ const SignUpScreen = ({ navigation }) => {
             <ScrollView style={[styles.container, flex]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled"
             >
-                {/* {!isSecondStep && (<> */}
-
                 <Text style={[styles.subtitle, textAlign]}>{CREATE_YOUE_NEW_ACCOUNT}</Text>
                 <TouchableOpacity onPress={openFrontCamera} style={[styles.circleButton, { marginTop: spacings.large }]}>
                     {capturedImage ? (
@@ -759,43 +655,6 @@ const SignUpScreen = ({ navigation }) => {
                     <Text style={styles.label}>
                         Address<Text style={styles.asterisk}> *</Text>
                     </Text>
-                    {/* <GooglePlacesAutocomplete
-                        ref={googleRef}
-                        placeholder="Enter Your Address"
-                        fetchDetails={true}
-                        onPress={(data, details = null) => {
-                            console.log('Selected:', data.description);
-                            handleInputChange("address", data.description)
-                        }}
-                        query={{
-                            key: GOOGLE_MAP_API_KEY,
-                            language: 'en',
-                        }}
-                        enablePoweredByContainer={false}
-                        keepResultsAfterBlur={true}
-                        styles={{
-                            container: {
-                                flex: 0,
-                                zIndex: 999,
-                            },
-                            listView: {
-                                zIndex: 999,
-                                position: 'absolute',
-                                top: 55,
-                            },
-                            textInputContainer: {
-                                zIndex: 999,
-                            },
-                            textInput: {
-                                height: 44,
-                                borderWidth: 1,
-                                borderColor: blueColor,
-                                borderRadius: 50,
-                                paddingHorizontal: 16,
-                                backgroundColor: '#fff',
-                            },
-                        }}
-                    /> */}
                     <View style={{ flex: 1, position: 'relative', zIndex: 999 }}>
                         <GooglePlacesAutocomplete
                             ref={googleRef}
@@ -854,11 +713,6 @@ const SignUpScreen = ({ navigation }) => {
                         const updatedText = text.charAt(0).toLowerCase() + text.slice(1);
                         handleInputChange("secondaryEmail", updatedText);  // Update the form data with modified email
                     }}
-                // leftIcon={
-                //     <View>
-                //         <MaterialCommunityIcons name={"email"} size={22} color={mediumGray} />
-                //     </View>
-                // }
                 />
                 {errors.secondaryEmail && <Text style={styles.error}>{errors.secondaryEmail}</Text>}
                 <View style={styles.phoneContainer}>

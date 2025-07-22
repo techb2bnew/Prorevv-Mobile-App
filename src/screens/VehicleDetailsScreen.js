@@ -16,7 +16,6 @@ import Header from '../componets/Header';
 import { useFocusEffect } from '@react-navigation/native';
 import { API_BASE_URL } from '../constans/Constants';
 
-
 const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween, textAlign, justifyContentCenter, justifyContentSpaceEvenly } = BaseStyle;
 
 const VehicleDetailsScreen = ({ navigation, route }) => {

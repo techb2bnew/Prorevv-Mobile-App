@@ -65,12 +65,6 @@ const CombinedInvoiceScreen = () => {
     return (
         <View style={{ flex: 1 }}>
             {/* Header */}
-            {/* <View style={{ flexDirection: 'row', alignItems: 'center', padding: 15, backgroundColor: lightBlueColor }}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 10 }}>
-                    <Ionicons name="arrow-back" size={24} color={blackColor} />
-                </TouchableOpacity>
-                <Text style={{ fontSize: 18, color: blackColor, fontWeight: 'bold' }}>Invoice</Text>
-            </View> */}
             <Header title={"Invoice"} />
 
             {/* Dynamic Buttons */}

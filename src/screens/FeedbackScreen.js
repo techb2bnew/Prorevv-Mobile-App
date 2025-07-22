@@ -288,11 +288,6 @@ const styles = StyleSheet.create({
         paddingVertical: spacings.large,
         paddingHorizontal: spacings.xxLarge,
         backgroundColor: whiteColor,
-        // shadowColor: "#000",
-        // shadowOffset: { width: 0, height: 2 },
-        // shadowOpacity: 0.1,
-        // shadowRadius: 4,
-        // elevation: 3,
     },
     backButton: {
         marginRight: 10,
@@ -308,10 +303,6 @@ const styles = StyleSheet.create({
         marginVertical: spacings.xLarge,
     },
     input: {
-        // borderBottomWidth: 1,
-        // marginBottom: spacings.large,
-        // paddingVertical: spacings.xLarge,
-        // borderColor: blackColor,
         height: 41.2,
         borderWidth: 1,
         borderColor: blueColor,

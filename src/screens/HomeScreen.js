@@ -346,11 +346,10 @@ const HomeScreen = ({ navigation }) => {
         {technicianType === "single-technician" && <Pressable
           onPress={() => navigation.navigate("ProfileStackScreen")}
           style={{
-            // backgroundColor: lightGrayColor,
             borderRadius: 30,
             position: "absolute",
             right: 10,
-            top: 10
+            top: 10,
           }}
         >
           <Feather name="user" size={30} color={whiteColor} />
@@ -391,44 +390,7 @@ const HomeScreen = ({ navigation }) => {
           </View>
         </Pressable>
       </View>
-      {/* {technicianType != "ifs" && <View style={[{ width: "100%", marginTop: 10, paddingHorizontal: spacings.xLarge }, flexDirectionRow, justifyContentSpaceBetween]}>
-        <View style={[{ width: "49.5%", height: isTablet ? hp(23) : hp(22), backgroundColor: '#EEEEEE', borderTopLeftRadius: isTablet ? 40 : 20, borderBottomLeftRadius: isTablet ? 40 : 20 }, alignJustifyCenter]}>
-          <Pressable style={alignJustifyCenter} onPress={() => navigation.navigate("CustomerInfo")}>
-            <Image source={NEW_CLIENT_IMAGE} style={[styles.cardImage, resizeModeContain]} />
-            <Text
-              style={[
-                styles.cardText,
-                {
-                  color: blackColor,
-                  fontSize: isTablet ? style.fontSizeLarge.fontSize : style.fontSizeNormal2x.fontSize,
 
-                },
-              ]}
-            >
-              Customer
-            </Text>
-          </Pressable>
-        </View>
-        <View style={[{ width: isTablet ? "49.5%" : "48%", height: isTablet ? hp(23) : hp(22), backgroundColor: '#EEEEEE', borderTopRightRadius: isTablet ? 40 : 20, borderBottomRightRadius: isTablet ? 40 : 20 }, alignJustifyCenter]}>
-          <Pressable style={alignJustifyCenter} onPress={() => navigation.navigate("CreateJobScreen")}>
-            <Image source={NEW_WORK_ORDER_IMAGE} style={[styles.cardImage, resizeModeContain]} />
-            <Text
-              style={[
-                styles.cardText,
-                {
-                  color: blackColor,
-                  fontSize: isTablet ? style.fontSizeLarge.fontSize : style.fontSizeNormal2x.fontSize,
-
-                },
-              ]}
-            >
-              Job
-            </Text>
-          </Pressable>
-        </View>
-
-
-      </View>} */}
       <View style={{ width: "100%", height: "55%", marginTop: 20, paddingHorizontal: spacings.large }}>
         <FlatList
           data={cardData}
@@ -444,7 +406,6 @@ const HomeScreen = ({ navigation }) => {
           top: Platform.OS === "android" ? (isTablet ? hp(21.5) : hp(17.5)) : isTablet ? hp(12) : hp(15.8),
           left: Platform.OS === "android" ? (isTablet ? wp(39) : wp(39.5)) : isTablet ? wp(38) : wp(39.4),
         }]}
-        // onPress={() => navigation.navigate("ScannerScreen")}
         >
           {/* {bLogo ? (
             <Image

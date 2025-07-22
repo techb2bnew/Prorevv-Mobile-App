@@ -12,9 +12,6 @@ import DatePicker from "react-native-date-picker";
 import { useFocusEffect, useRoute } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import { SORT_IMAGE } from '../assests/images';
-import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
-import NetInfo from "@react-native-community/netinfo";
 import Header from '../componets/Header';
 import { API_BASE_URL } from '../constans/Constants';
 import Share from 'react-native-share';
@@ -24,8 +21,6 @@ import JobDropdown from '../componets/jobDropdown';
 import CustomButton from '../componets/CustomButton';
 import Toast from 'react-native-simple-toast';
 import RNFS from 'react-native-fs';
-import { generateFilePath } from 'react-native-compressor';
-
 
 const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween, textAlign, justifyContentCenter, justifyContentSpaceEvenly } = BaseStyle;
 
@@ -47,7 +42,6 @@ const GenerateInvoiceScreen = ({ navigation,
     const [endDate, setEndDate] = useState(new Date());
     const [isStartPickerOpen, setIsStartPickerOpen] = useState(false);
     const [isEndPickerOpen, setIsEndPickerOpen] = useState(false);
-    // const [viewType, setViewType] = useState('list');
     const [customers, setCustomers] = useState([]);
     const [pageNumber, setPageNumber] = useState(1);
     const [hasMoreCustomer, setHasMoreCustomer] = useState(true);
@@ -60,8 +54,6 @@ const GenerateInvoiceScreen = ({ navigation,
     const [selectedJobEstimated, setSelectedJobEstimated] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
     const [isDateFilterActive, setIsDateFilterActive] = useState(false);
-    // const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
-    const [invoiceStatusFilter, setInvoiceStatusFilter] = useState('all'); // all, paid, unpaid
     const [searchText, setSearchText] = useState('');
     const [showDateModal, setShowDateModal] = useState(false);
     const [selectedDate, setSelectedDate] = useState(null);
@@ -127,64 +119,6 @@ const GenerateInvoiceScreen = ({ navigation,
         });
     };
 
-    // const shareCSVFile = async (filePath) => {
-    //     try {
-    //         const shareOptions = {
-    //             title: 'Export CSV',
-    //             url: `file://${filePath}`, // ⚠️ must include file://
-    //             type: 'text/csv',
-    //         };
-
-    //         await Share.open(shareOptions);
-    //     } catch (err) {
-    //         console.log('Sharing error:', err);
-    //     }
-    // };
-
-    // const formatDate = (date) => {
-    //     return date
-    //         ? new Date(date).toLocaleDateString('en-US', {
-    //             month: 'long',
-    //             day: 'numeric',
-    //             year: 'numeric',
-    //         })
-    //         : '-';
-    // };
-
-    // const handleExport = async () => {
-    //     if (selectedVehicles.length === 0) {
-    //         Alert.alert("No Selection", "Please select at least one vehicle to export.");
-    //         return;
-    //     }
-    //     console.log(selectedVehicles, customerDetails.fullName);
-
-    //     const exportData = selectedVehicles.map((item, index) => ({
-    //         No: index + 1,
-    //         Vin: item?.vin ?? '',
-    //         Make: item?.make ?? '',
-    //         Model: item?.model ?? '',
-    //         JobName: item?.jobName ?? '',
-    //         CustomerName: customerDetails?.fullName ?? '',
-    //         LabourCost: item?.labourCost ?? '',
-    //         JobEstimatedCost: selectedJobEstimated ?? '',
-    //         StartDate: formatDate(item?.startDate),
-    //         EndDate: formatDate(item?.endDate),
-    //         Status: getStatusText(item?.vehicleStatus),
-    //     }));
-    //     const filePath = await exportToCSV(
-    //         exportData,
-    //         ['JobName', 'CustomerName', 'Vin', 'Make', 'Model', 'LabourCost', 'JobEstimatedCost', 'StartDate', 'EndDate', 'Status'],
-    //         'work_orders_invoice.csv'
-    //     );
-
-    //     if (filePath && Platform.OS === 'ios') {
-    //         shareCSVFile(filePath); // ✅ Only iOS will share
-    //     } else if (filePath && Platform.OS === 'android') {
-    //         console.log("✅ File exported to:", filePath);
-    //         Alert.alert("Export Successful", `CSV saved to:\n${filePath}`);
-    //     }
-    // };
-
     const handleExport = async () => {
         if (selectedVehicles.length === 0) {
             Alert.alert("No Selection", "Please select at least one vehicle to export.");
@@ -198,6 +132,7 @@ const GenerateInvoiceScreen = ({ navigation,
             generateInvoiceDate: selectedDate?.toString() || new Date()?.toString(),
             userId: technicianId,
             roleType: technicianType,
+            print: "print"
         }));
         console.log("mappedVehicles", mappedVehicles);
 
@@ -220,11 +155,12 @@ const GenerateInvoiceScreen = ({ navigation,
             if (response.status === 200 || response.status === 201) {
                 const invoiceUrl = response?.data?.invoice?.invoiceUrl;
 
-                // 1. Get file extension
-                const fileName = `invoice-${Date.now()}.pdf`;
+                // ✅ Get filename from the URL
+                const urlParts = invoiceUrl.split('/');
+                const fileName = urlParts[urlParts.length - 1]; // e.g., 'INV-2025-5310.pdf'
                 const filePath = `${RNFS.DocumentDirectoryPath}/${fileName}`;
 
-                // 2. Download PDF to local file
+                // 🔽 Download PDF to local file
                 const downloadResult = await RNFS.downloadFile({
                     fromUrl: invoiceUrl,
                     toFile: filePath,
@@ -419,12 +355,7 @@ const GenerateInvoiceScreen = ({ navigation,
         if (status === false || status === "inprogress") return 'In Progress';
     };
 
-    // const filteredVehicles = workOrdersRawData?.filter(vehicle => {
-    //     if (statusFilter === 'all') return true;
-    //     if (statusFilter === 'completed') return vehicle.vehicleStatus === true || vehicle.vehicleStatus === 'completed';
-    //     if (statusFilter === 'inprogress') return vehicle.vehicleStatus === false || vehicle.vehicleStatus === 'inprogress';
-    //     return true;
-    // });
+
     const filteredVehicles = workOrdersRawData?.filter(vehicle => {
         // --- Status Filter ---
         const statusMatch =
@@ -561,43 +492,6 @@ const GenerateInvoiceScreen = ({ navigation,
             setCancelLoading(false);
         }
     };
-    // const handleGenerateInvoice = async (date) => {
-    //     console.log("📅 Selected Invoice Date:", date?.toString());
-
-    //     const invoiceUrl = "https://example.com/invoice/INV12345"; // Static invoice link
-    //     const subject = encodeURIComponent("Invoice for Your Work Order");
-    //     const body = encodeURIComponent(`Dear Customer,\n\nPlease find your invoice here:\n${invoiceUrl}\n\nThanks`);
-
-    //     const email = ""; // No email provided
-
-    //     const url = `mailto:${email}?subject=${subject}&body=${body}`;
-
-    //     try {
-    //         if (Platform.OS === 'android') {
-    //             try {
-    //                 await Linking.openURL(url); // Try default mail client
-    //             } catch (error) {
-    //                 // Fallback to Gmail app
-    //                 const gmailIntent = `intent://mail/#Intent;action=android.intent.action.SENDTO;data=mailto:${email};package=com.google.android.gm;end`;
-    //                 try {
-    //                     await Linking.openURL(gmailIntent);
-    //                 } catch (err) {
-    //                     Alert.alert("Could not open Gmail", "Please check your email app.");
-    //                 }
-    //             }
-    //         } else {
-    //             const canOpen = await Linking.canOpenURL(url);
-    //             if (canOpen) {
-    //                 Linking.openURL(url);
-    //             } else {
-    //                 Alert.alert("No mail app found", "Please install or configure a mail app.");
-    //             }
-    //         }
-    //     } catch (error) {
-    //         console.error("Error opening mail client:", error);
-    //         Alert.alert("Error", "Unable to open mail client.");
-    //     }
-    // };
 
     return (
         <View style={[flex, styles.container]}>
@@ -696,7 +590,7 @@ const GenerateInvoiceScreen = ({ navigation,
             </View>
 
 
-            {viewType === 'list' && <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(62.5) : hp(79) : isIOSAndTablet ? hp(60) : hp(73), marginTop: spacings.large }}>
+            {viewType === 'list' && <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(62.5) : hp(79) : isIOSAndTablet ? hp(60) : hp(73), marginTop: spacings.large, paddingBottom: selectedVehicles?.length > 0 ? hp(8) : 0 }}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                     <View>
                         {/* Header Row */}
@@ -795,7 +689,7 @@ const GenerateInvoiceScreen = ({ navigation,
             </View>}
 
             {viewType === 'grid' && (
-                <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(62.5) : hp(79) : isIOSAndTablet ? hp(61) : hp(73), marginTop: spacings.large }}>
+                <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(62.5) : hp(65) : isIOSAndTablet ? hp(61) : hp(73), marginTop: spacings.large, paddingBottom: selectedVehicles?.length > 0 ? hp(8) : 0 }}>
                     <FlatList
                         data={filteredVehicles}
                         keyExtractor={(item, index) => index.toString()}
@@ -1001,7 +895,7 @@ const GenerateInvoiceScreen = ({ navigation,
 
                         <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 10 }}>
                             <CustomButton
-                                title="Cancel"
+                                title="Today Date"
                                 onPress={handleCancelDate}
                                 style={{
                                     width: "48%",

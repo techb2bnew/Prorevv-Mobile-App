@@ -185,16 +185,6 @@ const ProfileScreen = ({ navigation }) => {
     }, [isEditing])
   );
 
-  // useEffect(() => {
-  //   fetchCountries();
-  // }, [country]);
-
-  // useEffect(() => {
-  //   if (countryValue) {
-  //     fetchStates();
-  //   }
-  // }, [countryValue]);
-
   const getCountryByCallingCode = async (callingCode) => {
     try {
       const response = await axios.get('https://restcountries.com/v3.1/all?fields=name,cca2,idd');
@@ -264,99 +254,6 @@ const ProfileScreen = ({ navigation }) => {
     }
   }, [secondryPhoneNumber]);
 
-  // useEffect(() => {
-  //   if (countryValue && stateValue) {
-  //     fetchCities();
-  //   }
-  // }, [countryValue, stateValue]);
-
-  // const fetchCities = async () => {
-  //   setIsLoadingState(true);
-  //   try {
-  //     const response = await axios.post(
-  //       "https://countriesnow.space/api/v0.1/countries/state/cities",
-  //       {
-  //         country: countryValue,
-  //         state: stateValue,
-  //       }
-  //     );
-
-  //     if (response.data && response.data.data) {
-  //       // console.log("Cities of", formData.state, ":", response.data.data);
-  //       setCities(response.data.data);
-  //     } else {
-  //       console.log("No cities found for", stateValue);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching cities:", error);
-  //   } finally {
-  //     setIsLoadingState(false);
-  //   }
-  // };
-
-  // const fetchCountries = async () => {
-  //   try {
-  //     console.log("Fetching countries...");
-  //     const response = await fetch("https://restcountries.com/v3.1/all?fields=name");
-  //     const data = await response.json();
-
-  //     console.log("Fetched Countries:", data);
-
-  //     if (Array.isArray(data)) {
-  //       const countryNames = data.map((item) => item.name.common);
-  //       const sortedCountries = countryNames.sort((a, b) => a.localeCompare(b));
-
-  //       setCountries(sortedCountries);
-  //       console.log("Countries:", sortedCountries);
-
-  //       // Set initial country value if profile has country data
-  //       if (profile?.country) {
-  //         setCountryValue(profile.country);
-  //       }
-  //     } else {
-  //       console.log("No countries found.");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching countries:", error);
-  //   }
-  // };
-
-
-  // const fetchStates = async () => {
-  //   setIsLoadingState(true);
-  //   try {
-  //     const response = await axios.post(
-  //       "https://countriesnow.space/api/v0.1/countries/states",
-  //       { country: countryValue }
-  //     );
-
-  //     if (response.data && response.data.data && response.data.data.states) {
-  //       console.log("States of", countryValue, ":", response.data.data.states);
-  //       const stateNames = response.data.data.states.map(state => state);
-  //       setStates(stateNames);
-
-  //       // Set initial state value if profile has state data
-  //       if (profile?.state) {
-  //         setStateValue(profile.state);
-  //       }
-  //     } else {
-  //       console.log("No states found for", countryValue);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching states:", error);
-  //   } finally {
-  //     setIsLoadingState(false);
-  //   }
-  // };
-
-  // // Update your handleInputChange function
-  // const handleInputChange = (field, value) => {
-  //   // Update validation errors if needed
-  //   setErrors((prev) => ({
-  //     ...prev,
-  //     [field]: value ? '' : `Please select ${field}`,
-  //   }));
-  // };
 
   const requestCameraPermission = async () => {
     if (Platform.OS === 'android') {
@@ -560,32 +457,6 @@ const ProfileScreen = ({ navigation }) => {
       ?.toUpperCase();
   };
 
-  // const handleLogout = async () => {
-  //   try {
-  //     await AsyncStorage.removeItem('auth_token');
-  //     await AsyncStorage.removeItem('userDeatils');
-  //     await AsyncStorage.removeItem("firstLoginCompleted");
-  //     await AsyncStorage.removeItem("jobHistoryData");
-  //     await AsyncStorage.removeItem('technicianName');
-  //     await AsyncStorage.removeItem("jobHistoryFetched");
-  //     await AsyncStorage.removeItem('technicianProfile');
-  //     await AsyncStorage.removeItem("customersList")
-  //     await AsyncStorage.removeItem("offlineCustomers");
-  //     await AsyncStorage.removeItem("businessLogo");
-  //     await AsyncStorage.removeItem('selectedCustomer')
-  //     console.log("User logged out successfully.");
-  //     // Reset navigation to AuthStack
-  //     // navigation.navigate("AuthStack");
-  //     navigation.dispatch(
-  //       CommonActions.reset({
-  //         index: 0,
-  //         routes: [{ name: 'AuthStack' }],
-  //       })
-  //     );
-  //   } catch (error) {
-  //     console.error("Error during logout:", error);
-  //   }
-  // };
 
   const handleLogout = async () => {
     try {
@@ -898,7 +769,6 @@ const ProfileScreen = ({ navigation }) => {
       <Header title={!isEditing ? "My Profile" : "Edit Profile"} onBack={() => isEditing ? setIsEditing(false) : navigation.goBack()} />
       {!isEditing && <TouchableOpacity
         onPress={() => setLogoutModalVisible(true)}
-        // onPress={() => { setIsEditing(true) }}
         disabled={loading}
         style={{
           position: "absolute",
@@ -915,8 +785,6 @@ const ProfileScreen = ({ navigation }) => {
         }}
       >
         <Ionicons name="power" size={25} color={redColor} />
-        {/* <Feather name="edit-3" size={25} color={blackColor} /> */}
-
       </TouchableOpacity>}
       {!isEditing ?
         <View style={[styles.container]}>
@@ -1018,24 +886,6 @@ const ProfileScreen = ({ navigation }) => {
               </View>
 
               <View style={[styles.userdetailsBox, alignJustifyCenter,]}>
-
-                {/* {technicianType === "single-technician" && <TouchableOpacity style={[{ width: wp(100), height: 'auto', paddingLeft: spacings.xLarge }, flexDirectionRow]} onPress={() => navigation.navigate("GenerateInvoiceScreen")}>
-                  <View style={{ padding: spacings.xLarge }}>
-                    <MaterialIcons name="post-add" size={24} color={blueColor} />
-                  </View>
-                  <View style={{ paddingVertical: spacings.xLarge }}>
-                    <Text style={[styles.text, { fontSize: style.fontSizeNormal1x.fontSize, paddingTop: 3, fontWeight: style.fontWeightThin1x.fontWeight }]}>Generate Invoice</Text>
-                  </View>
-                </TouchableOpacity>}
-                {technicianType === "single-technician" && <TouchableOpacity style={[{ width: wp(100), height: 'auto', paddingLeft: spacings.xLarge }, flexDirectionRow]} onPress={() => navigation.navigate("InvoiceHistoryScreen")}>
-                  <View style={{ padding: spacings.xLarge }}>
-                    <MaterialIcons name="list-alt" size={24} color={blueColor} />
-                  </View>
-                  <View style={{ paddingVertical: spacings.xLarge }}>
-                    <Text style={[styles.text, { fontSize: style.fontSizeNormal1x.fontSize, paddingTop: 3, fontWeight: style.fontWeightThin1x.fontWeight }]}>Invoice History</Text>
-                  </View>
-                </TouchableOpacity>} */}
-
                 <TouchableOpacity style={[{ width: wp(100), height: 'auto', paddingLeft: spacings.xLarge }, flexDirectionRow]} onPress={() => setModalVisible(true)}>
                   <View style={{ padding: spacings.xLarge }}>
                     <MaterialIcons name="support-agent" size={24} color={blueColor} />
@@ -1220,10 +1070,7 @@ const ProfileScreen = ({ navigation }) => {
                       onChangeText={setBusinessName}
                       placeholder="Enter Business Name" />
                   </View>}
-                  {/* <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Phone Number</Text>
-                    <TextInput style={styles.input} value={phoneNumber} onChangeText={setPhoneNumber} placeholder="Enter Phone Number" keyboardType="phone-pad" />
-                  </View> */}
+
                   <View style={styles.phoneContainer}>
                     <Text style={styles.label}>
                       Phone Number<Text style={styles.asterisk}> *</Text>
@@ -1250,47 +1097,6 @@ const ProfileScreen = ({ navigation }) => {
                   <View style={[styles.inputGroup, { height: isTablet ? hp(5) : hp(10) }]}>
                     <Text style={styles.label}>Address</Text>
                     <TextInput style={styles.input} value={address} onChangeText={setAddress} placeholder="Enter Address" />
-
-                    {/* <GooglePlacesAutocomplete
-                      ref={googleRef}
-                      placeholder="Enter Your Address"
-                      fetchDetails={true}
-                      onPress={(data, details = null) => {
-                        console.log('Selected:', data.description);
-                        setAddress(data.description);
-                      }}
-                      textInputProps={{
-                        value: address,
-                        onChangeText: (text) => setAddress(text),
-                      }}
-                      query={{
-                        key: 'AIzaSyBXNyT9zcGdvhAUCUEYTm6e_qPw26AOPgI',
-                        language: 'en',
-                      }}
-                      styles={{
-                        container: {
-                          flex: 0,
-                          zIndex: 999,
-                        },
-                        listView: {
-                          zIndex: 999,
-                          position: 'absolute',
-                          top: 55,
-                        },
-                        textInputContainer: {
-                          zIndex: 999,
-                        },
-                        textInput: {
-                          height: 44,
-                          borderWidth: 1,
-                          borderColor: 'blue',
-                          borderRadius: 50,
-                          paddingHorizontal: 16,
-                          backgroundColor: '#fff',
-                        },
-                      }}
-                    /> */}
-
                   </View>
                   <View style={styles.inputGroup}>
                     <Text style={styles.label}>Secondary Phone Number (Optional)</Text>
