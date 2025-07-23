@@ -427,12 +427,11 @@ const GenerateInvoiceScreen = ({ navigation,
 
             if (response.status === 200 || response.status === 201) {
                 const invoiceUrl = response?.data?.invoice?.invoiceUrl;
-                console.log("✅ Invoice Generated:", invoiceUrl);
-
+                console.log("✅ Invoice Generated:", response?.data);
                 const email = "";
                 const subject = "Invoice for Your Work Order";
 
-                const bodyText = `Dear Customer,\n\nPlease find your invoice here:\n${invoiceUrl}\n\nThanks`;
+                const bodyText = `Dear Customer,\n\nPlease find your invoice here:\n${invoiceUrl}\n\nThank you for choosing our services. If you have any questions or need further assistance, feel free to reach out.\n\nThank you for your trust,\nProrevv`;
 
                 const body = encodeURIComponent(bodyText);
                 const url = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${body}`;
@@ -492,6 +491,14 @@ const GenerateInvoiceScreen = ({ navigation,
             setCancelLoading(false);
         }
     };
+
+    useFocusEffect(
+        useCallback(() => {
+            if (selectedJobId) {
+                fetchJobData(selectedJobId);
+            }
+        }, [selectedJobId])
+    );
 
     return (
         <View style={[flex, styles.container]}>
@@ -590,7 +597,7 @@ const GenerateInvoiceScreen = ({ navigation,
             </View>
 
 
-            {viewType === 'list' && <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(62.5) : hp(79) : isIOSAndTablet ? hp(60) : hp(73), marginTop: spacings.large, paddingBottom: selectedVehicles?.length > 0 ? hp(8) : 0 }}>
+            {viewType === 'list' && <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(75) : hp(79) : isIOSAndTablet ? hp(75) : hp(73), marginTop: spacings.large, paddingBottom: selectedVehicles?.length > 0 ? hp(8) : 0 }}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                     <View>
                         {/* Header Row */}
@@ -616,7 +623,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                     const rowStyle = { backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor };
                                     const isSelected = selectedVehicles.some(v => v.id === item.id);
                                     return (
-                                        <Pressable key={index.toString()} style={[styles.listItem, rowStyle, { flexDirection: 'row' }]} onPress={() => navigation.navigate("VehicleDetailsScreen", { vehicleId: item?.id, from: "report" })}>
+                                        <Pressable key={index.toString()} style={[styles.listItem, rowStyle, { flexDirection: 'row', alignItems: "center" }]} onPress={() => navigation.navigate("VehicleDetailsScreen", { vehicleId: item?.id, from: "report" })}>
                                             <TouchableOpacity onPress={() => toggleSelection(item)} style={{ width: wp(15) }}>
                                                 <MaterialIcons
                                                     name={isSelected ? 'check-box' : 'check-box-outline-blank'}
@@ -649,7 +656,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                                     year: "numeric",
                                                 })
                                                 : "-"}</Text>
-                                            <View style={[getStatusStyle(item?.vehicleStatus), alignJustifyCenter, { height: hp(4) }]}>
+                                            <View style={[getStatusStyle(item?.vehicleStatus), alignJustifyCenter, { height: isTablet ? hp(2) : hp(4) }]}>
                                                 <Text
                                                     style={{
                                                         color: getStatusText(item?.vehicleStatus) === "Complete" ?
@@ -689,7 +696,7 @@ const GenerateInvoiceScreen = ({ navigation,
             </View>}
 
             {viewType === 'grid' && (
-                <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(62.5) : hp(65) : isIOSAndTablet ? hp(61) : hp(73), marginTop: spacings.large, paddingBottom: selectedVehicles?.length > 0 ? hp(8) : 0 }}>
+                <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(75) : hp(65) : isIOSAndTablet ? hp(75) : hp(73), marginTop: spacings.large, paddingBottom: selectedVehicles?.length > 0 ? hp(8) : 0 }}>
                     <FlatList
                         data={filteredVehicles}
                         keyExtractor={(item, index) => index.toString()}

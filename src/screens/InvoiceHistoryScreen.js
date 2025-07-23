@@ -4,8 +4,8 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Entypo from 'react-native-vector-icons/Entypo';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import { widthPercentageToDP as wp, heightPercentageToDP as hp} from '../utils';
-import { blackColor, whiteColor, grayColor, mediumGray, orangeColor, greenColor, redColor, lightGrayColor, blueColor, lightBlueColor, verylightGrayColor, goldColor } from '../constans/Color';
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from '../utils';
+import { blackColor, whiteColor, grayColor, mediumGray, orangeColor, greenColor, redColor, lightGrayColor, blueColor, lightBlueColor, verylightGrayColor, goldColor, lightGrayOpacityColor } from '../constans/Color';
 import { BaseStyle } from '../constans/Style';
 import { spacings, style } from '../constans/Fonts';
 import DatePicker from "react-native-date-picker";
@@ -40,6 +40,8 @@ const InvoiceHistoryScreen = ({ navigation,
     const [nameSortOrder, setNameSortOrder] = useState(null);
     const [paidDates, setPaidDates] = useState({});
     const [selectedInvoiceId, setSelectedInvoiceId] = useState(null);
+    const [selectedInvoiceNumber, setSelectedInvoiceNumber] = useState(null);
+    const [exportingId, setExportingId] = useState(null);
     const [isPaidDatePickerOpen, setIsPaidDatePickerOpen] = useState(false);
     const [refreshing, setRefreshing] = useState(false); // for top refresh
     const [loadingMore, setLoadingMore] = useState(false); // for bottom loader
@@ -62,12 +64,12 @@ const InvoiceHistoryScreen = ({ navigation,
         getTechnicianDetail();
     }, []);
 
-    const handleExport = async (invoiceUrl) => {
+    const handleExport = async (invoiceUrl, itemId) => {
         if (!invoiceUrl) {
             console.log("No Link", "Invoice URL not available.");
             return;
         }
-
+        setExportingId(itemId);
         try {
             const urlParts = invoiceUrl.split('/');
             const fileName = urlParts[urlParts.length - 1]; // e.g., INV-2025-5310.pdf
@@ -94,17 +96,19 @@ const InvoiceHistoryScreen = ({ navigation,
 
         } catch (error) {
             console.error("Export error:", error);
+        } finally {
+            setExportingId(null); // Reset loading
         }
     };
 
 
     const getStatusStyle = (status) => {
-        if (status === true || status === "Paid") return [styles.statusPill, styles.statusCompleted];
+        if (status === true || status === "paid") return [styles.statusPill, styles.statusCompleted];
         if (status === false || status === "unPaid") return [styles.statusPill, styles.statusInProgress];
     };
 
     const getStatusText = (status) => {
-        if (status === true || status === "Paid") return 'Paid';
+        if (status === true || status === "paid") return 'Paid';
         if (status === false || status === "unPaid") return 'UnPaid';
     };
 
@@ -114,7 +118,7 @@ const InvoiceHistoryScreen = ({ navigation,
         // --- Status Filter ---
         const statusMatch =
             invoiceStatusFilter === 'all' ||
-            (invoiceStatusFilter.toLowerCase() === 'paid' && (vehicle?.status === true || vehicle?.status === 'Paid')) ||
+            (invoiceStatusFilter.toLowerCase() === 'paid' && (vehicle?.status === true || vehicle?.status === 'paid')) ||
             (invoiceStatusFilter.toLowerCase() === 'unpaid' && (vehicle?.status === false || vehicle?.status === 'unPaid'));
 
 
@@ -150,8 +154,9 @@ const InvoiceHistoryScreen = ({ navigation,
         return result;
     });
 
-    const openPaidDatePicker = (invoiceId) => {
+    const openPaidDatePicker = (invoiceId, invoiceNumber) => {
         setSelectedInvoiceId(invoiceId);
+        setSelectedInvoiceNumber(invoiceNumber)
         setIsPaidDatePickerOpen(true);
     };
 
@@ -175,7 +180,7 @@ const InvoiceHistoryScreen = ({ navigation,
 
             if (response?.data?.response) {
                 const newInvoices = response.data?.response?.invoice;
-                console.log("newww::::::::::", newInvoices);
+                // console.log("newww::::::::::", newInvoices);
                 const filteredInvoices = newInvoices.filter(item => item.print !== "print");
 
                 console.log("filteredInvoices", filteredInvoices);
@@ -202,6 +207,34 @@ const InvoiceHistoryScreen = ({ navigation,
     const handleRefresh = () => {
         setPageNumber(1);
         fetchInvoices(1, true); // true = isRefresh
+    };
+
+    const updateInvoiceStatus = async ({ invoiceNumber, status, paidDate }) => {
+        const token = await AsyncStorage.getItem("auth_token");
+        try {
+            const params = new URLSearchParams();
+            params.append('invoiceNumber', invoiceNumber);
+            params.append('status', status);
+            params.append('paidDate', paidDate);
+
+            const response = await axios.post(
+                `${API_BASE_URL}/updateInvoiceStatus`,
+                params.toString(),
+                {
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            console.log('✅ Invoice updated successfully:', response.data);
+            fetchInvoices(1);
+            return response.data;
+        } catch (error) {
+            console.error('❌ Error updating invoice:', error?.response?.data || error.message);
+            throw error;
+        }
     };
 
     return (
@@ -265,7 +298,7 @@ const InvoiceHistoryScreen = ({ navigation,
                 </View>
             </View>
 
-            {viewType === 'list' && <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(62.5) : hp(77) : isIOSAndTablet ? hp(60) : hp(73), paddingBottom: selectedVehicles?.length > 0 ? hp(8) : 0 }}>
+            {viewType === 'list' && <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(82.5) : hp(77) : isIOSAndTablet ? hp(80) : hp(73), paddingBottom: selectedVehicles?.length > 0 ? hp(8) : 0 }}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                     <View>
                         {/* Header Row */}
@@ -276,9 +309,10 @@ const InvoiceHistoryScreen = ({ navigation,
                             <Text style={[styles.tableHeader, { width: wp(35) }]}>Job Name</Text>
                             <Text style={[styles.tableHeader, { width: wp(35) }]}>Grand Total</Text>
                             <Text style={[styles.tableHeader, { width: wp(45) }]}>Invoice Created Date</Text>
-                            <Text style={[styles.tableHeader, { width: wp(36) }]}>Add Paid Date</Text>
-                            <Text style={[styles.tableHeader, { paddingRight: isTablet ? 30 : 0, width: isIOSAndTablet ? wp(8) : wp(30) }]}>Status</Text>
+                            <Text style={[styles.tableHeader, { width: wp(40) }]}>Add Paid Date</Text>
                             <Text style={[styles.tableHeader, { width: wp(25) }]}>Action</Text>
+
+                            <Text style={[styles.tableHeader, { paddingRight: isTablet ? 30 : 0, width: isIOSAndTablet ? wp(8) : wp(30) }]}>Status</Text>
 
                         </View>
 
@@ -294,7 +328,7 @@ const InvoiceHistoryScreen = ({ navigation,
                                     // console.log("📦 Rendering item:", item);
 
                                     return (
-                                        <Pressable key={index.toString()} style={[styles.listItem, rowStyle, { flexDirection: 'row' }]}
+                                        <Pressable key={index.toString()} style={[styles.listItem, rowStyle, { flexDirection: 'row', alignItems: "center" }]}
                                             onPress={() => navigation.navigate("InvoiceDetailsScreen", { invoiceId: item?.invoiceNumber })}
                                         >
                                             {/* <TouchableOpacity onPress={() => toggleSelection(item)} style={{ width: wp(15) }}>
@@ -320,8 +354,8 @@ const InvoiceHistoryScreen = ({ navigation,
                                                     year: "numeric",
                                                 })
                                                 : "-"}</Text>
-                                            <TouchableOpacity
-                                                onPress={() => openPaidDatePicker(item?.id)}
+                                            {/* <TouchableOpacity
+                                                onPress={() => openPaidDatePicker(item?.id, item?.invoiceNumber)}
                                                 style={{
                                                     width: wp(36),
                                                     paddingRight: spacings.xxxxLarge
@@ -344,10 +378,79 @@ const InvoiceHistoryScreen = ({ navigation,
                                                         })
                                                         : "Select Date"}
                                                 </Text>
+                                            </TouchableOpacity> */}
+                                            {item?.paidDate ? (
+                                                <View
+                                                    style={{
+                                                        width: wp(30),
+                                                        paddingRight: spacings.xLarge
+                                                    }}
+                                                >
+                                                    <Text
+                                                        style={{
+                                                            color: blackColor,
+                                                            fontSize: 14,
+                                                            padding: 4,
+                                                            borderWidth: 1,
+                                                            borderColor: blueColor,
+                                                            borderRadius: 8,
+                                                            backgroundColor: lightGrayOpacityColor,
+                                                            textAlign: 'center'
+                                                        }}
+                                                    >
+                                                        {new Date(item?.paidDate).toLocaleDateString("en-US", {
+                                                            month: "long",
+                                                            day: "numeric",
+                                                            year: "numeric",
+                                                        })}
+                                                    </Text>
+                                                </View>
+                                            ) : (
+                                                <TouchableOpacity
+                                                    onPress={() => openPaidDatePicker(item?.id, item?.invoiceNumber)}
+                                                    style={{
+                                                        width: wp(30),
+                                                        paddingRight: spacings.xxxxLarge
+                                                    }}
+                                                >
+                                                    <Text
+                                                        style={{
+                                                            color: blackColor,
+                                                            fontSize: 14,
+                                                            padding: 4,
+                                                            borderWidth: 1,
+                                                            borderColor: blueColor,
+                                                            borderRadius: 8,
+                                                            backgroundColor: whiteColor,
+                                                            textAlign: 'center'
+                                                        }}
+                                                    >
+                                                        {paidDates[item.id]
+                                                            ? new Date(paidDates[item.id]).toLocaleDateString("en-US", {
+                                                                month: "long",
+                                                                day: "numeric",
+                                                                year: "numeric",
+                                                            })
+                                                            : "Select Date"}
+                                                    </Text>
+                                                </TouchableOpacity>
+                                            )}
+
+                                            <TouchableOpacity
+                                                onPress={() => handleExport(item?.pdfLink, item?.id)}
+                                                style={{
+                                                    width: wp(30),
+                                                    paddingHorizontal: wp(12)
+                                                }}
+                                            >
+                                                {exportingId === item?.id ? (
+                                                    <ActivityIndicator size="small" color={blueColor} />
+                                                ) : (
+                                                    <Feather name="download" size={20} color={blackColor} />
+                                                )}
                                             </TouchableOpacity>
 
-
-                                            <View style={[getStatusStyle(item?.status), alignJustifyCenter, { height: hp(4) }]}>
+                                            <View style={[getStatusStyle(item?.status), alignJustifyCenter, { height: isTablet ? hp(2) : hp(4) }]}>
                                                 <Text
                                                     style={{
                                                         color: item?.status
@@ -361,18 +464,6 @@ const InvoiceHistoryScreen = ({ navigation,
                                                     {item?.status ? getStatusText(item?.status) : "-"}
                                                 </Text>
                                             </View>
-
-                                            <TouchableOpacity
-                                                onPress={() => handleExport(item?.pdfLink)}
-                                                style={{
-                                                    width: wp(30),
-                                                    paddingHorizontal: wp(12)
-                                                }}
-                                            >
-                                                <Feather name="download" size={20} color={blackColor} />
-
-                                            </TouchableOpacity>
-
                                         </Pressable>
                                     );
                                 }}
@@ -415,17 +506,25 @@ const InvoiceHistoryScreen = ({ navigation,
                         : new Date() // fallback if no date
                 }
                 onConfirm={(date) => {
+                    const formattedDate = date.toISOString();
+
                     setPaidDates((prev) => ({
                         ...prev,
                         [selectedInvoiceId]: date,
                     }));
                     setIsPaidDatePickerOpen(false);
+
+                    updateInvoiceStatus({
+                        invoiceNumber: selectedInvoiceNumber,
+                        status: 'paid',
+                        paidDate: formattedDate,
+                    });
                 }}
                 onCancel={() => setIsPaidDatePickerOpen(false)}
             />
 
             {viewType === 'grid' && (
-                <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(62.5) : hp(79) : isIOSAndTablet ? hp(61) : hp(73), paddingBottom: selectedVehicles?.length > 0 ? hp(8) : 0 }}>
+                <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(82.5) : hp(79) : isIOSAndTablet ? hp(81) : hp(73), paddingBottom: selectedVehicles?.length > 0 ? hp(8) : 0 }}>
                     <FlatList
                         data={filteredVehicles}
                         keyExtractor={(item, index) => index.toString()}
@@ -449,15 +548,14 @@ const InvoiceHistoryScreen = ({ navigation,
                                     <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
                                         <TouchableOpacity
                                             // onPress={() => toggleSelection(item)} 
-                                            onPress={() => handleExport(item?.pdfLink)}
+                                            onPress={() => handleExport(item?.pdfLink, item?.id)}
                                             style={{ position: "absolute", right: -5, top: -10, zIndex: 999 }}>
-                                            {/* <MaterialIcons
-                                                name={isSelected ? 'check-box' : 'check-box-outline-blank'}
-                                                size={25}
-                                                color={isSelected ? blueColor : 'gray'}
-                                            /> */}
-                                            <Feather name="download" size={20} color={blackColor} />
 
+                                            {exportingId === item?.id ? (
+                                                <ActivityIndicator size="small" color={blueColor} />
+                                            ) : (
+                                                <Feather name="download" size={20} color={blackColor} />
+                                            )}
                                         </TouchableOpacity>
 
                                         <View style={{ width: '48%', marginBottom: 9 }}>
@@ -488,32 +586,62 @@ const InvoiceHistoryScreen = ({ navigation,
                                         </View>
                                         <View style={{ width: '48%', marginBottom: 9 }}>
                                             <Text style={{ color: '#555', fontSize: 10, marginBottom: 3 }}>Add Paid Date</Text>
-                                            <TouchableOpacity
-                                                onPress={() => openPaidDatePicker(item.invoiceId)}
-                                                style={{
-                                                    width: "100%",
-                                                    paddingRight: spacings.xxxxLarge
-                                                }}
-                                            >
-                                                <Text style={{
-                                                    color: blackColor, fontSize: 14,
-                                                    paddingVertical: 4,
-                                                    paddingHorizontal: 8,
-                                                    borderWidth: 1,
-                                                    borderColor: blueColor,
-                                                    borderRadius: 8,
-                                                    backgroundColor: whiteColor,
-                                                    justifyContent: 'center'
-                                                }}>
-                                                    {paidDates[item.invoiceId]
-                                                        ? new Date(paidDates[item.invoiceId]).toLocaleDateString("en-US", {
+                                            {item?.paidDate ? (
+                                                <View
+                                                    style={{
+                                                        width: "auto",
+                                                        paddingRight: spacings.xxxxLarge
+                                                    }}
+                                                >
+                                                    <Text
+                                                        style={{
+                                                            color: blackColor,
+                                                            fontSize: 14,
+                                                            padding: 4,
+                                                            borderWidth: 1,
+                                                            borderColor: blueColor,
+                                                            borderRadius: 8,
+                                                            backgroundColor: lightGrayOpacityColor,
+                                                            textAlign: 'center'
+                                                        }}
+                                                    >
+                                                        {new Date(item?.paidDate).toLocaleDateString("en-US", {
                                                             month: "long",
                                                             day: "numeric",
                                                             year: "numeric",
-                                                        })
-                                                        : "Select Date"}
-                                                </Text>
-                                            </TouchableOpacity>
+                                                        })}
+                                                    </Text>
+                                                </View>
+                                            ) : (
+                                                <TouchableOpacity
+                                                    onPress={() => openPaidDatePicker(item?.id, item?.invoiceNumber)}
+                                                    style={{
+                                                        width: "100%",
+                                                        paddingRight: spacings.xxxxLarge
+                                                    }}
+                                                >
+                                                    <Text
+                                                        style={{
+                                                            color: blackColor,
+                                                            fontSize: 14,
+                                                            padding: 4,
+                                                            borderWidth: 1,
+                                                            borderColor: blueColor,
+                                                            borderRadius: 8,
+                                                            backgroundColor: whiteColor,
+                                                            textAlign: 'center'
+                                                        }}
+                                                    >
+                                                        {paidDates[item.id]
+                                                            ? new Date(paidDates[item.id]).toLocaleDateString("en-US", {
+                                                                month: "long",
+                                                                day: "numeric",
+                                                                year: "numeric",
+                                                            })
+                                                            : "Select Date"}
+                                                    </Text>
+                                                </TouchableOpacity>
+                                            )}
                                         </View>
 
                                         <View style={[{ width: '48%', marginBottom: 9 }]}>

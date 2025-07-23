@@ -13,6 +13,7 @@ import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityI
 import { Feather } from "@expo/vector-icons";
 import { blackColor, blueColor, grayColor, mediumGray, lightBlueColor } from "../constans/Color";
 import { spacings, style } from "../constans/Fonts";
+import { heightPercentageToDP } from "../utils";
 
 const { width } = Dimensions.get("window");
 
@@ -38,13 +39,13 @@ const JobDropdown = ({
     };
 
     return (
-        <View style={{ paddingHorizontal: spacings.large }}>
+        <View style={{ paddingHorizontal: spacings.large, height: isTablet ? heightPercentageToDP(4) : heightPercentageToDP(6) }}>
             <Pressable
                 style={{
                     borderColor: blueColor,
                     borderWidth: 1,
                     borderRadius: 10,
-                    padding: isTablet ? spacings.xxLarge : 8,
+                    padding: isTablet ? spacings.large : 8,
                     flexDirection: "row",
                     alignItems: "center",
                     justifyContent: "space-between",
