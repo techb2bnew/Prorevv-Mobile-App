@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, Text, TextInput, FlatList, Pressable, StyleSheet, TouchableOpacity, ActivityIndicator, Image, Platform, Modal, Dimensions, TouchableWithoutFeedback, ScrollView, Alert, Linking } from 'react-native';
+import { View, Text, TextInput, FlatList, Pressable, StyleSheet, TouchableOpacity, ActivityIndicator, Image, Platform, Modal, Dimensions, TouchableWithoutFeedback, ScrollView, Alert, Linking, Keyboard, KeyboardAvoidingView } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Entypo from 'react-native-vector-icons/Entypo';
@@ -60,6 +60,9 @@ const GenerateInvoiceScreen = ({ navigation,
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [submitLoading, setSubmitLoading] = useState(false);
     const [cancelLoading, setCancelLoading] = useState(false);
+    const [invoiceRates, setInvoiceRates] = useState({});
+    const inputRefs = useRef({});
+
 
     useEffect(() => {
         const getTechnicianDetail = async () => {
@@ -132,7 +135,8 @@ const GenerateInvoiceScreen = ({ navigation,
             generateInvoiceDate: selectedDate?.toString() || new Date()?.toString(),
             userId: technicianId,
             roleType: technicianType,
-            print: "print"
+            print: "print",
+            generatedInvoiceStatus: false
         }));
         console.log("mappedVehicles", mappedVehicles);
 
@@ -159,6 +163,7 @@ const GenerateInvoiceScreen = ({ navigation,
                 const urlParts = invoiceUrl.split('/');
                 const fileName = urlParts[urlParts.length - 1]; // e.g., 'INV-2025-5310.pdf'
                 const filePath = `${RNFS.DocumentDirectoryPath}/${fileName}`;
+                setSelectedVehicles([]);
 
                 // 🔽 Download PDF to local file
                 const downloadResult = await RNFS.downloadFile({
@@ -345,14 +350,29 @@ const GenerateInvoiceScreen = ({ navigation,
         }
     };
 
-    const getStatusStyle = (status) => {
+    const getStatusStyle = (status, type = "") => {
+        if (type === "invoice") {
+            return status === true
+                ? [styles.statusPill, styles.statusCompleted] // green
+                : [styles.statusPill, styles.statusInProgress]; // red
+        }
+
+        // default for other statuses
         if (status === true || status === "completed") return [styles.statusPill, styles.statusCompleted];
         if (status === false || status === "inprogress") return [styles.statusPill, styles.statusInProgress];
+
+        return [styles.statusPill];
     };
 
-    const getStatusText = (status) => {
-        if (status === true || status === "completed") return 'Complete';
-        if (status === false || status === "inprogress") return 'In Progress';
+
+    const getStatusText = (status, type = "") => {
+        if (type === "invoice") {
+            return status === true ? 'Generated' : 'Pending';
+        } else {
+            if (status === true || status === "completed") return 'Complete';
+            if (status === false || status === "inprogress") return 'In Progress';
+        }
+        return 'Unknown';
     };
 
 
@@ -403,6 +423,7 @@ const GenerateInvoiceScreen = ({ navigation,
             generateInvoiceDate: date?.toString(),
             userId: technicianId,
             roleType: technicianType,
+            generatedInvoiceStatus: true
         }));
 
         console.log("🚗 Mapped Vehicles for API:", mappedVehicles);
@@ -435,7 +456,8 @@ const GenerateInvoiceScreen = ({ navigation,
 
                 const body = encodeURIComponent(bodyText);
                 const url = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${body}`;
-
+                setSelectedVehicles([]);
+                fetchJobData(selectedJobId);
                 if (Platform.OS === 'android') {
                     try {
                         await Linking.openURL(url);
@@ -500,43 +522,76 @@ const GenerateInvoiceScreen = ({ navigation,
         }, [selectedJobId])
     );
 
+    const handleInvoiceChange = (vehicleId, value) => {
+        setInvoiceRates(prev => ({
+            ...prev,
+            [vehicleId]: value
+        }));
+    };
+
+    const handleSaveInvoice = async (vehicle) => {
+        const vehicleId = vehicle.id;
+        const rate = invoiceRates[vehicleId];
+
+        // Step 1: Empty check
+        if (!rate || rate.toString().trim().length === 0) {
+            Toast.show("Please enter a valid invoice rate before saving.");
+            return;
+        }
+
+        const parsedRate = Number(rate);
+        const existingPdr = Number(vehicle?.pdr);
+
+        // Step 2: If same as existing, silently skip
+        if (!isNaN(existingPdr) && parsedRate === existingPdr) {
+            return;
+        }
+
+        const token = await AsyncStorage.getItem("auth_token");
+
+        try {
+            const dateToUse = new Date().toISOString().split('T')[0];
+            const payload = [{
+                vehicleId: vehicleId,
+                pdr: parsedRate,
+                generatedInvoiceDate: dateToUse,
+                roleType: technicianType,
+                userId: technicianId,
+            }];
+
+            const response = await fetch(`${API_BASE_URL}/updateVehiclePdr`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(payload),
+            });
+
+            if (!response.ok) throw new Error('Failed to update PDR');
+
+            const data = await response.json();
+            console.log("✅ PDR updated:", data);
+
+            if (inputRefs.current[vehicleId]) {
+                inputRefs.current[vehicleId].blur();
+            }
+
+            // Sync state so Save hides if you conditionally want it later
+            setInvoiceRates(prev => ({
+                ...prev,
+                [vehicleId]: parsedRate.toString()
+            }));
+
+            Toast.show("Invoice rate saved successfully.");
+        } catch (error) {
+            console.error('❌ Error saving invoice:', error);
+            Toast.show("Failed to save invoice rate.");
+        }
+    };
+
     return (
         <View style={[flex, styles.container]}>
-            {/* Header */}
-            {/* <Header title={"Generate Invoice"} />
-
-            <View style={{
-                flexDirection: 'row', position: "absolute",
-                top: Platform.OS === "android" ? isTablet ? hp(1) : 10 : isTablet ? 20 : 13,
-                right: -10,
-                justifyContent: "center",
-                alignItems: "center",
-            }}>
-
-                <TouchableOpacity
-                    onPress={() => setViewType('list')}
-                    style={[styles.tabButton, { backgroundColor: viewType === 'list' ? blueColor : whiteColor, margin: 0, marginRight: 10, width: isTablet ? wp(8) : wp(12), height: hp(4.5) }]}>
-                    <Ionicons name="list" size={isTablet ? 35 : 20} color={viewType === 'list' ? whiteColor : blackColor} />
-                </TouchableOpacity>
-                <TouchableOpacity
-                    onPress={() => setViewType('grid')}
-                    style={[styles.tabButton, { backgroundColor: viewType === 'grid' ? blueColor : whiteColor, width: isTablet ? wp(8) : wp(12), height: hp(4.5), marginRight: 10 }]}>
-                    <Ionicons name="grid-sharp" size={isTablet ? 35 : 20} color={viewType === 'grid' ? whiteColor : blackColor} />
-                </TouchableOpacity>
-                <TouchableOpacity
-                    onPress={() => {
-                        if (!customerDetails?.id && !selectedJobId) {
-                            Toast.show("Please select customer and job first.");
-                        } else if (customerDetails?.id && !selectedJobId) {
-                            Toast.show("Please select a job first.");
-                        } else {
-                            setIsFilterModalVisible(true);
-                        }
-                    }} style={[{ backgroundColor: blueColor, width: isTablet ? wp(8) : wp(12), height: hp(4.5), marginRight: 20, borderRadius: 5, borderWidth: 1, alignItems: "center", justifyContent: "center" }]}>
-                    <Text style={{ color: whiteColor }}>Filter</Text>
-                </TouchableOpacity>
-            </View> */}
-
             <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
                 <View style={{ paddingHorizontal: spacings.large, width: "50%" }} >
                     <Text style={[styles.label, { fontSize: style.fontSizeMedium.fontSize, }]}>Select Customer <Text style={{ color: 'red' }}>*</Text></Text>
@@ -559,7 +614,7 @@ const GenerateInvoiceScreen = ({ navigation,
                         selectedJobId={selectedJobId}
                         setSelectedJobId={(id) => {
                             setSelectedJobId(id);
-                            fetchJobData(id)
+                            fetchJobData(id);
                         }}
                         getJobName={(item) => item?.jobName}
                     />
@@ -597,7 +652,7 @@ const GenerateInvoiceScreen = ({ navigation,
             </View>
 
 
-            {viewType === 'list' && <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(75) : hp(79) : isIOSAndTablet ? hp(75) : hp(73), marginTop: spacings.large, paddingBottom: selectedVehicles?.length > 0 ? hp(8) : 0 }}>
+            {viewType === 'list' && <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(75) : hp(62) : isIOSAndTablet ? hp(75) : hp(73), marginTop: spacings.large, paddingBottom: selectedVehicles?.length > 0 ? hp(8) : 0 }}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                     <View>
                         {/* Header Row */}
@@ -610,7 +665,9 @@ const GenerateInvoiceScreen = ({ navigation,
                             <Text style={[styles.tableHeader, { width: wp(25) }]}>Est Cost($)</Text>
                             <Text style={[styles.tableHeader, { width: wp(35) }]}>Start Date</Text>
                             <Text style={[styles.tableHeader, { width: wp(35) }]}>End Date</Text>
-                            <Text style={[styles.tableHeader, { paddingRight: isTablet ? 30 : 0, width: isIOSAndTablet ? wp(8) : wp(35) }]}>Status</Text>
+                            <Text style={[styles.tableHeader, { width: wp(60) }]}>Invoice Rate($)</Text>
+                            <Text style={[styles.tableHeader, { paddingRight: isTablet ? 30 : 0, width: isIOSAndTablet ? wp(8) : wp(35) }]}>W O Status</Text>
+                            <Text style={[styles.tableHeader, { paddingRight: isTablet ? 30 : 0, width: isIOSAndTablet ? wp(8) : wp(35) }]}>Invoice Status</Text>
                         </View>
 
                         {/* Data Rows with vertical scroll */}
@@ -620,6 +677,8 @@ const GenerateInvoiceScreen = ({ navigation,
                                 keyExtractor={(item, index) => index.toString()}
                                 showsVerticalScrollIndicator={false}
                                 renderItem={({ item, index }) => {
+                                    console.log(item);
+
                                     const rowStyle = { backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor };
                                     const isSelected = selectedVehicles.some(v => v.id === item.id);
                                     return (
@@ -656,15 +715,62 @@ const GenerateInvoiceScreen = ({ navigation,
                                                     year: "numeric",
                                                 })
                                                 : "-"}</Text>
-                                            <View style={[getStatusStyle(item?.vehicleStatus), alignJustifyCenter, { height: isTablet ? hp(2) : hp(4) }]}>
+
+                                            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10, marginBottom: 10 }}>
+                                                <TextInput
+                                                    ref={(ref) => {
+                                                        if (ref) inputRefs.current[item.id] = ref;
+                                                    }}
+                                                    style={{
+                                                        borderWidth: 1,
+                                                        borderColor: 'gray',
+                                                        padding: 8,
+                                                        borderRadius: 5,
+                                                        width: wp(30),
+                                                        marginRight: 10,
+                                                    }}
+                                                    keyboardType="numeric"
+                                                    placeholder="Enter rate"
+                                                    value={
+                                                        invoiceRates[item.id] !== undefined
+                                                            ? invoiceRates[item.id]
+                                                            : item?.pdr?.toString() || ''
+                                                    }
+                                                    onChangeText={(value) => handleInvoiceChange(item.id, value)}
+                                                />
+
+
+                                                <TouchableOpacity
+                                                    onPress={() => handleSaveInvoice(item)}
+                                                    style={{
+                                                        backgroundColor: blueColor,
+                                                        paddingHorizontal: 12,
+                                                        paddingVertical: 10,
+                                                        borderRadius: 5
+                                                    }}
+                                                >
+                                                    <Text style={{ color: 'white' }}>Save</Text>
+                                                </TouchableOpacity>
+
+                                            </View>
+
+
+                                            <View style={[getStatusStyle(item?.vehicleStatus), alignJustifyCenter, { height: isTablet ? hp(2) : hp(4), width: wp(28), marginLeft: wp(10) }]}>
                                                 <Text
                                                     style={{
-                                                        color: getStatusText(item?.vehicleStatus) === "Complete" ?
-                                                            greenColor : getStatusText(item?.vehicleStatus) === "inprogress" ?
-                                                                redColor :
-                                                                goldColor
+                                                        color: getStatusText(item?.vehicleStatus) === "Complete" ? greenColor : goldColor
                                                     }}>
                                                     {getStatusText(item?.vehicleStatus)}
+                                                </Text>
+                                            </View>
+
+                                            {/* Invoice Status */}
+                                            <View style={[getStatusStyle(item?.generatedInvoiceStatus, "invoice"), alignJustifyCenter, { height: isTablet ? hp(2) : hp(4), marginLeft: isTablet ? wp(20) : wp(10) }]}>
+                                                <Text
+                                                    style={{
+                                                        color: getStatusText(item?.generatedInvoiceStatus, "invoice") === "Generated" ? greenColor : goldColor
+                                                    }}>
+                                                    {getStatusText(item?.generatedInvoiceStatus, "invoice")}
                                                 </Text>
                                             </View>
 
@@ -766,9 +872,48 @@ const GenerateInvoiceScreen = ({ navigation,
                                                 })
                                                 : "-"} </Text>
                                         </View>
+                                        <View style={[{ width: '100%', marginBottom: 9 }]}>
+                                            <Text style={{ color: '#555', fontSize: 10 }}>Invoice Rate ($)</Text>
+                                            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10, marginBottom: 10 }}>
+                                                <TextInput
+                                                    ref={(ref) => {
+                                                        if (ref) inputRefs.current[item.id] = ref;
+                                                    }}
+                                                    style={{
+                                                        borderWidth: 1,
+                                                        borderColor: 'gray',
+                                                        padding: 8,
+                                                        borderRadius: 5,
+                                                        width: "50%",
+                                                        marginRight: 10,
+                                                    }}
+                                                    keyboardType="numeric"
+                                                    placeholder="Enter rate"
+                                                    value={
+                                                        invoiceRates[item.id] !== undefined
+                                                            ? invoiceRates[item.id]
+                                                            : item?.pdr?.toString() || ''
+                                                    }
+                                                    onChangeText={(value) => handleInvoiceChange(item.id, value)}
+                                                />
 
+
+                                                <TouchableOpacity
+                                                    onPress={() => handleSaveInvoice(item)}
+                                                    style={{
+                                                        backgroundColor: blueColor,
+                                                        paddingHorizontal: 12,
+                                                        paddingVertical: 10,
+                                                        borderRadius: 5
+                                                    }}
+                                                >
+                                                    <Text style={{ color: 'white' }}>Save</Text>
+                                                </TouchableOpacity>
+
+                                            </View>
+                                        </View>
                                         <View style={[{ width: '48%', marginBottom: 9 }]}>
-                                            <Text style={{ color: '#555', fontSize: 10 }}>Status</Text>
+                                            <Text style={{ color: '#555', fontSize: 10 }}>W O Status</Text>
                                             <Text
                                                 style={{
                                                     color: getStatusText(item?.vehicleStatus) === "Complete" ?
@@ -777,6 +922,19 @@ const GenerateInvoiceScreen = ({ navigation,
                                                             goldColor,
                                                 }}>
                                                 {getStatusText(item?.vehicleStatus)}
+                                            </Text>
+                                        </View>
+
+                                        <View style={[{ width: '48%', marginBottom: 9 }]}>
+                                            <Text style={{ color: '#555', fontSize: 10 }}>Incoice Status</Text>
+                                            <Text
+                                                style={{
+                                                    color: getStatusText(item?.generatedInvoiceStatus) === "Complete" ?
+                                                        greenColor : getStatusText(item?.generatedInvoiceStatus) === "inprogress" ?
+                                                            redColor :
+                                                            goldColor,
+                                                }}>
+                                                {getStatusText(item?.generatedInvoiceStatus, "invoice")}
                                             </Text>
                                         </View>
                                     </View>
@@ -819,8 +977,23 @@ const GenerateInvoiceScreen = ({ navigation,
                     title="Generate Invoice"
                     loading={loading}
                     disabled={loading}
-                    // onPress={handleGenerateInvoice}
-                    onPress={() => { setShowDateModal(true), setSelectedDate(null) }}
+                    onPress={() => {
+                        console.log("selectedVehicles", selectedVehicles);
+
+                        const missingPdrVehicles = selectedVehicles.filter(vehicle => {
+                            const rate = invoiceRates[vehicle.id] ?? vehicle?.pdr; // ✅ fallback to vehicle.pdr
+                            return !rate || rate.toString().trim().length === 0;
+                        });
+
+                        if (missingPdrVehicles.length > 0) {
+                            Toast.show("Please add invoice cost first for all selected vehicles.");
+                            return;
+                        }
+
+                        // ✅ All good, open modal
+                        setSelectedDate(null);
+                        setShowDateModal(true);
+                    }}
                     style={{ width: "48%", marginBottom: 0 }}
                 />
             </View>}
