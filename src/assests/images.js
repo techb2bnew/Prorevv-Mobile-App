@@ -40,6 +40,9 @@ export const HOW_TO_PLAY_TAB_BACK_IMAGE = require('./howToUseTab.png');
 export const ADD_VEHICLE_IMAGE = require('./addVehicle.png');
 export const VIN_LIST_IMAGE = require('./vinList.png');
 export const CIRLE_SCANNER_IMAGE = require('./circleScanner.png');
+export const HEADER_BACKGROUND = require('./headerbackground.png');
+
+
 
 
 

@@ -62,6 +62,8 @@ const GenerateInvoiceScreen = ({ navigation,
     const [cancelLoading, setCancelLoading] = useState(false);
     const [invoiceRates, setInvoiceRates] = useState({});
     const inputRefs = useRef({});
+    const [selectAll, setSelectAll] = useState(false);
+
 
 
     useEffect(() => {
@@ -109,17 +111,31 @@ const GenerateInvoiceScreen = ({ navigation,
 
     // Function to handle selection/deselection of vehicles
     const toggleSelection = (vehicleItem) => {
-        setSelectedVehicles(prevState => {
-            const exists = prevState.find(v => v.id === vehicleItem.id);
+        if (selectAll) {
+            // If "Select All" is active, deselect all
+            setSelectedVehicles([]);
+            setSelectAll(false);
+        } else {
+            // If "Select All" is not active, select or deselect individual vehicle
+            setSelectedVehicles(prevState => {
+                const exists = prevState.find(v => v.id === vehicleItem.id);
+                if (exists) {
+                    return prevState.filter(v => v.id !== vehicleItem.id);
+                } else {
+                    return [...prevState, vehicleItem];
+                }
+            });
+        }
+    };
 
-            if (exists) {
-                // If already selected, remove the item
-                return prevState.filter(v => v.id !== vehicleItem.id);
-            } else {
-                // Add the full item
-                return [...prevState, vehicleItem];
-            }
-        });
+
+    const handleSelectAll = () => {
+        if (selectAll) {
+            setSelectedVehicles([]);
+        } else {
+            setSelectedVehicles(workOrdersRawData);
+        }
+        setSelectAll(!selectAll);
     };
 
     const handleExport = async () => {
@@ -651,13 +667,43 @@ const GenerateInvoiceScreen = ({ navigation,
                 </View>
             </View>
 
-
-            {viewType === 'list' && <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(75) : hp(62) : isIOSAndTablet ? hp(75) : hp(73), marginTop: spacings.large, paddingBottom: selectedVehicles?.length > 0 ? hp(8) : 0 }}>
+            {/* <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacings.large }}>
+                <TouchableOpacity
+                    onPress={handleSelectAll}
+                    style={{
+                        backgroundColor: blueColor,
+                        paddingVertical: 10,
+                        paddingHorizontal: 20,
+                        borderRadius: 10,
+                    }}
+                >
+                    <Text style={{ color: whiteColor }}>{selectAll ? "Deselect All" : "Select All"}</Text>
+                </TouchableOpacity>
+            </View> */}
+            {viewType === 'list' && <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(75) : hp(62) : isIOSAndTablet ? hp(75) : hp(62), marginTop: spacings.large, paddingBottom: selectedVehicles?.length > 0 ? hp(8) : 0 }}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                     <View>
                         {/* Header Row */}
                         <View style={[styles.tableHeaderRow, { backgroundColor: blueColor }]}>
-                            <Text style={[styles.tableHeader, { width: wp(15) }]}>Select</Text>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    if (selectAll) {
+                                        setSelectAll(false);
+                                        setSelectedVehicles([]);
+                                    } else {
+                                        setSelectAll(true);
+                                        setSelectedVehicles(filteredVehicles); // or filteredVehicles.map(v => v.id) depending on your structure
+                                    }
+                                }}
+                                style={{ width: wp(25), flexDirection: 'row', alignItems: 'center' }}
+                            >
+                                <MaterialIcons
+                                    name={selectAll ? 'check-box' : 'check-box-outline-blank'}
+                                    size={20}
+                                    color={ 'white'}
+                                />
+                                <Text style={[styles.tableHeader, { marginLeft: 5 }]}>Select</Text>
+                            </TouchableOpacity>                           
                             <Text style={[styles.tableHeader, { width: wp(45) }]}>VIN</Text>
                             <Text style={[styles.tableHeader, { width: wp(30) }]}>Make</Text>
                             <Text style={[styles.tableHeader, { width: wp(30) }]}>Model</Text>
@@ -680,7 +726,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                     console.log(item);
 
                                     const rowStyle = { backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor };
-                                    const isSelected = selectedVehicles.some(v => v.id === item.id);
+                                    const isSelected = selectAll || selectedVehicles.some(v => v.id === item.id);
                                     return (
                                         <Pressable key={index.toString()} style={[styles.listItem, rowStyle, { flexDirection: 'row', alignItems: "center" }]} onPress={() => navigation.navigate("VehicleDetailsScreen", { vehicleId: item?.id, from: "report" })}>
                                             <TouchableOpacity onPress={() => toggleSelection(item)} style={{ width: wp(15) }}>
@@ -802,14 +848,30 @@ const GenerateInvoiceScreen = ({ navigation,
             </View>}
 
             {viewType === 'grid' && (
-                <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(75) : hp(65) : isIOSAndTablet ? hp(75) : hp(73), marginTop: spacings.large, paddingBottom: selectedVehicles?.length > 0 ? hp(8) : 0 }}>
+                <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(75) : hp(65) : isIOSAndTablet ? hp(75) : hp(60), marginTop: spacings.large, paddingBottom: selectedVehicles?.length > 0 ? hp(8) : 0 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacings.large }}>
+                        <TouchableOpacity
+                            onPress={handleSelectAll}
+                            style={{
+                                backgroundColor: blueColor,
+                                paddingVertical: 4,
+                                paddingHorizontal: 4,
+                                borderRadius: 10,
+                                position: "absolute",
+                                right: 10,
+                                bottom: -15
+                            }}
+                        >
+                            <Text style={{ color: whiteColor }}>{selectAll ? "Deselect All" : "Select All"}</Text>
+                        </TouchableOpacity>
+                    </View>
                     <FlatList
                         data={filteredVehicles}
                         keyExtractor={(item, index) => index.toString()}
                         showsVerticalScrollIndicator={false}
                         contentContainerStyle={{ paddingVertical: 10 }}
                         renderItem={({ item, index }) => {
-                            const isSelected = selectedVehicles.some(v => v.id === item.id);
+                            const isSelected = selectAll || selectedVehicles.some(v => v.id === item.id);
 
                             return (
                                 <Pressable style={{

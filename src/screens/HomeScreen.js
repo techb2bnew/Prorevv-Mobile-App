@@ -1,7 +1,7 @@
-import { Image, StyleSheet, Text, TouchableOpacity, View, Pressable, FlatList, ImageBackground, Platform, Dimensions, Alert, ToastAndroid, TextInput } from 'react-native'
+import { Image, StyleSheet, Text, TouchableOpacity, View, Pressable, FlatList, ImageBackground, Platform, Dimensions, Alert, ToastAndroid, TextInput, ScrollView } from 'react-native'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { blackColor, blueColor, ExtraExtralightOrangeColor, grayColor, lightBlueColor, lightGrayColor, lightOrangeColor, orangeColor, whiteColor } from '../constans/Color';
-import { ADD_CASTUMER_BACK_IMAGE, ADD_CASTUMER_TAB_BACK_IMAGE, ADD_CASTUMER_TAB_WHITE_BACK_IMAGE, ADD_CASTUMER_WHITE_BACK_IMAGE, ADD_VEHICLE_BACK_IMAGE, ADD_VEHICLE_IMAGE, ADD_VEHICLE_TAB_BACK_IMAGE, APP_NAME_IMAGE, CAROUSAL_ONE_IMAGE, CAROUSAL_THREE_IMAGE, CAROUSAL_TWO_IMAGE, CIRLE_SCANNER_IMAGE, HOW_TO_PLAY_BACK_IMAGE, HOW_TO_PLAY_TAB_BACK_IMAGE, HOW_TO_USE_IMAGE, JOB_HISTORY_BACK_IMAGE, JOB_HISTORY_IMAGE, JOB_HISTORY_TAB_BACK_IMAGE, NEW_CLIENT_IMAGE, NEW_WORK_ORDER_IMAGE, VIN_LIST_IMAGE } from '../assests/images';
+import { ADD_CASTUMER_BACK_IMAGE, ADD_CASTUMER_TAB_BACK_IMAGE, ADD_CASTUMER_TAB_WHITE_BACK_IMAGE, ADD_CASTUMER_WHITE_BACK_IMAGE, ADD_VEHICLE_BACK_IMAGE, ADD_VEHICLE_IMAGE, ADD_VEHICLE_TAB_BACK_IMAGE, APP_NAME_IMAGE, CARD_BACKGROUND, CAROUSAL_ONE_IMAGE, CAROUSAL_THREE_IMAGE, CAROUSAL_TWO_IMAGE, CIRLE_SCANNER_IMAGE, HEADER_BACKGROUND, HOW_TO_PLAY_BACK_IMAGE, HOW_TO_PLAY_TAB_BACK_IMAGE, HOW_TO_USE_IMAGE, JOB_HISTORY_BACK_IMAGE, JOB_HISTORY_IMAGE, JOB_HISTORY_TAB_BACK_IMAGE, NEW_CLIENT_IMAGE, NEW_WORK_ORDER_IMAGE, VIN_LIST_IMAGE } from '../assests/images';
 import { BaseStyle } from '../constans/Style';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from '../utils';
 import { style, spacings } from '../constans/Fonts';
@@ -9,8 +9,11 @@ import { API_BASE_URL, JOB_HISTORY, NEW_CLIENT, NEW_WORK_ORDER } from '../consta
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import AntDesign from 'react-native-vector-icons/AntDesign';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Feather from 'react-native-vector-icons/Feather';
+import Ionicons from 'react-native-vector-icons/dist/Ionicons';
+import Octicons from 'react-native-vector-icons/Octicons';
+
 
 import Toast from 'react-native-simple-toast';
 
@@ -29,12 +32,14 @@ const HomeScreen = ({ navigation }) => {
   const [hasMore, setHasMore] = useState(true);
   const isTablet = width >= 668 && height >= 1024;
   const isIOSAndTablet = Platform.OS === "ios" && isTablet;
+  const [dashboardData, setDashboardData] = useState([]);
 
   const cardData = [
     {
-      name: technicianType === "ifs" ? "Jobs" : "Customer",
+      name: technicianType === "ifs" ? "View Jobs" : "Add Customer",
+      subtitle: technicianType === "ifs" ? "See all assigned jobs" : "Create a new customer",
       image: technicianType === "ifs" ? NEW_WORK_ORDER_IMAGE : NEW_CLIENT_IMAGE,
-      backgroundColor: orangeColor,
+      backgroundColor: blueColor,
       onPress: () => {
         if (technicianType === "ifs") {
           navigation.navigate("WorkOrderScreen");
@@ -42,14 +47,17 @@ const HomeScreen = ({ navigation }) => {
           navigation.navigate("CustomerInfo");
         }
       },
-      backgroundImage: isTablet ? ADD_CASTUMER_TAB_BACK_IMAGE : ADD_CASTUMER_BACK_IMAGE
-
+      color: ' #cacaca58',
+      backgroundImage: isTablet ? ADD_CASTUMER_TAB_BACK_IMAGE : ADD_CASTUMER_BACK_IMAGE,
+      iconComponent: technicianType === "ifs" ? Feather : Ionicons,
+      iconName: technicianType === "ifs" ? "file-text" : "person-add-outline",
     },
     {
-      name: technicianType === "ifs" ? "Scan Vin" : "Jobs",
+      name: technicianType === "ifs" ? "Scan Vin" : "Create Jobs",
+      subtitle: technicianType === "ifs" ? "Scan VIN number" : "Start a new job",
       image: technicianType === "ifs" ? CIRLE_SCANNER_IMAGE : NEW_WORK_ORDER_IMAGE,
-      backgroundColor: ExtraExtralightOrangeColor,
-      // onPress: () => { navigation.navigate("ScannerScreen"); },
+      backgroundColor: whiteColor,
+      color: '#F54900',
       onPress: async () => {
         if (technicianType === "ifs") {
           try {
@@ -73,12 +81,16 @@ const HomeScreen = ({ navigation }) => {
           }
         }
       },
-      backgroundImage: isTablet ? ADD_VEHICLE_TAB_BACK_IMAGE : ADD_VEHICLE_BACK_IMAGE
+      backgroundImage: isTablet ? ADD_VEHICLE_TAB_BACK_IMAGE : ADD_VEHICLE_BACK_IMAGE,
+      iconComponent: technicianType === "ifs" ? MaterialIcons : MaterialIcons,
+      iconName: technicianType === "ifs" ? "qr-code-scanner" : "add",
     },
     {
-      name: technicianType === "ifs" ? "Vin List" : "Vehicle",
+      name: technicianType === "ifs" ? "Vin List" : "Add Vehicle",
+      subtitle: technicianType === "ifs" ? "Browse saved VINs" : "Attach a vehicle to customer",
       image: technicianType === "ifs" ? VIN_LIST_IMAGE : ADD_VEHICLE_IMAGE,
-      backgroundColor: ExtraExtralightOrangeColor,
+      backgroundColor: whiteColor,
+      color: '#155DFC',
       onPress: () => {
         if (technicianType === "ifs") {
           navigation.navigate("VinListScreen")
@@ -91,12 +103,16 @@ const HomeScreen = ({ navigation }) => {
           }
         }
       },
-      backgroundImage: isTablet ? JOB_HISTORY_TAB_BACK_IMAGE : JOB_HISTORY_BACK_IMAGE
+      backgroundImage: isTablet ? JOB_HISTORY_TAB_BACK_IMAGE : JOB_HISTORY_BACK_IMAGE,
+      iconComponent: technicianType === "ifs" ? MaterialIcons : Ionicons,
+      iconName: technicianType === "ifs" ? "format-list-bulleted" : "car-outline",
     },
     {
-      name: technicianType === "ifs" ? "Reports" : "Scan Vin",
+      name: technicianType === "ifs" ? "View Reports" : "Scan Vin",
+      subtitle: technicianType === "ifs" ? "Check reports summary" : "Scan VIN number",
       image: technicianType === "ifs" ? JOB_HISTORY_IMAGE : CIRLE_SCANNER_IMAGE,
-      backgroundColor: ExtraExtralightOrangeColor,
+      backgroundColor: whiteColor,
+      color: '#009689',
       onPress: async () => {
         if (technicianType === "ifs") {
           navigation.navigate("ReportsScreen")
@@ -115,7 +131,9 @@ const HomeScreen = ({ navigation }) => {
           }
         }
       },
-      backgroundImage: isTablet ? HOW_TO_PLAY_TAB_BACK_IMAGE : HOW_TO_PLAY_BACK_IMAGE
+      backgroundImage: isTablet ? HOW_TO_PLAY_TAB_BACK_IMAGE : HOW_TO_PLAY_BACK_IMAGE,
+      iconComponent: technicianType === "ifs" ? Octicons : MaterialIcons,
+      iconName: technicianType === "ifs" ? "checklist" : "qr-code-scanner",
     }
   ]
 
@@ -175,6 +193,7 @@ const HomeScreen = ({ navigation }) => {
 
   useFocusEffect(
     useCallback(() => {
+      fetchDashboardCount()
       if (technicianType === "ifs") {
         fetchIFSCustomers();
       } else {
@@ -183,15 +202,69 @@ const HomeScreen = ({ navigation }) => {
     }, [technicianId])
   );
 
+
+  const fetchDashboardCount = async (page = 1) => {
+    try {
+      const token = await AsyncStorage.getItem("auth_token");
+      if (!token) {
+        console.error("Token not found!");
+        return;
+      }
+
+      let apiUrl = "";
+      let fetchOptions = {};
+      console.log("technicianType", technicianType);
+
+      if (technicianType === "manager") {
+        apiUrl = `https://techrepairtracker.base2brand.com/api/deshboradCount?page=1&roleType=${technicianType}&limit=10
+ `;
+        fetchOptions = {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        };
+      } else {
+        apiUrl = `${API_BASE_URL}/appDeshboardCount?userId=${technicianId}`;
+        fetchOptions = {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        };
+      }
+
+      const response = await fetch(apiUrl, fetchOptions);
+      const text = await response.text();
+
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        console.error("Response is not JSON. Possibly an error page:", e);
+        return;
+      }
+
+      console.log("Dashboard Data:", data);
+
+      if (data?.status) {
+        setDashboardData(data?.count);
+      } else {
+        console.warn("No dashboard data found");
+      }
+    } catch (error) {
+      console.error("Network error:::::::", error);
+    }
+  };
+
+
+
   const fetchCustomers = async (pageNum = 1) => {
     try {
       const token = await AsyncStorage.getItem("auth_token");
       if (!token || !technicianId || !technicianType) return;
-
-      // const apiUrl = technicianType === "manager"
-      //   ? `${API_BASE_URL}/fetchAllCustomer?page=${pageNum}&userId=${technicianId}&limit=10&roleType=${technicianType}`
-      //   : `${API_BASE_URL}/fetchCustomer?page=${pageNum}&userId=${technicianId}&limit=10`;
-
       const apiUrl = technicianType === "manager"
         ? `${API_BASE_URL}/fetchAllCustomer?page=${pageNum}&userId=${technicianId}&limit=10&roleType=${technicianType}`
         : technicianType === "ifs"
@@ -337,12 +410,181 @@ const HomeScreen = ({ navigation }) => {
     );
   };
 
+  // const renderCard = ({ item, index }) => (
+  //   <TouchableOpacity style={[styles.actionCard, { backgroundColor: item.backgroundColor }]} onPress={item?.onPress}>
+  //     <View
+  //       style={{
+  //         position: 'absolute',
+  //         top: -wp(10),
+  //         right: -wp(10),
+  //         width: wp(25),
+  //         height: wp(25),
+  //         borderRadius: wp(25) / 2,
+  //         backgroundColor: 'rgba(222, 219, 219, 0.45)',
+  //         opacity: index === 0 ? .5 : 1
+  //       }}
+  //     />
+  //     <View
+  //       style={{
+  //         position: 'absolute',
+  //         bottom: -wp(10),
+  //         left: -wp(14),
+  //         width: wp(25),
+  //         height: wp(25),
+  //         borderRadius: wp(25) / 2,
+  //         backgroundColor: '#cacaca58',
+  //         transform: [{ scaleX: 1.3 }],
+  //         opacity: index === 0 ? .6 : 1
+  //       }}
+  //     />
+  //     <View style={[styles.cardContent, justifyContentSpaceBetween]}>
+  //       <View style={[alignJustifyCenter, flexDirectionRow]}>
+  //         <View style={{
+  //           width: wp(12),
+  //           height: wp(12),
+  //           borderRadius: 8,
+  //           marginRight: spacings.xxLarge,
+  //           backgroundColor: (index === 0 ? '#cacaca58' : item?.color),
+  //           borderColor: "#fff",
+  //           borderWidth: .5,
+  //           alignItems: "center",
+  //           justifyContent: "center",
+  //         }}>
+  //           {/* <Image source={item?.image} style={styles.cardIcon} /> */}
+  //           <item.iconComponent
+  //             name={item.iconName}
+  //             size={24}
+  //             color="#fff"
+  //           />
+  //         </View>
+  //         <View>
+  //           <Text style={[styles.actionTitle, { color: item.backgroundColor === blueColor ? whiteColor : blackColor }]}>{item.name}</Text>
+  //           <Text style={[styles.actionSubtitle, { color: item.backgroundColor === blueColor ? whiteColor : blackColor }]}>Tap to open</Text>
+  //         </View>
+  //       </View>
+  //       <View style={{
+  //         width: wp(8),
+  //         height: wp(8),
+  //         borderRadius: 8,
+  //         marginRight: spacings.xxLarge,
+  //         padding: spacings.small,
+  //         backgroundColor: '#cacaca58',
+  //         borderColor: "#cacacaff",
+  //         borderWidth: .5,
+  //         alignItems: "center",
+  //         justifyContent: "center",
+  //       }}>
+  //         <Feather name="arrow-right" size={20} color={index === 0 ? '#fff' : item?.color} />
+  //       </View>
+  //     </View>
+  //   </TouchableOpacity>
+  // );
+  const renderCard = ({ item, index }) => (
+    <View style={styles.shadowWrapper}>
+      <TouchableOpacity
+        style={[styles.innerCard, { backgroundColor: item.backgroundColor }]}
+        onPress={item?.onPress}
+      >
+        {/* Decorative Shapes */}
+        <View
+          style={{
+            position: 'absolute',
+            top: -wp(10),
+            right: -wp(10),
+            width: wp(25),
+            height: wp(25),
+            borderRadius: wp(25) / 2,
+            backgroundColor: 'rgba(222, 219, 219, 0.45)',
+            opacity: index === 0 ? 0.5 : 1
+          }}
+        />
+        <View
+          style={{
+            position: 'absolute',
+            bottom: -wp(10),
+            left: -wp(14),
+            width: wp(25),
+            height: wp(25),
+            borderRadius: wp(25) / 2,
+            backgroundColor: '#cacaca58',
+            transform: [{ scaleX: 1.3 }],
+            opacity: index === 0 ? 0.6 : 1
+          }}
+        />
+
+        {/* Main Content */}
+        <View style={[styles.cardContent, justifyContentSpaceBetween]}>
+          <View style={[alignJustifyCenter, flexDirectionRow]}>
+            <View
+              style={{
+                width: wp(12),
+                height: wp(12),
+                borderRadius: 8,
+                marginRight: spacings.xxLarge,
+                backgroundColor: (index === 0 ? '#cacaca58' : item?.color),
+                borderColor: "#fff",
+                borderWidth: 0.5,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <item.iconComponent
+                name={item.iconName}
+                size={24}
+                color="#fff"
+              />
+            </View>
+            <View>
+              <Text
+                style={[
+                  styles.actionTitle,
+                  { color: item.backgroundColor === blueColor ? whiteColor : blackColor }
+                ]}
+              >
+                {item.name}
+              </Text>
+              <Text
+                style={[
+                  styles.actionSubtitle,
+                  { color: item.backgroundColor === blueColor ? whiteColor : blackColor }
+                ]}
+              >
+                {item.subtitle}
+              </Text>
+            </View>
+          </View>
+          <View
+            style={{
+              width: wp(8),
+              height: wp(8),
+              borderRadius: 8,
+              marginRight: spacings.xxLarge,
+              padding: spacings.small,
+              backgroundColor: '#cacaca58',
+              borderColor: "#cacacaff",
+              borderWidth: 0.5,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Feather
+              name="arrow-right"
+              size={20}
+              color={index === 0 ? '#fff' : item?.color}
+            />
+          </View>
+        </View>
+      </TouchableOpacity>
+    </View>
+  );
+
+
   return (
     <View style={[styles.container, flex]}>
-      <View style={[styles.logoContainer, alignItemsCenter, {
+      {/* <View style={[styles.logoContainer, alignItemsCenter, {
         height: Platform.OS === "android" ? isTablet ? hp(12) : hp(17) : isIOSAndTablet ? hp(12) : hp(14),
       }]}>
-        <Text style={[styles.title, textAlign]}>👋 Hi, {capitalizetext(technicianName)}</Text>
+        <Text style={[styles.title, textAlign]}>Hi, {capitalizetext(technicianName)}</Text>
         {technicianType === "single-technician" && <Pressable
           onPress={() => navigation.navigate("ProfileStackScreen")}
           style={{
@@ -378,11 +620,6 @@ const HomeScreen = ({ navigation }) => {
               });
             }
           }}
-
-        // onPress={() => navigation.navigate("ScannerScreen", {
-        //   from: "VinList"
-        // })}
-
         >
           <View style={[styles.input, { flexDirection: "row", alignItems: "center", justifyContent: "space-between" }]}>
             <Text style={{ color: grayColor }}>Search By Scan VIN</Text>
@@ -401,25 +638,11 @@ const HomeScreen = ({ navigation }) => {
           scrollEnabled={false}
         />
 
-        {/* Center Circular Logo */}
         <Pressable style={[styles.logoCircle, {
           top: Platform.OS === "android" ? (isTablet ? hp(21.5) : hp(17.5)) : isTablet ? hp(12) : hp(15.8),
           left: Platform.OS === "android" ? (isTablet ? wp(39) : wp(39.5)) : isTablet ? wp(38) : wp(39.4),
         }]}
         >
-          {/* {bLogo ? (
-            <Image
-              source={{ uri: bLogo }}
-              style={[
-                styles.logo,
-                (Platform.OS === "ios" && isTablet) && {
-                  borderWidth: 8,
-                  borderColor: whiteColor,
-                  borderRadius: 1000, // circular ke liye large radius
-                }
-              ]}
-            />
-          ) : ( */}
           <Image
             source={APP_NAME_IMAGE}
             style={[
@@ -431,11 +654,114 @@ const HomeScreen = ({ navigation }) => {
               }
             ]}
           />
-          {/* )} */}
-
         </Pressable>
-      </View>
+      </View> */}
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <View style={{ marginBottom: isTablet ? hp(9) : hp(11) }}>
+          <ImageBackground source={HEADER_BACKGROUND} style={{ resizeMode: "conatin", height: isTablet ? hp(20) : hp(30) }}>
+            <View style={styles.header}>
+              <Image source={APP_NAME_IMAGE} style={[styles.profileImage, { resizeMode: "contain" }]} />
+              <View>
+                <Text style={styles.greeting}>Hi, {capitalizetext(technicianName)}</Text>
+                <Text style={styles.subtitle}>Manage your garage with ease</Text>
+              </View>
+              {technicianType === "single-technician" && <Pressable
+                onPress={() => navigation.navigate("ProfileStackScreen")}
+                style={{
+                  borderRadius: 30,
+                  position: "absolute",
+                  right: 10,
+                  top: 15,
+                }}
+              >
+                <Feather name="user" size={30} color={whiteColor} />
+              </Pressable>}
+            </View>
+            <Pressable style={[styles.searchTextInput, { height: isTablet ? hp(4) : hp(4.8), }]}
+              onPress={async () => {
+                if (technicianType === "ifs") {
+                  try {
+                    const currentJob = await AsyncStorage.getItem("current_Job");
 
+                    if (ifscustomers.length === 0) {
+                      Toast.show("You don't have any assigned job currently.");
+                    } else if (!currentJob) {
+                      Toast.show("Please select a job from the jobs page first.");
+                    } else {
+                      navigation.navigate("ScannerScreen", {
+                        from: "VinList"
+                      });
+                    }
+                  } catch (error) {
+                    console.error("Error checking current job:", error);
+                  }
+                } else {
+                  navigation.navigate("ScannerScreen", {
+                    from: "VinList"
+                  });
+                }
+              }}
+            >
+              <View style={[styles.input, { flexDirection: "row", alignItems: "center", justifyContent: "space-between" }]}>
+                <Text style={{ color: grayColor }}>Search By Scan VIN</Text>
+                <MaterialIcons name="qr-code-scanner" size={24} color="#252837" />
+              </View>
+            </Pressable>
+
+
+            <View style={styles.totalOverview}>
+              <Text style={[styles.greeting, { color: blackColor }]}>Total Overview</Text>
+              <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                {/* Active Jobs */}
+                <View style={styles.overviewCard}>
+                  <View style={styles.overviewCardIcon}>
+                    <Ionicons name="bag-add-outline" size={25} color='#FF5733' />
+                  </View>
+                  <Text style={[styles.overviewNumber, { color: '#FF5733' }]}>
+                    {technicianType === "manager"
+                      ? (dashboardData?.jobsuperadmin ?? 0)
+                      : (dashboardData?.AppJobCount ?? 0)}
+                  </Text>
+                  <Text style={styles.overviewText}>Active Jobs</Text>
+                </View>
+
+                {/* Customers */}
+                <View style={styles.overviewCard}>
+                  <View style={styles.overviewCardIcon}>
+                    <Feather name="users" size={25} color='#28A745' />
+                  </View>
+                  <Text style={[styles.overviewNumber, { color: '#28A745' }]}>
+                    {technicianType === "manager"
+                      ? (dashboardData?.Customersuperadmin ?? 0)
+                      : (dashboardData?.AppCustomerCount ?? 0)}
+                  </Text>
+                  <Text style={styles.overviewText}>Customers</Text>
+                </View>
+
+                {/* Vehicles */}
+                <View style={styles.overviewCard}>
+                  <View style={styles.overviewCardIcon}>
+                    <Ionicons name="car-outline" size={25} color='#8A2BE2' />
+                  </View>
+                  <Text style={[styles.overviewNumber, { color: '#8A2BE2' }]}>
+                    {technicianType === "manager"
+                      ? (dashboardData?.Vehiclesuperadmin ?? 0)
+                      : (dashboardData?.AppVehicleCount ?? 0)}
+                  </Text>
+                  <Text style={styles.overviewText}>Vehicles</Text>
+                </View>
+              </View>
+            </View>
+            
+          </ImageBackground>
+        </View>
+        <FlatList
+          data={cardData}
+          renderItem={renderCard}
+          keyExtractor={(item, index) => index.toString()}
+          scrollEnabled={false}
+        />
+      </ScrollView>
     </View >
   )
 }
@@ -447,41 +773,41 @@ const styles = StyleSheet.create({
     // padding: spacings.large,
     backgroundColor: whiteColor
   },
-  logoContainer: {
-    backgroundColor: blueColor,
-    padding: spacings.large,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30
-  },
-  title: {
-    fontSize: style.fontSizeLarge1x.fontSize,
-    fontWeight: style.fontWeightMedium.fontWeight,
-    color: whiteColor,
-  },
-  card: {
-    width: wp(48),
-    margin: spacings.small,
-    height: Platform.OS === "android" ? hp(28) : hp(20),
-    resizeMode: "cover"
-  },
-  cardImage: {
-    width: wp(15),
-    height: hp(10),
-  },
-  cardText: {
-    fontSize: style.fontSizeNormal2x.fontSize,
-    fontWeight: style.fontWeightMedium.fontWeight,
-  },
-  logoCircle: {
-    position: 'absolute',
-    width: wp(12) * 2,
-    height: wp(12) * 2,
-  },
-  logo: {
-    width: '90%',
-    height: '90%',
-    borderRadius: 100,
-  },
+  // logoContainer: {
+  //   backgroundColor: blueColor,
+  //   padding: spacings.large,
+  //   borderBottomLeftRadius: 30,
+  //   borderBottomRightRadius: 30
+  // },
+  // title: {
+  //   fontSize: style.fontSizeLarge1x.fontSize,
+  //   fontWeight: style.fontWeightMedium.fontWeight,
+  //   color: whiteColor,
+  // },
+  // card: {
+  //   width: wp(48),
+  //   margin: spacings.small,
+  //   height: Platform.OS === "android" ? hp(28) : hp(20),
+  //   resizeMode: "cover"
+  // },
+  // cardImage: {
+  //   width: wp(15),
+  //   height: hp(10),
+  // },
+  // cardText: {
+  //   fontSize: style.fontSizeNormal2x.fontSize,
+  //   fontWeight: style.fontWeightMedium.fontWeight,
+  // },
+  // logoCircle: {
+  //   position: 'absolute',
+  //   width: wp(12) * 2,
+  //   height: wp(12) * 2,
+  // },
+  // logo: {
+  //   width: '90%',
+  //   height: '90%',
+  //   borderRadius: 100,
+  // },
   searchTextInput: {
     flexDirection: 'row',
     backgroundColor: whiteColor,
@@ -494,7 +820,7 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
     marginTop: spacings.Large2x,
-    marginHorizontal: spacings.xLarge
+    marginHorizontal: spacings.xxLarge
   },
   input: {
     flex: 1,
@@ -503,5 +829,117 @@ const styles = StyleSheet.create({
   },
   iconContainer: {
     paddingLeft: spacings.large,
+  },
+  header: {
+    flexDirection: 'row',
+    paddingHorizontal: spacings.xxxLarge,
+    paddingTop: spacings.xxxLarge,
+    borderBottomLeftRadius: 50,
+    borderBottomRightRadius: 50,
+  },
+  profileImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 8,
+    marginRight: spacings.xxLarge,
+    padding: spacings.small,
+    backgroundColor: '#cacaca58',
+    borderColor: "#fff",
+    borderWidth: .5
+  },
+  greeting: {
+    color: '#fff',
+    fontSize: style.fontSizeNormal2x.fontSize,
+    fontWeight: style.fontWeightMedium.fontWeight,
+  },
+  subtitle: {
+    color: '#ddd',
+    fontSize: style.fontSizeNormal.fontSize,
+    paddingVertical: spacings.small
+  },
+  totalOverview: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: spacings.xxxLarge,
+    margin: spacings.xxxLarge,
+    elevation: 5,
+    // iOS shadow
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+  },
+  overviewCard: {
+    alignItems: 'center',
+  },
+  overviewCardIcon: {
+    backgroundColor: '#cacaca58',
+    borderRadius: 12,
+    padding: spacings.xxxLarge,
+    margin: spacings.xxxLarge,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+  },
+  overviewNumber: {
+    fontSize: style.fontSizeNormal2x.fontSize,
+    fontWeight: style.fontWeightMedium.fontWeight,
+  },
+  overviewText: {
+    fontSize: style.fontSizeSmall2x.fontSize,
+    color: '#555',
+    marginTop: 4,
+  },
+  actionCard: {
+    borderRadius: 12,
+    padding: spacings.xxxLarge,
+    marginBottom: spacings.xxLarge,
+    marginHorizontal: spacings.xxxxLarge,
+    elevation: 5,
+    // iOS shadow
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+  },
+  cardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  cardIcon: {
+    width: wp(10),
+    height: wp(10),
+    resizeMode: "contain"
+  },
+
+  shadowWrapper: {
+    borderRadius: 12,
+    marginBottom: spacings.xxLarge,
+    marginHorizontal: spacings.xxxxLarge,
+    elevation: 5, // Android shadow
+    shadowColor: '#000', // iOS shadow
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+  },
+  innerCard: {
+    borderRadius: 12,
+    padding: spacings.xxxLarge,
+    overflow: 'hidden',
+  },
+  cardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  actionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  actionSubtitle: {
+    fontSize: 13,
+    color: '#f2f2f2',
+    marginTop: 4,
   },
 });

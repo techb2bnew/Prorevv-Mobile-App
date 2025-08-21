@@ -95,11 +95,24 @@ export default function MainNavigator() {
                     }
 
                     return (
-                        <IconComponent
-                            name={iconName}
-                            size={24}
-                            color={focused ? blueColor : grayColor}
-                        />
+                        <View
+                            style={{
+                                backgroundColor: focused ? blueColor : "transparent",
+                                // paddingVertical: 6,
+                                // paddingHorizontal: 12,
+                                borderRadius: 5,
+                                alignItems: "center",
+                                justifyContent: "center",
+                                width:35,
+                                height:35,
+                            }}
+                        >
+                            <IconComponent
+                                name={iconName}
+                                size={24}
+                                color={focused ? "#fff" : grayColor}
+                            />
+                        </View>
                     );
                 },
                 tabBarActiveTintColor: blueColor,
@@ -107,28 +120,28 @@ export default function MainNavigator() {
                 tabBarStyle: shouldHideTabBar(route) || route.name === "Invoice"
                     ? { display: "none" }
                     : {
-                        position: "absolute",
-                        bottom: Platform.OS === "android" ? 0 : 20,
-                        height: isTablet ? 90 : 70,
-                        backgroundColor: lightBlueColor,
-                        borderRadius: 50,
-                        borderWidth: 1,
-                        borderTopWidth: 1,
-                        borderColor: blueColor,
-                        // shadowColor: "#000",
-                        // shadowOffset: { width: 0, height: 4 },
-                        // shadowOpacity: 0.05,
-                        // shadowRadius: 8,
-                        elevation: 0,
+                        // position: "absolute",
+                        // bottom: Platform.OS === "android" ? 0 : 20,
+                        height: isTablet ? 100 : Platform.OS === "android" ? 70 : 100,
+                        // backgroundColor: lightBlueColor,
+                        // borderRadius: 50,
+                        // borderWidth: 1,
+                        // borderTopWidth: 1,
+                        // borderColor: blueColor,
+                        // // shadowColor: "#000",
+                        // // shadowOffset: { width: 0, height: 4 },
+                        // // shadowOpacity: 0.05,
+                        // // shadowRadius: 8,
+                        // elevation: 0,
                         paddingTop: isTablet ? 15 : 7,
-                        paddingBottom: 10,
-                        marginHorizontal: 20,
-                        zIndex: 9999
+                        // paddingBottom: 10,
+                        // marginHorizontal: 20,
+                        // zIndex: 9999
                     },
                 tabBarLabelStyle: {
                     fontSize: isTablet ? 16 : 12,
                     fontWeight: "600",
-                    marginTop: 4,
+                    marginTop: 8,
                 },
             })}
         >
