@@ -52,10 +52,20 @@ const JobDropdown = ({
                 }}
                 onPress={() => setVisible(true)}
             >
-                <Text style={{ color: selectedJob ? blackColor : grayColor, fontSize: 16 }}>
-                    {selectedJob ? getJobName(selectedJob) : "Select a Job"}
-                </Text>
-                <MaterialCommunityIcons name="chevron-down" size={22} color={blackColor} />
+                <View style={{ width: "80%" }}>
+                    <Text
+                        style={{
+                            color: selectedJob ? blackColor : grayColor,
+                            fontSize: 16,
+                            flexWrap: "wrap",
+                        }}
+                    >
+                        {selectedJob ? getJobName(selectedJob) : "Select a Job"}
+                    </Text>
+                </View>
+
+                <MaterialCommunityIcons name="chevron-down" size={22} color={blackColor} style={{ marginLeft: 8 }}
+                />
             </Pressable>
 
             {/* Modal starts */}

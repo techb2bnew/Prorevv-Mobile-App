@@ -38,6 +38,7 @@ const GenerateInvoiceScreen = ({ navigation,
     const [workOrdersRawData, setWorkOrdersRawData] = useState([]);
     const [loading, setLoading] = useState(false);
     const [isLoading, setisLoading] = useState(false);
+    const [isExportLoading, setIsExportLoading] = useState(false);
     const [startDate, setStartDate] = useState(new Date());
     const [endDate, setEndDate] = useState(new Date());
     const [isStartPickerOpen, setIsStartPickerOpen] = useState(false);
@@ -64,8 +65,17 @@ const GenerateInvoiceScreen = ({ navigation,
     const inputRefs = useRef({});
     const [selectAll, setSelectAll] = useState(false);
 
+    useFocusEffect(
+        useCallback(() => {
+            setCustomerDetails(null);
+            setSelectedJobId(null);
+            setJobList([]);
+            setSelectedVehicles([]);
+            setSelectAll(false);
 
-
+            fetchCustomers(1); // fresh customers + jobs fetch
+        }, [])
+    );
     useEffect(() => {
         const getTechnicianDetail = async () => {
             try {
@@ -83,9 +93,24 @@ const GenerateInvoiceScreen = ({ navigation,
         getTechnicianDetail();
     }, []);
 
-    useEffect(() => {
-        fetchCustomers();
-    }, [technicianId])
+    useFocusEffect(
+        useCallback(() => {
+            fetchCustomers();   // ✅ jab bhi screen focus hogi tab chalega
+        }, [technicianId])
+    );
+
+    useFocusEffect(
+        useCallback(() => {
+            console.log("🔄 GenerateInvoiceScreen Focused, refreshing data...")
+            fetchCustomers();
+            if (selectedJobId) {
+                fetchJobData(selectedJobId);
+            }
+            return () => {
+                console.log("🔙 Screen unfocused");
+            };
+        }, [selectedJobId])
+    );
 
 
     useFocusEffect(
@@ -127,7 +152,6 @@ const GenerateInvoiceScreen = ({ navigation,
             });
         }
     };
-
 
     const handleSelectAll = () => {
         if (selectAll) {
@@ -207,6 +231,73 @@ const GenerateInvoiceScreen = ({ navigation,
         } finally {
             setisLoading(false);
         }
+    };
+
+    const shareCSVFile = async (filePath) => {
+        try {
+            const shareOptions = {
+                title: 'Export CSV',
+                url: `file://${filePath}`, // ⚠️ must include file://
+                type: 'text/csv',
+            };
+
+            await Share.open(shareOptions);
+        } catch (err) {
+            console.log('Sharing error:', err);
+        }
+    };
+
+    const handleExportCSV = async () => {
+        if (selectedVehicles.length === 0) {
+            Alert.alert("No Selection", "Please select at least one vehicle to export.");
+            return;
+        }
+        console.log("selectedVehicles", selectedJobEstimated);
+
+        const mappedVehicles = selectedVehicles.map((vehicle) => ({
+            jobName: vehicle?.jobName,
+            vin: vehicle?.vin,
+            make: vehicle?.make,
+            model: vehicle?.model,
+            estimatedBy: vehicle?.estimatedBy || "-",
+            estimatedCost: selectedJobEstimated,
+            status: getStatusText(vehicle?.vehicleStatus),
+            assignedTechnicians:
+                vehicle?.assignedTechnicians?.length > 0
+                    ? vehicle.assignedTechnicians
+                        .map((tech) => `${tech.firstName} ${tech.lastName}`)
+                        .join(", ")
+                    : "-",
+            generateInvoiceDate: selectedDate?.toString() || new Date()?.toString(),
+        }));
+
+        setIsExportLoading(true);
+
+        // console.log("mappedVehicles", mappedVehicles);
+
+        const filePath = await exportToCSV(
+            mappedVehicles,
+            [
+                "jobName",
+                "vin",
+                "make",
+                "model",
+                "status",
+                "estimatedCost",
+                "estimatedBy",
+                "assignedTechnicians"
+            ],
+            "invoice.csv"
+        );
+
+        if (filePath && Platform.OS === "ios") {
+            shareCSVFile(filePath); // ✅ Only iOS will share
+        } else if (filePath && Platform.OS === "android") {
+            console.log("✅ File exported to:", filePath);
+            Alert.alert("Export Successful", `CSV saved to:\n${filePath}`);
+        }
+        setIsExportLoading(false);
+        setSelectedVehicles([]);
     };
 
     const fetchCustomers = async (page) => {
@@ -380,7 +471,6 @@ const GenerateInvoiceScreen = ({ navigation,
         return [styles.statusPill];
     };
 
-
     const getStatusText = (status, type = "") => {
         if (type === "invoice") {
             return status === true ? 'Generated' : 'Pending';
@@ -390,7 +480,6 @@ const GenerateInvoiceScreen = ({ navigation,
         }
         return 'Unknown';
     };
-
 
     const filteredVehicles = workOrdersRawData?.filter(vehicle => {
         // --- Status Filter ---
@@ -428,7 +517,6 @@ const GenerateInvoiceScreen = ({ navigation,
 
         return statusMatch && matchesSearch && isWithinDateRange;
     });
-
 
     const handleGenerateInvoice = async (date) => {
         console.log("📅 Selected Invoice Date:", date?.toString());
@@ -631,6 +719,8 @@ const GenerateInvoiceScreen = ({ navigation,
                         setSelectedJobId={(id) => {
                             setSelectedJobId(id);
                             fetchJobData(id);
+                            setSelectedVehicles([]);
+                            setSelectAll(false);
                         }}
                         getJobName={(item) => item?.jobName}
                     />
@@ -695,19 +785,19 @@ const GenerateInvoiceScreen = ({ navigation,
                                         setSelectedVehicles(filteredVehicles); // or filteredVehicles.map(v => v.id) depending on your structure
                                     }
                                 }}
-                                style={{ width: wp(25), flexDirection: 'row', alignItems: 'center' }}
+                                style={{ width: wp(15), flexDirection: 'row', alignItems: 'center' }}
                             >
                                 <MaterialIcons
                                     name={selectAll ? 'check-box' : 'check-box-outline-blank'}
-                                    size={20}
-                                    color={ 'white'}
+                                    size={25}
+                                    color={'white'}
                                 />
-                                <Text style={[styles.tableHeader, { marginLeft: 5 }]}>Select</Text>
-                            </TouchableOpacity>                           
+                                {/* <Text style={[styles.tableHeader, { marginLeft: 5 }]}>Select</Text> */}
+                            </TouchableOpacity>
                             <Text style={[styles.tableHeader, { width: wp(45) }]}>VIN</Text>
                             <Text style={[styles.tableHeader, { width: wp(30) }]}>Make</Text>
                             <Text style={[styles.tableHeader, { width: wp(30) }]}>Model</Text>
-                            <Text style={[styles.tableHeader, { width: wp(35) }]}>Labour Cost($)</Text>
+                            {/* <Text style={[styles.tableHeader, { width: wp(35) }]}>Labour Cost($)</Text> */}
                             <Text style={[styles.tableHeader, { width: wp(25) }]}>Est Cost($)</Text>
                             <Text style={[styles.tableHeader, { width: wp(35) }]}>Start Date</Text>
                             <Text style={[styles.tableHeader, { width: wp(35) }]}>End Date</Text>
@@ -741,9 +831,9 @@ const GenerateInvoiceScreen = ({ navigation,
                                             <Text style={[styles.text, { width: wp(30) }]}>{item?.model || '-'}</Text>
 
 
-                                            <Text style={[styles.text, { width: wp(35) }]}>
+                                            {/* <Text style={[styles.text, { width: wp(35) }]}>
                                                 {item?.labourCost ? `$${item.labourCost}` : '-'}
-                                            </Text>
+                                            </Text> */}
                                             <Text style={[styles.text, { width: wp(25) }]}>
                                                 {selectedJobEstimated ? `$${selectedJobEstimated}` : '-'}
                                             </Text>
@@ -849,7 +939,7 @@ const GenerateInvoiceScreen = ({ navigation,
 
             {viewType === 'grid' && (
                 <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(75) : hp(65) : isIOSAndTablet ? hp(75) : hp(60), marginTop: spacings.large, paddingBottom: selectedVehicles?.length > 0 ? hp(8) : 0 }}>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacings.large }}>
+                    {filteredVehicles.length > 0 && <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacings.large }}>
                         <TouchableOpacity
                             onPress={handleSelectAll}
                             style={{
@@ -864,7 +954,7 @@ const GenerateInvoiceScreen = ({ navigation,
                         >
                             <Text style={{ color: whiteColor }}>{selectAll ? "Deselect All" : "Select All"}</Text>
                         </TouchableOpacity>
-                    </View>
+                    </View>}
                     <FlatList
                         data={filteredVehicles}
                         keyExtractor={(item, index) => index.toString()}
@@ -1028,11 +1118,18 @@ const GenerateInvoiceScreen = ({ navigation,
 
             {selectedVehicles.length > 0 && <View style={{ position: "absolute", bottom: 0, backgroundColor: whiteColor, width: wp(100), flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: spacings.large }}>
                 <CustomButton
+                    title={"Export"}
+                    loading={isExportLoading}
+                    disabled={isExportLoading}
+                    onPress={handleExportCSV}
+                    style={{ width: "28%", marginBottom: 0 }}
+                />
+                <CustomButton
                     title={"Print"}
                     loading={isLoading}
                     disabled={isLoading}
                     onPress={handleExport}
-                    style={{ width: "48%", marginBottom: 0 }}
+                    style={{ width: "28%", marginBottom: 0 }}
                 />
 
                 <CustomButton
@@ -1056,7 +1153,7 @@ const GenerateInvoiceScreen = ({ navigation,
                         setSelectedDate(null);
                         setShowDateModal(true);
                     }}
-                    style={{ width: "48%", marginBottom: 0 }}
+                    style={{ width: "40%", marginBottom: 0 }}
                 />
             </View>}
 

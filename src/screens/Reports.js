@@ -777,7 +777,7 @@ const Reports = ({ navigation }) => {
                     </View>
 
                     {/* FlatList for Jobs only */}
-                    <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(59.5) : hp(47) : isIOSAndTablet ? hp(58) : hp(44.5) }}>
+                    <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(59.5) : hp(50) : isIOSAndTablet ? hp(60) : hp(45.5)}}>
                         <FlatList
                             data={filteredJobs}
                             keyExtractor={(item, index) => item?.jobName || index.toString()}
@@ -837,7 +837,7 @@ const Reports = ({ navigation }) => {
 
             {/* WorkOrders */}
             {activeTab === 'WorkOrders' && viewType === 'grid' ? (
-                <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(62.5) : hp(53) : isIOSAndTablet ? hp(61) : hp(49) }}>
+                <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(62.5) : hp(55) : isIOSAndTablet ? hp(62) : hp(49) }}>
                     <FlatList
                         data={filteredWorkOrders}
                         keyExtractor={(item, index) => index.toString()}
@@ -952,7 +952,7 @@ const Reports = ({ navigation }) => {
 
                 </View>
             ) : activeTab === 'WorkOrders' && viewType === 'list' ? (
-                <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(62.5) : hp(53) : isIOSAndTablet ? hp(60) : hp(49) }}>
+                <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(62.5) : hp(54) : isIOSAndTablet ? hp(62) : hp(49) }}>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                         <View>
                             {/* Header Row */}
@@ -1027,12 +1027,14 @@ const Reports = ({ navigation }) => {
                                                     })}>
                                                         <Text style={styles.viewText}>View</Text>
                                                     </Pressable>
-                                                    {activeStatus != 'Completed' && <Pressable
+                                                    {/* {activeStatus != 'Completed' &&  */}
+                                                    <Pressable
                                                         onPress={() => navigation.navigate("WorkOrderScreenTwo", {
                                                             vehicleId: item.id,
                                                         })}>
                                                         <Text style={styles.viewText}>Edit</Text>
-                                                    </Pressable>}
+                                                    </Pressable>
+                                                    {/* } */}
                                                 </View>
                                             </Pressable>
                                         );
@@ -1075,7 +1077,7 @@ const Reports = ({ navigation }) => {
 
                     </View>
 
-                    <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(69) : hp(63) : isIOSAndTablet ? hp(67) : hp(57) }}>
+                    <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(69) : hp(64) : isIOSAndTablet ? hp(69) : hp(58)}}>
                         <FlatList
                             data={filteredCustomer}
                             keyExtractor={(item, index) => item?.vin || index.toString()}

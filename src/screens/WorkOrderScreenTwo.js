@@ -197,7 +197,7 @@ const WorkOrderScreenTwo = ({ route }) => {
         }, [])
     );
 
- 
+
 
     //Vin
     useEffect(() => {
@@ -463,10 +463,10 @@ const WorkOrderScreenTwo = ({ route }) => {
 
     // Function to handle submit job
     const handleSubmitJob = async (shouldNavigate = false, setLoaderFn) => {
-        if (!selectedColor) {
-            setSelectedColorError("Please select a color");
-            return;
-        }
+        // if (!selectedColor) {
+        //     setSelectedColorError("Please select a color");
+        //     return;
+        // }
 
         // console.log("finalFlatRate", finalFlatRate);
 
@@ -616,8 +616,12 @@ const WorkOrderScreenTwo = ({ route }) => {
                     Toast.show((route?.params?.vehicleId) ? "Vehicle update successfully!" : "Vehicle add successfully!");
                 } else {
                     resetForm();
-                    setStep(1);
-                    setLoaderFn(false);
+                    // setStep(1);
+                    // setLoaderFn(false);
+                    navigation.navigate('ScannerScreen', {
+                        from: "scanNext"
+                    });
+
                     if (route?.params?.vehicleId) {
                         Toast.show("Vehicle update successfully!");
                     }
@@ -1140,14 +1144,16 @@ const WorkOrderScreenTwo = ({ route }) => {
                             {((carDetails && carDetails.length > 0) || route?.params?.vehicleId) && (
                                 <>
                                     {/* vechilecolor */}
-                                    <Text style={[styles.label, { marginTop: 5 }]}>Vehicle Color <Text style={{ color: "red" }}>*</Text></Text>
+                                    <Text style={[styles.label, { marginTop: 5 }]}>Vehicle Color
+                                        {/* <Text style={{ color: "red" }}>*</Text> */}
+                                    </Text>
                                     <DropDownPicker
                                         open={open}
                                         value={selectedColor}
                                         items={dropdownItems}
                                         setOpen={(val) => {
                                             if (val) {
-                                                Keyboard.dismiss(); // Keyboard ko close kar do jab dropdown open ho
+                                                Keyboard.dismiss(); 
                                             }
                                             setOpen(val);
                                         }} setValue={(val) => {
@@ -1172,8 +1178,6 @@ const WorkOrderScreenTwo = ({ route }) => {
                                         listMode="SCROLLVIEW"
                                     />
                                     {selectedColorError && <Text style={{ color: 'red' }}>{selectedColorError}</Text>}
-
-
 
                                     {/* Work Description */}
                                     <View style={{ marginTop: spacings.large }}>
@@ -1285,7 +1289,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                             open={isStartPickerOpen}
                                             // date={startDate}
                                             date={startDate || new Date()}
-                                            mode="datetime"
+                                            mode="date"
                                             // maximumDate={new Date()}
                                             onConfirm={(date) => {
                                                 setStartDate(date);
@@ -1299,7 +1303,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                             open={isEndPickerOpen}
                                             // date={endDate}
                                             date={endDate || new Date()}
-                                            mode="datetime"
+                                            mode="date"
                                             minimumDate={startDate}
                                             // maximumDate={new Date()}
                                             onConfirm={(date) => {
@@ -1493,6 +1497,12 @@ const WorkOrderScreenTwo = ({ route }) => {
                                         {!route?.params?.vehicleId && <CustomButton
                                             title="Scan Next VIN"
                                             onPress={() => handleSubmitJob(false, setScanLoading)}
+                                            //     onPress={() => {
+                                            // // Navigate only if customer is selected
+                                            // setVin("");
+                                            // setCarDetails(null);
+                                            // navigation.navigate('ScannerScreen');
+                                            // }}
                                             loading={scanLoading}
                                             style={{ width: wp(50) }}
                                             disabled={submitLoading || scanLoading}

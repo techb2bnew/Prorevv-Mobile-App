@@ -86,8 +86,8 @@ const HomeScreen = ({ navigation }) => {
       iconName: technicianType === "ifs" ? "qr-code-scanner" : "add",
     },
     {
-      name: technicianType === "ifs" ? "Vin List" : "Add Vehicle",
-      subtitle: technicianType === "ifs" ? "Browse saved VINs" : "Attach a vehicle to customer",
+      name: technicianType === "ifs" ? "Vin List" : "Assigned Jobs",
+      subtitle: technicianType === "ifs" ? "Browse saved VINs" : "Manage assigned Jobs",
       image: technicianType === "ifs" ? VIN_LIST_IMAGE : ADD_VEHICLE_IMAGE,
       backgroundColor: whiteColor,
       color: '#155DFC',
@@ -202,7 +202,6 @@ const HomeScreen = ({ navigation }) => {
     }, [technicianId])
   );
 
-
   const fetchDashboardCount = async (page = 1) => {
     try {
       const token = await AsyncStorage.getItem("auth_token");
@@ -258,8 +257,6 @@ const HomeScreen = ({ navigation }) => {
       console.error("Network error:::::::", error);
     }
   };
-
-
 
   const fetchCustomers = async (pageNum = 1) => {
     try {
@@ -481,7 +478,7 @@ const HomeScreen = ({ navigation }) => {
   // );
   const renderCard = ({ item, index }) => (
     <View style={styles.shadowWrapper}>
-      <TouchableOpacity
+      <Pressable
         style={[styles.innerCard, { backgroundColor: item.backgroundColor }]}
         onPress={item?.onPress}
       >
@@ -574,7 +571,7 @@ const HomeScreen = ({ navigation }) => {
             />
           </View>
         </View>
-      </TouchableOpacity>
+      </Pressable>
     </View>
   );
 
@@ -657,12 +654,12 @@ const HomeScreen = ({ navigation }) => {
         </Pressable>
       </View> */}
       <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={{ marginBottom: isTablet ? hp(9) : hp(11) }}>
+        <View style={{ marginBottom: isTablet ? hp(9) : Platform.OS === "android" ? hp(18) : hp(11) }}>
           <ImageBackground source={HEADER_BACKGROUND} style={{ resizeMode: "conatin", height: isTablet ? hp(20) : hp(30) }}>
             <View style={styles.header}>
               <Image source={APP_NAME_IMAGE} style={[styles.profileImage, { resizeMode: "contain" }]} />
               <View>
-                <Text style={styles.greeting}>Hi, {capitalizetext(technicianName)}</Text>
+                <Text style={styles.greeting}>Hi {capitalizetext(technicianName)}</Text>
                 <Text style={styles.subtitle}>Manage your garage with ease</Text>
               </View>
               {technicianType === "single-technician" && <Pressable
@@ -707,7 +704,6 @@ const HomeScreen = ({ navigation }) => {
                 <MaterialIcons name="qr-code-scanner" size={24} color="#252837" />
               </View>
             </Pressable>
-
 
             <View style={styles.totalOverview}>
               <Text style={[styles.greeting, { color: blackColor }]}>Total Overview</Text>

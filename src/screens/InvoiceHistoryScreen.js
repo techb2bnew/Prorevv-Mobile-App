@@ -237,6 +237,7 @@ const InvoiceHistoryScreen = ({ navigation,
         }
     };
 
+
     return (
         <View style={[flex, styles.container]}>
             {/* Header */}
@@ -298,7 +299,7 @@ const InvoiceHistoryScreen = ({ navigation,
                 </View>
             </View>
 
-            {viewType === 'list' && <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(82.5) : hp(77) : isIOSAndTablet ? hp(80) : hp(73), paddingBottom: selectedVehicles?.length > 0 ? hp(8) : 0 }}>
+            {viewType === 'list' && <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(82.5) : hp(77) : isIOSAndTablet ? hp(82) : hp(73), paddingBottom: selectedVehicles?.length > 0 ? hp(8) : 0 }}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                     <View>
                         {/* Header Row */}
@@ -524,7 +525,7 @@ const InvoiceHistoryScreen = ({ navigation,
             />
 
             {viewType === 'grid' && (
-                <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(82.5) : hp(79) : isIOSAndTablet ? hp(81) : hp(73), paddingBottom: selectedVehicles?.length > 0 ? hp(8) : 0 }}>
+                <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(82.5) : hp(79) : isIOSAndTablet ? hp(82) : hp(73), paddingBottom: selectedVehicles?.length > 0 ? hp(8) : 0}}>
                     <FlatList
                         data={filteredVehicles}
                         keyExtractor={(item, index) => index.toString()}

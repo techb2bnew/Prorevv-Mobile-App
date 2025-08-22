@@ -48,7 +48,15 @@ const ScannerScreen = ({ navigation, route }) => {
           Toast.show('Please scan a valid VIN number.');
           navigation.goBack();
         }
-      } else {
+      } else if (result.resultStatus === EnumResultStatus.RS_CANCELED) {
+        console.log("Scanner closed by user");
+        if (fromScreen === 'scanNext') {
+          navigation.navigate('Home');
+        } else {
+          navigation.goBack();
+        }
+      } 
+      else {
         navigation.goBack();
       }
     } catch (error) {
@@ -62,7 +70,9 @@ const ScannerScreen = ({ navigation, route }) => {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
+        <Pressable
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}>
           <Ionicons name="arrow-back" size={30} color={blackColor} />
         </Pressable>
         <Text style={styles.headerTitle}>Scan Vehicle</Text>

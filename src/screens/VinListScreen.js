@@ -415,8 +415,8 @@ const VinListScreen = ({ navigation, route }) => {
 
 
     const finalVehicleList = React.useMemo(() => {
-        console.log("vehicleData",vehicleData);
-        
+        console.log("vehicleData", vehicleData);
+
         const baseData = selectedJobId ? selectedJobVehicles : vehicleData;
 
         // Step 1: Apply search filter
@@ -664,7 +664,7 @@ const VinListScreen = ({ navigation, route }) => {
 
                     </View>
 
-                    <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(62) : hp(44) : isIOSAndTablet ? hp(60) : hp(43) }}>
+                    <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(62) : hp(45) : isIOSAndTablet ? hp(62) : hp(43)}}>
                         <FlatList
                             // data={selectedJobId ? selectedJobVehicles : filteredData}
                             data={finalVehicleList}
@@ -731,16 +731,16 @@ const VinListScreen = ({ navigation, route }) => {
                                             })}>
                                                 <Text style={styles.viewText}>View</Text>
                                             </Pressable>
-                                            {item.vehicleStatus !== true && (
-                                                <Pressable
-                                                    onPress={() =>
-                                                        navigation.navigate("WorkOrderScreenTwo", {
-                                                            vehicleId: item.id,
-                                                        })
-                                                    }>
-                                                    <Text style={styles.viewText}>Edit</Text>
-                                                </Pressable>
-                                            )}
+                                            {/* {item.vehicleStatus !== true && ( */}
+                                            <Pressable
+                                                onPress={() =>
+                                                    navigation.navigate("WorkOrderScreenTwo", {
+                                                        vehicleId: item.id,
+                                                    })
+                                                }>
+                                                <Text style={styles.viewText}>Edit</Text>
+                                            </Pressable>
+                                            {/* )} */}
                                         </View>
                                     </Pressable>
                                 );
@@ -774,7 +774,7 @@ const VinListScreen = ({ navigation, route }) => {
                 </View>
             </ScrollView>}
 
-            {viewType === "grid" && <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(65) : hp(50) : isIOSAndTablet ? hp(63) : hp(48) }}>
+            {viewType === "grid" && <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(65) : hp(52) : isIOSAndTablet ? hp(63) : hp(48) }}>
                 <FlatList
                     // data={selectedJobId ? selectedJobVehicles : filteredData}
                     data={finalVehicleList}
@@ -799,7 +799,8 @@ const VinListScreen = ({ navigation, route }) => {
                             })}
                         >
                             <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-                                {item.vehicleStatus !== true && (<Pressable
+                                {/* {item.vehicleStatus !== true && ( */}
+                                <Pressable
                                     onPress={() => navigation.navigate("WorkOrderScreenTwo", {
                                         vehicleId: item.id,
                                     })}
@@ -807,7 +808,8 @@ const VinListScreen = ({ navigation, route }) => {
                                     {/* <Text style={styles.viewText}>Edit</Text> */}
                                     <AntDesign name="edit" size={20} color={blackColor} />
 
-                                </Pressable>)}
+                                </Pressable>
+                                {/* )} */}
                                 <View style={{ width: '48%', marginBottom: 10 }}>
                                     <Text style={{ color: '#555', fontSize: 11 }}>JobName</Text>
                                     <Text>{item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}</Text>

@@ -1037,7 +1037,7 @@ const CreateJobScreen = ({ route }) => {
                                         open={isStartPickerOpen}
                                         // date={startDate}
                                         date={startDate || new Date()}  // Avoid showing today's date if no endDate selected
-                                        mode="datetime"
+                                        mode="date"
                                         onConfirm={(date) => {
                                             setStartDate(date);
                                             setIsStartPickerOpen(false);
@@ -1049,7 +1049,7 @@ const CreateJobScreen = ({ route }) => {
                                         modal
                                         open={isEndPickerOpen}
                                         date={endDate || new Date()}  // Avoid showing today's date if no endDate selected
-                                        mode="datetime"
+                                        mode="date"
                                         minimumDate={startDate}
                                         onConfirm={(date) => {
                                             const newEndDate = date;
