@@ -594,6 +594,7 @@ const CreateJobScreen = ({ route }) => {
                 estimatedCost: estimatedCost,
                 notes: notes
             };
+            console.log("req", requestBody);
 
             // ✅ If editing, include jobId and change endpoint
             const endpoint = route?.params?.jobId || editableJobId ? `${API_BASE_URL}/updateJob` : `${API_BASE_URL}/technicianCreateJob`;
@@ -633,7 +634,13 @@ const CreateJobScreen = ({ route }) => {
             setLoading(false);
         }
     };
+    useEffect(() => {
+        console.log("🚀 API Response Start Date:", jobDetails?.startDate);
+        console.log("🚀 API Response End Date:", jobDetails?.endDate);
 
+        setStartDate(jobDetails?.startDate ? new Date(jobDetails.startDate) : null);
+        setEndDate(jobDetails?.endDate ? new Date(jobDetails.endDate) : null);
+    }, [jobDetails]);
 
     return (
         <KeyboardAvoidingView
@@ -688,12 +695,12 @@ const CreateJobScreen = ({ route }) => {
                                     <View style={{ backgroundColor: whiteColor }}>
                                         {/* Table Header */}
                                         <View style={[styles.tableHeader, flexDirectionRow]}>
-                                            <Text style={[styles.tableHeaderText, { width: wp(40) }]}>Job Title</Text>
-                                            <Text style={[styles.tableHeaderText, { width: wp(40) }]}>Number of W.O</Text>
-                                            <Text style={[styles.tableHeaderText, { width: wp(40) }]}>Customer Name</Text>
-                                            <Text style={[styles.tableHeaderText, { width: wp(40) }]}>Estimated Cost</Text>
-                                            <Text style={[styles.tableHeaderText, { width: wp(40) }]}>Start Date</Text>
-                                            <Text style={[styles.tableHeaderText, { width: wp(40) }]}>End Date</Text>
+                                            <Text style={[styles.tableHeaderText, { width: wp(25) }]}>Job Title</Text>
+                                            <Text style={[styles.tableHeaderText, { width: wp(33) }]}>Number of W.O</Text>
+                                            <Text style={[styles.tableHeaderText, { width: wp(33) }]}>Customer Name</Text>
+                                            <Text style={[styles.tableHeaderText, { width: wp(33) }]}>Est Cost</Text>
+                                            <Text style={[styles.tableHeaderText, { width: wp(33) }]}>Start Date</Text>
+                                            <Text style={[styles.tableHeaderText, { width: wp(33) }]}>End Date</Text>
                                             <Text style={[styles.tableHeaderText, { width: wp(25) }]}>Action</Text>
                                         </View>
 
@@ -708,7 +715,7 @@ const CreateJobScreen = ({ route }) => {
                                                 data={jobsRawData}
                                                 keyExtractor={(item, index) => index.toString()}
                                                 renderItem={({ item, index }) => (
-                                                    <View
+                                                    <Pressable
                                                         style={[
                                                             styles.tableRow,
                                                             flexDirectionRow,
@@ -716,26 +723,29 @@ const CreateJobScreen = ({ route }) => {
                                                                 backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor,
                                                             },
                                                         ]}
+                                                        onPress={() => navigation.navigate("NewJobDetailsScreen", {
+                                                            jobId: item?.id
+                                                        })}
                                                     >
-                                                        <Text style={[styles.tableText, { width: wp(50) }]}>{capitalize(item.jobName) || '—'}</Text>
-                                                        <Text style={[styles.tableText, { width: wp(30) }]}>{item?.vehicles?.length}</Text>
-                                                        <Text style={[styles.tableText, { width: wp(40) }]}>{capitalize(item.customer?.fullName) || '—'}</Text>
-                                                        <Text style={[styles.tableText, { width: wp(40) }]}>
+                                                        <Text style={[styles.tableText, { width: wp(30), paddingRight: spacings.large }]}>{capitalize(item.jobName) || '—'}</Text>
+                                                        <Text style={[styles.tableText, { width: wp(30), paddingLeft: spacings.large }]}>{item?.vehicles?.length}</Text>
+                                                        <Text style={[styles.tableText, { width: wp(35) }]}>{capitalize(item.customer?.fullName) || '—'}</Text>
+                                                        <Text style={[styles.tableText, { width: wp(30) }]}>
                                                             {item.estimatedCost ? `$${item.estimatedCost}` : '—'}
                                                         </Text>
-                                                        <Text style={[styles.tableText, { width: wp(40) }]}>
+                                                        <Text style={[styles.tableText, { width: wp(33) }]}>
                                                             {item.startDate
                                                                 ? new Date(item.startDate).toLocaleDateString('en-US', {
-                                                                    month: 'long',
+                                                                    month: 'short',
                                                                     day: '2-digit',
                                                                     year: 'numeric',
                                                                 })
                                                                 : '—'}
                                                         </Text>
-                                                        <Text style={[styles.tableText, { width: wp(40) }]}>
+                                                        <Text style={[styles.tableText, { width: wp(33) }]}>
                                                             {item.endDate
                                                                 ? new Date(item.endDate).toLocaleDateString('en-US', {
-                                                                    month: 'long',
+                                                                    month: 'short',
                                                                     day: '2-digit',
                                                                     year: 'numeric',
                                                                 })
@@ -753,7 +763,7 @@ const CreateJobScreen = ({ route }) => {
                                                         }}>
                                                             <Text style={styles.viewText}>Edit</Text>
                                                         </Pressable>)}
-                                                    </View>
+                                                    </Pressable>
                                                 )}
                                                 onEndReached={() => {
                                                     if (!isJobLoading && hasMoreJob) {
@@ -1012,21 +1022,25 @@ const CreateJobScreen = ({ route }) => {
                                     <View style={[styles.datePickerContainer]}>
                                         <TouchableOpacity onPress={() => setIsStartPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter]}>
                                             <Text style={styles.dateText}>
-                                                {startDate ? startDate.toLocaleDateString("en-US", {
-                                                    month: "long",
-                                                    day: "numeric",
-                                                    year: "numeric",
-                                                }) : "Select Start Date"}
+                                                {startDate !== null && startDate !== undefined && startDate !== "null"
+                                                    ? new Date(startDate).toLocaleDateString("en-US", {
+                                                        month: "short",
+                                                        day: "numeric",
+                                                        year: "numeric",
+                                                    })
+                                                    : "Select Start Date"}
                                             </Text>
                                             <Feather name="calendar" size={20} color={blackColor} />
                                         </TouchableOpacity>
                                         <TouchableOpacity onPress={() => setIsEndPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter]}>
                                             <Text style={styles.dateText}>
-                                                {endDate ? endDate.toLocaleDateString("en-US", {
-                                                    month: "long",
-                                                    day: "numeric",
-                                                    year: "numeric",
-                                                }) : "Select End Date"}
+                                                {endDate !== null && endDate !== undefined && endDate !== "null"
+                                                    ? new Date(endDate).toLocaleDateString("en-US", {
+                                                        month: "short",
+                                                        day: "numeric",
+                                                        year: "numeric",
+                                                    })
+                                                    : "Select End Date"}
                                             </Text>
                                             <Feather name="calendar" size={20} color={blackColor} />
                                         </TouchableOpacity>
@@ -1036,7 +1050,7 @@ const CreateJobScreen = ({ route }) => {
                                         modal
                                         open={isStartPickerOpen}
                                         // date={startDate}
-                                        date={startDate || new Date()}  // Avoid showing today's date if no endDate selected
+                                        date={startDate ? new Date(startDate) : new Date()}
                                         mode="date"
                                         onConfirm={(date) => {
                                             setStartDate(date);
@@ -1048,7 +1062,8 @@ const CreateJobScreen = ({ route }) => {
                                     <DatePicker
                                         modal
                                         open={isEndPickerOpen}
-                                        date={endDate || new Date()}  // Avoid showing today's date if no endDate selected
+                                        date={endDate ? new Date(endDate) : new Date()}
+                                        // date={endDate || new Date()}  // Avoid showing today's date if no endDate selected
                                         mode="date"
                                         minimumDate={startDate}
                                         onConfirm={(date) => {

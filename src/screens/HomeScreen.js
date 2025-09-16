@@ -33,13 +33,14 @@ const HomeScreen = ({ navigation }) => {
   const isTablet = width >= 668 && height >= 1024;
   const isIOSAndTablet = Platform.OS === "ios" && isTablet;
   const [dashboardData, setDashboardData] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   const cardData = [
     {
       name: technicianType === "ifs" ? "View Jobs" : "Add Customer",
       subtitle: technicianType === "ifs" ? "See all assigned jobs" : "Create a new customer",
       image: technicianType === "ifs" ? NEW_WORK_ORDER_IMAGE : NEW_CLIENT_IMAGE,
-      backgroundColor: blueColor,
+      backgroundColor: whiteColor,
       onPress: () => {
         if (technicianType === "ifs") {
           navigation.navigate("WorkOrderScreen");
@@ -51,9 +52,10 @@ const HomeScreen = ({ navigation }) => {
       backgroundImage: isTablet ? ADD_CASTUMER_TAB_BACK_IMAGE : ADD_CASTUMER_BACK_IMAGE,
       iconComponent: technicianType === "ifs" ? Feather : Ionicons,
       iconName: technicianType === "ifs" ? "file-text" : "person-add-outline",
+      color: '#fb0105ff',
     },
     {
-      name: technicianType === "ifs" ? "Scan Vin" : "Create Jobs",
+      name: technicianType === "ifs" ? "Scan Vin" : "Manage Jobs",
       subtitle: technicianType === "ifs" ? "Scan VIN number" : "Start a new job",
       image: technicianType === "ifs" ? CIRLE_SCANNER_IMAGE : NEW_WORK_ORDER_IMAGE,
       backgroundColor: whiteColor,
@@ -86,8 +88,8 @@ const HomeScreen = ({ navigation }) => {
       iconName: technicianType === "ifs" ? "qr-code-scanner" : "add",
     },
     {
-      name: technicianType === "ifs" ? "Vin List" : "Assigned Jobs",
-      subtitle: technicianType === "ifs" ? "Browse saved VINs" : "Manage assigned Jobs",
+      name: technicianType === "ifs" ? "Vin List" : "Assign Jobs",
+      subtitle: technicianType === "ifs" ? "Browse saved VINs" : "Manage assign Jobs",
       image: technicianType === "ifs" ? VIN_LIST_IMAGE : ADD_VEHICLE_IMAGE,
       backgroundColor: whiteColor,
       color: '#155DFC',
@@ -518,7 +520,7 @@ const HomeScreen = ({ navigation }) => {
                 height: wp(12),
                 borderRadius: 8,
                 marginRight: spacings.xxLarge,
-                backgroundColor: (index === 0 ? '#cacaca58' : item?.color),
+                backgroundColor: (item?.color),
                 borderColor: "#fff",
                 borderWidth: 0.5,
                 alignItems: "center",
@@ -535,7 +537,7 @@ const HomeScreen = ({ navigation }) => {
               <Text
                 style={[
                   styles.actionTitle,
-                  { color: item.backgroundColor === blueColor ? whiteColor : blackColor }
+                  { color: item.backgroundColor === blueColor ? whiteColor : blackColor, fontSize: isIOSAndTablet ? 20 : 16 }
                 ]}
               >
                 {item.name}
@@ -543,7 +545,7 @@ const HomeScreen = ({ navigation }) => {
               <Text
                 style={[
                   styles.actionSubtitle,
-                  { color: item.backgroundColor === blueColor ? whiteColor : blackColor }
+                  { color: item.backgroundColor === blueColor ? whiteColor : blackColor, fontSize: isIOSAndTablet ? 16 : 13 }
                 ]}
               >
                 {item.subtitle}
@@ -567,7 +569,7 @@ const HomeScreen = ({ navigation }) => {
             <Feather
               name="arrow-right"
               size={20}
-              color={index === 0 ? '#fff' : item?.color}
+              color={item?.color}
             />
           </View>
         </View>
@@ -578,177 +580,253 @@ const HomeScreen = ({ navigation }) => {
 
   return (
     <View style={[styles.container, flex]}>
-      {/* <View style={[styles.logoContainer, alignItemsCenter, {
-        height: Platform.OS === "android" ? isTablet ? hp(12) : hp(17) : isIOSAndTablet ? hp(12) : hp(14),
-      }]}>
-        <Text style={[styles.title, textAlign]}>Hi, {capitalizetext(technicianName)}</Text>
-        {technicianType === "single-technician" && <Pressable
-          onPress={() => navigation.navigate("ProfileStackScreen")}
-          style={{
-            borderRadius: 30,
-            position: "absolute",
-            right: 10,
-            top: 10,
-          }}
-        >
-          <Feather name="user" size={30} color={whiteColor} />
-        </Pressable>}
-        <Pressable style={[styles.searchTextInput, { height: isTablet ? hp(4) : hp(4.8), }]}
-          onPress={async () => {
-            if (technicianType === "ifs") {
-              try {
-                const currentJob = await AsyncStorage.getItem("current_Job");
-
-                if (ifscustomers.length === 0) {
-                  Toast.show("You don't have any assigned job currently.");
-                } else if (!currentJob) {
-                  Toast.show("Please select a job from the jobs page first.");
-                } else {
-                  navigation.navigate("ScannerScreen", {
-                    from: "VinList"
-                  });
-                }
-              } catch (error) {
-                console.error("Error checking current job:", error);
-              }
-            } else {
-              navigation.navigate("ScannerScreen", {
-                from: "VinList"
-              });
-            }
-          }}
-        >
-          <View style={[styles.input, { flexDirection: "row", alignItems: "center", justifyContent: "space-between" }]}>
-            <Text style={{ color: grayColor }}>Search By Scan VIN</Text>
-            <AntDesign name="scan1" size={24} color="#252837" />
-          </View>
-        </Pressable>
-      </View>
-
-      <View style={{ width: "100%", height: "55%", marginTop: 20, paddingHorizontal: spacings.large }}>
-        <FlatList
-          data={cardData}
-          renderItem={renderItem}
-          keyExtractor={(item, index) => index.toString()}
-          numColumns={2}
-          showsVerticalScrollIndicator={false}
-          scrollEnabled={false}
-        />
-
-        <Pressable style={[styles.logoCircle, {
-          top: Platform.OS === "android" ? (isTablet ? hp(21.5) : hp(17.5)) : isTablet ? hp(12) : hp(15.8),
-          left: Platform.OS === "android" ? (isTablet ? wp(39) : wp(39.5)) : isTablet ? wp(38) : wp(39.4),
-        }]}
-        >
-          <Image
-            source={APP_NAME_IMAGE}
-            style={[
-              styles.logo,
-              (Platform.OS === "ios" && isTablet) && {
-                borderWidth: 8,
-                borderColor: whiteColor,
-                borderRadius: 1000,
-              }
-            ]}
-          />
-        </Pressable>
-      </View> */}
       <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={{ marginBottom: isTablet ? hp(9) : Platform.OS === "android" ? hp(18) : hp(11) }}>
-          <ImageBackground source={HEADER_BACKGROUND} style={{ resizeMode: "conatin", height: isTablet ? hp(20) : hp(30) }}>
-            <View style={styles.header}>
-              <Image source={APP_NAME_IMAGE} style={[styles.profileImage, { resizeMode: "contain" }]} />
-              <View>
-                <Text style={styles.greeting}>Hi {capitalizetext(technicianName)}</Text>
-                <Text style={styles.subtitle}>Manage your garage with ease</Text>
-              </View>
-              {technicianType === "single-technician" && <Pressable
-                onPress={() => navigation.navigate("ProfileStackScreen")}
-                style={{
-                  borderRadius: 30,
-                  position: "absolute",
-                  right: 10,
-                  top: 15,
+        <View style={{ marginBottom: isTablet ? hp(5) : Platform.OS === "android" ? hp(7) : hp(5) }}>
+          <ImageBackground source={HEADER_BACKGROUND} style={{
+            resizeMode: "contain",
+            height: isIOSAndTablet
+              ? !isSearching
+                ? hp(18)
+                : hp(25)
+              : isTablet
+                ? !isSearching
+                  ? hp(15.5)
+                  : hp(21)
+                : !isSearching
+                  ? hp(22)
+                  : hp(30),
+            backgroundColor: !isTablet && Platform.OS === "ios" ? blueColor : "transparent"
+          }}>
+            <View style={[styles.header, { justifyContent: "space-between" }]}>
+              {/* Left side */}
+              {technicianType === "single-technician" ? (
+                isSearching ? (
+                  // 🔙 Back button
+                  <Pressable
+                    onPress={() => setIsSearching(false)}
+                    style={{
+                      borderRadius: 10,
+                      backgroundColor: "#cacaca58",
+                      borderColor: "#fff",
+                      borderWidth: 0.5,
+                      padding: spacings.large,
+                    }}
+                  >
+                    <Feather name="arrow-left" size={25} color={whiteColor} />
+                  </Pressable>
+                ) : (
+                  // 👤 Profile button
+                  <Pressable
+                    onPress={() => navigation.navigate("ProfileStackScreen")}
+                    style={{
+                      borderRadius: 10,
+                      backgroundColor: "#cacaca58",
+                      borderColor: "#fff",
+                      borderWidth: 0.5,
+                      padding: spacings.large,
+                    }}
+                  >
+                    <Feather name="user" size={25} color={whiteColor} />
+                  </Pressable>
+                )
+              ) : (
+                // 👇 Not single tech → search mode me Back button left me
+                isSearching ? (
+                  <Pressable
+                    onPress={() => setIsSearching(false)}
+                    style={{
+                      borderRadius: 10,
+                      backgroundColor: "#cacaca58",
+                      borderColor: "#fff",
+                      borderWidth: 0.5,
+                      padding: spacings.large,
+                    }}
+                  >
+                    <Feather name="arrow-left" size={25} color={whiteColor} />
+                  </Pressable>
+                ) : (
+                  <View style={{ width: 50 }} /> // default empty
+                )
+              )}
+
+              {/* Center logo */}
+              <Image
+                source={APP_NAME_IMAGE}
+                style={[styles.profileImage, { resizeMode: "contain", width: isIOSAndTablet ? 80 : 50, height: isIOSAndTablet ? 80 : 50 }]}
+              />
+
+              {/* Right side */}
+              {technicianType === "single-technician" ? (
+                isSearching ? (
+                  // 👤 Profile (when searching)
+                  <Pressable
+                    onPress={() => navigation.navigate("ProfileStackScreen")}
+                    style={{
+                      borderRadius: 10,
+                      backgroundColor: "#cacaca58",
+                      borderColor: "#fff",
+                      borderWidth: 0.5,
+                      padding: spacings.large,
+                    }}
+                  >
+                    <Feather name="user" size={25} color={whiteColor} />
+                  </Pressable>
+                ) : (
+                  // 🔍 Search
+                  <Pressable
+                    onPress={() => setIsSearching(true)}
+                    style={{
+                      borderRadius: 10,
+                      backgroundColor: "#cacaca58",
+                      borderColor: "#fff",
+                      borderWidth: 0.5,
+                      padding: spacings.large,
+                    }}
+                  >
+                    <Feather name="search" size={25} color={whiteColor} />
+                  </Pressable>
+                )
+              ) : (
+                // 👇 Not single tech → search mode me right side empty
+                isSearching ? (
+                  <View style={{ width: 50 }} />
+                ) : (
+                  // Default → Search icon
+                  <Pressable
+                    onPress={() => setIsSearching(true)}
+                    style={{
+                      borderRadius: 10,
+                      backgroundColor: "#cacaca58",
+                      borderColor: "#fff",
+                      borderWidth: 0.5,
+                      padding: spacings.large,
+                    }}
+                  >
+                    <Feather name="search" size={25} color={whiteColor} />
+                  </Pressable>
+                )
+              )}
+            </View>
+
+            {isSearching && (
+              <Pressable style={[styles.searchTextInput, { height: isTablet ? hp(4) : hp(4.8), }]}
+                onPress={async () => {
+                  if (technicianType === "ifs") {
+                    try {
+                      const currentJob = await AsyncStorage.getItem("current_Job");
+
+                      if (ifscustomers.length === 0) {
+                        Toast.show("You don't have any assigned job currently.");
+                      } else if (!currentJob) {
+                        Toast.show("Please select a job from the jobs page first.");
+                      } else {
+                        navigation.navigate("ScannerScreen", {
+                          from: "VinList"
+                        });
+                      }
+                    } catch (error) {
+                      console.error("Error checking current job:", error);
+                    }
+                  } else {
+                    navigation.navigate("ScannerScreen", {
+                      from: "VinList"
+                    });
+                  }
                 }}
               >
-                <Feather name="user" size={30} color={whiteColor} />
-              </Pressable>}
-            </View>
-            <Pressable style={[styles.searchTextInput, { height: isTablet ? hp(4) : hp(4.8), }]}
-              onPress={async () => {
-                if (technicianType === "ifs") {
-                  try {
-                    const currentJob = await AsyncStorage.getItem("current_Job");
-
-                    if (ifscustomers.length === 0) {
-                      Toast.show("You don't have any assigned job currently.");
-                    } else if (!currentJob) {
-                      Toast.show("Please select a job from the jobs page first.");
-                    } else {
-                      navigation.navigate("ScannerScreen", {
-                        from: "VinList"
-                      });
-                    }
-                  } catch (error) {
-                    console.error("Error checking current job:", error);
-                  }
-                } else {
-                  navigation.navigate("ScannerScreen", {
-                    from: "VinList"
-                  });
-                }
-              }}
-            >
-              <View style={[styles.input, { flexDirection: "row", alignItems: "center", justifyContent: "space-between" }]}>
-                <Text style={{ color: grayColor }}>Search By Scan VIN</Text>
-                <MaterialIcons name="qr-code-scanner" size={24} color="#252837" />
-              </View>
-            </Pressable>
+                <View style={[styles.input, { flexDirection: "row", alignItems: "center", justifyContent: "space-between" }]}>
+                  <Text style={{ color: grayColor }}>Search By Scan VIN</Text>
+                  <MaterialIcons name="qr-code-scanner" size={24} color="#252837" />
+                </View>
+              </Pressable>)}
 
             <View style={styles.totalOverview}>
-              <Text style={[styles.greeting, { color: blackColor }]}>Total Overview</Text>
-              <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+              <Text style={[styles.greeting, {
+                color: blackColor,
+                textAlign: "center",
+                fontSize: isIOSAndTablet
+                  ? style.fontSizeMedium2x.fontSize
+                  : isTablet
+                    ? style.fontSizeMedium.fontSize
+                    : style.fontSizeNormal2x.fontSize,
+              }]}>
+                Total Overview
+              </Text>
+              <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: spacings.large }}>
                 {/* Active Jobs */}
                 <View style={styles.overviewCard}>
-                  <View style={styles.overviewCardIcon}>
+                  {/* <View style={styles.overviewCardIcon}>
                     <Ionicons name="bag-add-outline" size={25} color='#FF5733' />
-                  </View>
-                  <Text style={[styles.overviewNumber, { color: '#FF5733' }]}>
+                  </View> */}
+                  <Text style={[styles.overviewNumber, {
+                    color: '#FF5733',
+                    fontSize: isIOSAndTablet ? style.fontSizeMedium2x.fontSize : style.fontSizeNormal2x.fontSize
+                  }]}>
                     {technicianType === "manager"
                       ? (dashboardData?.jobsuperadmin ?? 0)
                       : (dashboardData?.AppJobCount ?? 0)}
                   </Text>
-                  <Text style={styles.overviewText}>Active Jobs</Text>
+                  <Text style={[styles.overviewText,
+                  {
+                    fontSize:
+                      isIOSAndTablet
+                        ? style.fontSizeMedium.fontSize
+                        : isTablet
+                          ? style.fontSizeNormal1x.fontSize
+                          : style.fontSizeSmall2x.fontSize,
+                  }]}>
+                    Active Jobs
+                  </Text>
                 </View>
 
                 {/* Customers */}
                 <View style={styles.overviewCard}>
-                  <View style={styles.overviewCardIcon}>
+                  {/* <View style={styles.overviewCardIcon}>
                     <Feather name="users" size={25} color='#28A745' />
-                  </View>
-                  <Text style={[styles.overviewNumber, { color: '#28A745' }]}>
+                  </View> */}
+                  <Text style={[styles.overviewNumber, {
+                    color: '#28A745',
+                    fontSize: isIOSAndTablet ? style.fontSizeMedium2x.fontSize : style.fontSizeNormal2x.fontSize
+                  }]}>
                     {technicianType === "manager"
                       ? (dashboardData?.Customersuperadmin ?? 0)
                       : (dashboardData?.AppCustomerCount ?? 0)}
                   </Text>
-                  <Text style={styles.overviewText}>Customers</Text>
+                  <Text style={[styles.overviewText,
+                  {
+                    fontSize:
+                      isIOSAndTablet
+                        ? style.fontSizeMedium.fontSize
+                        : isTablet
+                          ? style.fontSizeNormal1x.fontSize
+                          : style.fontSizeSmall2x.fontSize,
+                  }]}>Customers</Text>
                 </View>
 
                 {/* Vehicles */}
                 <View style={styles.overviewCard}>
-                  <View style={styles.overviewCardIcon}>
+                  {/* <View style={styles.overviewCardIcon}>
                     <Ionicons name="car-outline" size={25} color='#8A2BE2' />
-                  </View>
-                  <Text style={[styles.overviewNumber, { color: '#8A2BE2' }]}>
+                  </View> */}
+                  <Text style={[styles.overviewNumber, {
+                    color: '#8A2BE2', fontSize: isIOSAndTablet ? style.fontSizeMedium2x.fontSize : style.fontSizeNormal2x.fontSize
+                  }]}>
                     {technicianType === "manager"
                       ? (dashboardData?.Vehiclesuperadmin ?? 0)
                       : (dashboardData?.AppVehicleCount ?? 0)}
                   </Text>
-                  <Text style={styles.overviewText}>Vehicles</Text>
+                  <Text style={[styles.overviewText,
+                  {
+                    fontSize:
+                      isIOSAndTablet
+                        ? style.fontSizeMedium.fontSize
+                        : isTablet
+                          ? style.fontSizeNormal1x.fontSize
+                          : style.fontSizeSmall2x.fontSize,
+                  }]}>Vehicles</Text>
                 </View>
               </View>
             </View>
-            
           </ImageBackground>
         </View>
         <FlatList
@@ -769,41 +847,6 @@ const styles = StyleSheet.create({
     // padding: spacings.large,
     backgroundColor: whiteColor
   },
-  // logoContainer: {
-  //   backgroundColor: blueColor,
-  //   padding: spacings.large,
-  //   borderBottomLeftRadius: 30,
-  //   borderBottomRightRadius: 30
-  // },
-  // title: {
-  //   fontSize: style.fontSizeLarge1x.fontSize,
-  //   fontWeight: style.fontWeightMedium.fontWeight,
-  //   color: whiteColor,
-  // },
-  // card: {
-  //   width: wp(48),
-  //   margin: spacings.small,
-  //   height: Platform.OS === "android" ? hp(28) : hp(20),
-  //   resizeMode: "cover"
-  // },
-  // cardImage: {
-  //   width: wp(15),
-  //   height: hp(10),
-  // },
-  // cardText: {
-  //   fontSize: style.fontSizeNormal2x.fontSize,
-  //   fontWeight: style.fontWeightMedium.fontWeight,
-  // },
-  // logoCircle: {
-  //   position: 'absolute',
-  //   width: wp(12) * 2,
-  //   height: wp(12) * 2,
-  // },
-  // logo: {
-  //   width: '90%',
-  //   height: '90%',
-  //   borderRadius: 100,
-  // },
   searchTextInput: {
     flexDirection: 'row',
     backgroundColor: whiteColor,
@@ -832,10 +875,10 @@ const styles = StyleSheet.create({
     paddingTop: spacings.xxxLarge,
     borderBottomLeftRadius: 50,
     borderBottomRightRadius: 50,
+    alignItems: "center",
+    justifyContent: "center"
   },
   profileImage: {
-    width: 50,
-    height: 50,
     borderRadius: 8,
     marginRight: spacings.xxLarge,
     padding: spacings.small,

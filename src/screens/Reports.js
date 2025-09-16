@@ -646,7 +646,7 @@ const Reports = ({ navigation }) => {
                     <TouchableOpacity onPress={() => setIsStartPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter]}>
                         <Text style={styles.dateText}>
                             {startDate.toLocaleDateString("en-US", {
-                                month: "long",
+                                month: "short",
                                 day: "numeric",
                                 year: "numeric",
                             })}
@@ -657,7 +657,7 @@ const Reports = ({ navigation }) => {
                     <TouchableOpacity onPress={() => setIsEndPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter]}>
                         <Text style={styles.dateText}>
                             {endDate.toLocaleDateString("en-US", {
-                                month: "long",
+                                month: "short",
                                 day: "numeric",
                                 year: "numeric",
                             })}
@@ -797,7 +797,7 @@ const Reports = ({ navigation }) => {
                                             jobId: item?.id
                                         })}
                                     >
-                                        <Text style={[styles.text, { width: "49%" }]}>
+                                        <Text style={[styles.text, { width: "44%",paddingRight:spacings.xxxxLarge }]}>
                                             {item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}
                                         </Text>
                                         <Text style={[styles.text, { width: "30%" }]}>
@@ -995,14 +995,14 @@ const Reports = ({ navigation }) => {
                                                 </Text>}
                                                 <Text style={[styles.text, { width: wp(35) }]}> {item?.startDate
                                                     ? new Date(item?.startDate).toLocaleDateString("en-US", {
-                                                        month: "long",
+                                                        month: "short",
                                                         day: "numeric",
                                                         year: "numeric",
                                                     })
                                                     : "-"}</Text>
                                                 <Text style={[styles.text, { width: wp(35) }]}>{item?.endDate
                                                     ? new Date(item?.endDate).toLocaleDateString("en-US", {
-                                                        month: "long",
+                                                        month: "short",
                                                         day: "numeric",
                                                         year: "numeric",
                                                     })

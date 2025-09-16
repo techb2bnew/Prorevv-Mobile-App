@@ -740,8 +740,16 @@ const WorkOrderScreenTwo = ({ route }) => {
                     setSelectedJobId(data?.vehicle?.vehicle?.jobId)
                     setLabourCost(data?.vehicle?.vehicle?.labourCost)
                     setSelectedColor(data?.vehicle?.vehicle?.color)
-                    setStartDate(new Date(data?.vehicle?.vehicle?.startDate));
-                    setEndDate(new Date(data?.vehicle?.vehicle?.endDate));
+                    setStartDate(
+                        data?.vehicle?.vehicle?.startDate && data?.vehicle?.vehicle?.startDate !== "null"
+                            ? new Date(data.vehicle.vehicle.startDate)
+                            : null
+                    );
+                    setEndDate(
+                        data?.vehicle?.vehicle?.endDate && data?.vehicle?.vehicle?.endDate !== "null"
+                            ? new Date(data.vehicle.vehicle.endDate)
+                            : null
+                    ); 
                     setTechnicians(data?.vehicle?.vehicle?.assignedTechnicians);
                     setSelectedTechnicians(data?.vehicle?.vehicle?.assignedTechnicians);
                     setSelectedCustomer(data?.vehicle?.vehicle.customerId)
@@ -1153,7 +1161,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                         items={dropdownItems}
                                         setOpen={(val) => {
                                             if (val) {
-                                                Keyboard.dismiss(); 
+                                                Keyboard.dismiss();
                                             }
                                             setOpen(val);
                                         }} setValue={(val) => {
@@ -1240,10 +1248,10 @@ const WorkOrderScreenTwo = ({ route }) => {
                                     </View>
 
                                     {technicianType === "single-technician" && <View style={{ marginTop: spacings.xxLarge }}>
-                                        <Text style={styles.label}>R/I R/R (Labour/Service Cost)</Text>
+                                        <Text style={styles.label}>Job Override Cost</Text>
                                         <TextInput
                                             style={[styles.input, { height: isTablet ? hp(3.5) : hp(5.5), marginTop: 5 }]}
-                                            placeholder="Enter R/I R/R (Labour/Service Cost)"
+                                            placeholder="Job Override Cost"
                                             value={labourCost}
                                             onChangeText={setLabourCost}
                                             keyboardType="numeric"
@@ -1261,24 +1269,31 @@ const WorkOrderScreenTwo = ({ route }) => {
                                                 <Text style={styles.label}>End Date</Text>
                                             </View>
                                         </View>
+
+                                        {console.log("🚀 Rendering StartDate:", startDate)}
+                                        {console.log("🚀 Rendering EndDate:", endDate)}
                                         <View style={[styles.datePickerContainer, { marginBottom: 15, color: blackColor }]}>
                                             <TouchableOpacity onPress={() => setIsStartPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter]}>
                                                 <Text style={styles.dateText}>
-                                                    {startDate ? startDate.toLocaleDateString("en-US", {
-                                                        month: "long",
-                                                        day: "numeric",
-                                                        year: "numeric",
-                                                    }) : "Select Start Date"}
+                                                    {startDate && startDate instanceof Date && !isNaN(startDate.getTime())
+                                                        ? startDate.toLocaleDateString("en-US", {
+                                                            month: "short",
+                                                            day: "numeric",
+                                                            year: "numeric",
+                                                        })
+                                                        : "Select Start Date"}
                                                 </Text>
                                                 <Feather name="calendar" size={20} color={blackColor} />
                                             </TouchableOpacity>
                                             <TouchableOpacity onPress={() => setIsEndPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter]}>
                                                 <Text style={styles.dateText}>
-                                                    {endDate ? endDate.toLocaleDateString("en-US", {
-                                                        month: "long",
-                                                        day: "numeric",
-                                                        year: "numeric",
-                                                    }) : "Select End Date"}
+                                                    {endDate && typeof endDate === "object" && endDate instanceof Date && !isNaN(endDate)
+                                                        ? endDate.toLocaleDateString("en-US", {
+                                                            month: "short",
+                                                            day: "numeric",
+                                                            year: "numeric",
+                                                        })
+                                                        : "Select End Date"}
                                                 </Text>
                                                 <Feather name="calendar" size={20} color={blackColor} />
                                             </TouchableOpacity>
@@ -1288,7 +1303,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                             modal
                                             open={isStartPickerOpen}
                                             // date={startDate}
-                                            date={startDate || new Date()}
+                                            date={startDate ? new Date(startDate) : new Date()}
                                             mode="date"
                                             // maximumDate={new Date()}
                                             onConfirm={(date) => {
@@ -1302,7 +1317,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                             modal
                                             open={isEndPickerOpen}
                                             // date={endDate}
-                                            date={endDate || new Date()}
+                                            date={endDate ? new Date(endDate) : new Date()}
                                             mode="date"
                                             minimumDate={startDate}
                                             // maximumDate={new Date()}

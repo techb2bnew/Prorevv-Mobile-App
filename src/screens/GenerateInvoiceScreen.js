@@ -72,7 +72,7 @@ const GenerateInvoiceScreen = ({ navigation,
             setJobList([]);
             setSelectedVehicles([]);
             setSelectAll(false);
-
+            setWorkOrdersRawData([])
             fetchCustomers(1); // fresh customers + jobs fetch
         }, [])
     );
@@ -756,6 +756,11 @@ const GenerateInvoiceScreen = ({ navigation,
                     <Feather name="search" size={20} color={blueColor} />
                 </View>
             </View>
+            {/* {technicianType === 'single-technician' && <View style={{ flexDirection: "row", justifyContent: "space-between", width: "100%", paddingHorizontal: spacings.large }}>
+                <Text style={[styles.label, { fontSize: style.fontSizeNormal1x.fontSize }]}>Total Job Cost($)</Text>
+                <Text style={[styles.label, { fontSize: style.fontSizeNormal.fontSize }]}>5000</Text>
+            </View>}
+            */}
 
             {/* <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacings.large }}>
                 <TouchableOpacity
@@ -794,16 +799,16 @@ const GenerateInvoiceScreen = ({ navigation,
                                 />
                                 {/* <Text style={[styles.tableHeader, { marginLeft: 5 }]}>Select</Text> */}
                             </TouchableOpacity>
-                            <Text style={[styles.tableHeader, { width: wp(45) }]}>VIN</Text>
-                            <Text style={[styles.tableHeader, { width: wp(30) }]}>Make</Text>
+                            <Text style={[styles.tableHeader, { width: wp(43) }]}>VIN</Text>
+                            <Text style={[styles.tableHeader, { width: wp(25) }]}>Make</Text>
                             <Text style={[styles.tableHeader, { width: wp(30) }]}>Model</Text>
-                            {/* <Text style={[styles.tableHeader, { width: wp(35) }]}>Labour Cost($)</Text> */}
-                            <Text style={[styles.tableHeader, { width: wp(25) }]}>Est Cost($)</Text>
+                            <Text style={[styles.tableHeader, { width: wp(35) }]}>Extra Cost($)</Text>
+                            {/* <Text style={[styles.tableHeader, { width: wp(25) }]}>Est Cost($)</Text> */}
                             <Text style={[styles.tableHeader, { width: wp(35) }]}>Start Date</Text>
                             <Text style={[styles.tableHeader, { width: wp(35) }]}>End Date</Text>
-                            <Text style={[styles.tableHeader, { width: wp(60) }]}>Invoice Rate($)</Text>
-                            <Text style={[styles.tableHeader, { paddingRight: isTablet ? 30 : 0, width: isIOSAndTablet ? wp(8) : wp(35) }]}>W O Status</Text>
-                            <Text style={[styles.tableHeader, { paddingRight: isTablet ? 30 : 0, width: isIOSAndTablet ? wp(8) : wp(35) }]}>Invoice Status</Text>
+                            <Text style={[styles.tableHeader, { width: isIOSAndTablet ? wp(45) : wp(50) }]}>Invoice Rate($)</Text>
+                            <Text style={[styles.tableHeader, { width: isIOSAndTablet ? wp(30) : wp(35), }]}>W O Status</Text>
+                            <Text style={[styles.tableHeader, { width: isIOSAndTablet ? wp(30) : wp(35) }]}>Invoice Status</Text>
                         </View>
 
                         {/* Data Rows with vertical scroll */}
@@ -814,7 +819,6 @@ const GenerateInvoiceScreen = ({ navigation,
                                 showsVerticalScrollIndicator={false}
                                 renderItem={({ item, index }) => {
                                     console.log(item);
-
                                     const rowStyle = { backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor };
                                     const isSelected = selectAll || selectedVehicles.some(v => v.id === item.id);
                                     return (
@@ -826,27 +830,25 @@ const GenerateInvoiceScreen = ({ navigation,
                                                     color={isSelected ? blueColor : 'gray'}
                                                 />
                                             </TouchableOpacity>
-                                            <Text style={[styles.text, { width: wp(45) }]}>{item?.vin || '-'}</Text>
-                                            <Text style={[styles.text, { width: wp(30) }]}>{item?.make || '-'}</Text>
-                                            <Text style={[styles.text, { width: wp(30) }]}>{item?.model || '-'}</Text>
-
-
-                                            {/* <Text style={[styles.text, { width: wp(35) }]}>
+                                            <Text style={[styles.text, { width: wp(43) }]}>{item?.vin || '-'}</Text>
+                                            <Text style={[styles.text, { width: wp(25) }]}>{item?.make || '-'}</Text>
+                                            <Text style={[styles.text, { width: wp(28), paddingRight: spacings.large }]}>{item?.model || '-'}</Text>
+                                            <Text style={[styles.text, { width: wp(35) }]}>
                                                 {item?.labourCost ? `$${item.labourCost}` : '-'}
-                                            </Text> */}
-                                            <Text style={[styles.text, { width: wp(25) }]}>
-                                                {selectedJobEstimated ? `$${selectedJobEstimated}` : '-'}
                                             </Text>
+                                            {/* <Text style={[styles.text, { width: wp(25) }]}>
+                                                {selectedJobEstimated ? `$${selectedJobEstimated}` : '-'}
+                                            </Text> */}
                                             <Text style={[styles.text, { width: wp(35) }]}> {item?.startDate
                                                 ? new Date(item?.startDate).toLocaleDateString("en-US", {
-                                                    month: "long",
+                                                    month: "short",
                                                     day: "numeric",
                                                     year: "numeric",
                                                 })
                                                 : "-"}</Text>
                                             <Text style={[styles.text, { width: wp(35) }]}> {item?.startDate
                                                 ? new Date(item?.endDate).toLocaleDateString("en-US", {
-                                                    month: "long",
+                                                    month: "short",
                                                     day: "numeric",
                                                     year: "numeric",
                                                 })
@@ -874,8 +876,6 @@ const GenerateInvoiceScreen = ({ navigation,
                                                     }
                                                     onChangeText={(value) => handleInvoiceChange(item.id, value)}
                                                 />
-
-
                                                 <TouchableOpacity
                                                     onPress={() => handleSaveInvoice(item)}
                                                     style={{
@@ -891,7 +891,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                             </View>
 
 
-                                            <View style={[getStatusStyle(item?.vehicleStatus), alignJustifyCenter, { height: isTablet ? hp(2) : hp(4), width: wp(28), marginLeft: wp(10) }]}>
+                                            <View style={[getStatusStyle(item?.vehicleStatus), alignJustifyCenter, { height: isTablet ? hp(2) : hp(4), marginLeft: wp(10) }]}>
                                                 <Text
                                                     style={{
                                                         color: getStatusText(item?.vehicleStatus) === "Complete" ? greenColor : goldColor
@@ -996,14 +996,14 @@ const GenerateInvoiceScreen = ({ navigation,
                                             <Text >{item?.model}</Text>
                                         </View>
                                         <View style={{ width: '48%', marginBottom: 9 }}>
-                                            <Text style={{ color: '#555', fontSize: 10 }}>Labour Cost($)</Text>
+                                            <Text style={{ color: '#555', fontSize: 10 }}>Extra Cost($)</Text>
                                             <Text >{item?.labourCost ? `$${item.labourCost}` : '-'} </Text>
                                         </View>
 
-                                        <View style={{ width: '48%', marginBottom: 9 }}>
+                                        {/* <View style={{ width: '48%', marginBottom: 9 }}>
                                             <Text style={{ color: '#555', fontSize: 10 }}>Estimated Cost($)</Text>
                                             <Text >{selectedJobEstimated ? `$${selectedJobEstimated}` : '-'} </Text>
-                                        </View>
+                                        </View> */}
                                         <View style={{ width: '48%', marginBottom: 9 }}>
                                             <Text style={{ color: '#555', fontSize: 10 }}>Start Date</Text>
                                             <Text >{item?.startDate

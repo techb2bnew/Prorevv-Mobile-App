@@ -3,7 +3,6 @@ import { View, Text, TouchableOpacity, StyleSheet, Pressable } from 'react-nativ
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { blackColor, whiteColor } from '../constans/Color';
 import Toast from 'react-native-simple-toast';
-
 import {
   BarcodeScanner,
   EnumScanningMode,
@@ -11,7 +10,7 @@ import {
 } from 'dynamsoft-capture-vision-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 
-const LICENSE = 't0087pwAAAKeZgdVqm7tfpy4k7T/sqExAnB9/PeqKCgM0uWoaZ3TLB0+ygOFM2/PPR8aD7FX9VdE3KWHNFs3S0rZ3fqcsolTVR7rAfA55bfzl5pqeeQIdaCGy;t0087pwAAAG16m1wucr9FotD8eFuoC/3rkPHvOK2mVxt0Udy0IV+VMUsrZAyOzAIhYeBKI4IB2/XJGuruk85xl/NKLR8zgi700UXN5yqvjb+KluzFfQc3iSHe;t0087pwAAAGCXfhVNb8ZjstZbOHrrATEumXNylX5bQB3LsOlchf+mtELeNy6eL8u2wQoO5WOdPhb8DKqnizvZg+BRucrFu1Q+1CuYz11eG3+aturNfQc5pSHi';
+const LICENSE = 't0089pwAAAGhb81iy7n5fl95LSpqqKYmFugxYb0CdzMZSNU22/mifpi6+do3D7oDcPtvfKt5TnmZxUxv9ZEHD476NGNgnZTG+1SWdYDw32dfGX1uxWtzrDUzTImI=;t0089pwAAAG4Nl1WMs7tSfwa4ErLs53Q+2R4dtEegG/i+cOFIrIqT8kXC4oEApNuywNlIJxkkno4ihaS7T4H9WZnZVmh6xss78EWXHmo+G7W18VepotVdT2W/Iow=;t0090pwAAADFvwlIFpw76wSOpv0jkRjunEM+/LF2/TFlVUWufoEax0td4TOlV/jIkmkaCQI13hko7TAXn//xXxz5h94I8BoTs8K1OpQeMZ5dtbvy1FrUSYSdq9yKV';
 
 const ScannerScreen = ({ navigation, route }) => {
   const fromScreen = route?.params?.from;
