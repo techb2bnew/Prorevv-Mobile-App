@@ -40,7 +40,7 @@ const CombinedInvoiceScreen = () => {
                         backgroundColor: viewType === 'list' ? blueColor : whiteColor,
                         marginRight: 10
                     }]}>
-                    <Ionicons name="list" size={20} color={viewType === 'list' ? whiteColor : blackColor} />
+                    <Ionicons name="list" size={isTablet ? 35 : 20} color={viewType === 'list' ? whiteColor : blackColor} />
                 </TouchableOpacity>
                 <TouchableOpacity
                     onPress={() => setViewType('grid')}
@@ -48,7 +48,7 @@ const CombinedInvoiceScreen = () => {
                         backgroundColor: viewType === 'grid' ? blueColor : whiteColor,
                         marginRight: 10
                     }]}>
-                    <Ionicons name="grid-sharp" size={20} color={viewType === 'grid' ? whiteColor : blackColor} />
+                    <Ionicons name="grid-sharp" size={isTablet ? 35 : 20} color={viewType === 'grid' ? whiteColor : blackColor} />
                 </TouchableOpacity>
                 <TouchableOpacity
                     onPress={() => setIsFilterModalVisible(true)}

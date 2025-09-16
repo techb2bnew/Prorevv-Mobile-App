@@ -555,7 +555,7 @@ const Reports = ({ navigation }) => {
             })
             : '-';
     };
-    
+
     const shareCSVFile = async (filePath) => {
         try {
             const shareOptions = {
@@ -620,7 +620,7 @@ const Reports = ({ navigation }) => {
                     </TouchableOpacity>
                     <TouchableOpacity
                         onPress={() => setViewType('grid')}
-                        style={[styles.tabButton, { backgroundColor: viewType === 'grid' ? blueColor : whiteColor, width: isTablet ? wp(8) : wp(12), height: hp(4.5),marginRight: 10}]}>
+                        style={[styles.tabButton, { backgroundColor: viewType === 'grid' ? blueColor : whiteColor, width: isTablet ? wp(8) : wp(12), height: hp(4.5), marginRight: 10 }]}>
                         <Ionicons name="grid-sharp" size={isTablet ? 35 : 20} color={viewType === 'grid' ? whiteColor : blackColor} />
                     </TouchableOpacity>
                     <TouchableOpacity
@@ -635,15 +635,15 @@ const Reports = ({ navigation }) => {
             <View style={{ paddingHorizontal: spacings.large, paddingTop: spacings.large }}>
                 {/* Filter & Date Picker */}
                 {activeTab != 'Customers' && <View style={styles.datePickerContainer}>
-                    <View style={{ width: wp(38) }}>
+                    <View style={{ width: isTablet ? wp(45) : wp(38) }}>
                         <Text style={styles.dateText}>From</Text>
                     </View>
-                    <View style={{ width: wp(38) }}>
+                    <View style={{ width: isTablet ? wp(45) : wp(38) }}>
                         <Text style={styles.dateText}>To</Text>
                     </View>
                 </View>}
-                {activeTab != 'Customers' && <View style={[styles.datePickerContainer, { marginBottom: 15 }]}>
-                    <TouchableOpacity onPress={() => setIsStartPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter]}>
+                {activeTab != 'Customers' && <View style={[styles.datePickerContainer, { marginBottom: 15, }]}>
+                    <TouchableOpacity onPress={() => setIsStartPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter, { width: isTablet ? wp(45) : wp(38) }]}>
                         <Text style={styles.dateText}>
                             {startDate.toLocaleDateString("en-US", {
                                 month: "short",
@@ -654,7 +654,7 @@ const Reports = ({ navigation }) => {
                         <Feather name="calendar" size={20} color={blackColor} />
 
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => setIsEndPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter]}>
+                    <TouchableOpacity onPress={() => setIsEndPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter, { width: isTablet ? wp(45) : wp(38) }]}>
                         <Text style={styles.dateText}>
                             {endDate.toLocaleDateString("en-US", {
                                 month: "short",
@@ -772,12 +772,12 @@ const Reports = ({ navigation }) => {
                     <View style={styles.tableHeaderRow}>
                         <Text style={[styles.tableHeader, { width: "40%" }]}>Job Name</Text>
                         <Text style={[styles.tableHeader, { width: "35%" }]}>Number of W.O</Text>
-                        <Text style={[styles.tableHeader, { width: "20%", textAlign: "center" }]}>Action</Text>
+                        <Text style={[styles.tableHeader, { width: "20%", textAlign: isTablet ? "left" : "center" }]}>Action</Text>
 
                     </View>
 
                     {/* FlatList for Jobs only */}
-                    <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(59.5) : hp(50) : isIOSAndTablet ? hp(60) : hp(45.5)}}>
+                    <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(59.5) : hp(50) : isIOSAndTablet ? hp(60) : hp(45.5) }}>
                         <FlatList
                             data={filteredJobs}
                             keyExtractor={(item, index) => item?.jobName || index.toString()}
@@ -797,7 +797,7 @@ const Reports = ({ navigation }) => {
                                             jobId: item?.id
                                         })}
                                     >
-                                        <Text style={[styles.text, { width: "44%",paddingRight:spacings.xxxxLarge }]}>
+                                        <Text style={[styles.text, { width: "44%", paddingRight: spacings.xxxxLarge }]}>
                                             {item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}
                                         </Text>
                                         <Text style={[styles.text, { width: "30%" }]}>
@@ -957,17 +957,17 @@ const Reports = ({ navigation }) => {
                         <View>
                             {/* Header Row */}
                             <View style={[styles.tableHeaderRow, { backgroundColor: blueColor }]}>
-                                <Text style={[styles.tableHeader, { width: wp(30) }]}>Job Name</Text>
-                                <Text style={[styles.tableHeader, { width: wp(55) }]}>VIN</Text>
-                                <Text style={[styles.tableHeader, { width: wp(35) }]}>Make</Text>
-                                <Text style={[styles.tableHeader, { width: wp(30) }]}>Model</Text>
-                                {technicianType === "manager" && <Text style={[styles.tableHeader, { width: wp(35) }]}>Assigned Tech</Text>}
-                                <Text style={[styles.tableHeader, { width: wp(35) }]}>Start Date</Text>
-                                <Text style={[styles.tableHeader, { width: wp(35) }]}>End Date</Text>
+                                <Text style={[styles.tableHeader, { width: isTablet ? wp(13) : wp(30) }]}>Job Name</Text>
+                                <Text style={[styles.tableHeader, { width: isTablet ? wp(24) : wp(55) }]}>VIN</Text>
+                                <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(35) }]}>Make</Text>
+                                <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(30) }]}>Model</Text>
+                                {technicianType === "manager" && <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(35) }]}>Assigned Tech</Text>}
+                                <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(35) }]}>Start Date</Text>
+                                <Text style={[styles.tableHeader, { width: isTablet ? wp(18) : wp(35) }]}>End Date</Text>
 
                                 {/* <Text style={[styles.tableHeader, { width: wp(30) }]}>Cost Estimate</Text> */}
-                                <Text style={[styles.tableHeader, { paddingRight: isTablet ? 30 : 0, width: isIOSAndTablet ? wp(8) : wp(35) }]}>Status</Text>
-                                <Text style={[styles.tableHeader, { width: wp(35), }]}>Action</Text>
+                                <Text style={[styles.tableHeader, { paddingRight: isTablet ? 30 : 0, width: isIOSAndTablet ? wp(10) : isTablet ? wp(20) : wp(35) }]}>Status</Text>
+                                <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(35), }]}>Action</Text>
                             </View>
 
                             {/* Data Rows with vertical scroll */}
@@ -981,26 +981,26 @@ const Reports = ({ navigation }) => {
                                     renderItem={({ item, index }) => {
                                         const rowStyle = { backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor };
                                         return (
-                                            <Pressable key={index.toString()} style={[styles.listItem, rowStyle, { flexDirection: 'row' }]} onPress={() => navigation.navigate("VehicleDetailsScreen", { vehicleId: item?.id, from: "report" })}>
-                                                <Text style={[styles.text, { width: wp(30), paddingLeft: spacings.small }]}>{item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}</Text>
-                                                <Text style={[styles.text, { width: wp(55) }]}>{item?.vin || '-'}</Text>
-                                                <Text style={[styles.text, { width: wp(35) }]}>{item?.make || '-'}</Text>
-                                                <Text style={[styles.text, { width: wp(30) }]}>{item?.model || '-'}</Text>
-                                                {technicianType === "manager" && <Text style={[styles.text, { width: isTablet ? wp(35) : wp(30) }]}>
+                                            <Pressable key={index.toString()} style={[styles.listItem, rowStyle, { flexDirection: 'row', alignItems: "center" }]} onPress={() => navigation.navigate("VehicleDetailsScreen", { vehicleId: item?.id, from: "report" })}>
+                                                <Text style={[styles.text, { width: isTablet ? wp(13) : wp(30), paddingLeft: spacings.small }]}>{item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}</Text>
+                                                <Text style={[styles.text, { width: isTablet ? wp(25) : wp(55) }]}>{item?.vin || '-'}</Text>
+                                                <Text style={[styles.text, { width: isTablet ? wp(15) : wp(35) }]}>{item?.make || '-'}</Text>
+                                                <Text style={[styles.text, { width: isTablet ? wp(15) : wp(30) }]}>{item?.model || '-'}</Text>
+                                                {technicianType === "manager" && <Text style={[styles.text, { width: isTablet ? wp(14) : wp(30) }]}>
                                                     {item?.assignedTechnicians?.length > 0
                                                         ? item?.assignedTechnicians
                                                             .map(tech => `${tech.firstName} ${tech.lastName}`)
                                                             .join(', ')
                                                         : '-'}
                                                 </Text>}
-                                                <Text style={[styles.text, { width: wp(35) }]}> {item?.startDate
+                                                <Text style={[styles.text, { width: isTablet ? wp(15) : wp(35) }]}> {item?.startDate
                                                     ? new Date(item?.startDate).toLocaleDateString("en-US", {
                                                         month: "short",
                                                         day: "numeric",
                                                         year: "numeric",
                                                     })
                                                     : "-"}</Text>
-                                                <Text style={[styles.text, { width: wp(35) }]}>{item?.endDate
+                                                <Text style={[styles.text, { width: isTablet ? wp(15) : wp(35) }]}>{item?.endDate
                                                     ? new Date(item?.endDate).toLocaleDateString("en-US", {
                                                         month: "short",
                                                         day: "numeric",
@@ -1008,7 +1008,7 @@ const Reports = ({ navigation }) => {
                                                     })
                                                     : "-"}</Text>
 
-                                                <View style={[getStatusStyle(item?.vehicleStatus), alignJustifyCenter, { height: hp(4) }]}>
+                                                <View style={[getStatusStyle(item?.vehicleStatus), alignJustifyCenter, { height: isTablet ? hp(2) : hp(4) }]}>
                                                     <Text
                                                         style={{
                                                             color: getStatusText(item?.vehicleStatus) === "Complete" ?
@@ -1020,7 +1020,7 @@ const Reports = ({ navigation }) => {
                                                     </Text>
                                                 </View>
 
-                                                <View style={{ flexDirection: "row", alignItems: "center", marginLeft: wp(10), width: isTablet ? wp(30) : wp(20), justifyContent: "center" }} >
+                                                <View style={{ flexDirection: "row", alignItems: "center", marginLeft: isTablet ? 0 : wp(10), width: isIOSAndTablet ? wp(10) : isTablet ? wp(30) : wp(20), justifyContent: "center" }} >
                                                     <Pressable onPress={() => navigation.navigate("VehicleDetailsScreen", {
                                                         vehicleId: item.id,
                                                         from: activeTab === "partnerOrder" ? "partner" : "workOrder"
@@ -1077,7 +1077,7 @@ const Reports = ({ navigation }) => {
 
                     </View>
 
-                    <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(69) : hp(64) : isIOSAndTablet ? hp(69) : hp(58)}}>
+                    <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(69) : hp(64) : isIOSAndTablet ? hp(69) : hp(58) }}>
                         <FlatList
                             data={filteredCustomer}
                             keyExtractor={(item, index) => item?.vin || index.toString()}

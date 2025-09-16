@@ -790,7 +790,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                         setSelectedVehicles(filteredVehicles); // or filteredVehicles.map(v => v.id) depending on your structure
                                     }
                                 }}
-                                style={{ width: wp(15), flexDirection: 'row', alignItems: 'center' }}
+                                style={{ width: isTablet ? wp(8) : wp(15), flexDirection: 'row', alignItems: 'center' }}
                             >
                                 <MaterialIcons
                                     name={selectAll ? 'check-box' : 'check-box-outline-blank'}
@@ -799,16 +799,16 @@ const GenerateInvoiceScreen = ({ navigation,
                                 />
                                 {/* <Text style={[styles.tableHeader, { marginLeft: 5 }]}>Select</Text> */}
                             </TouchableOpacity>
-                            <Text style={[styles.tableHeader, { width: wp(43) }]}>VIN</Text>
-                            <Text style={[styles.tableHeader, { width: wp(25) }]}>Make</Text>
-                            <Text style={[styles.tableHeader, { width: wp(30) }]}>Model</Text>
-                            <Text style={[styles.tableHeader, { width: wp(35) }]}>Extra Cost($)</Text>
+                            <Text style={[styles.tableHeader, { width: isTablet ? wp(25) : wp(43) }]}>VIN</Text>
+                            <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(25) }]}>Make</Text>
+                            <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(30) }]}>Model</Text>
+                            <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(35) }]}>Extra Cost($)</Text>
                             {/* <Text style={[styles.tableHeader, { width: wp(25) }]}>Est Cost($)</Text> */}
-                            <Text style={[styles.tableHeader, { width: wp(35) }]}>Start Date</Text>
-                            <Text style={[styles.tableHeader, { width: wp(35) }]}>End Date</Text>
-                            <Text style={[styles.tableHeader, { width: isIOSAndTablet ? wp(45) : wp(50) }]}>Invoice Rate($)</Text>
-                            <Text style={[styles.tableHeader, { width: isIOSAndTablet ? wp(30) : wp(35), }]}>W O Status</Text>
-                            <Text style={[styles.tableHeader, { width: isIOSAndTablet ? wp(30) : wp(35) }]}>Invoice Status</Text>
+                            <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(35) }]}>Start Date</Text>
+                            <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(35) }]}>End Date</Text>
+                            <Text style={[styles.tableHeader, { width: isIOSAndTablet ? wp(35) : isTablet ? wp(42) : wp(55) }]}>Invoice Rate($)</Text>
+                            <Text style={[styles.tableHeader, { width: isIOSAndTablet ? wp(20) : isTablet ? wp(20) : wp(35), }]}>W O Status</Text>
+                            <Text style={[styles.tableHeader, { width: isIOSAndTablet ? wp(20) : isTablet ? wp(20) : wp(35) }]}>Invoice Status</Text>
                         </View>
 
                         {/* Data Rows with vertical scroll */}
@@ -823,30 +823,30 @@ const GenerateInvoiceScreen = ({ navigation,
                                     const isSelected = selectAll || selectedVehicles.some(v => v.id === item.id);
                                     return (
                                         <Pressable key={index.toString()} style={[styles.listItem, rowStyle, { flexDirection: 'row', alignItems: "center" }]} onPress={() => navigation.navigate("VehicleDetailsScreen", { vehicleId: item?.id, from: "report" })}>
-                                            <TouchableOpacity onPress={() => toggleSelection(item)} style={{ width: wp(15) }}>
+                                            <TouchableOpacity onPress={() => toggleSelection(item)} style={{ width: isTablet ? wp(8) : wp(15) }}>
                                                 <MaterialIcons
                                                     name={isSelected ? 'check-box' : 'check-box-outline-blank'}
                                                     size={25}
                                                     color={isSelected ? blueColor : 'gray'}
                                                 />
                                             </TouchableOpacity>
-                                            <Text style={[styles.text, { width: wp(43) }]}>{item?.vin || '-'}</Text>
-                                            <Text style={[styles.text, { width: wp(25) }]}>{item?.make || '-'}</Text>
-                                            <Text style={[styles.text, { width: wp(28), paddingRight: spacings.large }]}>{item?.model || '-'}</Text>
-                                            <Text style={[styles.text, { width: wp(35) }]}>
+                                            <Text style={[styles.text, { width: isTablet ? wp(25) : wp(43) }]}>{item?.vin || '-'}</Text>
+                                            <Text style={[styles.text, { width: isTablet ? wp(15) : wp(25) }]}>{item?.make || '-'}</Text>
+                                            <Text style={[styles.text, { width: isTablet ? wp(15) : wp(28), paddingRight: spacings.large }]}>{item?.model || '-'}</Text>
+                                            <Text style={[styles.text, { width: isTablet ? wp(15) : wp(35) }]}>
                                                 {item?.labourCost ? `$${item.labourCost}` : '-'}
                                             </Text>
                                             {/* <Text style={[styles.text, { width: wp(25) }]}>
                                                 {selectedJobEstimated ? `$${selectedJobEstimated}` : '-'}
                                             </Text> */}
-                                            <Text style={[styles.text, { width: wp(35) }]}> {item?.startDate
+                                            <Text style={[styles.text, { width: isTablet ? wp(15) : wp(35) }]}> {item?.startDate
                                                 ? new Date(item?.startDate).toLocaleDateString("en-US", {
                                                     month: "short",
                                                     day: "numeric",
                                                     year: "numeric",
                                                 })
                                                 : "-"}</Text>
-                                            <Text style={[styles.text, { width: wp(35) }]}> {item?.startDate
+                                            <Text style={[styles.text, { width: isTablet ? wp(15) : wp(35) }]}> {item?.startDate
                                                 ? new Date(item?.endDate).toLocaleDateString("en-US", {
                                                     month: "short",
                                                     day: "numeric",
@@ -854,7 +854,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                                 })
                                                 : "-"}</Text>
 
-                                            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10, marginBottom: 10 }}>
+                                            <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 8, width: isIOSAndTablet ? wp(35) : isTablet ? wp(42) : wp(55) }}>
                                                 <TextInput
                                                     ref={(ref) => {
                                                         if (ref) inputRefs.current[item.id] = ref;
@@ -864,7 +864,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                                         borderColor: 'gray',
                                                         padding: 8,
                                                         borderRadius: 5,
-                                                        width: wp(30),
+                                                        width: isIOSAndTablet ? wp(23) : wp(30),
                                                         marginRight: 10,
                                                     }}
                                                     keyboardType="numeric"
@@ -891,7 +891,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                             </View>
 
 
-                                            <View style={[getStatusStyle(item?.vehicleStatus), alignJustifyCenter, { height: isTablet ? hp(2) : hp(4), marginLeft: wp(10) }]}>
+                                            <View style={[getStatusStyle(item?.vehicleStatus), alignJustifyCenter, { height: isTablet ? hp(2) : hp(4)  }]}>
                                                 <Text
                                                     style={{
                                                         color: getStatusText(item?.vehicleStatus) === "Complete" ? greenColor : goldColor
@@ -901,7 +901,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                             </View>
 
                                             {/* Invoice Status */}
-                                            <View style={[getStatusStyle(item?.generatedInvoiceStatus, "invoice"), alignJustifyCenter, { height: isTablet ? hp(2) : hp(4), marginLeft: isTablet ? wp(20) : wp(10) }]}>
+                                            <View style={[getStatusStyle(item?.generatedInvoiceStatus, "invoice"), alignJustifyCenter, { height: isTablet ? hp(2) : hp(4), marginLeft: isTablet ? wp(10) : wp(10) }]}>
                                                 <Text
                                                     style={{
                                                         color: getStatusText(item?.generatedInvoiceStatus, "invoice") === "Generated" ? greenColor : goldColor
@@ -1456,12 +1456,14 @@ const styles = StyleSheet.create({
         padding: spacings.medium,
         borderBottomWidth: 1,
         borderColor: '#E6E6E6',
-        backgroundColor: blueColor
+        backgroundColor: blueColor,
+        alignItems: "center"
     },
     tableHeader: {
         fontSize: style.fontSizeNormal.fontSize,
         color: whiteColor,
-        fontWeight: style.fontWeightThin1x.fontWeight
+        fontWeight: style.fontWeightThin1x.fontWeight,
+
     },
     listItem: {
         flexDirection: 'row',

@@ -15,6 +15,7 @@ import Reports from "../screens/Reports";
 import VehicleDetailsScreen from "../screens/VehicleDetailsScreen";
 import NewJobDetailsScreen from "../screens/NewJobDetailsScreen";
 import CreateJobScreen from "../screens/CreateJobScreen";
+import ProfileStack from "./ProfileStack";
 
 
 const Stack = createStackNavigator();
@@ -37,7 +38,7 @@ export default function VinListStack() {
       <Stack.Screen name="ReportsScreen" component={Reports} options={{ gestureEnabled: false }}/>
       <Stack.Screen name="CreateJobScreen" component={CreateJobScreen}options={{ gestureEnabled: false }} />
       <Stack.Screen name="Home" component={HomeScreen} options={{ gestureEnabled: false }}/>
-
+      <Stack.Screen name="ProfileStackScreen" component={ProfileStack} options={{ gestureEnabled: false }}/>
     </Stack.Navigator>
   );
 }

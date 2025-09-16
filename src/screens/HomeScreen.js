@@ -529,7 +529,7 @@ const HomeScreen = ({ navigation }) => {
             >
               <item.iconComponent
                 name={item.iconName}
-                size={24}
+                size={isTablet ? 35 : 24}
                 color="#fff"
               />
             </View>
@@ -568,7 +568,7 @@ const HomeScreen = ({ navigation }) => {
           >
             <Feather
               name="arrow-right"
-              size={20}
+              size={isTablet ? 25 : 20}
               color={item?.color}
             />
           </View>
@@ -577,11 +577,10 @@ const HomeScreen = ({ navigation }) => {
     </View>
   );
 
-
   return (
     <View style={[styles.container, flex]}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={{ marginBottom: isTablet ? hp(5) : Platform.OS === "android" ? hp(7) : hp(5) }}>
+        <View style={{ marginBottom: isTablet ? hp(5) : Platform.OS === "android" ? hp(5.5) : hp(5) }}>
           <ImageBackground source={HEADER_BACKGROUND} style={{
             resizeMode: "contain",
             height: isIOSAndTablet
@@ -593,8 +592,8 @@ const HomeScreen = ({ navigation }) => {
                   ? hp(15.5)
                   : hp(21)
                 : !isSearching
-                  ? hp(22)
-                  : hp(30),
+                  ? Platform.OS === "android" ? hp(30) : hp(22)
+                  : Platform.OS === "android" ? hp(35.5) : hp(30),
             backgroundColor: !isTablet && Platform.OS === "ios" ? blueColor : "transparent"
           }}>
             <View style={[styles.header, { justifyContent: "space-between" }]}>
@@ -836,7 +835,7 @@ const HomeScreen = ({ navigation }) => {
           scrollEnabled={false}
         />
       </ScrollView>
-    </View >
+    </View>
   )
 }
 

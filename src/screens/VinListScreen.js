@@ -544,15 +544,15 @@ const VinListScreen = ({ navigation, route }) => {
             <View style={{ paddingHorizontal: spacings.large, paddingTop: spacings.large }}>
                 {/* Filter & Date Picker */}
                 <View style={styles.datePickerContainer}>
-                    <View style={{ width: wp(38) }}>
+                    <View style={{ width: isTablet ? wp(45) : wp(38) }}>
                         <Text style={styles.dateText}>From</Text>
                     </View>
-                    <View style={{ width: wp(38) }}>
+                    <View style={{ width: isTablet ? wp(45) : wp(38) }}>
                         <Text style={styles.dateText}>To</Text>
                     </View>
                 </View>
                 <View style={[styles.datePickerContainer]}>
-                    <TouchableOpacity onPress={() => setIsStartPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter]}>
+                    <TouchableOpacity onPress={() => setIsStartPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter, { width: isTablet ? wp(45) : wp(38) }]}>
                         <Text style={styles.dateText}>
                             {startDate.toLocaleDateString("en-US", {
                                 month: "long",
@@ -563,7 +563,7 @@ const VinListScreen = ({ navigation, route }) => {
                         <Feather name="calendar" size={20} color={blackColor} />
 
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => setIsEndPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter]}>
+                    <TouchableOpacity onPress={() => setIsEndPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter, { width: isTablet ? wp(45) : wp(38) }]}>
                         <Text style={styles.dateText}>
                             {endDate.toLocaleDateString("en-US", {
                                 month: "long",
@@ -647,20 +647,20 @@ const VinListScreen = ({ navigation, route }) => {
                 <View>
                     <View style={[styles.tableHeader, flexDirectionRow]}>
                         {/* <Text style={[styles.tableHeaderText, { width: wp(30) }]}>JobName</Text> */}
-                        <Text style={[styles.tableHeaderText, { width: wp(50) }]}>VIN No.</Text>
-                        <Text style={[styles.tableHeaderText, { width: wp(25) }]}>Make</Text>
-                        <Text style={[styles.tableHeaderText, { width: wp(35) }]}>Model</Text>
-                        <Text style={[styles.tableHeaderText, { width: wp(35) }]}>Job Name</Text>
-                        <Text style={[styles.tableHeaderText, { width: wp(35) }]}>Start Date</Text>
-                        <Text style={[styles.tableHeaderText, { width: wp(35) }]}>End Date</Text>
+                        <Text style={[styles.tableHeaderText, { width: isTablet ? wp(25) : wp(50) }]}>VIN No.</Text>
+                        <Text style={[styles.tableHeaderText, { width: isTablet ? wp(13) : wp(25) }]}>Make</Text>
+                        <Text style={[styles.tableHeaderText, { width: isTablet ? wp(13) : wp(35) }]}>Model</Text>
+                        <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) : wp(35) }]}>Job Name</Text>
+                        <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) : wp(35) }]}>Start Date</Text>
+                        <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) : wp(35) }]}>End Date</Text>
 
                         {technicianType === "manager" && (
-                            <Text style={[styles.tableHeaderText, { width: wp(40) }]}>Assigned Tech</Text>
+                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(25) : wp(40) }]}>Assigned Tech</Text>
                         )}
                         {/* <Text style={[styles.tableHeaderText, { width: wp(35) }]}>Status</Text> */}
 
                         {/* <Text style={[styles.tableHeaderText, { width: wp(45) }]}>Cost Estimate</Text> */}
-                        <Text style={[styles.tableHeaderText, { width: wp(35), }]}>Action</Text>
+                        <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) : wp(35), }]}>Action</Text>
 
                     </View>
 
@@ -686,11 +686,11 @@ const VinListScreen = ({ navigation, route }) => {
                                         })}
                                     >
                                         {/* <Text style={[styles.tableText, { width: wp(30), paddingLeft: spacings.small }]}>{item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}</Text> */}
-                                        <Text style={[styles.tableText, { width: wp(50) }]}>{item?.vin}</Text>
-                                        <Text style={[styles.tableText, { width: wp(25) }]}>{item?.make}</Text>
-                                        <Text style={[styles.tableText, { width: wp(35) }]}>{item?.model}</Text>
-                                        <Text style={[styles.tableText, { width: wp(35), paddingRight: spacings.large }]}>{item?.jobName}</Text>
-                                        <Text style={[styles.tableText, { width: wp(35) }]}>
+                                        <Text style={[styles.tableText, { width: isTablet ? wp(25) : wp(50) }]}>{item?.vin}</Text>
+                                        <Text style={[styles.tableText, { width: isTablet ? wp(13) : wp(25) }]}>{item?.make}</Text>
+                                        <Text style={[styles.tableText, { width: isTablet ? wp(13) : wp(35) }]}>{item?.model}</Text>
+                                        <Text style={[styles.tableText, { width: isTablet ? wp(15) : wp(35), paddingRight: spacings.large }]}>{item?.jobName}</Text>
+                                        <Text style={[styles.tableText, { width: isTablet ? wp(15) : wp(35) }]}>
                                             {item?.startDate
                                                 ? new Date(item.startDate).toLocaleDateString("en-US", {
                                                     month: "short",
@@ -700,7 +700,7 @@ const VinListScreen = ({ navigation, route }) => {
                                                 : "-"}
                                         </Text>
 
-                                        <Text style={[styles.tableText, { width: wp(35) }]}>
+                                        <Text style={[styles.tableText, { width: isTablet ? wp(15) : wp(35) }]}>
                                             {item?.endDate
                                                 ? new Date(item.endDate).toLocaleDateString("en-US", {
                                                     month: "short",
@@ -710,7 +710,7 @@ const VinListScreen = ({ navigation, route }) => {
                                                 : "-"}
                                         </Text>
                                         {technicianType === "manager" && (
-                                            <Text style={[styles.tableText, { width: wp(40), paddingRight: 10 }]}>
+                                            <Text style={[styles.tableText, { width: isTablet ? wp(23) : wp(40), paddingRight: 10 }]}>
                                                 {item?.assignedTechnicians
                                                     // ?.filter(tech => tech?.id !== technicianId)
                                                     ?.map(tech => {
@@ -724,7 +724,7 @@ const VinListScreen = ({ navigation, route }) => {
                                                     .join(', ') || '—'}
                                             </Text>
                                         )}
-                                        <View style={{ flexDirection: "row", alignItems: "center", width: wp(35) }} >
+                                        <View style={{ flexDirection: "row", alignItems: "center", width: isTablet ? wp(15) : wp(35)}} >
                                             <Pressable onPress={() => navigation.navigate("VehicleDetailsScreen", {
                                                 vehicleId: item.id,
                                                 from: activeTab === "partnerOrder" ? "partner" : "workOrder"

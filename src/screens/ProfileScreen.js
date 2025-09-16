@@ -800,7 +800,7 @@ const ProfileScreen = ({ navigation }) => {
                     <Image source={{ uri: imageUri }} style={[styles.image, { borderRadius: isTablet ? isIOsAndTablet ? 1000 : 100 : 50 }]} />
                   ) : (
                     <View style={[styles.fallbackContainer, { borderRadius: isTablet ? isIOsAndTablet ? 1000 : 100 : 50 }]}>
-                      <Text style={styles.fallbackText}>{getInitials(profile?.firstName)}</Text>
+                      <Text style={[styles.fallbackText, { fontSize: isTablet ? 90 : 40 }]}>{getInitials(profile?.firstName)}</Text>
                     </View>
                   )}
                   <View>
@@ -1001,7 +1001,7 @@ const ProfileScreen = ({ navigation }) => {
                         <Image source={{ uri: imageUri }} style={[styles.image, { width: wp(25), height: wp(25), borderRadius: isTablet ? isIOsAndTablet ? 1000 : 100 : 50 }]} />
                       ) : (
                         <View style={[styles.fallbackContainer, { borderRadius: isTablet ? isIOsAndTablet ? 1000 : 100 : 50 }]}>
-                          <Text style={styles.fallbackText}>{getInitials(profile?.firstName)}</Text>
+                           <Text style={[styles.fallbackText, { fontSize: isTablet ? 90 : 40 }]}>{getInitials(profile?.firstName)}</Text>
                         </View>
                       )}
                       <View style={[styles.cameraIconContainer, {

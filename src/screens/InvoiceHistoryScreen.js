@@ -305,13 +305,13 @@ const InvoiceHistoryScreen = ({ navigation,
                         {/* Header Row */}
                         <View style={[styles.tableHeaderRow, { backgroundColor: blueColor }]}>
                             {/* <Text style={[styles.tableHeader, { width: wp(15) }]}>Select</Text> */}
-                            <Text style={[styles.tableHeader, { width: wp(35) }]}>Invoice Number</Text>
-                            <Text style={[styles.tableHeader, { width: wp(35) }]}>Customer Name</Text>
-                            <Text style={[styles.tableHeader, { width: wp(35) }]}>Job Name</Text>
-                            <Text style={[styles.tableHeader, { width: wp(35) }]}>Grand Total</Text>
-                            <Text style={[styles.tableHeader, { width: wp(45) }]}>Invoice Created Date</Text>
-                            <Text style={[styles.tableHeader, { width: wp(40) }]}>Add Paid Date</Text>
-                            <Text style={[styles.tableHeader, { width: wp(25) }]}>Action</Text>
+                            <Text style={[styles.tableHeader, { width: isTablet ? wp(20) : wp(35) }]}>Invoice Number</Text>
+                            <Text style={[styles.tableHeader, { width: isTablet ? wp(20) :wp(35) }]}>Customer Name</Text>
+                            <Text style={[styles.tableHeader, { width: isTablet ? wp(20) :wp(35) }]}>Job Name</Text>
+                            <Text style={[styles.tableHeader, { width: isTablet ? wp(20) :wp(35) }]}>Grand Total</Text>
+                            <Text style={[styles.tableHeader, { width: isTablet ? wp(24) :wp(45) }]}>Invoice Created Date</Text>
+                            <Text style={[styles.tableHeader, { width: isTablet ? wp(20) :wp(40) }]}>Add Paid Date</Text>
+                            <Text style={[styles.tableHeader, { width: isTablet ? wp(20) :wp(25) }]}>Action</Text>
 
                             <Text style={[styles.tableHeader, { paddingRight: isTablet ? 30 : 0, width: isIOSAndTablet ? wp(8) : wp(30) }]}>Status</Text>
 
@@ -339,16 +339,16 @@ const InvoiceHistoryScreen = ({ navigation,
                                                     color={isSelected ? blueColor : 'gray'}
                                                 />
                                             </TouchableOpacity> */}
-                                            <Text style={[styles.text, { width: wp(35) }]}>{item?.invoiceNumber || '-'}</Text>
-                                            <Text style={[styles.text, { width: wp(35) }]}>{item?.customer?.fullName || '-'}</Text>
-                                            <Text style={[styles.text, { width: wp(35) }]}>{item?.job?.jobName || '-'}</Text>
+                                            <Text style={[styles.text, { width: isTablet ? wp(20) :wp(35) }]}>{item?.invoiceNumber || '-'}</Text>
+                                            <Text style={[styles.text, { width: isTablet ? wp(20) :wp(35) }]}>{item?.customer?.fullName || '-'}</Text>
+                                            <Text style={[styles.text, { width: isTablet ? wp(20) :wp(35) }]}>{item?.job?.jobName || '-'}</Text>
 
 
-                                            <Text style={[styles.text, { width: wp(35) }]}>
+                                            <Text style={[styles.text, { width: isTablet ? wp(20) :wp(35) }]}>
                                                 {item?.grandTotal ? `$${item.grandTotal}` : '-'}
                                             </Text>
 
-                                            <Text style={[styles.text, { width: wp(45) }]}> {item?.createdAt
+                                            <Text style={[styles.text, { width: isTablet ? wp(20) :wp(45) }]}> {item?.createdAt
                                                 ? new Date(item?.createdAt).toLocaleDateString("en-US", {
                                                     month: "long",
                                                     day: "numeric",
@@ -383,7 +383,7 @@ const InvoiceHistoryScreen = ({ navigation,
                                             {item?.paidDate ? (
                                                 <View
                                                     style={{
-                                                        width: wp(30),
+                                                        width: isTablet ? wp(24) :wp(30),
                                                         paddingRight: spacings.xLarge
                                                     }}
                                                 >
@@ -400,7 +400,7 @@ const InvoiceHistoryScreen = ({ navigation,
                                                         }}
                                                     >
                                                         {new Date(item?.paidDate).toLocaleDateString("en-US", {
-                                                            month: "long",
+                                                            month: "short",
                                                             day: "numeric",
                                                             year: "numeric",
                                                         })}
@@ -410,7 +410,7 @@ const InvoiceHistoryScreen = ({ navigation,
                                                 <TouchableOpacity
                                                     onPress={() => openPaidDatePicker(item?.id, item?.invoiceNumber)}
                                                     style={{
-                                                        width: wp(30),
+                                                        width:isTablet ? wp(24) : wp(30),
                                                         paddingRight: spacings.xxxxLarge
                                                     }}
                                                 >
@@ -440,8 +440,8 @@ const InvoiceHistoryScreen = ({ navigation,
                                             <TouchableOpacity
                                                 onPress={() => handleExport(item?.pdfLink, item?.id)}
                                                 style={{
-                                                    width: wp(30),
-                                                    paddingHorizontal: wp(12)
+                                                    width:isTablet ? wp(20) : wp(30),
+                                                    paddingHorizontal:isTablet ? wp(2) : wp(12)
                                                 }}
                                             >
                                                 {exportingId === item?.id ? (
