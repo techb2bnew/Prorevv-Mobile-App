@@ -466,10 +466,10 @@ const CustomerInfoScreen = ({ navigation }) => {
                                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                                     <View>
                                         <View style={[styles.tableHeader, flexDirectionRow]}>
-                                            <Text style={[styles.tableHeaderText, { width: wp(40) }]}>Name</Text>
-                                            <Text style={[styles.tableHeaderText, { width: wp(40) }]}>Phone</Text>
-                                            <Text style={[styles.tableHeaderText, { width: wp(60) }]}>Email</Text>
-                                            <Text style={[styles.tableHeaderText, { width: wp(80) }]}>Address</Text>
+                                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(20) : wp(40) }]}>Name</Text>
+                                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(20) : wp(40) }]}>Phone</Text>
+                                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(25) : wp(60) }]}>Email</Text>
+                                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(45) : wp(80) }]}>Address</Text>
                                             <Text style={[styles.tableHeaderText, { width: wp(20) }]}>Action</Text>
 
                                         </View>
@@ -482,10 +482,10 @@ const CustomerInfoScreen = ({ navigation }) => {
                                                     flexDirectionRow,
                                                     { backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor }
                                                 ]}>
-                                                    <Text style={[styles.tableText, { width: wp(40) }]}>{capitalize(item.fullName) || '—'}</Text>
-                                                    <Text style={[styles.tableText, { width: wp(40) }]}>{item.phoneNumber || '—'}</Text>
-                                                    <Text style={[styles.tableText, { width: wp(60) }]}>{item.email || '—'}</Text>
-                                                    <Text style={[styles.tableText, { width: isTablet ? wp(75) : wp(70) }]} numberOfLines={1} ellipsizeMode="tail">{item.address || '—'}</Text>
+                                                    <Text style={[styles.tableText, { width: isTablet ? wp(20) : wp(40) }]}>{capitalize(item.fullName) || '—'}</Text>
+                                                    <Text style={[styles.tableText, { width: isTablet ? wp(20) : wp(40) }]}>{item.phoneNumber || '—'}</Text>
+                                                    <Text style={[styles.tableText, { width: isTablet ? wp(25) : wp(60) }]}>{item.email || '—'}</Text>
+                                                    <Text style={[styles.tableText, { width: isTablet ? wp(40) : wp(70) }]}>{item.address || '—'}</Text>
                                                     <TouchableOpacity
                                                         onPress={() => {
                                                             setIsEditMode(true);

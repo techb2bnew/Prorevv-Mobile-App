@@ -695,12 +695,12 @@ const CreateJobScreen = ({ route }) => {
                                     <View style={{ backgroundColor: whiteColor }}>
                                         {/* Table Header */}
                                         <View style={[styles.tableHeader, flexDirectionRow]}>
-                                            <Text style={[styles.tableHeaderText, { width: wp(25) }]}>Job Title</Text>
-                                            <Text style={[styles.tableHeaderText, { width: wp(33) }]}>Number of W.O</Text>
-                                            <Text style={[styles.tableHeaderText, { width: wp(33) }]}>Customer Name</Text>
-                                            <Text style={[styles.tableHeaderText, { width: wp(33) }]}>Est Cost</Text>
-                                            <Text style={[styles.tableHeaderText, { width: wp(33) }]}>Start Date</Text>
-                                            <Text style={[styles.tableHeaderText, { width: wp(33) }]}>End Date</Text>
+                                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) :wp(25) }]}>Job Title</Text>
+                                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) :wp(33) }]}>Number of W.O</Text>
+                                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(20) :wp(33) }]}>Customer Name</Text>
+                                            <Text style={[styles.tableHeaderText, { width:isTablet ? wp(15) :wp(33) }]}>Est Cost</Text>
+                                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) :wp(33) }]}>Start Date</Text>
+                                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) :wp(33) }]}>End Date</Text>
                                             <Text style={[styles.tableHeaderText, { width: wp(25) }]}>Action</Text>
                                         </View>
 
@@ -727,13 +727,13 @@ const CreateJobScreen = ({ route }) => {
                                                             jobId: item?.id
                                                         })}
                                                     >
-                                                        <Text style={[styles.tableText, { width: wp(30), paddingRight: spacings.large }]}>{capitalize(item.jobName) || '—'}</Text>
-                                                        <Text style={[styles.tableText, { width: wp(30), paddingLeft: spacings.large }]}>{item?.vehicles?.length}</Text>
-                                                        <Text style={[styles.tableText, { width: wp(35) }]}>{capitalize(item.customer?.fullName) || '—'}</Text>
-                                                        <Text style={[styles.tableText, { width: wp(30) }]}>
+                                                        <Text style={[styles.tableText, { width: isTablet ? wp(20) :wp(30), paddingRight: spacings.large }]}>{capitalize(item.jobName) || '—'}</Text>
+                                                        <Text style={[styles.tableText, { width: isTablet ? wp(10) :wp(30), paddingLeft: spacings.large }]}>{item?.vehicles?.length}</Text>
+                                                        <Text style={[styles.tableText, { width: isTablet ? wp(20) :wp(35) }]}>{capitalize(item.customer?.fullName) || '—'}</Text>
+                                                        <Text style={[styles.tableText, { width:isTablet ? wp(15) : wp(30) }]}>
                                                             {item.estimatedCost ? `$${item.estimatedCost}` : '—'}
                                                         </Text>
-                                                        <Text style={[styles.tableText, { width: wp(33) }]}>
+                                                        <Text style={[styles.tableText, { width:isTablet ? wp(15) : wp(33) }]}>
                                                             {item.startDate
                                                                 ? new Date(item.startDate).toLocaleDateString('en-US', {
                                                                     month: 'short',
@@ -742,7 +742,7 @@ const CreateJobScreen = ({ route }) => {
                                                                 })
                                                                 : '—'}
                                                         </Text>
-                                                        <Text style={[styles.tableText, { width: wp(33) }]}>
+                                                        <Text style={[styles.tableText, { width: isTablet ? wp(15) :wp(33) }]}>
                                                             {item.endDate
                                                                 ? new Date(item.endDate).toLocaleDateString('en-US', {
                                                                     month: 'short',
