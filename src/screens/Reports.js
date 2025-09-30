@@ -788,7 +788,7 @@ const Reports = ({ navigation }) => {
                             onEndReachedThreshold={0.5}
                             renderItem={({ item, index }) => {
                                 const rowStyle = {
-                                    backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor,
+                                    backgroundColor: index % 2 === 0 ? lightBlueColor : whiteColor,
                                 };
 
                                 return (
@@ -847,7 +847,7 @@ const Reports = ({ navigation }) => {
                         onRefresh={handleRefreshVehicle}
                         renderItem={({ item, index }) => (
                             <Pressable style={{
-                                backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor,
+                                backgroundColor: index % 2 === 0 ?lightBlueColor : whiteColor,
                                 borderRadius: 10,
                                 padding: 10,
                                 marginBottom: 10,
@@ -979,7 +979,7 @@ const Reports = ({ navigation }) => {
                                     refreshing={refreshing}
                                     onRefresh={handleRefreshVehicle}
                                     renderItem={({ item, index }) => {
-                                        const rowStyle = { backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor };
+                                        const rowStyle = { backgroundColor: index % 2 === 0 ? lightBlueColor : whiteColor };
                                         return (
                                             <Pressable key={index.toString()} style={[styles.listItem, rowStyle, { flexDirection: 'row', alignItems: "center" }]} onPress={() => navigation.navigate("VehicleDetailsScreen", { vehicleId: item?.id, from: "report" })}>
                                                 <Text style={[styles.text, { width: isTablet ? wp(13) : wp(30), paddingLeft: spacings.small }]}>{item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}</Text>
@@ -1092,7 +1092,7 @@ const Reports = ({ navigation }) => {
                             onEndReachedThreshold={0.3}
                             renderItem={({ item, index }) => {
                                 const rowStyle = {
-                                    backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor,
+                                    backgroundColor: index % 2 === 0 ? lightBlueColor : whiteColor,
                                 };
                                 return (
                                     <Pressable style={[styles.listItem, rowStyle]}

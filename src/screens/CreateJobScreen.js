@@ -720,7 +720,7 @@ const CreateJobScreen = ({ route }) => {
                                                             styles.tableRow,
                                                             flexDirectionRow,
                                                             {
-                                                                backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor,
+                                                                backgroundColor: index % 2 === 0 ? lightBlueColor : whiteColor,
                                                             },
                                                         ]}
                                                         onPress={() => navigation.navigate("NewJobDetailsScreen", {

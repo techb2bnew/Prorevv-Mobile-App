@@ -10,7 +10,7 @@ import {
 } from 'dynamsoft-capture-vision-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 
-const LICENSE = 't0089pwAAAGhb81iy7n5fl95LSpqqKYmFugxYb0CdzMZSNU22/mifpi6+do3D7oDcPtvfKt5TnmZxUxv9ZEHD476NGNgnZTG+1SWdYDw32dfGX1uxWtzrDUzTImI=;t0089pwAAAG4Nl1WMs7tSfwa4ErLs53Q+2R4dtEegG/i+cOFIrIqT8kXC4oEApNuywNlIJxkkno4ihaS7T4H9WZnZVmh6xss78EWXHmo+G7W18VepotVdT2W/Iow=;t0090pwAAADFvwlIFpw76wSOpv0jkRjunEM+/LF2/TFlVUWufoEax0td4TOlV/jIkmkaCQI13hko7TAXn//xXxz5h94I8BoTs8K1OpQeMZ5dtbvy1FrUSYSdq9yKV';
+const LICENSE = 't0090pwAAAI/b/AQi51JB7LPBZm/YJfM7RRnZutbowhzCmEZAo8yT8es1KOIot++Q1ff6N3/ludhdE9tCiI0RRsh6pO4jjQ+5Ad/qVH7AeHa2ufFXceYqLieYJCMM';
 
 const ScannerScreen = ({ navigation, route }) => {
   const fromScreen = route?.params?.from;

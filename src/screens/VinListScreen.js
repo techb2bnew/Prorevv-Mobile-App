@@ -678,7 +678,7 @@ const VinListScreen = ({ navigation, route }) => {
                                         style={[
                                             styles.tableRow,
                                             flexDirectionRow,
-                                            { backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor },
+                                            { backgroundColor: index % 2 === 0 ? lightBlueColor : whiteColor },
                                         ]}
                                         onPress={() => navigation.navigate("VehicleDetailsScreen", {
                                             vehicleId: item.id,
@@ -785,7 +785,7 @@ const VinListScreen = ({ navigation, route }) => {
                     onRefresh={handleRefresh}
                     renderItem={({ item, index }) => (
                         <Pressable style={{
-                            backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor,
+                            backgroundColor: index % 2 === 0 ? lightBlueColor : whiteColor,
                             borderRadius: 10,
                             padding: 10,
                             marginBottom: 10,

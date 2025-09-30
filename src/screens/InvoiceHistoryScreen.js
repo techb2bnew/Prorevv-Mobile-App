@@ -324,7 +324,7 @@ const InvoiceHistoryScreen = ({ navigation,
                                 keyExtractor={(item, index) => item.id?.toString() || index.toString()}
                                 showsVerticalScrollIndicator={false}
                                 renderItem={({ item, index }) => {
-                                    const rowStyle = { backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor };
+                                    const rowStyle = { backgroundColor: index % 2 === 0 ? lightBlueColor : whiteColor };
                                     const isSelected = selectedVehicles.some(v => v.id === item.id);
                                     // console.log("📦 Rendering item:", item);
 
@@ -533,10 +533,11 @@ const InvoiceHistoryScreen = ({ navigation,
                         contentContainerStyle={{ paddingVertical: 10 }}
                         renderItem={({ item, index }) => {
                             const isSelected = selectedVehicles.some(v => v.id === item.id);
+console.log("item", item);
 
                             return (
                                 <Pressable style={{
-                                    backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor,
+                                    backgroundColor: index % 2 === 0 ? lightBlueColor : whiteColor,
                                     borderRadius: 10,
                                     padding: 10,
                                     marginBottom: 10,
@@ -573,7 +574,7 @@ const InvoiceHistoryScreen = ({ navigation,
                                         </View>
                                         <View style={{ width: '48%', marginBottom: 9 }}>
                                             <Text style={{ color: '#555', fontSize: 10 }}>Grand Total($)</Text>
-                                            <Text >{item?.grandTotal ? `$${item.grandTotal}` : '-'} </Text>
+                                            <Text >{item?.grandTotal ? `$${item?.grandTotal}` : '-'} </Text>
                                         </View>
                                         <View style={{ width: '48%', marginBottom: 9 }}>
                                             <Text style={{ color: '#555', fontSize: 10 }}>Invoice Created Date</Text>

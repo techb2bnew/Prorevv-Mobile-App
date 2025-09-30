@@ -97,14 +97,14 @@ export default function MainNavigator() {
                     return (
                         <View
                             style={{
-                                backgroundColor: focused ? blueColor : "transparent",
+                                backgroundColor: focused ? '#3B6981' : "transparent",
                                 // paddingVertical: 6,
                                 // paddingHorizontal: 12,
-                                borderRadius: 5,
+                                borderRadius: 8,
                                 alignItems: "center",
                                 justifyContent: "center",
-                                width:35,
-                                height:35,
+                                width: 35,
+                                height: 35,
                             }}
                         >
                             <IconComponent
@@ -115,7 +115,7 @@ export default function MainNavigator() {
                         </View>
                     );
                 },
-                tabBarActiveTintColor: blueColor,
+                tabBarActiveTintColor: '#3B6981',
                 tabBarInactiveTintColor: grayColor,
                 tabBarStyle: shouldHideTabBar(route) || route.name === "Invoice"
                     ? { display: "none" }

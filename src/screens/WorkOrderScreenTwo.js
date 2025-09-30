@@ -1180,7 +1180,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                             borderColor: blueColor,
                                             borderWidth: 1,
                                             zIndex: 100000,
-                                            backgroundColor: lightBlueColor,
+                                            backgroundColor: '#5a8298f7',
                                             maxHeight: hp(15)
                                         }}
                                         listMode="SCROLLVIEW"

@@ -819,7 +819,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                 showsVerticalScrollIndicator={false}
                                 renderItem={({ item, index }) => {
                                     console.log(item);
-                                    const rowStyle = { backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor };
+                                    const rowStyle = { backgroundColor: index % 2 === 0 ? lightBlueColor : whiteColor };
                                     const isSelected = selectAll || selectedVehicles.some(v => v.id === item.id);
                                     return (
                                         <Pressable key={index.toString()} style={[styles.listItem, rowStyle, { flexDirection: 'row', alignItems: "center" }]} onPress={() => navigation.navigate("VehicleDetailsScreen", { vehicleId: item?.id, from: "report" })}>
@@ -965,7 +965,7 @@ const GenerateInvoiceScreen = ({ navigation,
 
                             return (
                                 <Pressable style={{
-                                    backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor,
+                                    backgroundColor: index % 2 === 0 ? lightBlueColor : whiteColor,
                                     borderRadius: 10,
                                     padding: 10,
                                     marginBottom: 10,

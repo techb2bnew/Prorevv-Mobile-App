@@ -21,6 +21,6 @@ export const greenColor = "#3B8000";
 export const orangeColor = '#FF5733';
 export const lightOrangeColor = '#EF502E';
 export const ExtraExtralightOrangeColor = '#FFF4F1';
-export const blueColor = '#383D71';
-export const lightBlueColor ="#ECEEFF";
+export const blueColor = '#3B6981';
+export const lightBlueColor ='#3b698143';
 

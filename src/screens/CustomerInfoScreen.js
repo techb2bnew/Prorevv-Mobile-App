@@ -439,6 +439,7 @@ const CustomerInfoScreen = ({ navigation }) => {
                             alignItems: 'center',
                             borderRadius: 5,
                             marginRight: 10,
+                            borderWidth: 1
 
                         }]}>
                         <Ionicons name="list" size={isTablet ? 35 : 20} color={viewType === 'list' ? whiteColor : blackColor} />
@@ -452,6 +453,7 @@ const CustomerInfoScreen = ({ navigation }) => {
                             justifyContent: 'center',
                             alignItems: 'center',
                             borderRadius: 5,
+                            borderWidth: 1
                         }]}>
                         <Ionicons name="grid-sharp" size={isTablet ? 35 : 20} color={viewType === 'grid' ? whiteColor : blackColor} />
                     </TouchableOpacity>
@@ -480,7 +482,7 @@ const CustomerInfoScreen = ({ navigation }) => {
                                                 <View style={[
                                                     styles.tableRow,
                                                     flexDirectionRow,
-                                                    { backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor }
+                                                    { backgroundColor: index % 2 === 0 ? lightBlueColor : whiteColor }
                                                 ]}>
                                                     <Text style={[styles.tableText, { width: isTablet ? wp(20) : wp(40) }]}>{capitalize(item.fullName) || '—'}</Text>
                                                     <Text style={[styles.tableText, { width: isTablet ? wp(20) : wp(40) }]}>{item.phoneNumber || '—'}</Text>

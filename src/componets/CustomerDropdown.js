@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { View, Text, FlatList, Pressable, Modal, StyleSheet, ScrollView, Dimensions, ActivityIndicator } from "react-native";
 import { heightPercentageToDP, widthPercentageToDP } from "../utils";
-import { blackColor, blueColor, grayColor, mediumGray } from "../constans/Color";
+import { blackColor, blueColor, grayColor, lightBlueColor, mediumGray } from "../constans/Color";
 import MaterialCommunityIcons from 'react-native-vector-icons/dist/MaterialCommunityIcons';
 const { width, height } = Dimensions.get('window');
 import Feather from 'react-native-vector-icons/Feather';
@@ -86,7 +86,7 @@ const CustomerDropdown = ({ data, selectedValue, onSelect, showIcon, rightIcon, 
                                 <Pressable
                                     style={[
                                         styles.item,
-                                        isSelected && { backgroundColor: "#e6f0ff" }  // light blue background
+                                        isSelected && { backgroundColor: lightBlueColor }  // light blue background
                                     ]}
                                     onPress={() => {
                                         onSelect(item);

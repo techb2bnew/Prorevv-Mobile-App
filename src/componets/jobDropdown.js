@@ -107,7 +107,7 @@ const JobDropdown = ({
                                     <Pressable
                                         style={{
                                             padding: spacings.xxLarge,
-                                            backgroundColor: isSelected ? "#e6f0ff" : "white",
+                                            backgroundColor: isSelected ? lightBlueColor : "white",
                                             borderBottomColor: "#ccc",
                                             borderBottomWidth: 1,
                                             flexDirection: "row",

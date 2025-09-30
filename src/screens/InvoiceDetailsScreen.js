@@ -72,7 +72,7 @@ const InvoiceDetailsScreen = ({ route, navigation }) => {
     const renderItem = ({ item, index }) => (
         <Pressable
             onPress={() => navigation.navigate('VehicleDetailsScreen', { vehicleId: item.id })}
-            style={[styles.row, { backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor },]}
+            style={[styles.row, { backgroundColor: index % 2 === 0 ? lightBlueColor : whiteColor },]}
         >
             <Text style={[styles.cell, { width: isIOsAndTablet ? "40%" : "44%", paddingLeft: spacings.small2x }]}>{item?.vin || 'N/A'}</Text>
             <Text style={[styles.cell, { color: item.vehicleStatus ? 'green' : 'red', width: isIOsAndTablet ? "43%" : "38%", }]}>

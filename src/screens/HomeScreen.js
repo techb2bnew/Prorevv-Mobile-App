@@ -1,6 +1,6 @@
 import { Image, StyleSheet, Text, TouchableOpacity, View, Pressable, FlatList, ImageBackground, Platform, Dimensions, Alert, ToastAndroid, TextInput, ScrollView } from 'react-native'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { blackColor, blueColor, ExtraExtralightOrangeColor, grayColor, lightBlueColor, lightGrayColor, lightOrangeColor, orangeColor, whiteColor } from '../constans/Color';
+import { blackColor, blueColor, ExtraExtralightOrangeColor, grayColor, lightBlueColor, lightGrayColor, lightOrangeColor, orangeColor, redColor, whiteColor } from '../constans/Color';
 import { ADD_CASTUMER_BACK_IMAGE, ADD_CASTUMER_TAB_BACK_IMAGE, ADD_CASTUMER_TAB_WHITE_BACK_IMAGE, ADD_CASTUMER_WHITE_BACK_IMAGE, ADD_VEHICLE_BACK_IMAGE, ADD_VEHICLE_IMAGE, ADD_VEHICLE_TAB_BACK_IMAGE, APP_NAME_IMAGE, CARD_BACKGROUND, CAROUSAL_ONE_IMAGE, CAROUSAL_THREE_IMAGE, CAROUSAL_TWO_IMAGE, CIRLE_SCANNER_IMAGE, HEADER_BACKGROUND, HOW_TO_PLAY_BACK_IMAGE, HOW_TO_PLAY_TAB_BACK_IMAGE, HOW_TO_USE_IMAGE, JOB_HISTORY_BACK_IMAGE, JOB_HISTORY_IMAGE, JOB_HISTORY_TAB_BACK_IMAGE, NEW_CLIENT_IMAGE, NEW_WORK_ORDER_IMAGE, VIN_LIST_IMAGE } from '../assests/images';
 import { BaseStyle } from '../constans/Style';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from '../utils';
@@ -48,18 +48,18 @@ const HomeScreen = ({ navigation }) => {
           navigation.navigate("CustomerInfo");
         }
       },
-      color: ' #cacaca58',
+      // color: ' #cacaca58',
       backgroundImage: isTablet ? ADD_CASTUMER_TAB_BACK_IMAGE : ADD_CASTUMER_BACK_IMAGE,
       iconComponent: technicianType === "ifs" ? Feather : Ionicons,
       iconName: technicianType === "ifs" ? "file-text" : "person-add-outline",
-      color: '#fb0105ff',
+      color: '#3B6981',
     },
     {
       name: technicianType === "ifs" ? "Scan Vin" : "Manage Jobs",
       subtitle: technicianType === "ifs" ? "Scan VIN number" : "Start a new job",
       image: technicianType === "ifs" ? CIRLE_SCANNER_IMAGE : NEW_WORK_ORDER_IMAGE,
       backgroundColor: whiteColor,
-      color: '#F54900',
+      color: blackColor,
       onPress: async () => {
         if (technicianType === "ifs") {
           try {
@@ -92,7 +92,7 @@ const HomeScreen = ({ navigation }) => {
       subtitle: technicianType === "ifs" ? "Browse saved VINs" : "Manage assign Jobs",
       image: technicianType === "ifs" ? VIN_LIST_IMAGE : ADD_VEHICLE_IMAGE,
       backgroundColor: whiteColor,
-      color: '#155DFC',
+      color:redColor,
       onPress: () => {
         if (technicianType === "ifs") {
           navigation.navigate("VinListScreen")
@@ -114,7 +114,7 @@ const HomeScreen = ({ navigation }) => {
       subtitle: technicianType === "ifs" ? "Check reports summary" : "Scan VIN number",
       image: technicianType === "ifs" ? JOB_HISTORY_IMAGE : CIRLE_SCANNER_IMAGE,
       backgroundColor: whiteColor,
-      color: '#009689',
+      color: '#3B6981',
       onPress: async () => {
         if (technicianType === "ifs") {
           navigation.navigate("ReportsScreen")
@@ -559,7 +559,7 @@ const HomeScreen = ({ navigation }) => {
               borderRadius: 8,
               marginRight: spacings.xxLarge,
               padding: spacings.small,
-              backgroundColor: '#cacaca58',
+              backgroundColor: item?.color,
               borderColor: "#cacacaff",
               borderWidth: 0.5,
               alignItems: "center",
@@ -569,7 +569,7 @@ const HomeScreen = ({ navigation }) => {
             <Feather
               name="arrow-right"
               size={isTablet ? 25 : 20}
-              color={item?.color}
+              color={whiteColor}
             />
           </View>
         </View>
@@ -605,13 +605,13 @@ const HomeScreen = ({ navigation }) => {
                     onPress={() => setIsSearching(false)}
                     style={{
                       borderRadius: 10,
-                      backgroundColor: "#cacaca58",
+                      backgroundColor: whiteColor,
                       borderColor: "#fff",
                       borderWidth: 0.5,
                       padding: spacings.large,
                     }}
                   >
-                    <Feather name="arrow-left" size={25} color={whiteColor} />
+                    <Feather name="arrow-left" size={25} color={blueColor} />
                   </Pressable>
                 ) : (
                   // 👤 Profile button
@@ -619,13 +619,13 @@ const HomeScreen = ({ navigation }) => {
                     onPress={() => navigation.navigate("ProfileStackScreen")}
                     style={{
                       borderRadius: 10,
-                      backgroundColor: "#cacaca58",
+                      backgroundColor:whiteColor,
                       borderColor: "#fff",
                       borderWidth: 0.5,
                       padding: spacings.large,
                     }}
                   >
-                    <Feather name="user" size={25} color={whiteColor} />
+                    <Feather name="user" size={25} color={blueColor} />
                   </Pressable>
                 )
               ) : (
@@ -635,13 +635,13 @@ const HomeScreen = ({ navigation }) => {
                     onPress={() => setIsSearching(false)}
                     style={{
                       borderRadius: 10,
-                      backgroundColor: "#cacaca58",
+                      backgroundColor: whiteColor,
                       borderColor: "#fff",
                       borderWidth: 0.5,
                       padding: spacings.large,
                     }}
                   >
-                    <Feather name="arrow-left" size={25} color={whiteColor} />
+                    <Feather name="arrow-left" size={25} color={blueColor} />
                   </Pressable>
                 ) : (
                   <View style={{ width: 50 }} /> // default empty
@@ -662,13 +662,13 @@ const HomeScreen = ({ navigation }) => {
                     onPress={() => navigation.navigate("ProfileStackScreen")}
                     style={{
                       borderRadius: 10,
-                      backgroundColor: "#cacaca58",
+                      backgroundColor:whiteColor,
                       borderColor: "#fff",
                       borderWidth: 0.5,
                       padding: spacings.large,
                     }}
                   >
-                    <Feather name="user" size={25} color={whiteColor} />
+                    <Feather name="user" size={25} color={blueColor} />
                   </Pressable>
                 ) : (
                   // 🔍 Search
@@ -676,13 +676,13 @@ const HomeScreen = ({ navigation }) => {
                     onPress={() => setIsSearching(true)}
                     style={{
                       borderRadius: 10,
-                      backgroundColor: "#cacaca58",
+                      backgroundColor: whiteColor,
                       borderColor: "#fff",
                       borderWidth: 0.5,
                       padding: spacings.large,
                     }}
                   >
-                    <Feather name="search" size={25} color={whiteColor} />
+                    <Feather name="search" size={25} color={blueColor} />
                   </Pressable>
                 )
               ) : (
@@ -695,13 +695,13 @@ const HomeScreen = ({ navigation }) => {
                     onPress={() => setIsSearching(true)}
                     style={{
                       borderRadius: 10,
-                      backgroundColor: "#cacaca58",
+                      backgroundColor: whiteColor,
                       borderColor: "#fff",
                       borderWidth: 0.5,
                       padding: spacings.large,
                     }}
                   >
-                    <Feather name="search" size={25} color={whiteColor} />
+                    <Feather name="search" size={25} color={blueColor} />
                   </Pressable>
                 )
               )}
@@ -784,7 +784,7 @@ const HomeScreen = ({ navigation }) => {
                     <Feather name="users" size={25} color='#28A745' />
                   </View> */}
                   <Text style={[styles.overviewNumber, {
-                    color: '#28A745',
+                   color: '#8A2BE2',
                     fontSize: isIOSAndTablet ? style.fontSizeMedium2x.fontSize : style.fontSizeNormal2x.fontSize
                   }]}>
                     {technicianType === "manager"
@@ -808,7 +808,7 @@ const HomeScreen = ({ navigation }) => {
                     <Ionicons name="car-outline" size={25} color='#8A2BE2' />
                   </View> */}
                   <Text style={[styles.overviewNumber, {
-                    color: '#8A2BE2', fontSize: isIOSAndTablet ? style.fontSizeMedium2x.fontSize : style.fontSizeNormal2x.fontSize
+                    color: '#e2682bff', fontSize: isIOSAndTablet ? style.fontSizeMedium2x.fontSize : style.fontSizeNormal2x.fontSize
                   }]}>
                     {technicianType === "manager"
                       ? (dashboardData?.Vehiclesuperadmin ?? 0)
