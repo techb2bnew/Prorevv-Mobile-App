@@ -67,13 +67,45 @@ const GenerateInvoiceScreen = ({ navigation,
 
     useFocusEffect(
         useCallback(() => {
-            setCustomerDetails(null);
-            setSelectedJobId(null);
-            setJobList([]);
+            const loadSelectedCustomerAndJob = async () => {
+                try {
+                    // Load selected customer from AsyncStorage
+                    const savedCustomer = await AsyncStorage.getItem("current_customer");
+                    if (savedCustomer) {
+                        const parsedCustomer = JSON.parse(savedCustomer);
+                        console.log("Loading saved customer:", parsedCustomer);
+                        setCustomerDetails(parsedCustomer);
+                    }
+
+                    // Load selected job from AsyncStorage
+                    const savedJob = await AsyncStorage.getItem("current_Job");
+                    if (savedJob) {
+                        const parsedJob = JSON.parse(savedJob);
+                        console.log("Loading saved job:", parsedJob);
+                        
+                        // Set the job details
+                        setSelectedJobId(parsedJob.id);
+                        
+                        // If no customer was loaded from current_customer, try to get it from job data
+                        if (!savedCustomer && parsedJob.assignCustomer) {
+                            setCustomerDetails(parsedJob.assignCustomer);
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error loading saved customer and job:", error);
+                }
+            };
+
+            // Reset other states but keep customer and job if they exist
             setSelectedVehicles([]);
             setSelectAll(false);
-            setWorkOrdersRawData([])
-            fetchCustomers(1); // fresh customers + jobs fetch
+            setWorkOrdersRawData([]);
+            
+            // Load saved selections
+            loadSelectedCustomerAndJob();
+            
+            // Fetch fresh data
+            fetchCustomers(1);
         }, [])
     );
     useEffect(() => {
@@ -626,6 +658,27 @@ const GenerateInvoiceScreen = ({ navigation,
         }, [selectedJobId])
     );
 
+    // Load job list after customer data is fetched and customer is selected
+    useEffect(() => {
+        const loadJobListForSelectedCustomer = async () => {
+            if (customerDetails && allJobList.length > 0) {
+                const customerJobs = allJobList.filter(job => job.customer?.fullName === customerDetails.fullName);
+                setJobList(customerJobs);
+                
+                // If we have a selected job ID, make sure it's in the job list
+                if (selectedJobId) {
+                    const jobExists = customerJobs.find(job => job.id === selectedJobId);
+                    if (jobExists) {
+                        // Job exists, fetch its data
+                        fetchJobData(selectedJobId);
+                    }
+                }
+            }
+        };
+        
+        loadJobListForSelectedCustomer();
+    }, [customerDetails, allJobList, selectedJobId]);
+
     const handleInvoiceChange = (vehicleId, value) => {
         setInvoiceRates(prev => ({
             ...prev,
@@ -799,10 +852,10 @@ const GenerateInvoiceScreen = ({ navigation,
                                 />
                                 {/* <Text style={[styles.tableHeader, { marginLeft: 5 }]}>Select</Text> */}
                             </TouchableOpacity>
-                            <Text style={[styles.tableHeader, { width: isTablet ? wp(25) : wp(43) }]}>VIN</Text>
+                            <Text style={[styles.tableHeader, { width: isTablet ? wp(25) : wp(45) }]}>VIN</Text>
                             <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(25) }]}>Make</Text>
                             <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(30) }]}>Model</Text>
-                            <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(35) }]}>Extra Cost($)</Text>
+                            <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(35) }]}>Job Override Cost($)</Text>
                             {/* <Text style={[styles.tableHeader, { width: wp(25) }]}>Est Cost($)</Text> */}
                             <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(35) }]}>Start Date</Text>
                             <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(35) }]}>End Date</Text>
@@ -830,8 +883,8 @@ const GenerateInvoiceScreen = ({ navigation,
                                                     color={isSelected ? blueColor : 'gray'}
                                                 />
                                             </TouchableOpacity>
-                                            <Text style={[styles.text, { width: isTablet ? wp(25) : wp(43) }]}>{item?.vin || '-'}</Text>
-                                            <Text style={[styles.text, { width: isTablet ? wp(15) : wp(25) }]}>{item?.make || '-'}</Text>
+                                            <Text style={[styles.text, { width: isTablet ? wp(25) : wp(45) }]}>{item?.vin || '-'}</Text>
+                                            <Text style={[styles.text, { width: isTablet ? wp(15) : wp(25), paddingRight: spacings.normal }]}>{item?.make || '-'}</Text>
                                             <Text style={[styles.text, { width: isTablet ? wp(15) : wp(28), paddingRight: spacings.large }]}>{item?.model || '-'}</Text>
                                             <Text style={[styles.text, { width: isTablet ? wp(15) : wp(35) }]}>
                                                 {item?.labourCost ? `$${item.labourCost}` : '-'}
@@ -891,7 +944,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                             </View>
 
 
-                                            <View style={[getStatusStyle(item?.vehicleStatus), alignJustifyCenter, { height: isTablet ? hp(2) : hp(4)  }]}>
+                                            <View style={[getStatusStyle(item?.vehicleStatus), alignJustifyCenter, { height: isTablet ? hp(2) : hp(4) }]}>
                                                 <Text
                                                     style={{
                                                         color: getStatusText(item?.vehicleStatus) === "Complete" ? greenColor : goldColor
@@ -996,7 +1049,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                             <Text >{item?.model}</Text>
                                         </View>
                                         <View style={{ width: '48%', marginBottom: 9 }}>
-                                            <Text style={{ color: '#555', fontSize: 10 }}>Extra Cost($)</Text>
+                                            <Text style={{ color: '#555', fontSize: 10 }}>Job Override Cost($)</Text>
                                             <Text >{item?.labourCost ? `$${item.labourCost}` : '-'} </Text>
                                         </View>
 

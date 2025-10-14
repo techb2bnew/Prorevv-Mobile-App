@@ -18,7 +18,7 @@ import { heightPercentageToDP as hp, widthPercentageToDP as wp } from '../utils'
 const CombinedInvoiceScreen = () => {
     const navigation = useNavigation();
     const [activeTab, setActiveTab] = useState('generate');
-    const [viewType, setViewType] = useState('list');
+    const [viewType, setViewType] = useState('grid');
     const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
     const { width, height } = Dimensions.get("window");
     const isTablet = width >= 668 && height >= 1024;
@@ -74,7 +74,7 @@ const CombinedInvoiceScreen = () => {
             <View style={styles.tabHeader}>
                 <TouchableOpacity
                     style={[styles.tab, activeTab === 'generate' && styles.activeTab]}
-                    onPress={() => { setActiveTab('generate'), setViewType('list') }}
+                    onPress={() => { setActiveTab('generate'), setViewType('grid') }}
                 >
                     <Text style={[styles.tabText, activeTab === 'generate' && styles.activeText]}>
                         Generate Invoice
@@ -82,7 +82,7 @@ const CombinedInvoiceScreen = () => {
                 </TouchableOpacity>
                 <TouchableOpacity
                     style={[styles.tab, activeTab === 'history' && styles.activeTab]}
-                    onPress={() => { setActiveTab('history'), setViewType('list') }}
+                    onPress={() => { setActiveTab('history'), setViewType('grid') }}
                 >
                     <Text style={[styles.tabText, activeTab === 'history' && styles.activeText]}>
                         Invoice History

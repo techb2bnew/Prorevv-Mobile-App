@@ -92,7 +92,7 @@ const HomeScreen = ({ navigation }) => {
       subtitle: technicianType === "ifs" ? "Browse saved VINs" : "Manage assign Jobs",
       image: technicianType === "ifs" ? VIN_LIST_IMAGE : ADD_VEHICLE_IMAGE,
       backgroundColor: whiteColor,
-      color:redColor,
+      color: redColor,
       onPress: () => {
         if (technicianType === "ifs") {
           navigation.navigate("VinListScreen")
@@ -619,7 +619,7 @@ const HomeScreen = ({ navigation }) => {
                     onPress={() => navigation.navigate("ProfileStackScreen")}
                     style={{
                       borderRadius: 10,
-                      backgroundColor:whiteColor,
+                      backgroundColor: whiteColor,
                       borderColor: "#fff",
                       borderWidth: 0.5,
                       padding: spacings.large,
@@ -662,7 +662,7 @@ const HomeScreen = ({ navigation }) => {
                     onPress={() => navigation.navigate("ProfileStackScreen")}
                     style={{
                       borderRadius: 10,
-                      backgroundColor:whiteColor,
+                      backgroundColor: whiteColor,
                       borderColor: "#fff",
                       borderWidth: 0.5,
                       padding: spacings.large,
@@ -751,9 +751,9 @@ const HomeScreen = ({ navigation }) => {
               }]}>
                 Total Overview
               </Text>
-              <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: spacings.large }}>
+              <View style={{ flexDirection: "row", justifyContent: technicianType != "ifs" ? "space-between" : "space-around", marginTop: spacings.large }}>
                 {/* Active Jobs */}
-                <View style={styles.overviewCard}>
+                <Pressable style={styles.overviewCard} onPress={() => { navigation.navigate("CreateJobScreen") }}>
                   {/* <View style={styles.overviewCardIcon}>
                     <Ionicons name="bag-add-outline" size={25} color='#FF5733' />
                   </View> */}
@@ -776,15 +776,15 @@ const HomeScreen = ({ navigation }) => {
                   }]}>
                     Active Jobs
                   </Text>
-                </View>
+                </Pressable>
 
                 {/* Customers */}
-                <View style={styles.overviewCard}>
+                {technicianType != "ifs" && <Pressable style={styles.overviewCard} onPress={() => { navigation.navigate("CustomerInfo") }}>
                   {/* <View style={styles.overviewCardIcon}>
                     <Feather name="users" size={25} color='#28A745' />
                   </View> */}
                   <Text style={[styles.overviewNumber, {
-                   color: '#8A2BE2',
+                    color: '#8A2BE2',
                     fontSize: isIOSAndTablet ? style.fontSizeMedium2x.fontSize : style.fontSizeNormal2x.fontSize
                   }]}>
                     {technicianType === "manager"
@@ -800,10 +800,10 @@ const HomeScreen = ({ navigation }) => {
                           ? style.fontSizeNormal1x.fontSize
                           : style.fontSizeSmall2x.fontSize,
                   }]}>Customers</Text>
-                </View>
+                </Pressable>}
 
                 {/* Vehicles */}
-                <View style={styles.overviewCard}>
+                <Pressable style={styles.overviewCard} onPress={() => { navigation.navigate("VinListScreen") }}>
                   {/* <View style={styles.overviewCardIcon}>
                     <Ionicons name="car-outline" size={25} color='#8A2BE2' />
                   </View> */}
@@ -823,7 +823,7 @@ const HomeScreen = ({ navigation }) => {
                           ? style.fontSizeNormal1x.fontSize
                           : style.fontSizeSmall2x.fontSize,
                   }]}>Vehicles</Text>
-                </View>
+                </Pressable>
               </View>
             </View>
           </ImageBackground>

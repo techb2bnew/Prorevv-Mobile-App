@@ -83,6 +83,25 @@ const VinListScreen = ({ navigation, route }) => {
         }, [])
     );
 
+    // Load selected job after job data is fetched
+    useEffect(() => {
+        const loadSelectedJobAfterDataLoad = async () => {
+            if (jobsRawData.length > 0) {
+                const savedJob = await AsyncStorage.getItem("current_Job");
+                if (savedJob) {
+                    const parsed = JSON.parse(savedJob);
+                    // Check if the saved job exists in the current job list
+                    const jobExists = jobsRawData.find(job => job.id === parsed.id);
+                    if (jobExists) {
+                        setSelectedJobName(parsed.jobName);
+                        setSelectedJobId(parsed.id);
+                    }
+                }
+            }
+        };
+        loadSelectedJobAfterDataLoad();
+    }, [jobsRawData]);
+
     const filteredData = sortedData.filter(item => {
         // Search filter
         const matchesSearch = searchVin
@@ -417,6 +436,11 @@ const VinListScreen = ({ navigation, route }) => {
     const finalVehicleList = React.useMemo(() => {
         console.log("vehicleData", vehicleData);
 
+        // If no job is selected, return empty array (show no data)
+        if (!selectedJobId) {
+            return [];
+        }
+
         const baseData = selectedJobId ? selectedJobVehicles : vehicleData;
 
         // Step 1: Apply search filter
@@ -490,7 +514,7 @@ const VinListScreen = ({ navigation, route }) => {
     return (
         <View style={{ width: wp(100), height: hp(100), backgroundColor: whiteColor }}>
             {/* Header */}
-            <Header title={"Vin List"} onBack={() => navigation.navigate("Home")} />
+            <Header title={"Vin List"} onBack={() => navigation.getParent()?.navigate("Home")} />
             <View style={{
                 flexDirection: 'row',
                 position: "absolute",
@@ -647,7 +671,7 @@ const VinListScreen = ({ navigation, route }) => {
                 <View>
                     <View style={[styles.tableHeader, flexDirectionRow]}>
                         {/* <Text style={[styles.tableHeaderText, { width: wp(30) }]}>JobName</Text> */}
-                        <Text style={[styles.tableHeaderText, { width: isTablet ? wp(25) : wp(50) }]}>VIN No.</Text>
+                        <Text style={[styles.tableHeaderText, { width: isTablet ? wp(25) : wp(52) }]}>VIN No.</Text>
                         <Text style={[styles.tableHeaderText, { width: isTablet ? wp(13) : wp(25) }]}>Make</Text>
                         <Text style={[styles.tableHeaderText, { width: isTablet ? wp(13) : wp(35) }]}>Model</Text>
                         <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) : wp(35) }]}>Job Name</Text>
@@ -686,9 +710,9 @@ const VinListScreen = ({ navigation, route }) => {
                                         })}
                                     >
                                         {/* <Text style={[styles.tableText, { width: wp(30), paddingLeft: spacings.small }]}>{item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}</Text> */}
-                                        <Text style={[styles.tableText, { width: isTablet ? wp(25) : wp(50) }]}>{item?.vin}</Text>
-                                        <Text style={[styles.tableText, { width: isTablet ? wp(13) : wp(25) }]}>{item?.make}</Text>
-                                        <Text style={[styles.tableText, { width: isTablet ? wp(13) : wp(35) }]}>{item?.model}</Text>
+                                        <Text style={[styles.tableText, { width: isTablet ? wp(25) : wp(52) }]}>{item?.vin}</Text>
+                                        <Text style={[styles.tableText, { width: isTablet ? wp(13) : wp(25),paddingRight: spacings.large }]}>{item?.make}</Text>
+                                        <Text style={[styles.tableText, { width: isTablet ? wp(13) : wp(35)}]}>{item?.model}</Text>
                                         <Text style={[styles.tableText, { width: isTablet ? wp(15) : wp(35), paddingRight: spacings.large }]}>{item?.jobName}</Text>
                                         <Text style={[styles.tableText, { width: isTablet ? wp(15) : wp(35) }]}>
                                             {item?.startDate
@@ -724,7 +748,7 @@ const VinListScreen = ({ navigation, route }) => {
                                                     .join(', ') || '—'}
                                             </Text>
                                         )}
-                                        <View style={{ flexDirection: "row", alignItems: "center", width: isTablet ? wp(15) : wp(35)}} >
+                                        <View style={{ flexDirection: "row", alignItems: "center", width: isTablet ? wp(15) : wp(35) }} >
                                             <Pressable onPress={() => navigation.navigate("VehicleDetailsScreen", {
                                                 vehicleId: item.id,
                                                 from: activeTab === "partnerOrder" ? "partner" : "workOrder"
@@ -754,9 +778,15 @@ const VinListScreen = ({ navigation, route }) => {
                             }
                             ListEmptyComponent={() => {
                                 if (loading) return null;
+                                let message = '';
+                                if (!selectedJobId) {
+                                    message = "Please select a job to view vehicles";
+                                } else {
+                                    message = "No Vehicle List found";
+                                }
                                 return (
                                     <View style={styles.emptyContainer}>
-                                        <Text style={styles.emptyText}>No Vehicle List found</Text>
+                                        <Text style={styles.emptyText}>{message}</Text>
                                     </View>
                                 );
                             }}
@@ -894,9 +924,15 @@ const VinListScreen = ({ navigation, route }) => {
                     }
                     ListEmptyComponent={() => {
                         if (loading) return null; // 👈 Loading ke time kuch mat dikhao
+                        let message = '';
+                        if (!selectedJobId) {
+                            message = "Please select a job to view vehicles";
+                        } else {
+                            message = "No Vehicle List found";
+                        }
                         return (
                             <View style={styles.emptyContainer}>
-                                <Text style={styles.emptyText}>No Vehicle List found</Text>
+                                <Text style={styles.emptyText}>{message}</Text>
                             </View>
                         );
                     }}

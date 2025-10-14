@@ -434,7 +434,7 @@ function App(): React.JSX.Element {
             </NavigationContainer>
           </TabBarProvider>
         )}
-        {/* {isBiometricModalVisible && <BiometricModal isBiometricModalVisible={isBiometricModalVisible} setIsBiometricModalVisible={setIsBiometricModalVisible} />} */}
+        {isBiometricModalVisible && <BiometricModal isBiometricModalVisible={isBiometricModalVisible} setIsBiometricModalVisible={setIsBiometricModalVisible} />}
         <InternetToast message={toastMessage} visible={toastVisible} />
       </KeyboardAvoidingView>
     </SafeAreaView>
