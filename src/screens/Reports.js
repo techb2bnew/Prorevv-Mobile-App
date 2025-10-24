@@ -28,10 +28,12 @@ const Reports = ({ navigation }) => {
     const [technicianId, setTechnicianId] = useState();
     const [technicianType, setTechnicianType] = useState();
     const [loading, setLoading] = useState(true);
-    const [startDate, setStartDate] = useState(new Date());
-    const [endDate, setEndDate] = useState(new Date());
+    const [startDate, setStartDate] = useState(null);
+    const [endDate, setEndDate] = useState(null);
     const [isStartPickerOpen, setIsStartPickerOpen] = useState(false);
     const [isEndPickerOpen, setIsEndPickerOpen] = useState(false);
+    const [tempStartDate, setTempStartDate] = useState(new Date());
+    const [tempEndDate, setTempEndDate] = useState(new Date());
     const [isModalVisible, setModalVisible] = useState(false);
     const [sortOrder, setSortOrder] = useState("asc");
     const [sortType, setSortType] = useState("");
@@ -174,24 +176,25 @@ const Reports = ({ navigation }) => {
 
     useFocusEffect(
         useCallback(() => {
-            const today = new Date();
-
-            console.log("Focus effect ran on screen focus");
-            console.log("endDate:", endDate.toISOString());
-            console.log("today:", today.toISOString());
-
-            if (endDate > today) {
-                console.log("Resetting endDate to today");
-                setEndDate(today);
-            }
-
-            const lastMonth = new Date();
-            lastMonth.setMonth(today.getMonth() - 1);
-            console.log("Resetting startDate to last month");
-            setStartDate(lastMonth);
+            console.log("Focus effect ran on screen focus - resetting dates");
+            
+            // Reset dates when screen renders
+            setStartDate(null);
+            setEndDate(null);
+            setTempStartDate(new Date());
+            setTempEndDate(new Date());
 
         }, []) // <-- keep this empty so it only runs on focus
     );
+
+    // Reset dates when tab changes
+    useEffect(() => {
+        console.log("Tab changed to:", activeTab, "- resetting dates");
+        setStartDate(null);
+        setEndDate(null);
+        setTempStartDate(new Date());
+        setTempEndDate(new Date());
+    }, [activeTab]);
 
     //fetch tech details
     useEffect(() => {
@@ -282,6 +285,13 @@ const Reports = ({ navigation }) => {
 
     const fetchFilteredData = async (start, end, tab) => {
         if (!technicianId) return;
+        
+        // Filter with single date if only one is provided
+        if (!start && !end) {
+            console.log("At least one date must be selected to filter");
+            return;
+        }
+        
         setLoading(true);
 
         try {
@@ -291,25 +301,29 @@ const Reports = ({ navigation }) => {
                 return;
             }
 
-            const formattedStartDate = start
-                ? new Date(start).toISOString().split("T")[0].split("-").reverse().join("-")
-                : "";
-
-            const formattedEndDate = end
-                ? new Date(end).toISOString().split("T")[0].split("-").reverse().join("-")
-                : "";
+            const formattedStartDate = start ? new Date(start).toISOString().split("T")[0].split("-").reverse().join("-") : "";
+            const formattedEndDate = end ? new Date(end).toISOString().split("T")[0].split("-").reverse().join("-") : "";
 
             console.log("Start:", formattedStartDate, "End:", formattedEndDate, "Tab:", tab);
 
             if (tab === "Jobs") {
                 let bodyData;
 
+                // Build body data with only selected dates
+                let dateParams = [];
+                if (formattedStartDate) {
+                    dateParams.push(`startDate=${formattedStartDate}`);
+                }
+                if (formattedEndDate) {
+                    dateParams.push(`endDate=${formattedEndDate}`);
+                }
+
                 if (technicianType === 'manager') {
-                    bodyData = `startDate=${formattedStartDate}&endDate=${formattedEndDate}&roleType=${technicianType}`;
+                    bodyData = `${dateParams.join('&')}&roleType=${technicianType}`;
                 } else if (technicianType === 'ifs') {
-                    bodyData = `startDate=${formattedStartDate}&endDate=${formattedEndDate}&technicianId=${technicianId}`;
+                    bodyData = `${dateParams.join('&')}&technicianId=${technicianId}`;
                 } else {
-                    bodyData = `startDate=${formattedStartDate}&endDate=${formattedEndDate}&roleType=${technicianType}&technicianId=${technicianId}`;
+                    bodyData = `${dateParams.join('&')}&roleType=${technicianType}&technicianId=${technicianId}`;
                 }
 
                 console.log(bodyData);
@@ -332,12 +346,21 @@ const Reports = ({ navigation }) => {
             } else if (tab === "WorkOrders") {
                 let bodyData;
 
+                // Build body data with only selected dates
+                let dateParams = [];
+                if (formattedStartDate) {
+                    dateParams.push(`startDate=${formattedStartDate}`);
+                }
+                if (formattedEndDate) {
+                    dateParams.push(`endDate=${formattedEndDate}`);
+                }
+
                 if (technicianType === 'manager') {
-                    bodyData = `startDate=${formattedStartDate}&endDate=${formattedEndDate}&roleType=${technicianType}`;
+                    bodyData = `${dateParams.join('&')}&roleType=${technicianType}`;
                 } else if (technicianType === 'ifs') {
-                    bodyData = `startDate=${formattedStartDate}&endDate=${formattedEndDate}&technicianId=${technicianId}`;
+                    bodyData = `${dateParams.join('&')}&technicianId=${technicianId}`;
                 } else {
-                    bodyData = `startDate=${formattedStartDate}&endDate=${formattedEndDate}&roleType=${technicianType}&technicianId=${technicianId}`;
+                    bodyData = `${dateParams.join('&')}&roleType=${technicianType}&technicianId=${technicianId}`;
                 }
                 const response = await axios.post(
                     `${API_BASE_URL}/vehicleFilter`,
@@ -645,22 +668,22 @@ const Reports = ({ navigation }) => {
                 {activeTab != 'Customers' && <View style={[styles.datePickerContainer, { marginBottom: 15, }]}>
                     <TouchableOpacity onPress={() => setIsStartPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter, { width: isTablet ? wp(45) : wp(38) }]}>
                         <Text style={styles.dateText}>
-                            {startDate.toLocaleDateString("en-US", {
+                            {startDate ? startDate.toLocaleDateString("en-US", {
                                 month: "short",
                                 day: "numeric",
                                 year: "numeric",
-                            })}
+                            }) : "Select Date"}
                         </Text>
                         <Feather name="calendar" size={20} color={blackColor} />
 
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => setIsEndPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter, { width: isTablet ? wp(45) : wp(38) }]}>
                         <Text style={styles.dateText}>
-                            {endDate.toLocaleDateString("en-US", {
+                            {endDate ? endDate.toLocaleDateString("en-US", {
                                 month: "short",
                                 day: "numeric",
                                 year: "numeric",
-                            })}
+                            }) : "Select Date"}
                         </Text>
                         <Feather name="calendar" size={20} color={blackColor} />
                     </TouchableOpacity>
@@ -669,11 +692,12 @@ const Reports = ({ navigation }) => {
                 <DatePicker
                     modal
                     open={isStartPickerOpen}
-                    date={startDate}
+                    date={tempStartDate}
                     mode="date"
                     maximumDate={new Date()} // ⛔ prevents selecting future dates
                     onConfirm={(date) => {
                         setStartDate(date);
+                        setTempStartDate(date);
                         setIsStartPickerOpen(false);
                         fetchFilteredData(date, endDate, activeTab);
                     }}
@@ -683,13 +707,14 @@ const Reports = ({ navigation }) => {
                 <DatePicker
                     modal
                     open={isEndPickerOpen}
-                    date={endDate}
+                    date={tempEndDate}
                     mode="date"
                     minimumDate={startDate}       // ✅ StartDate se pehle ki date disable
                     // maximumDate={new Date()} // ⛔ prevents selecting future dates
                     onConfirm={(date) => {
                         const newEndDate = date;
                         setEndDate(newEndDate);
+                        setTempEndDate(newEndDate);
                         setIsEndPickerOpen(false);
                         fetchFilteredData(startDate, newEndDate, activeTab); // Use new end date
                     }}
@@ -958,7 +983,7 @@ const Reports = ({ navigation }) => {
                             {/* Header Row */}
                             <View style={[styles.tableHeaderRow, { backgroundColor: blueColor }]}>
                                 <Text style={[styles.tableHeader, { width: isTablet ? wp(13) : wp(30) }]}>Job Name</Text>
-                                <Text style={[styles.tableHeader, { width: isTablet ? wp(24) : wp(55) }]}>VIN</Text>
+                                <Text style={[styles.tableHeader, { width: isTablet ? wp(27) : wp(55) }]}>VIN</Text>
                                 <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(35) }]}>Make</Text>
                                 <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(30) }]}>Model</Text>
                                 {technicianType === "manager" && <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(35) }]}>Assigned Tech</Text>}
@@ -983,7 +1008,7 @@ const Reports = ({ navigation }) => {
                                         return (
                                             <Pressable key={index.toString()} style={[styles.listItem, rowStyle, { flexDirection: 'row', alignItems: "center" }]} onPress={() => navigation.navigate("VehicleDetailsScreen", { vehicleId: item?.id, from: "report" })}>
                                                 <Text style={[styles.text, { width: isTablet ? wp(13) : wp(30), paddingLeft: spacings.small }]}>{item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}</Text>
-                                                <Text style={[styles.text, { width: isTablet ? wp(25) : wp(55) }]}>{item?.vin || '-'}</Text>
+                                                <Text style={[styles.text, { width: isTablet ? wp(25) : wp(57) }]}>{item?.vin || '-'}</Text>
                                                 <Text style={[styles.text, { width: isTablet ? wp(15) : wp(35) }]}>{item?.make || '-'}</Text>
                                                 <Text style={[styles.text, { width: isTablet ? wp(15) : wp(30) }]}>{item?.model || '-'}</Text>
                                                 {technicianType === "manager" && <Text style={[styles.text, { width: isTablet ? wp(14) : wp(30) }]}>

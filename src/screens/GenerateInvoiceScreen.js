@@ -39,10 +39,12 @@ const GenerateInvoiceScreen = ({ navigation,
     const [loading, setLoading] = useState(false);
     const [isLoading, setisLoading] = useState(false);
     const [isExportLoading, setIsExportLoading] = useState(false);
-    const [startDate, setStartDate] = useState(new Date());
-    const [endDate, setEndDate] = useState(new Date());
+    const [startDate, setStartDate] = useState(null);
+    const [endDate, setEndDate] = useState(null);
     const [isStartPickerOpen, setIsStartPickerOpen] = useState(false);
     const [isEndPickerOpen, setIsEndPickerOpen] = useState(false);
+    const [tempStartDate, setTempStartDate] = useState(new Date());
+    const [tempEndDate, setTempEndDate] = useState(new Date());
     const [customers, setCustomers] = useState([]);
     const [pageNumber, setPageNumber] = useState(1);
     const [hasMoreCustomer, setHasMoreCustomer] = useState(true);
@@ -147,21 +149,13 @@ const GenerateInvoiceScreen = ({ navigation,
 
     useFocusEffect(
         useCallback(() => {
-            const today = new Date();
-
-            console.log("Focus effect ran on screen focus");
-            console.log("endDate:", endDate.toISOString());
-            console.log("today:", today.toISOString());
-
-            if (endDate > today) {
-                console.log("Resetting endDate to today");
-                setEndDate(today);
-            }
-
-            const lastMonth = new Date();
-            lastMonth.setMonth(today.getMonth() - 1);
-            console.log("Resetting startDate to last month");
-            setStartDate(lastMonth);
+            console.log("Focus effect ran on screen focus - resetting dates");
+            
+            // Reset dates when screen renders
+            setStartDate(null);
+            setEndDate(null);
+            setTempStartDate(new Date());
+            setTempEndDate(new Date());
 
         }, []) // <-- keep this empty so it only runs on focus
     );
@@ -528,8 +522,8 @@ const GenerateInvoiceScreen = ({ navigation,
             vehicle?.make?.toLowerCase().includes(lowerSearch) ||
             vehicle?.model?.toLowerCase().includes(lowerSearch);
 
-        if (!isDateFilterActive) {
-            // 🔄 Don't apply date filter if user hasn’t changed date
+        if (!isDateFilterActive || !startDate || !endDate) {
+            // 🔄 Don't apply date filter if user hasn't changed date or both dates not selected
             return statusMatch && matchesSearch;
         }
 
@@ -852,7 +846,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                 />
                                 {/* <Text style={[styles.tableHeader, { marginLeft: 5 }]}>Select</Text> */}
                             </TouchableOpacity>
-                            <Text style={[styles.tableHeader, { width: isTablet ? wp(25) : wp(45) }]}>VIN</Text>
+                            <Text style={[styles.tableHeader, { width: isTablet ? wp(25) : wp(55) }]}>VIN</Text>
                             <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(25) }]}>Make</Text>
                             <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(30) }]}>Model</Text>
                             <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(35) }]}>Job Override Cost($)</Text>
@@ -883,7 +877,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                                     color={isSelected ? blueColor : 'gray'}
                                                 />
                                             </TouchableOpacity>
-                                            <Text style={[styles.text, { width: isTablet ? wp(25) : wp(45) }]}>{item?.vin || '-'}</Text>
+                                            <Text style={[styles.text, { width: isTablet ? wp(25) : wp(55) }]}>{item?.vin || '-'}</Text>
                                             <Text style={[styles.text, { width: isTablet ? wp(15) : wp(25), paddingRight: spacings.normal }]}>{item?.make || '-'}</Text>
                                             <Text style={[styles.text, { width: isTablet ? wp(15) : wp(28), paddingRight: spacings.large }]}>{item?.model || '-'}</Text>
                                             <Text style={[styles.text, { width: isTablet ? wp(15) : wp(35) }]}>
@@ -1175,14 +1169,14 @@ const GenerateInvoiceScreen = ({ navigation,
                     loading={isExportLoading}
                     disabled={isExportLoading}
                     onPress={handleExportCSV}
-                    style={{ width: "28%", marginBottom: 0 }}
+                    style={{ width: "24%", marginBottom: 0 }}
                 />
                 <CustomButton
                     title={"Print"}
                     loading={isLoading}
                     disabled={isLoading}
                     onPress={handleExport}
-                    style={{ width: "28%", marginBottom: 0 }}
+                    style={{ width: "24%", marginBottom: 0 }}
                 />
 
                 <CustomButton
@@ -1206,7 +1200,7 @@ const GenerateInvoiceScreen = ({ navigation,
                         setSelectedDate(null);
                         setShowDateModal(true);
                     }}
-                    style={{ width: "40%", marginBottom: 0 }}
+                    style={{ width: "48%", marginBottom: 0 }}
                 />
             </View>}
 
@@ -1371,11 +1365,11 @@ const GenerateInvoiceScreen = ({ navigation,
                                 onPress={() => setIsStartPickerOpen(true)}
                                 style={[styles.datePicker, flexDirectionRow, alignItemsCenter, { flex: 1, marginRight: 10 }]}>
                                 <Text style={styles.dateText}>
-                                    {startDate.toLocaleDateString("en-US", {
+                                    {startDate ? startDate.toLocaleDateString("en-US", {
                                         month: "long",
                                         day: "numeric",
                                         year: "numeric",
-                                    })}
+                                    }) : "Select Date"}
                                 </Text>
                                 <Feather name="calendar" size={20} color={blackColor} />
                             </TouchableOpacity>
@@ -1384,11 +1378,11 @@ const GenerateInvoiceScreen = ({ navigation,
                                 onPress={() => setIsEndPickerOpen(true)}
                                 style={[styles.datePicker, flexDirectionRow, alignItemsCenter, { flex: 1 }]}>
                                 <Text style={styles.dateText}>
-                                    {endDate.toLocaleDateString("en-US", {
+                                    {endDate ? endDate.toLocaleDateString("en-US", {
                                         month: "long",
                                         day: "numeric",
                                         year: "numeric",
-                                    })}
+                                    }) : "Select Date"}
                                 </Text>
                                 <Feather name="calendar" size={20} color={blackColor} />
                             </TouchableOpacity>
@@ -1434,10 +1428,11 @@ const GenerateInvoiceScreen = ({ navigation,
             <DatePicker
                 modal
                 open={isStartPickerOpen}
-                date={startDate}
+                date={tempStartDate}
                 mode="date"
                 onConfirm={(date) => {
                     setStartDate(date);
+                    setTempStartDate(date);
                     setIsStartPickerOpen(false);
                     setIsDateFilterActive(true); // activate filtering
                 }}
@@ -1447,12 +1442,13 @@ const GenerateInvoiceScreen = ({ navigation,
             <DatePicker
                 modal
                 open={isEndPickerOpen}
-                date={endDate}
+                date={tempEndDate}
                 mode="date"
                 minimumDate={startDate}
                 onConfirm={(date) => {
                     const newEndDate = date;
                     setEndDate(newEndDate);
+                    setTempEndDate(newEndDate);
                     setIsEndPickerOpen(false);
                     setIsDateFilterActive(true); // activate filtering
                 }}

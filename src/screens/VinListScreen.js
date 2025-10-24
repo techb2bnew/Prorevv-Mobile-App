@@ -38,10 +38,12 @@ const VinListScreen = ({ navigation, route }) => {
     const [viewType, setViewType] = useState('list');
     const [refreshing, setRefreshing] = useState(false);
     const [sortOrder, setSortOrder] = useState("newest");
-    const [startDate, setStartDate] = useState(new Date());
-    const [endDate, setEndDate] = useState(new Date());
+    const [startDate, setStartDate] = useState(null);
+    const [endDate, setEndDate] = useState(null);
     const [isStartPickerOpen, setIsStartPickerOpen] = useState(false);
     const [isEndPickerOpen, setIsEndPickerOpen] = useState(false);
+    const [tempStartDate, setTempStartDate] = useState(new Date());
+    const [tempEndDate, setTempEndDate] = useState(new Date());
     const [selectedJobName, setSelectedJobName] = useState("");
     const [selectedJobId, setSelectedJobId] = useState(null); // selected value
     const [jobPage, setJobPage] = useState(1);
@@ -79,6 +81,12 @@ const VinListScreen = ({ navigation, route }) => {
             };
             loadSelectedJob();
 
+            // Reset dates when screen renders
+            setStartDate(null);
+            setEndDate(null);
+            setTempStartDate(new Date());
+            setTempEndDate(new Date());
+
             return () => { };
         }, [])
     );
@@ -101,6 +109,15 @@ const VinListScreen = ({ navigation, route }) => {
         };
         loadSelectedJobAfterDataLoad();
     }, [jobsRawData]);
+
+    // Reset dates when job selection changes
+    useEffect(() => {
+        console.log("Job selection changed to:", selectedJobId, "- resetting dates");
+        setStartDate(null);
+        setEndDate(null);
+        setTempStartDate(new Date());
+        setTempEndDate(new Date());
+    }, [selectedJobId]);
 
     const filteredData = sortedData.filter(item => {
         // Search filter
@@ -138,7 +155,7 @@ const VinListScreen = ({ navigation, route }) => {
             const lastMonth = new Date();
             lastMonth.setMonth(today.getMonth() - 1);
             console.log("Resetting startDate to last month");
-            setStartDate(lastMonth);
+            // setStartDate(lastMonth);
 
         }, []) // <-- keep this empty so it only runs on focus
     );
@@ -247,6 +264,13 @@ const VinListScreen = ({ navigation, route }) => {
 
     const fetchFilteredData = async (start, end) => {
         if (!technicianId) return;
+        
+        // Filter with single date if only one is provided
+        if (!start && !end) {
+            console.log("At least one date must be selected to filter");
+            return;
+        }
+        
         setLoading(true);
 
         try {
@@ -256,22 +280,28 @@ const VinListScreen = ({ navigation, route }) => {
                 return;
             }
 
-            const formattedStartDate = start
-                ? new Date(start).toISOString().split("T")[0].split("-").reverse().join("-")
-                : "";
-
-            const formattedEndDate = end
-                ? new Date(end).toISOString().split("T")[0].split("-").reverse().join("-")
-                : "";
+            const formattedStartDate = start ? new Date(start).toISOString().split("T")[0].split("-").reverse().join("-") : "";
+            const formattedEndDate = end ? new Date(end).toISOString().split("T")[0].split("-").reverse().join("-") : "";
 
             console.log("Start:", formattedStartDate, "End:", formattedEndDate, technicianId);
             let bodyData;
 
-            if (technicianType === 'manager') {
-                bodyData = `startDate=${formattedStartDate}&endDate=${formattedEndDate}&roleType=${technicianType}`;
-            } else {
-                bodyData = `startDate=${formattedStartDate}&endDate=${formattedEndDate}&roleType=${technicianType}&technicianId=${technicianId}`;
+            // Build body data with only selected dates
+            let dateParams = [];
+            if (formattedStartDate) {
+                dateParams.push(`startDate=${formattedStartDate}`);
             }
+            if (formattedEndDate) {
+                dateParams.push(`endDate=${formattedEndDate}`);
+            }
+
+            if (technicianType === 'manager') {
+                bodyData = `${dateParams.join('&')}&roleType=${technicianType}`;
+            } else {
+                bodyData = `${dateParams.join('&')}&roleType=${technicianType}&technicianId=${technicianId}`;
+            }
+           
+
             const response = await axios.post(
                 `${API_BASE_URL}/vehicleFilter`,
                 bodyData,
@@ -578,22 +608,22 @@ const VinListScreen = ({ navigation, route }) => {
                 <View style={[styles.datePickerContainer]}>
                     <TouchableOpacity onPress={() => setIsStartPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter, { width: isTablet ? wp(45) : wp(38) }]}>
                         <Text style={styles.dateText}>
-                            {startDate.toLocaleDateString("en-US", {
+                            {startDate ? startDate.toLocaleDateString("en-US", {
                                 month: "long",
                                 day: "numeric",
                                 year: "numeric",
-                            })}
+                            }) : "Select Date"}
                         </Text>
                         <Feather name="calendar" size={20} color={blackColor} />
 
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => setIsEndPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter, { width: isTablet ? wp(45) : wp(38) }]}>
                         <Text style={styles.dateText}>
-                            {endDate.toLocaleDateString("en-US", {
+                            {endDate ? endDate.toLocaleDateString("en-US", {
                                 month: "long",
                                 day: "numeric",
                                 year: "numeric",
-                            })}
+                            }) : "Select Date"}
                         </Text>
                         <Feather name="calendar" size={20} color={blackColor} />
                     </TouchableOpacity>
@@ -602,11 +632,12 @@ const VinListScreen = ({ navigation, route }) => {
                 <DatePicker
                     modal
                     open={isStartPickerOpen}
-                    date={startDate}
+                    date={tempStartDate}
                     mode="date"
                     // maximumDate={new Date()} // ⛔ prevents selecting future dates
                     onConfirm={(date) => {
                         setStartDate(date);
+                        setTempStartDate(date);
                         setIsStartPickerOpen(false);
                         fetchFilteredData(date, endDate, activeTab);
                     }}
@@ -616,13 +647,14 @@ const VinListScreen = ({ navigation, route }) => {
                 <DatePicker
                     modal
                     open={isEndPickerOpen}
-                    date={endDate}
+                    date={tempEndDate}
                     mode="date"
                     // minimumDate={startDate}       // ✅ StartDate se pehle ki date disable
                     // maximumDate={new Date()} // ⛔ prevents selecting future dates
                     onConfirm={(date) => {
                         const newEndDate = date;
                         setEndDate(newEndDate);
+                        setTempEndDate(newEndDate);
                         setIsEndPickerOpen(false);
                         fetchFilteredData(startDate, newEndDate, activeTab); // Use new end date
                     }}
@@ -671,7 +703,7 @@ const VinListScreen = ({ navigation, route }) => {
                 <View>
                     <View style={[styles.tableHeader, flexDirectionRow]}>
                         {/* <Text style={[styles.tableHeaderText, { width: wp(30) }]}>JobName</Text> */}
-                        <Text style={[styles.tableHeaderText, { width: isTablet ? wp(25) : wp(52) }]}>VIN No.</Text>
+                        <Text style={[styles.tableHeaderText, { width: isTablet ? wp(27) : wp(52) }]}>VIN No.</Text>
                         <Text style={[styles.tableHeaderText, { width: isTablet ? wp(13) : wp(25) }]}>Make</Text>
                         <Text style={[styles.tableHeaderText, { width: isTablet ? wp(13) : wp(35) }]}>Model</Text>
                         <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) : wp(35) }]}>Job Name</Text>
@@ -710,7 +742,7 @@ const VinListScreen = ({ navigation, route }) => {
                                         })}
                                     >
                                         {/* <Text style={[styles.tableText, { width: wp(30), paddingLeft: spacings.small }]}>{item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}</Text> */}
-                                        <Text style={[styles.tableText, { width: isTablet ? wp(25) : wp(52) }]}>{item?.vin}</Text>
+                                        <Text style={[styles.tableText, { width: isTablet ? wp(25) : wp(55) }]}>{item?.vin}</Text>
                                         <Text style={[styles.tableText, { width: isTablet ? wp(13) : wp(25),paddingRight: spacings.large }]}>{item?.make}</Text>
                                         <Text style={[styles.tableText, { width: isTablet ? wp(13) : wp(35)}]}>{item?.model}</Text>
                                         <Text style={[styles.tableText, { width: isTablet ? wp(15) : wp(35), paddingRight: spacings.large }]}>{item?.jobName}</Text>
@@ -1143,7 +1175,8 @@ const styles = StyleSheet.create({
         borderBottomColor: '#E6E6E6'
     },
     tableText: {
-        textAlign: 'left'
+        textAlign: 'left',
+        fontSize: style.fontSizeNormal.fontSize
     },
     statusPill: {
         paddingHorizontal: spacings.large,
