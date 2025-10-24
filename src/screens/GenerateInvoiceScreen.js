@@ -442,11 +442,27 @@ const GenerateInvoiceScreen = ({ navigation,
     };
 
     const handleCustomerSelect = async (item) => {
-        fetchSingleCustomerDetails(item.id);
-        setJobList([]);
-        pageRef.current = 1;
-        const customerJobs = allJobList.filter(job => job.customer?.fullName === item.fullName);
-        setJobList(customerJobs)
+        // Clear selected job when customer changes
+        setSelectedJobId(null);
+        setWorkOrdersRawData([]);
+        setSelectedVehicles([]);
+        setSelectAll(false);
+        
+        if (item.isAllOption) {
+            // Handle "All Customers" selection
+            setCustomerDetails({ id: 'all', fullName: 'All Customers', isAllOption: true });
+            setJobList([]);
+            pageRef.current = 1;
+            // Show all jobs when "All Customers" is selected
+            setJobList(allJobList);
+        } else {
+            // Handle specific customer selection - keep original logic
+            fetchSingleCustomerDetails(item.id);
+            setJobList([]);
+            pageRef.current = 1;
+            const customerJobs = allJobList.filter(job => job.customer?.fullName === item.fullName);
+            setJobList(customerJobs);
+        }
     };
 
     const handleLoadMore = () => {
@@ -465,18 +481,44 @@ const GenerateInvoiceScreen = ({ navigation,
                 headers["Authorization"] = `Bearer ${token}`;
             }
 
-            const response = await fetch(`${apiUrl}/fetchSingleJobs?jobid=${jobId}`, {
-                method: "POST",
-                headers,
-            });
-
-            const data = await response.json();
-            if (response.ok && data.jobs) {
-                console.log("API Response Data:", data?.jobs);
-                setWorkOrdersRawData(data?.jobs?.vehicles);
-                setSelectedJobEstimated(data?.jobs?.estimatedCost);
+            if (jobId === 'all') {
+                // Handle "All Jobs" selection - get all vehicles from all jobs
+                const allVehicles = [];
+                let totalEstimatedCost = 0;
+                
+                for (const job of allJobList) {
+                    try {
+                        const response = await fetch(`${apiUrl}/fetchSingleJobs?jobid=${job.id}`, {
+                            method: "POST",
+                            headers,
+                        });
+                        const data = await response.json();
+                        if (response.ok && data.jobs?.vehicles) {
+                            allVehicles.push(...data.jobs.vehicles);
+                            totalEstimatedCost += data.jobs.estimatedCost || 0;
+                        }
+                    } catch (error) {
+                        console.error(`Error fetching data for job ${job.id}:`, error);
+                    }
+                }
+                
+                setWorkOrdersRawData(allVehicles);
+                setSelectedJobEstimated(totalEstimatedCost);
             } else {
-                console.error("Error fetching job data:", data.error || "Unknown error");
+                // Handle specific job selection - keep original logic
+                const response = await fetch(`${apiUrl}/fetchSingleJobs?jobid=${jobId}`, {
+                    method: "POST",
+                    headers,
+                });
+
+                const data = await response.json();
+                if (response.ok && data.jobs) {
+                    console.log("API Response Data:", data?.jobs);
+                    setWorkOrdersRawData(data?.jobs?.vehicles);
+                    setSelectedJobEstimated(data?.jobs?.estimatedCost);
+                } else {
+                    console.error("Error fetching job data:", data.error || "Unknown error");
+                }
             }
         } catch (error) {
             console.error("An error occurred while fetching job data:", error);
@@ -492,7 +534,7 @@ const GenerateInvoiceScreen = ({ navigation,
 
         // default for other statuses
         if (status === true || status === "completed") return [styles.statusPill, styles.statusCompleted];
-        if (status === false || status === "inprogress") return [styles.statusPill, styles.statusInProgress];
+        if (status === false || status === "inprogress") return [styles.statusPill, styles.statusInProgress,{backgroundColor: `${blackColor}20`}];
 
         return [styles.statusPill];
     };
@@ -508,12 +550,14 @@ const GenerateInvoiceScreen = ({ navigation,
     };
 
     const filteredVehicles = workOrdersRawData?.filter(vehicle => {
+        // --- Job Selection Filter ---
+        const jobSelected = selectedJobId && selectedJobId !== '';
+        
         // --- Status Filter ---
         const statusMatch =
             statusFilter === 'all' ||
             (statusFilter === 'completed' && (vehicle.vehicleStatus === true || vehicle.vehicleStatus === 'completed')) ||
             (statusFilter === 'inprogress' && (vehicle.vehicleStatus === false || vehicle.vehicleStatus === 'inprogress'));
-
 
         const lowerSearch = searchText.toLowerCase();
 
@@ -524,7 +568,7 @@ const GenerateInvoiceScreen = ({ navigation,
 
         if (!isDateFilterActive || !startDate || !endDate) {
             // 🔄 Don't apply date filter if user hasn't changed date or both dates not selected
-            return statusMatch && matchesSearch;
+            return jobSelected && statusMatch && matchesSearch;
         }
 
         // --- Date Filter ---
@@ -541,7 +585,7 @@ const GenerateInvoiceScreen = ({ navigation,
                 (vehicleStartDate <= start && vehicleEndDate >= end)
             );
 
-        return statusMatch && matchesSearch && isWithinDateRange;
+        return jobSelected && statusMatch && matchesSearch && isWithinDateRange;
     });
 
     const handleGenerateInvoice = async (date) => {
@@ -747,7 +791,7 @@ const GenerateInvoiceScreen = ({ navigation,
                 <View style={{ paddingHorizontal: spacings.large, width: "50%" }} >
                     <Text style={[styles.label, { fontSize: style.fontSizeMedium.fontSize, }]}>Select Customer <Text style={{ color: 'red' }}>*</Text></Text>
                     <CustomerDropdown
-                        data={customers}
+                        data={[{ id: 'all', fullName: 'All Customers', isAllOption: true }, ...customers]}
                         selectedValue={customerDetails}
                         onSelect={handleCustomerSelect}
                         showIcon={false}
@@ -761,7 +805,10 @@ const GenerateInvoiceScreen = ({ navigation,
                 <View style={{ width: "50%" }}>
                     <Text style={[styles.label, { fontSize: style.fontSizeMedium.fontSize, paddingLeft: spacings.large }]}>Select Job <Text style={{ color: 'red' }}>*</Text></Text>
                     <JobDropdown
-                        jobs={jobList}
+                        jobs={customerDetails?.isAllOption ? 
+                            [{ id: 'all', jobName: 'All Jobs', isAllOption: true }, ...allJobList] : 
+                            [{ id: 'all', jobName: 'All Jobs', isAllOption: true }, ...jobList]
+                        }
                         selectedJobId={selectedJobId}
                         setSelectedJobId={(id) => {
                             setSelectedJobId(id);
@@ -849,7 +896,7 @@ const GenerateInvoiceScreen = ({ navigation,
                             <Text style={[styles.tableHeader, { width: isTablet ? wp(25) : wp(55) }]}>VIN</Text>
                             <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(25) }]}>Make</Text>
                             <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(30) }]}>Model</Text>
-                            <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(35) }]}>Job Override Cost($)</Text>
+                            <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(35) }]}>Vehicle price ($)</Text>
                             {/* <Text style={[styles.tableHeader, { width: wp(25) }]}>Est Cost($)</Text> */}
                             <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(35) }]}>Start Date</Text>
                             <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(35) }]}>End Date</Text>
@@ -893,9 +940,9 @@ const GenerateInvoiceScreen = ({ navigation,
                                                     year: "numeric",
                                                 })
                                                 : "-"}</Text>
-                                            <Text style={[styles.text, { width: isTablet ? wp(15) : wp(35) }]}> {item?.startDate
+                                            <Text style={[styles.text, { width: isTablet ? wp(15) : wp(35) }]}> {item?.endDate
                                                 ? new Date(item?.endDate).toLocaleDateString("en-US", {
-                                                    month: "short",
+                                                    month: "long",
                                                     day: "numeric",
                                                     year: "numeric",
                                                 })
@@ -919,7 +966,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                                     value={
                                                         invoiceRates[item.id] !== undefined
                                                             ? invoiceRates[item.id]
-                                                            : item?.pdr?.toString() || ''
+                                                            : item?.labourCost?.toString() || item?.pdr?.toString() || ''
                                                     }
                                                     onChangeText={(value) => handleInvoiceChange(item.id, value)}
                                                 />
@@ -941,7 +988,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                             <View style={[getStatusStyle(item?.vehicleStatus), alignJustifyCenter, { height: isTablet ? hp(2) : hp(4) }]}>
                                                 <Text
                                                     style={{
-                                                        color: getStatusText(item?.vehicleStatus) === "Complete" ? greenColor : goldColor
+                                                        color: getStatusText(item?.vehicleStatus) === "Complete" ? greenColor : blackColor
                                                     }}>
                                                     {getStatusText(item?.vehicleStatus)}
                                                 </Text>
@@ -1043,7 +1090,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                             <Text >{item?.model}</Text>
                                         </View>
                                         <View style={{ width: '48%', marginBottom: 9 }}>
-                                            <Text style={{ color: '#555', fontSize: 10 }}>Job Override Cost($)</Text>
+                                            <Text style={{ color: '#555', fontSize: 10 }}>Vehicle price($)</Text>
                                             <Text >{item?.labourCost ? `$${item.labourCost}` : '-'} </Text>
                                         </View>
 
@@ -1063,7 +1110,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                         </View>
                                         <View style={{ width: '48%', marginBottom: 9 }}>
                                             <Text style={{ color: '#555', fontSize: 10 }}>End Date</Text>
-                                            <Text >{item?.startDate
+                                            <Text >{item?.endDate
                                                 ? new Date(item?.endDate).toLocaleDateString("en-US", {
                                                     month: "long",
                                                     day: "numeric",
@@ -1091,7 +1138,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                                     value={
                                                         invoiceRates[item.id] !== undefined
                                                             ? invoiceRates[item.id]
-                                                            : item?.pdr?.toString() || ''
+                                                            : item?.labourCost?.toString() || item?.pdr?.toString() || ''
                                                     }
                                                     onChangeText={(value) => handleInvoiceChange(item.id, value)}
                                                 />
@@ -1116,8 +1163,8 @@ const GenerateInvoiceScreen = ({ navigation,
                                             <Text
                                                 style={{
                                                     color: getStatusText(item?.vehicleStatus) === "Complete" ?
-                                                        greenColor : getStatusText(item?.vehicleStatus) === "inprogress" ?
-                                                            redColor :
+                                                        greenColor : getStatusText(item?.vehicleStatus) === "In Progress" ?
+                                                            blackColor :
                                                             goldColor,
                                                 }}>
                                                 {getStatusText(item?.vehicleStatus)}
@@ -1564,5 +1611,5 @@ const styles = StyleSheet.create({
         borderRadius: 20
     },
     statusCompleted: { backgroundColor: '#C8F8D6', borderWidth: 1, borderColor: greenColor, },
-    statusInProgress: { backgroundColor: '#FFEFC3', borderWidth: 1, borderColor: goldColor },
+    statusInProgress: { backgroundColor: '#FFEFC3', borderWidth: 1, borderColor: blackColor },
 });

@@ -45,7 +45,7 @@ const CustomerDropdown = ({ data, selectedValue, onSelect, showIcon, rightIcon, 
                 {showIcon && <MaterialCommunityIcons name={"account"} size={22} color={mediumGray} />}
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContainer}>
                     <Text style={[styles.selectedText, { color: selectedValue ? blackColor : grayColor }]} numberOfLines={1} ellipsizeMode="tail">
-                        {selectedValue ? getCustomerName(selectedValue) : "Select customer"}
+                        {selectedValue ? (selectedValue.isAllOption ? 'All Customers' : getCustomerName(selectedValue)) : "Select customer"}
                     </Text>
                 </ScrollView>
 
@@ -94,7 +94,9 @@ const CustomerDropdown = ({ data, selectedValue, onSelect, showIcon, rightIcon, 
                                     }}
                                 >
                                     <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-                                        <Text style={styles.itemText}>{getCustomerName(item)}</Text>
+                                        <Text style={[styles.itemText, item.isAllOption && { fontWeight: 'bold' }]}>
+                                            {item.isAllOption ? 'All Customers' : getCustomerName(item)}
+                                        </Text>
                                         {isSelected && (
                                             <MaterialCommunityIcons name="check-circle" size={20} color={blueColor} />
                                         )}

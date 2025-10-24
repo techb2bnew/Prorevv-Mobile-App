@@ -60,10 +60,68 @@ const Reports = ({ navigation }) => {
     const [customerLoading, setCustomerLoading] = useState(false);
     const [customerLoadingMore, setCustomerLoadingMore] = useState(false);
     const [customerRefreshing, setCustomerRefreshing] = useState(false);
+    const [selectedJobs, setSelectedJobs] = useState([]);
+    const [isCompletingJobs, setIsCompletingJobs] = useState(false);
 
 
     const toggleModal = () => {
         setModalVisible(!isModalVisible);
+    };
+
+    // Job selection functions
+    const toggleJobSelection = (jobId) => {
+        setSelectedJobs(prev => {
+            if (prev.includes(jobId)) {
+                return prev.filter(id => id !== jobId);
+            } else {
+                return [...prev, jobId];
+            }
+        });
+    };
+
+    const clearSelectedJobs = () => {
+        setSelectedJobs([]);
+    };
+
+    const completeSelectedJobs = async () => {
+        if (selectedJobs.length === 0) return;
+
+        setIsCompletingJobs(true);
+        try {
+            const token = await AsyncStorage.getItem("auth_token");
+            if (!token) {
+                console.error("No token found");
+                return;
+            }
+console.log("selectedJobs",selectedJobs);
+
+            // API call to complete selected jobs
+            const response = await axios.post(
+                `${API_BASE_URL}/completeJobs`,
+                { jobIds: selectedJobs },
+                {
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            if (response.data.success) {
+                // Refresh the job list
+                await fetchJobHistory(1, false);
+                // Clear selected jobs
+                setSelectedJobs([]);
+                Alert.alert("Success", "Selected jobs have been completed successfully!");
+            } else {
+                Alert.alert("Error", "Failed to complete jobs. Please try again.");
+            }
+        } catch (error) {
+            console.error("Error completing jobs:", error);
+            Alert.alert("Error", "Failed to complete jobs. Please try again.");
+        } finally {
+            setIsCompletingJobs(false);
+        }
     };
 
     const handleSort = (order, type) => {
@@ -177,7 +235,7 @@ const Reports = ({ navigation }) => {
     useFocusEffect(
         useCallback(() => {
             console.log("Focus effect ran on screen focus - resetting dates");
-            
+
             // Reset dates when screen renders
             setStartDate(null);
             setEndDate(null);
@@ -285,13 +343,13 @@ const Reports = ({ navigation }) => {
 
     const fetchFilteredData = async (start, end, tab) => {
         if (!technicianId) return;
-        
+
         // Filter with single date if only one is provided
         if (!start && !end) {
             console.log("At least one date must be selected to filter");
             return;
         }
-        
+
         setLoading(true);
 
         try {
@@ -501,7 +559,7 @@ const Reports = ({ navigation }) => {
 
     const getStatusStyle = (status) => {
         if (status === true || status === "completed") return [styles.statusPill, styles.statusCompleted];
-        if (status === false || status === "inprogress") return [styles.statusPill, styles.statusInProgress];
+        if (status === false || status === "In Progress") return [styles.statusPill, styles.statusInProgress, `${blackColor}20`];
     };
 
     const getStatusText = (status) => {
@@ -795,14 +853,22 @@ const Reports = ({ navigation }) => {
                 <>
                     {/* Table Header */}
                     <View style={styles.tableHeaderRow}>
-                        <Text style={[styles.tableHeader, { width: "40%" }]}>Job Name</Text>
+                        {activeStatus === 'InProgress' && (
+                            <Text style={[styles.tableHeader, { width: "15%" }]}>Select</Text>
+                        )}
+                        <Text style={[styles.tableHeader, { width: activeStatus === 'InProgress' ? "30%" : "40%" }]}>Job Name</Text>
                         <Text style={[styles.tableHeader, { width: "35%" }]}>Number of W.O</Text>
-                        <Text style={[styles.tableHeader, { width: "20%", textAlign: isTablet ? "left" : "center" }]}>Action</Text>
+                        <Text style={[styles.tableHeader, { width: activeStatus === 'InProgress' ? "20%" : "20%", textAlign: isTablet ? "left" : "center" }]}>Action</Text>
 
                     </View>
 
                     {/* FlatList for Jobs only */}
-                    <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(59.5) : hp(50) : isIOSAndTablet ? hp(60) : hp(45.5) }}>
+                    <View style={{ 
+                        width: "100%", 
+                        height: activeStatus === 'InProgress' && selectedJobs.length > 0 
+                            ? (Platform.OS === "android" ? isTablet ? hp(55) : hp(42) : isIOSAndTablet ? hp(53) : hp(38))
+                            : (Platform.OS === "android" ? isTablet ? hp(59.5) : hp(50) : isIOSAndTablet ? hp(60) : hp(45.5)),
+                    }}>
                         <FlatList
                             data={filteredJobs}
                             keyExtractor={(item, index) => item?.jobName || index.toString()}
@@ -815,20 +881,34 @@ const Reports = ({ navigation }) => {
                                 const rowStyle = {
                                     backgroundColor: index % 2 === 0 ? lightBlueColor : whiteColor,
                                 };
+                                const isSelected = selectedJobs.includes(item?.id);
 
                                 return (
-                                    <Pressable style={[styles.listItem, rowStyle]}
+                                    <Pressable style={[styles.listItem, rowStyle, isSelected && styles.selectedRow]}
                                         onPress={() => navigation.navigate("NewJobDetailsScreen", {
                                             jobId: item?.id
                                         })}
                                     >
-                                        <Text style={[styles.text, { width: "44%", paddingRight: spacings.xxxxLarge }]}>
+                                        < View style={{ width: "15%", justifyContent: "center" }}>
+                                            {activeStatus === 'InProgress' && (
+                                                <TouchableOpacity
+                                                    style={[styles.checkbox, isSelected && styles.checkboxSelected]}
+                                                    onPress={(e) => {
+                                                        e.stopPropagation();
+                                                        toggleJobSelection(item?.id);
+                                                    }}
+                                                >
+                                                    {isSelected && <Ionicons name="checkmark" size={16} color={whiteColor} />}
+                                                </TouchableOpacity>
+                                            )}
+                                        </View>
+                                        <Text style={[styles.text, { width: activeStatus === 'InProgress' ? "30%" : "44%", paddingRight: spacings.xxxxLarge }]}>
                                             {item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}
                                         </Text>
-                                        <Text style={[styles.text, { width: "30%" }]}>
+                                        <Text style={[styles.text, { width: "35%" }]}>
                                             {item?.vehicles?.length}
                                         </Text>
-                                        <View style={{ flexDirection: "row", alignItems: "center", width: "20%" }} >
+                                        <View style={{ flexDirection: "row", alignItems: "center", width: activeStatus === 'InProgress' ? "20%" : "20%" }} >
                                             <Pressable onPress={() => navigation.navigate("NewJobDetailsScreen", {
                                                 jobId: item?.id
                                             })}>
@@ -857,6 +937,27 @@ const Reports = ({ navigation }) => {
                             }}
                         />
                     </View>
+
+                    {/* Complete Selected Jobs Button - Only show for InProgress jobs */}
+                    {activeStatus === 'InProgress' && selectedJobs.length > 0 && (
+                        <View style={styles.completeButtonContainer}>
+                            <TouchableOpacity
+                                style={[styles.completeButton, isCompletingJobs && styles.completeButtonDisabled]}
+                                onPress={completeSelectedJobs}
+                                disabled={isCompletingJobs}
+                            >
+                                <Text style={styles.completeButtonText}>
+                                    {isCompletingJobs ? 'Completing...' : `Complete Selected Jobs (${selectedJobs.length})`}
+                                </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.clearButton}
+                                onPress={clearSelectedJobs}
+                            >
+                                <Text style={styles.clearButtonText}>Clear Selection</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
                 </>
             )}
 
@@ -872,7 +973,7 @@ const Reports = ({ navigation }) => {
                         onRefresh={handleRefreshVehicle}
                         renderItem={({ item, index }) => (
                             <Pressable style={{
-                                backgroundColor: index % 2 === 0 ?lightBlueColor : whiteColor,
+                                backgroundColor: index % 2 === 0 ? lightBlueColor : whiteColor,
                                 borderRadius: 10,
                                 padding: 10,
                                 marginBottom: 10,
@@ -944,7 +1045,7 @@ const Reports = ({ navigation }) => {
                                     <View style={{ width: '48%', marginBottom: 9 }}>
                                         <Text style={{ color: '#555', fontSize: 10 }}>Status</Text>
 
-                                        <Text style={[{ fontSize: 15, fontWeight: '700', color: item?.vehicleStatus === true ? greenColor : redColor }]}>
+                                        <Text style={[{ fontSize: 15, fontWeight: '700', color: item?.vehicleStatus === true ? greenColor : blackColor }]}>
                                             {getStatusText(item?.vehicleStatus)}
                                         </Text>
                                     </View>
@@ -983,7 +1084,7 @@ const Reports = ({ navigation }) => {
                             {/* Header Row */}
                             <View style={[styles.tableHeaderRow, { backgroundColor: blueColor }]}>
                                 <Text style={[styles.tableHeader, { width: isTablet ? wp(13) : wp(30) }]}>Job Name</Text>
-                                <Text style={[styles.tableHeader, { width: isTablet ? wp(27) : wp(55) }]}>VIN</Text>
+                                <Text style={[styles.tableHeader, { width: isTablet ? wp(25) : wp(55) }]}>VIN</Text>
                                 <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(35) }]}>Make</Text>
                                 <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(30) }]}>Model</Text>
                                 {technicianType === "manager" && <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(35) }]}>Assigned Tech</Text>}
@@ -1037,8 +1138,8 @@ const Reports = ({ navigation }) => {
                                                     <Text
                                                         style={{
                                                             color: getStatusText(item?.vehicleStatus) === "Complete" ?
-                                                                greenColor : getStatusText(item?.vehicleStatus) === "inprogress" ?
-                                                                    redColor :
+                                                                greenColor : getStatusText(item?.vehicleStatus) === "In Progress" ?
+                                                                    blackColor :
                                                                     goldColor
                                                         }}>
                                                         {getStatusText(item?.vehicleStatus)}
@@ -1510,7 +1611,7 @@ const styles = StyleSheet.create({
         borderRadius: 20
     },
     statusCompleted: { backgroundColor: '#C8F8D6', borderWidth: 1, borderColor: greenColor, },
-    statusInProgress: { backgroundColor: '#FFEFC3', borderWidth: 1, borderColor: goldColor },
+    statusInProgress: { backgroundColor: `${blackColor}20`, borderWidth: 1, borderColor: blackColor },
     statusPending: { backgroundColor: '#FDE2E2', borderWidth: 1, borderColor: redColor },
     gridItem: {
         padding: 16,
@@ -1537,5 +1638,71 @@ const styles = StyleSheet.create({
     emptyText: {
         fontSize: 16,
         color: mediumGray
+    },
+    completeButtonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: spacings.medium,
+        paddingVertical: spacings.small,
+        backgroundColor: lightBlueColor,
+        marginHorizontal: spacings.small,
+        borderRadius: 8,
+        marginBottom: spacings.small,
+        height: hp(6),
+    },
+    completeButton: {
+        backgroundColor: blueColor,
+        paddingHorizontal: spacings.medium,
+        paddingVertical: spacings.small,
+        borderRadius: 8,
+        // flex: 1,
+        width:wp(48),
+        // marginRight: spacings.medium,
+        height: hp(4),
+        justifyContent: 'center',
+    },
+    completeButtonDisabled: {
+        backgroundColor: grayColor,
+    },
+    completeButtonText: {
+        color: whiteColor,
+        fontSize: style.fontSizeNormal.fontSize,
+        fontWeight: style.fontWeightThin1x.fontWeight,
+        textAlign: 'center',
+    },
+    clearButton: {
+        backgroundColor: whiteColor,
+        paddingHorizontal: spacings.medium,
+        paddingVertical: spacings.small,
+        borderRadius: 8,
+        height: hp(4),
+        width: wp(48),
+        justifyContent: 'center',
+        alignItems:'center'
+    },
+    clearButtonText: {
+        color: blackColor,
+        fontSize: style.fontSizeSmall1x.fontSize,
+        fontWeight: style.fontWeightThin1x.fontWeight,
+    },
+    checkbox: {
+        width: 20,
+        height: 20,
+        borderWidth: 2,
+        borderColor: blackColor,
+        borderRadius: 4,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: spacings.small,
+    },
+    checkboxSelected: {
+        backgroundColor: blueColor,
+        borderColor: blueColor,
+    },
+    selectedRow: {
+        backgroundColor: lightBlueColor,
+        borderLeftWidth: 4,
+        borderLeftColor: blueColor,
     },
 });

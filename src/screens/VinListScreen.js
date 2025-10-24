@@ -317,19 +317,24 @@ const VinListScreen = ({ navigation, route }) => {
 
             const vehicles = response?.data?.vehicles?.updatedVehicles || [];
             if (selectedJobId) {
-                const matchedVehicles = vehicles.filter(item => item.jobId === selectedJobId);
+                // If "All Jobs" is selected, show all vehicles
+                if (selectedJobId === 'all') {
+                    setVehicleData(vehicles);
+                } else {
+                    const matchedVehicles = vehicles.filter(item => item.jobId === selectedJobId);
 
-                // ✅ Update job data also so selectedJobVehicles works
-                setJobsRawData(prevJobs => {
-                    return prevJobs.map(job => {
-                        if (job.id === selectedJobId) {
-                            return { ...job, vehicles: matchedVehicles };
-                        }
-                        return job;
+                    // ✅ Update job data also so selectedJobVehicles works
+                    setJobsRawData(prevJobs => {
+                        return prevJobs.map(job => {
+                            if (job.id === selectedJobId) {
+                                return { ...job, vehicles: matchedVehicles };
+                            }
+                            return job;
+                        });
                     });
-                });
 
-                setVehicleData(matchedVehicles);
+                    setVehicleData(matchedVehicles);
+                }
             } else {
                 setVehicleData(vehicles);
             }
@@ -440,7 +445,9 @@ const VinListScreen = ({ navigation, route }) => {
             const newJobs = (technicianType === "manager") ? (response?.data?.jobs?.jobs) : (response?.data?.jobs?.jobs) || [];
             console.log("fetchJobHistory", response?.data);
 
-            const updatedJobs = newPage === 1 ? newJobs : [...jobsRawData, ...newJobs];
+            // Add "All Jobs" option at the beginning if it's the first page
+            const jobsWithAllOption = newPage === 1 ? [{ id: 'all', jobName: 'All Jobs', isAllOption: true }, ...newJobs] : newJobs;
+            const updatedJobs = newPage === 1 ? jobsWithAllOption : [...jobsRawData, ...newJobs];
 
             setJobsRawData(updatedJobs);
             setHasMoreJob(newJobs.length > 0);
@@ -471,7 +478,8 @@ const VinListScreen = ({ navigation, route }) => {
             return [];
         }
 
-        const baseData = selectedJobId ? selectedJobVehicles : vehicleData;
+        // If "All Jobs" is selected, use all vehicle data
+        const baseData = selectedJobId === 'all' ? vehicleData : (selectedJobId ? selectedJobVehicles : vehicleData);
 
         // Step 1: Apply search filter
         const filtered = baseData.filter(item => {
@@ -703,7 +711,7 @@ const VinListScreen = ({ navigation, route }) => {
                 <View>
                     <View style={[styles.tableHeader, flexDirectionRow]}>
                         {/* <Text style={[styles.tableHeaderText, { width: wp(30) }]}>JobName</Text> */}
-                        <Text style={[styles.tableHeaderText, { width: isTablet ? wp(27) : wp(52) }]}>VIN No.</Text>
+                        <Text style={[styles.tableHeaderText, { width: isTablet ? wp(25) : wp(52) }]}>VIN No.</Text>
                         <Text style={[styles.tableHeaderText, { width: isTablet ? wp(13) : wp(25) }]}>Make</Text>
                         <Text style={[styles.tableHeaderText, { width: isTablet ? wp(13) : wp(35) }]}>Model</Text>
                         <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) : wp(35) }]}>Job Name</Text>

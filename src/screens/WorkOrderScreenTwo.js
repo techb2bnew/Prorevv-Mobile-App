@@ -520,9 +520,7 @@ const WorkOrderScreenTwo = ({ route }) => {
             // formData.append("cost", item.cost);
         });
 
-        if (startDate) {
-            formData.append("startDate", startDate.toISOString());
-        }
+        formData.append("startDate", startDate ? startDate.toISOString() : new Date().toISOString());
 
         if (endDate) {
             formData.append("endDate", endDate.toISOString());
@@ -749,7 +747,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                         data?.vehicle?.vehicle?.endDate && data?.vehicle?.vehicle?.endDate !== "null"
                             ? new Date(data.vehicle.vehicle.endDate)
                             : null
-                    ); 
+                    );
                     setTechnicians(data?.vehicle?.vehicle?.assignedTechnicians);
                     setSelectedTechnicians(data?.vehicle?.vehicle?.assignedTechnicians);
                     setSelectedCustomer(data?.vehicle?.vehicle.customerId)
@@ -1273,7 +1271,9 @@ const WorkOrderScreenTwo = ({ route }) => {
                                         {console.log("🚀 Rendering StartDate:", startDate)}
                                         {console.log("🚀 Rendering EndDate:", endDate)}
                                         <View style={[styles.datePickerContainer, { marginBottom: 15, color: blackColor }]}>
-                                            <TouchableOpacity onPress={() => setIsStartPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter]}>
+                                            <Pressable
+                                                // onPress={() => setIsStartPickerOpen(true)} 
+                                                style={[styles.datePicker, flexDirectionRow, alignItemsCenter]}>
                                                 <Text style={styles.dateText}>
                                                     {startDate && startDate instanceof Date && !isNaN(startDate.getTime())
                                                         ? startDate.toLocaleDateString("en-US", {
@@ -1281,10 +1281,14 @@ const WorkOrderScreenTwo = ({ route }) => {
                                                             day: "numeric",
                                                             year: "numeric",
                                                         })
-                                                        : "Select Start Date"}
+                                                        : new Date().toLocaleDateString("en-US", {
+                                                            month: "short",
+                                                            day: "numeric",
+                                                            year: "numeric",
+                                                        })}
                                                 </Text>
                                                 <Feather name="calendar" size={20} color={blackColor} />
-                                            </TouchableOpacity>
+                                            </Pressable>
                                             <TouchableOpacity onPress={() => setIsEndPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter]}>
                                                 <Text style={styles.dateText}>
                                                     {endDate && typeof endDate === "object" && endDate instanceof Date && !isNaN(endDate)

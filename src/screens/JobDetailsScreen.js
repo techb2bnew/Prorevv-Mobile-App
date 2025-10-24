@@ -443,7 +443,7 @@ const JobDetailsScreen = ({ navigation, route }) => {
                                   item.label === "Current Job Status" &&
                                   (item.value === "Complete"
                                     ? { color: greenColor }
-                                    : { color: redColor })
+                                    : { color: blackColor })
                                 ]}
                               >
                                 {item.value}

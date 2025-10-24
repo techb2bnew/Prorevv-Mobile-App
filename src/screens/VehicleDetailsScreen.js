@@ -202,8 +202,11 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
                     { label: "Vehicle Type", value: (vehicleDetails?.vehicleType && vehicleDetails?.vehicleType !== "null") ? vehicleDetails?.vehicleType : null },
                     {
                         label: "Color",
-                        value: vehicleDetails?.color
-                            ? vehicleDetails?.color.charAt(0).toUpperCase() + vehicleDetails.color.slice(1)
+                        value: (vehicleDetails?.color && 
+                               vehicleDetails?.color !== "undefined" && 
+                               vehicleDetails?.color !== "null" && 
+                               vehicleDetails?.color.trim() !== "")
+                            ? vehicleDetails.color.charAt(0).toUpperCase() + vehicleDetails.color.slice(1)
                             : null, // yahan "N/A" ki jagah null diya taki filter me remove ho jaye
                     },
                 ].filter(item => {
@@ -407,7 +410,7 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
                                                                     item.label === "Status" &&
                                                                     (item.value === "Completed"
                                                                         ? { color: greenColor }
-                                                                        : { color: redColor })
+                                                                        : { color: blackColor })
                                                                 ]}
                                                             >
                                                                 {item.value}

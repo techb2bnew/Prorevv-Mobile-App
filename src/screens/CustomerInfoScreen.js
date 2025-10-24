@@ -783,9 +783,8 @@ const CustomerInfoScreen = ({ navigation }) => {
                                     layout="second"
                                     onChangeFormattedText={(text) => handleInputChange("phoneNumber", text)}
                                     textInputProps={{
-                                        maxLength: 13,
+                                        maxLength: 15,
                                         keyboardType: "default",
-
                                     }}
                                     containerStyle={styles.phoneInput}
                                     textContainerStyle={styles.phoneText}

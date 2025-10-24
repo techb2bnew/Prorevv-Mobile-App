@@ -34,6 +34,10 @@ const HomeScreen = ({ navigation }) => {
   const isIOSAndTablet = Platform.OS === "ios" && isTablet;
   const [dashboardData, setDashboardData] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [searchVinText, setSearchVinText] = useState('');
+  const [vinSearchResults, setVinSearchResults] = useState(null);
+  const [isSearchingVin, setIsSearchingVin] = useState(false);
+  const [allVehicles, setAllVehicles] = useState([]);
 
   const cardData = [
     {
@@ -358,6 +362,110 @@ const HomeScreen = ({ navigation }) => {
       .join(' ');
   };
 
+  const fetchAllVehicles = async () => {
+    try {
+      const token = await AsyncStorage.getItem("auth_token");
+      if (!token) {
+        console.error("Token not found!");
+        return;
+      }
+
+      // Use the same API as VinListScreen
+      const apiUrl = technicianType === "manager"
+        ? `${API_BASE_URL}/fetchVehicalInfo?page=1&roleType=${technicianType}`
+        : technicianType === "ifs"
+          ? `${API_BASE_URL}/fetchtechVehicleInfo?page=1&userId=${technicianId}`
+          : `${API_BASE_URL}/fetchVehicalInfo?page=1&roleType=${technicianType}&userId=${technicianId}`;
+
+      const response = await axios.get(apiUrl, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      const vehicles = response?.data?.jobs?.vehicles || response.data?.response?.vehicles || [];
+      console.log("Fetched all vehicles for search:", vehicles);
+      setAllVehicles(vehicles);
+    } catch (error) {
+      console.error("Failed to fetch vehicles:", error);
+    }
+  };
+
+  const searchVinByText = async (vinText) => {
+    if (!vinText.trim()) {
+      setVinSearchResults(null);
+      return;
+    }
+
+    setIsSearchingVin(true);
+    try {
+      // If we don't have vehicles loaded yet, fetch them first
+      if (allVehicles.length === 0) {
+        await fetchAllVehicles();
+      }
+
+      // Filter vehicles based on search text
+      const filteredVehicles = allVehicles.filter(vehicle =>
+        vehicle.vin?.toLowerCase().includes(vinText.trim().toLowerCase())
+        // ||
+        // vehicle.make?.toLowerCase().includes(vinText.trim().toLowerCase()) ||
+        // vehicle.model?.toLowerCase().includes(vinText.trim().toLowerCase()) ||
+        // vehicle.jobName?.toLowerCase().includes(vinText.trim().toLowerCase())
+      );
+
+
+      if (filteredVehicles.length > 0) {
+        // Show the first matching vehicle
+        setVinSearchResults(filteredVehicles[0]);
+      } else {
+        // Show "No result found" when no matches
+        setVinSearchResults({ noResult: true });
+      }
+    } catch (error) {
+      console.error("Error searching VIN:", error);
+      setVinSearchResults(null);
+    } finally {
+      setIsSearchingVin(false);
+    }
+  };
+
+  const handleVinTextChange = (text) => {
+    setSearchVinText(text);
+
+    // Clear results when text is cleared
+    if (!text.trim()) {
+      setVinSearchResults(null);
+      setIsSearchingVin(false);
+      return;
+    }
+
+    // Search automatically as user types
+    searchVinByText(text.trim());
+  };
+
+  const openScanner = async () => {
+    if (technicianType === "ifs") {
+      try {
+        const currentJob = await AsyncStorage.getItem("current_Job");
+        if (ifscustomers.length === 0) {
+          Toast.show("You don't have any assigned job currently.");
+        } else if (!currentJob) {
+          Toast.show("Please select a job from the jobs page first.");
+        } else {
+          navigation.navigate("ScannerScreen", {
+            from: "VinList"
+          });
+        }
+      } catch (error) {
+        console.error("Error checking current job:", error);
+      }
+    } else {
+      navigation.navigate("ScannerScreen", {
+        from: "VinList"
+      });
+    }
+  };
+
   const renderItem = ({ item, index }) => {
     const isIOSAndTablet = Platform.OS === "ios" && isTablet;
 
@@ -593,7 +701,7 @@ const HomeScreen = ({ navigation }) => {
                   : hp(21)
                 : !isSearching
                   ? Platform.OS === "android" ? hp(30) : hp(22)
-                  : Platform.OS === "android" ? hp(35.5) : hp(30),
+                  : Platform.OS === "android" ? hp(37.5) : hp(30),
             backgroundColor: !isTablet && Platform.OS === "ios" ? blueColor : "transparent"
           }}>
             <View style={[styles.header, { justifyContent: "space-between" }]}>
@@ -602,7 +710,11 @@ const HomeScreen = ({ navigation }) => {
                 isSearching ? (
                   // 🔙 Back button
                   <Pressable
-                    onPress={() => setIsSearching(false)}
+                    onPress={() => {
+                      setIsSearching(false);
+                      setSearchVinText('');
+                      setVinSearchResults(null);
+                    }}
                     style={{
                       borderRadius: 10,
                       backgroundColor: whiteColor,
@@ -632,7 +744,11 @@ const HomeScreen = ({ navigation }) => {
                 // 👇 Not single tech → search mode me Back button left me
                 isSearching ? (
                   <Pressable
-                    onPress={() => setIsSearching(false)}
+                    onPress={() => {
+                      setIsSearching(false);
+                      setSearchVinText('');
+                      setVinSearchResults(null);
+                    }}
                     style={{
                       borderRadius: 10,
                       backgroundColor: whiteColor,
@@ -651,7 +767,7 @@ const HomeScreen = ({ navigation }) => {
               {/* Center logo */}
               <Image
                 source={APP_NAME_IMAGE}
-                style={[styles.profileImage, { resizeMode: "contain", width: isIOSAndTablet ? 80 : 50, height: isIOSAndTablet ? 80 : 50 }]}
+                style={[styles.profileImage, { resizeMode: "contain", width: isIOSAndTablet ? 80 : 60, height: isIOSAndTablet ? 80 : 60 }]}
               />
 
               {/* Right side */}
@@ -708,36 +824,68 @@ const HomeScreen = ({ navigation }) => {
             </View>
 
             {isSearching && (
-              <Pressable style={[styles.searchTextInput, { height: isTablet ? hp(4) : hp(4.8), }]}
-                onPress={async () => {
-                  if (technicianType === "ifs") {
-                    try {
-                      const currentJob = await AsyncStorage.getItem("current_Job");
-
-                      if (ifscustomers.length === 0) {
-                        Toast.show("You don't have any assigned job currently.");
-                      } else if (!currentJob) {
-                        Toast.show("Please select a job from the jobs page first.");
-                      } else {
-                        navigation.navigate("ScannerScreen", {
-                          from: "VinList"
-                        });
-                      }
-                    } catch (error) {
-                      console.error("Error checking current job:", error);
-                    }
-                  } else {
-                    navigation.navigate("ScannerScreen", {
-                      from: "VinList"
-                    });
-                  }
-                }}
-              >
-                <View style={[styles.input, { flexDirection: "row", alignItems: "center", justifyContent: "space-between" }]}>
-                  <Text style={{ color: grayColor }}>Search By Scan VIN</Text>
-                  <MaterialIcons name="qr-code-scanner" size={24} color="#252837" />
+              <View style={styles.searchContainer}>
+                <View style={[styles.searchTextInput, { height: isTablet ? hp(4) : hp(5.5), flexDirection: "row", alignItems: "center", justifyContent: "space-between" }]}>
+                  <TextInput
+                    placeholder="Enter VIN number"
+                    placeholderTextColor={grayColor}
+                    style={[styles.input, { flex: 1, fontSize: 16, color: blueColor }]}
+                    value={searchVinText}
+                    onChangeText={handleVinTextChange}
+                    autoCapitalize="characters"
+                  />
+                  {isSearchingVin && (
+                    <Feather
+                      name="loader"
+                      size={20}
+                      color={blueColor}
+                      style={{ marginRight: spacings.small }}
+                    />
+                  )}
+                  <TouchableOpacity
+                    style={styles.scanButton}
+                    onPress={openScanner}
+                  >
+                    <MaterialIcons name="qr-code-scanner" size={24} color="#252837" />
+                  </TouchableOpacity>
                 </View>
-              </Pressable>)}
+              </View>
+            )}
+
+            {/* VIN Search Results - Show above search input */}
+            {isSearching && vinSearchResults && (
+              <Pressable style={[styles.vinResultsContainer,{top: isTablet ? hp(14) : hp(19)}]} onPress={() => navigation.navigate("VehicleDetailsScreen", {
+                vehicleId: vinSearchResults.id,
+              })}>
+                {vinSearchResults.noResult ? (
+                  <View style={styles.noResultContainer}>
+                    <Text style={styles.noResultText}>No result found</Text>
+                    <Text style={styles.noResultSubText}>Try searching with a different VIN number</Text>
+                  </View>
+                ) : (
+                  <View style={styles.vinDetailsCard}>
+                    <View style={styles.vinDetailRow}>
+                      <Text style={styles.vinDetailLabel}>VIN:</Text>
+                      <Text style={styles.vinDetailValue}>{vinSearchResults.vin}</Text>
+                    </View>
+                    <View style={styles.vinDetailRow}>
+                      <Text style={styles.vinDetailLabel}>Make:</Text>
+                      <Text style={styles.vinDetailValue}>{vinSearchResults.make || 'N/A'}</Text>
+                    </View>
+                    <View style={styles.vinDetailRow}>
+                      <Text style={styles.vinDetailLabel}>Model:</Text>
+                      <Text style={styles.vinDetailValue}>{vinSearchResults.model || 'N/A'}</Text>
+                    </View>
+                    <View style={styles.vinDetailRow}>
+                      <Text style={styles.vinDetailLabel}>Customer:</Text>
+                      <Text style={styles.vinDetailValue}>
+                        {vinSearchResults.customer ? vinSearchResults.customer.fullName || 'N/A' : 'No result found'}
+                      </Text>
+                    </View>
+                  </View>
+                )}
+              </Pressable>
+            )}
 
             <View style={styles.totalOverview}>
               <Text style={[styles.greeting, {
@@ -846,6 +994,10 @@ const styles = StyleSheet.create({
     // padding: spacings.large,
     backgroundColor: whiteColor
   },
+  searchContainer: {
+    marginTop: spacings.Large2x,
+    marginHorizontal: spacings.xxLarge,
+  },
   searchTextInput: {
     flexDirection: 'row',
     backgroundColor: whiteColor,
@@ -857,13 +1009,77 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowRadius: 2,
     elevation: 2,
-    marginTop: spacings.Large2x,
-    marginHorizontal: spacings.xxLarge
   },
   input: {
     flex: 1,
     fontSize: 16,
     color: blueColor,
+  },
+  scanButton: {
+    padding: spacings.small,
+    marginLeft: spacings.small,
+  },
+  vinResultsContainer: {
+    position: 'absolute',
+    top: hp(19), // Adjust this value based on your header height
+    left: spacings.large,
+    right: spacings.large,
+    backgroundColor: whiteColor,
+    borderRadius: 8,
+    padding: spacings.large,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 5,
+    zIndex: 1000,
+  },
+  noResultContainer: {
+    alignItems: 'center',
+    paddingVertical: spacings.large,
+  },
+  noResultText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: redColor,
+    marginBottom: spacings.small,
+  },
+  noResultSubText: {
+    fontSize: 14,
+    color: grayColor,
+    textAlign: 'center',
+  },
+  resultsTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: blackColor,
+    marginBottom: spacings.large,
+    textAlign: 'center',
+  },
+  vinDetailsCard: {
+    backgroundColor: lightGrayColor,
+    borderRadius: 8,
+    padding: spacings.large,
+  },
+  vinDetailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: spacings.small,
+    borderBottomWidth: 1,
+    borderBottomColor: grayColor,
+  },
+  vinDetailLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: blackColor,
+    flex: 1,
+  },
+  vinDetailValue: {
+    fontSize: 14,
+    color: blueColor,
+    flex: 2,
+    textAlign: 'right',
   },
   iconContainer: {
     paddingLeft: spacings.large,
