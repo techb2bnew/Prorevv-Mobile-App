@@ -66,6 +66,8 @@ const GenerateInvoiceScreen = ({ navigation,
     const [invoiceRates, setInvoiceRates] = useState({});
     const inputRefs = useRef({});
     const [selectAll, setSelectAll] = useState(false);
+    const [autoSavingVehicles, setAutoSavingVehicles] = useState(new Set()); // Track which vehicles are being auto-saved
+    const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
 
     useFocusEffect(
         useCallback(() => {
@@ -84,10 +86,10 @@ const GenerateInvoiceScreen = ({ navigation,
                     if (savedJob) {
                         const parsedJob = JSON.parse(savedJob);
                         console.log("Loading saved job:", parsedJob);
-                        
+
                         // Set the job details
                         setSelectedJobId(parsedJob.id);
-                        
+
                         // If no customer was loaded from current_customer, try to get it from job data
                         if (!savedCustomer && parsedJob.assignCustomer) {
                             setCustomerDetails(parsedJob.assignCustomer);
@@ -102,10 +104,10 @@ const GenerateInvoiceScreen = ({ navigation,
             setSelectedVehicles([]);
             setSelectAll(false);
             setWorkOrdersRawData([]);
-            
+
             // Load saved selections
             loadSelectedCustomerAndJob();
-            
+
             // Fetch fresh data
             fetchCustomers(1);
         }, [])
@@ -150,7 +152,7 @@ const GenerateInvoiceScreen = ({ navigation,
     useFocusEffect(
         useCallback(() => {
             console.log("Focus effect ran on screen focus - resetting dates");
-            
+
             // Reset dates when screen renders
             setStartDate(null);
             setEndDate(null);
@@ -447,7 +449,7 @@ const GenerateInvoiceScreen = ({ navigation,
         setWorkOrdersRawData([]);
         setSelectedVehicles([]);
         setSelectAll(false);
-        
+
         if (item.isAllOption) {
             // Handle "All Customers" selection
             setCustomerDetails({ id: 'all', fullName: 'All Customers', isAllOption: true });
@@ -485,7 +487,7 @@ const GenerateInvoiceScreen = ({ navigation,
                 // Handle "All Jobs" selection - get all vehicles from all jobs
                 const allVehicles = [];
                 let totalEstimatedCost = 0;
-                
+
                 for (const job of allJobList) {
                     try {
                         const response = await fetch(`${apiUrl}/fetchSingleJobs?jobid=${job.id}`, {
@@ -501,9 +503,12 @@ const GenerateInvoiceScreen = ({ navigation,
                         console.error(`Error fetching data for job ${job.id}:`, error);
                     }
                 }
-                
+
                 setWorkOrdersRawData(allVehicles);
                 setSelectedJobEstimated(totalEstimatedCost);
+                
+                // Auto-save existing invoice rates for all vehicles
+                autoSaveExistingRates(allVehicles);
             } else {
                 // Handle specific job selection - keep original logic
                 const response = await fetch(`${apiUrl}/fetchSingleJobs?jobid=${jobId}`, {
@@ -516,6 +521,9 @@ const GenerateInvoiceScreen = ({ navigation,
                     console.log("API Response Data:", data?.jobs);
                     setWorkOrdersRawData(data?.jobs?.vehicles);
                     setSelectedJobEstimated(data?.jobs?.estimatedCost);
+                    
+                    // Auto-save existing invoice rates for vehicles
+                    autoSaveExistingRates(data?.jobs?.vehicles);
                 } else {
                     console.error("Error fetching job data:", data.error || "Unknown error");
                 }
@@ -523,6 +531,41 @@ const GenerateInvoiceScreen = ({ navigation,
         } catch (error) {
             console.error("An error occurred while fetching job data:", error);
         }
+    };
+
+    const autoSaveExistingRates = async (vehicles) => {
+        if (!vehicles || vehicles.length === 0) return;
+
+        console.log("🚀 Starting auto-save for vehicles:", vehicles.length);
+
+        // Auto-save each vehicle's existing rate one by one with faster processing
+        for (const vehicle of vehicles) {
+            // Check for existing rate in priority order: labourCost -> pdr -> selectedJobEstimated
+            const existingRate = vehicle?.labourCost || vehicle?.pdr || selectedJobEstimated;
+            
+            console.log(`🔍 Vehicle ${vehicle.id}: labourCost=${vehicle?.labourCost}, pdr=${vehicle?.pdr}, selectedJobEstimated=${selectedJobEstimated}`);
+            
+            if (existingRate && existingRate > 0) {
+                console.log(`💾 Auto-saving vehicle ${vehicle.id} with rate: ${existingRate}`);
+                
+                // Add to auto-saving set
+                setAutoSavingVehicles(prev => new Set([...prev, vehicle.id]));
+                
+                try {
+                    // Use await to ensure proper execution
+                    await handleAutoSaveInvoice(vehicle.id, existingRate.toString());
+                } catch (error) {
+                    console.error(`Error auto-saving for vehicle ${vehicle.id}:`, error);
+                }
+                
+                // Minimal delay for faster processing
+                await new Promise(resolve => setTimeout(resolve, 100));
+            } else {
+                console.log(`⏭️ Skipping vehicle ${vehicle.id} - no valid rate found`);
+            }
+        }
+        
+        console.log("✅ Auto-save process completed");
     };
 
     const getStatusStyle = (status, type = "") => {
@@ -534,7 +577,7 @@ const GenerateInvoiceScreen = ({ navigation,
 
         // default for other statuses
         if (status === true || status === "completed") return [styles.statusPill, styles.statusCompleted];
-        if (status === false || status === "inprogress") return [styles.statusPill, styles.statusInProgress,{backgroundColor: `${blackColor}20`}];
+        if (status === false || status === "inprogress") return [styles.statusPill, styles.statusInProgress, { backgroundColor: `${blackColor}20` }];
 
         return [styles.statusPill];
     };
@@ -552,7 +595,7 @@ const GenerateInvoiceScreen = ({ navigation,
     const filteredVehicles = workOrdersRawData?.filter(vehicle => {
         // --- Job Selection Filter ---
         const jobSelected = selectedJobId && selectedJobId !== '';
-        
+
         // --- Status Filter ---
         const statusMatch =
             statusFilter === 'all' ||
@@ -702,7 +745,7 @@ const GenerateInvoiceScreen = ({ navigation,
             if (customerDetails && allJobList.length > 0) {
                 const customerJobs = allJobList.filter(job => job.customer?.fullName === customerDetails.fullName);
                 setJobList(customerJobs);
-                
+
                 // If we have a selected job ID, make sure it's in the job list
                 if (selectedJobId) {
                     const jobExists = customerJobs.find(job => job.id === selectedJobId);
@@ -713,20 +756,146 @@ const GenerateInvoiceScreen = ({ navigation,
                 }
             }
         };
-        
+
         loadJobListForSelectedCustomer();
     }, [customerDetails, allJobList, selectedJobId]);
+
+    // Auto-save when workOrdersRawData changes
+    useEffect(() => {
+        if (workOrdersRawData && workOrdersRawData.length > 0) {
+            console.log("📋 Vehicles loaded, triggering auto-save...");
+            autoSaveExistingRates(workOrdersRawData);
+        }
+    }, [workOrdersRawData]);
+
+    // Keyboard event listeners
+    useEffect(() => {
+        const keyboardWillShowListener = Keyboard.addListener('keyboardWillShow', () => {
+            console.log("⌨️ Keyboard will show");
+            setIsKeyboardOpen(true);
+        });
+        const keyboardWillHideListener = Keyboard.addListener('keyboardWillHide', () => {
+            console.log("⌨️ Keyboard will hide");
+            setIsKeyboardOpen(false);
+        });
+        const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
+            console.log("⌨️ Keyboard did show");
+            setIsKeyboardOpen(true);
+        });
+        const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+            console.log("⌨️ Keyboard did hide");
+            setIsKeyboardOpen(false);
+        });
+
+        return () => {
+            keyboardWillShowListener.remove();
+            keyboardWillHideListener.remove();
+            keyboardDidShowListener.remove();
+            keyboardDidHideListener.remove();
+        };
+    }, []);
 
     const handleInvoiceChange = (vehicleId, value) => {
         setInvoiceRates(prev => ({
             ...prev,
             [vehicleId]: value
         }));
+        
+        // Auto-save when user changes value
+        if (value && value.trim() !== '') {
+            handleAutoSaveInvoice(vehicleId, value);
+        }
+    };
+
+    const handleAutoSaveInvoice = async (vehicleId, value) => {
+        console.log(`🔄 Auto-saving vehicle ${vehicleId} with value: ${value}`);
+        
+        // Find the vehicle data
+        const vehicle = workOrdersRawData.find(v => v.id === vehicleId);
+        if (!vehicle) {
+            console.log(`❌ Vehicle ${vehicleId} not found`);
+            return;
+        }
+
+        // Empty check
+        if (!value || value.toString().trim().length === 0) {
+            console.log(`❌ Empty value for vehicle ${vehicleId}`);
+            return;
+        }
+
+        const parsedRate = Number(value);
+        const existingPdr = Number(vehicle?.pdr);
+
+        console.log(`📊 Vehicle ${vehicleId}: parsedRate=${parsedRate}, existingPdr=${existingPdr}`);
+
+        // If same as existing, skip save
+        if (!isNaN(existingPdr) && parsedRate === existingPdr) {
+            console.log(`⏭️ Skipping save for vehicle ${vehicleId} - same as existing PDR`);
+            return;
+        }
+
+        // Add to auto-saving set
+        setAutoSavingVehicles(prev => new Set([...prev, vehicleId]));
+
+        // Add timeout wrapper for faster processing
+        const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Auto-save timeout')), 5000)
+        );
+
+        try {
+            const token = await AsyncStorage.getItem("auth_token");
+            const dateToUse = new Date().toISOString().split('T')[0];
+            const payload = [{
+                vehicleId: vehicleId,
+                pdr: parsedRate,
+                generatedInvoiceDate: dateToUse,
+                roleType: technicianType,
+                userId: technicianId,
+            }];
+
+            const fetchPromise = fetch(`${API_BASE_URL}/updateVehiclePdr`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(payload),
+            });
+
+            const response = await Promise.race([fetchPromise, timeoutPromise]);
+
+            if (!response.ok) {
+                throw new Error(`API Error: ${response.status}`);
+            }
+
+            // Quick JSON parse with error handling
+            try {
+                const data = await response.json();
+                console.log("✅ Auto-saved PDR:", data);
+            } catch (parseError) {
+                console.error('JSON Parse Error:', parseError);
+                // Continue without throwing - auto-save should be silent
+            }
+
+        } catch (error) {
+            console.error('❌ Error auto-saving invoice:', error);
+            // Don't show error to user for auto-save, just log it
+        } finally {
+            // Remove from auto-saving set quickly
+            setAutoSavingVehicles(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(vehicleId);
+                return newSet;
+            });
+        }
     };
 
     const handleSaveInvoice = async (vehicle) => {
         const vehicleId = vehicle.id;
-        const rate = invoiceRates[vehicleId];
+        // Get the actual displayed value from the input
+        const rate = invoiceRates[vehicleId] !== undefined 
+            ? invoiceRates[vehicleId] 
+            : vehicle?.labourCost?.toString() || selectedJobEstimated.toString() || vehicle?.pdr?.toString() || '';
 
         // Step 1: Empty check
         if (!rate || rate.toString().trim().length === 0) {
@@ -786,7 +955,22 @@ const GenerateInvoiceScreen = ({ navigation,
     };
 
     return (
-        <View style={[flex, styles.container]}>
+        <KeyboardAvoidingView 
+            style={[flex, styles.container]} 
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+        >
+            <ScrollView 
+                showsVerticalScrollIndicator={true}
+                keyboardShouldPersistTaps="handled"
+                contentContainerStyle={{ 
+                    flexGrow: 1, 
+                    paddingBottom: isKeyboardOpen ? 100 : 0 
+                }}
+                nestedScrollEnabled={true}
+            >
+           
+            
             <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
                 <View style={{ paddingHorizontal: spacings.large, width: "50%" }} >
                     <Text style={[styles.label, { fontSize: style.fontSizeMedium.fontSize, }]}>Select Customer <Text style={{ color: 'red' }}>*</Text></Text>
@@ -805,8 +989,8 @@ const GenerateInvoiceScreen = ({ navigation,
                 <View style={{ width: "50%" }}>
                     <Text style={[styles.label, { fontSize: style.fontSizeMedium.fontSize, paddingLeft: spacings.large }]}>Select Job <Text style={{ color: 'red' }}>*</Text></Text>
                     <JobDropdown
-                        jobs={customerDetails?.isAllOption ? 
-                            [{ id: 'all', jobName: 'All Jobs', isAllOption: true }, ...allJobList] : 
+                        jobs={customerDetails?.isAllOption ?
+                            [{ id: 'all', jobName: 'All Jobs', isAllOption: true }, ...allJobList] :
                             [{ id: 'all', jobName: 'All Jobs', isAllOption: true }, ...jobList]
                         }
                         selectedJobId={selectedJobId}
@@ -894,10 +1078,10 @@ const GenerateInvoiceScreen = ({ navigation,
                                 {/* <Text style={[styles.tableHeader, { marginLeft: 5 }]}>Select</Text> */}
                             </TouchableOpacity>
                             <Text style={[styles.tableHeader, { width: isTablet ? wp(25) : wp(55) }]}>VIN</Text>
-                            <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(25) }]}>Make</Text>
+                            <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(30) }]}>Make</Text>
                             <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(30) }]}>Model</Text>
+                            <Text style={[styles.tableHeader, { width: wp(28) }]}>Est Cost($)</Text>
                             <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(35) }]}>Vehicle price ($)</Text>
-                            {/* <Text style={[styles.tableHeader, { width: wp(25) }]}>Est Cost($)</Text> */}
                             <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(35) }]}>Start Date</Text>
                             <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(35) }]}>End Date</Text>
                             <Text style={[styles.tableHeader, { width: isIOSAndTablet ? wp(35) : isTablet ? wp(42) : wp(55) }]}>Invoice Rate($)</Text>
@@ -925,14 +1109,15 @@ const GenerateInvoiceScreen = ({ navigation,
                                                 />
                                             </TouchableOpacity>
                                             <Text style={[styles.text, { width: isTablet ? wp(25) : wp(55) }]}>{item?.vin || '-'}</Text>
-                                            <Text style={[styles.text, { width: isTablet ? wp(15) : wp(25), paddingRight: spacings.normal }]}>{item?.make || '-'}</Text>
+                                            <Text style={[styles.text, { width: isTablet ? wp(15) : wp(30), paddingRight: spacings.normal }]}>{item?.make || '-'}</Text>
                                             <Text style={[styles.text, { width: isTablet ? wp(15) : wp(28), paddingRight: spacings.large }]}>{item?.model || '-'}</Text>
+                                            <Text style={[styles.text, { width: wp(28) }]}>
+                                                {selectedJobEstimated ? `$${selectedJobEstimated}` : '-'}
+                                            </Text>
                                             <Text style={[styles.text, { width: isTablet ? wp(15) : wp(35) }]}>
                                                 {item?.labourCost ? `$${item.labourCost}` : '-'}
                                             </Text>
-                                            {/* <Text style={[styles.text, { width: wp(25) }]}>
-                                                {selectedJobEstimated ? `$${selectedJobEstimated}` : '-'}
-                                            </Text> */}
+
                                             <Text style={[styles.text, { width: isTablet ? wp(15) : wp(35) }]}> {item?.startDate
                                                 ? new Date(item?.startDate).toLocaleDateString("en-US", {
                                                     month: "short",
@@ -966,7 +1151,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                                     value={
                                                         invoiceRates[item.id] !== undefined
                                                             ? invoiceRates[item.id]
-                                                            : item?.labourCost?.toString() || item?.pdr?.toString() || ''
+                                                            : item?.labourCost?.toString() || selectedJobEstimated.toString() || item?.pdr?.toString() || ''
                                                     }
                                                     onChangeText={(value) => handleInvoiceChange(item.id, value)}
                                                 />
@@ -979,7 +1164,9 @@ const GenerateInvoiceScreen = ({ navigation,
                                                         borderRadius: 5
                                                     }}
                                                 >
-                                                    <Text style={{ color: 'white' }}>Save</Text>
+                                                    <Text style={{ color: 'white' }}>
+                                                        {autoSavingVehicles.has(item.id) ? 'Saving...' : 'Save'}
+                                                    </Text>
                                                 </TouchableOpacity>
 
                                             </View>
@@ -1032,7 +1219,12 @@ const GenerateInvoiceScreen = ({ navigation,
             </View>}
 
             {viewType === 'grid' && (
-                <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(75) : hp(65) : isIOSAndTablet ? hp(75) : hp(60), marginTop: spacings.large, paddingBottom: selectedVehicles?.length > 0 ? hp(8) : 0 }}>
+                <ScrollView 
+                    style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(75) : hp(65) : isIOSAndTablet ? hp(75) : hp(60), marginTop: spacings.large, paddingBottom: selectedVehicles?.length > 0 ? hp(8) : 0 }}
+                    showsVerticalScrollIndicator={true}
+                    keyboardShouldPersistTaps="handled"
+                    nestedScrollEnabled={true}
+                >
                     {filteredVehicles.length > 0 && <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacings.large }}>
                         <TouchableOpacity
                             onPress={handleSelectAll}
@@ -1094,10 +1286,10 @@ const GenerateInvoiceScreen = ({ navigation,
                                             <Text >{item?.labourCost ? `$${item.labourCost}` : '-'} </Text>
                                         </View>
 
-                                        {/* <View style={{ width: '48%', marginBottom: 9 }}>
+                                        <View style={{ width: '48%', marginBottom: 9 }}>
                                             <Text style={{ color: '#555', fontSize: 10 }}>Estimated Cost($)</Text>
                                             <Text >{selectedJobEstimated ? `$${selectedJobEstimated}` : '-'} </Text>
-                                        </View> */}
+                                        </View>
                                         <View style={{ width: '48%', marginBottom: 9 }}>
                                             <Text style={{ color: '#555', fontSize: 10 }}>Start Date</Text>
                                             <Text >{item?.startDate
@@ -1138,7 +1330,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                                     value={
                                                         invoiceRates[item.id] !== undefined
                                                             ? invoiceRates[item.id]
-                                                            : item?.labourCost?.toString() || item?.pdr?.toString() || ''
+                                                            : item?.labourCost?.toString() || selectedJobEstimated.toString() || item?.pdr?.toString() || ''
                                                     }
                                                     onChangeText={(value) => handleInvoiceChange(item.id, value)}
                                                 />
@@ -1153,7 +1345,9 @@ const GenerateInvoiceScreen = ({ navigation,
                                                         borderRadius: 5
                                                     }}
                                                 >
-                                                    <Text style={{ color: 'white' }}>Save</Text>
+                                                    <Text style={{ color: 'white' }}>
+                                                        {autoSavingVehicles.has(item.id) ? 'Saving...' : 'Save'}
+                                                    </Text>
                                                 </TouchableOpacity>
 
                                             </View>
@@ -1208,7 +1402,7 @@ const GenerateInvoiceScreen = ({ navigation,
                         }}
                     />
 
-                </View>)}
+                </ScrollView>)}
 
             {selectedVehicles.length > 0 && <View style={{ position: "absolute", bottom: 0, backgroundColor: whiteColor, width: wp(100), flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: spacings.large }}>
                 <CustomButton
@@ -1503,7 +1697,8 @@ const GenerateInvoiceScreen = ({ navigation,
             />
 
 
-        </View >
+            </ScrollView>
+        </KeyboardAvoidingView>
     );
 };
 

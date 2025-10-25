@@ -264,13 +264,13 @@ const VinListScreen = ({ navigation, route }) => {
 
     const fetchFilteredData = async (start, end) => {
         if (!technicianId) return;
-        
+
         // Filter with single date if only one is provided
         if (!start && !end) {
             console.log("At least one date must be selected to filter");
             return;
         }
-        
+
         setLoading(true);
 
         try {
@@ -300,7 +300,7 @@ const VinListScreen = ({ navigation, route }) => {
             } else {
                 bodyData = `${dateParams.join('&')}&roleType=${technicianType}&technicianId=${technicianId}`;
             }
-           
+
 
             const response = await axios.post(
                 `${API_BASE_URL}/vehicleFilter`,
@@ -563,7 +563,7 @@ const VinListScreen = ({ navigation, route }) => {
                 <TouchableOpacity
                     onPress={() => setViewType('list')}
                     style={[styles.tabButton, {
-                        backgroundColor: viewType === 'list' ? blueColor : whiteColor,
+                        backgroundColor: viewType === 'list' ? grayColor : whiteColor,
                         width: isTablet ? wp(8) : wp(12),
                         height: hp(4.5),
                         justifyContent: 'center',
@@ -572,19 +572,19 @@ const VinListScreen = ({ navigation, route }) => {
                         marginRight: 10,
 
                     }]}>
-                    <Ionicons name="list" size={isTablet ? 35 : 20} color={viewType === 'list' ? whiteColor : blackColor} />
+                    <Ionicons name="list" size={isTablet ? 35 : 20} color={viewType === 'list' ? blackColor : blackColor} />
                 </TouchableOpacity>
                 <TouchableOpacity
                     onPress={() => setViewType('grid')}
                     style={[styles.tabButton, {
-                        backgroundColor: viewType === 'grid' ? blueColor : whiteColor,
+                        backgroundColor: viewType === 'grid' ? grayColor : whiteColor,
                         width: isTablet ? wp(8) : wp(12),
                         height: hp(4.5),
                         justifyContent: 'center',
                         alignItems: 'center',
                         borderRadius: 5,
                     }]}>
-                    <Ionicons name="grid-sharp" size={isTablet ? 35 : 20} color={viewType === 'grid' ? whiteColor : blackColor} />
+                    <Ionicons name="grid-sharp" size={isTablet ? 35 : 20} color={viewType === 'grid' ? blackColor : blackColor} />
                 </TouchableOpacity>
 
             </View>
@@ -742,7 +742,7 @@ const VinListScreen = ({ navigation, route }) => {
                                         style={[
                                             styles.tableRow,
                                             flexDirectionRow,
-                                            { backgroundColor: index % 2 === 0 ? lightBlueColor : whiteColor },
+                                            { backgroundColor: index % 2 === 0 ? lightGrayColor : grayColor },
                                         ]}
                                         onPress={() => navigation.navigate("VehicleDetailsScreen", {
                                             vehicleId: item.id,
@@ -751,8 +751,8 @@ const VinListScreen = ({ navigation, route }) => {
                                     >
                                         {/* <Text style={[styles.tableText, { width: wp(30), paddingLeft: spacings.small }]}>{item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}</Text> */}
                                         <Text style={[styles.tableText, { width: isTablet ? wp(25) : wp(55) }]}>{item?.vin}</Text>
-                                        <Text style={[styles.tableText, { width: isTablet ? wp(13) : wp(25),paddingRight: spacings.large }]}>{item?.make}</Text>
-                                        <Text style={[styles.tableText, { width: isTablet ? wp(13) : wp(35)}]}>{item?.model}</Text>
+                                        <Text style={[styles.tableText, { width: isTablet ? wp(13) : wp(25), paddingRight: spacings.large }]}>{item?.make}</Text>
+                                        <Text style={[styles.tableText, { width: isTablet ? wp(13) : wp(35) }]}>{item?.model}</Text>
                                         <Text style={[styles.tableText, { width: isTablet ? wp(15) : wp(35), paddingRight: spacings.large }]}>{item?.jobName}</Text>
                                         <Text style={[styles.tableText, { width: isTablet ? wp(15) : wp(35) }]}>
                                             {item?.startDate
@@ -855,7 +855,7 @@ const VinListScreen = ({ navigation, route }) => {
                     onRefresh={handleRefresh}
                     renderItem={({ item, index }) => (
                         <Pressable style={{
-                            backgroundColor: index % 2 === 0 ? lightBlueColor : whiteColor,
+                            backgroundColor: index % 2 === 0 ? lightGrayColor : grayColor,
                             borderRadius: 10,
                             padding: 10,
                             marginBottom: 10,
@@ -1154,7 +1154,7 @@ const styles = StyleSheet.create({
         paddingLeft: spacings.large,
     },
     filterButton: {
-        backgroundColor: blueColor,
+        backgroundColor: blackColor,
         padding: spacings.large,
         borderRadius: 5,
         alignItems: "center",
@@ -1169,7 +1169,7 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.15,
         shadowRadius: 4,
-        backgroundColor: blueColor
+        backgroundColor: blackColor
     },
     tableHeaderText: {
         fontWeight: style.fontWeightThin1x.fontWeight,

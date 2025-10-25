@@ -857,7 +857,7 @@ console.log("selectedJobs",selectedJobs);
                             <Text style={[styles.tableHeader, { width: "15%" }]}>Select</Text>
                         )}
                         <Text style={[styles.tableHeader, { width: activeStatus === 'InProgress' ? "30%" : "40%" }]}>Job Name</Text>
-                        <Text style={[styles.tableHeader, { width: "35%" }]}>Number of W.O</Text>
+                        <Text style={[styles.tableHeader, { width: "30%" }]}>Number of W.O</Text>
                         <Text style={[styles.tableHeader, { width: activeStatus === 'InProgress' ? "20%" : "20%", textAlign: isTablet ? "left" : "center" }]}>Action</Text>
 
                     </View>
@@ -889,7 +889,7 @@ console.log("selectedJobs",selectedJobs);
                                             jobId: item?.id
                                         })}
                                     >
-                                        < View style={{ width: "15%", justifyContent: "center" }}>
+                                        <View style={{ width: "15%", justifyContent: "center" }}>
                                             {activeStatus === 'InProgress' && (
                                                 <TouchableOpacity
                                                     style={[styles.checkbox, isSelected && styles.checkboxSelected]}
@@ -905,7 +905,7 @@ console.log("selectedJobs",selectedJobs);
                                         <Text style={[styles.text, { width: activeStatus === 'InProgress' ? "30%" : "44%", paddingRight: spacings.xxxxLarge }]}>
                                             {item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}
                                         </Text>
-                                        <Text style={[styles.text, { width: "35%" }]}>
+                                        <Text style={[styles.text, { width: "30%" }]}>
                                             {item?.vehicles?.length}
                                         </Text>
                                         <View style={{ flexDirection: "row", alignItems: "center", width: activeStatus === 'InProgress' ? "20%" : "20%" }} >
@@ -947,7 +947,7 @@ console.log("selectedJobs",selectedJobs);
                                 disabled={isCompletingJobs}
                             >
                                 <Text style={styles.completeButtonText}>
-                                    {isCompletingJobs ? 'Completing...' : `Complete Selected Jobs (${selectedJobs.length})`}
+                                    {isCompletingJobs ? 'Completing...' : `Complete Selected Jobs`}
                                 </Text>
                             </TouchableOpacity>
                             <TouchableOpacity
@@ -1657,7 +1657,7 @@ const styles = StyleSheet.create({
         paddingVertical: spacings.small,
         borderRadius: 8,
         // flex: 1,
-        width:wp(48),
+        width:wp(45),
         // marginRight: spacings.medium,
         height: hp(4),
         justifyContent: 'center',
@@ -1667,8 +1667,8 @@ const styles = StyleSheet.create({
     },
     completeButtonText: {
         color: whiteColor,
-        fontSize: style.fontSizeNormal.fontSize,
-        fontWeight: style.fontWeightThin1x.fontWeight,
+        fontSize: style.fontSizeSmall1x.fontSize,
+        // fontWeight: style.fontWeightThin1x.fontWeight,
         textAlign: 'center',
     },
     clearButton: {
@@ -1677,7 +1677,7 @@ const styles = StyleSheet.create({
         paddingVertical: spacings.small,
         borderRadius: 8,
         height: hp(4),
-        width: wp(48),
+        width: wp(45),
         justifyContent: 'center',
         alignItems:'center'
     },

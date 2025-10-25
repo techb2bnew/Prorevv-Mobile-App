@@ -1,7 +1,8 @@
 import { Image, StyleSheet, Text, TouchableOpacity, View, Pressable, FlatList, ImageBackground, Platform, Dimensions, Alert, ToastAndroid, TextInput, ScrollView } from 'react-native'
+import LinearGradient from 'react-native-linear-gradient'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { blackColor, blueColor, ExtraExtralightOrangeColor, grayColor, lightBlueColor, lightGrayColor, lightOrangeColor, orangeColor, redColor, whiteColor } from '../constans/Color';
-import { ADD_CASTUMER_BACK_IMAGE, ADD_CASTUMER_TAB_BACK_IMAGE, ADD_CASTUMER_TAB_WHITE_BACK_IMAGE, ADD_CASTUMER_WHITE_BACK_IMAGE, ADD_VEHICLE_BACK_IMAGE, ADD_VEHICLE_IMAGE, ADD_VEHICLE_TAB_BACK_IMAGE, APP_NAME_IMAGE, CARD_BACKGROUND, CAROUSAL_ONE_IMAGE, CAROUSAL_THREE_IMAGE, CAROUSAL_TWO_IMAGE, CIRLE_SCANNER_IMAGE, HEADER_BACKGROUND, HOW_TO_PLAY_BACK_IMAGE, HOW_TO_PLAY_TAB_BACK_IMAGE, HOW_TO_USE_IMAGE, JOB_HISTORY_BACK_IMAGE, JOB_HISTORY_IMAGE, JOB_HISTORY_TAB_BACK_IMAGE, NEW_CLIENT_IMAGE, NEW_WORK_ORDER_IMAGE, VIN_LIST_IMAGE } from '../assests/images';
+import { ADD_CASTUMER_BACK_IMAGE, ADD_CASTUMER_TAB_BACK_IMAGE, ADD_CASTUMER_TAB_WHITE_BACK_IMAGE, ADD_CASTUMER_WHITE_BACK_IMAGE, ADD_VEHICLE_BACK_IMAGE, ADD_VEHICLE_IMAGE, ADD_VEHICLE_TAB_BACK_IMAGE, APP_ICON_IMAGE, APP_NAME_IMAGE, CARD_BACKGROUND, CAROUSAL_ONE_IMAGE, CAROUSAL_THREE_IMAGE, CAROUSAL_TWO_IMAGE, CIRLE_SCANNER_IMAGE, HEADER_BACKGROUND, HOW_TO_PLAY_BACK_IMAGE, HOW_TO_PLAY_TAB_BACK_IMAGE, HOW_TO_USE_IMAGE, JOB_HISTORY_BACK_IMAGE, JOB_HISTORY_IMAGE, JOB_HISTORY_TAB_BACK_IMAGE, NEW_CLIENT_IMAGE, NEW_WORK_ORDER_IMAGE, VIN_LIST_IMAGE } from '../assests/images';
 import { BaseStyle } from '../constans/Style';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from '../utils';
 import { style, spacings } from '../constans/Fonts';
@@ -56,7 +57,9 @@ const HomeScreen = ({ navigation }) => {
       backgroundImage: isTablet ? ADD_CASTUMER_TAB_BACK_IMAGE : ADD_CASTUMER_BACK_IMAGE,
       iconComponent: technicianType === "ifs" ? Feather : Ionicons,
       iconName: technicianType === "ifs" ? "file-text" : "person-add-outline",
-      color: '#3B6981',
+      // color: '#3B6981',
+      color: blackColor,
+
     },
     {
       name: technicianType === "ifs" ? "Scan Vin" : "Manage Jobs",
@@ -118,7 +121,8 @@ const HomeScreen = ({ navigation }) => {
       subtitle: technicianType === "ifs" ? "Check reports summary" : "Scan VIN number",
       image: technicianType === "ifs" ? JOB_HISTORY_IMAGE : CIRLE_SCANNER_IMAGE,
       backgroundColor: whiteColor,
-      color: '#3B6981',
+      // color: '#3B6981',
+      color: blackColor,
       onPress: async () => {
         if (technicianType === "ifs") {
           navigation.navigate("ReportsScreen")
@@ -517,179 +521,162 @@ const HomeScreen = ({ navigation }) => {
     );
   };
 
-  // const renderCard = ({ item, index }) => (
-  //   <TouchableOpacity style={[styles.actionCard, { backgroundColor: item.backgroundColor }]} onPress={item?.onPress}>
-  //     <View
-  //       style={{
-  //         position: 'absolute',
-  //         top: -wp(10),
-  //         right: -wp(10),
-  //         width: wp(25),
-  //         height: wp(25),
-  //         borderRadius: wp(25) / 2,
-  //         backgroundColor: 'rgba(222, 219, 219, 0.45)',
-  //         opacity: index === 0 ? .5 : 1
-  //       }}
-  //     />
-  //     <View
-  //       style={{
-  //         position: 'absolute',
-  //         bottom: -wp(10),
-  //         left: -wp(14),
-  //         width: wp(25),
-  //         height: wp(25),
-  //         borderRadius: wp(25) / 2,
-  //         backgroundColor: '#cacaca58',
-  //         transform: [{ scaleX: 1.3 }],
-  //         opacity: index === 0 ? .6 : 1
-  //       }}
-  //     />
-  //     <View style={[styles.cardContent, justifyContentSpaceBetween]}>
-  //       <View style={[alignJustifyCenter, flexDirectionRow]}>
-  //         <View style={{
-  //           width: wp(12),
-  //           height: wp(12),
-  //           borderRadius: 8,
-  //           marginRight: spacings.xxLarge,
-  //           backgroundColor: (index === 0 ? '#cacaca58' : item?.color),
-  //           borderColor: "#fff",
-  //           borderWidth: .5,
-  //           alignItems: "center",
-  //           justifyContent: "center",
-  //         }}>
-  //           {/* <Image source={item?.image} style={styles.cardIcon} /> */}
-  //           <item.iconComponent
-  //             name={item.iconName}
-  //             size={24}
-  //             color="#fff"
-  //           />
-  //         </View>
-  //         <View>
-  //           <Text style={[styles.actionTitle, { color: item.backgroundColor === blueColor ? whiteColor : blackColor }]}>{item.name}</Text>
-  //           <Text style={[styles.actionSubtitle, { color: item.backgroundColor === blueColor ? whiteColor : blackColor }]}>Tap to open</Text>
-  //         </View>
-  //       </View>
-  //       <View style={{
-  //         width: wp(8),
-  //         height: wp(8),
-  //         borderRadius: 8,
-  //         marginRight: spacings.xxLarge,
-  //         padding: spacings.small,
-  //         backgroundColor: '#cacaca58',
-  //         borderColor: "#cacacaff",
-  //         borderWidth: .5,
-  //         alignItems: "center",
-  //         justifyContent: "center",
-  //       }}>
-  //         <Feather name="arrow-right" size={20} color={index === 0 ? '#fff' : item?.color} />
-  //       </View>
-  //     </View>
-  //   </TouchableOpacity>
-  // );
   const renderCard = ({ item, index }) => (
     <View style={styles.shadowWrapper}>
-      <Pressable
-        style={[styles.innerCard, { backgroundColor: item.backgroundColor }]}
-        onPress={item?.onPress}
-      >
-        {/* Decorative Shapes */}
-        <View
-          style={{
-            position: 'absolute',
-            top: -wp(10),
-            right: -wp(10),
-            width: wp(25),
-            height: wp(25),
-            borderRadius: wp(25) / 2,
-            backgroundColor: 'rgba(222, 219, 219, 0.45)',
-            opacity: index === 0 ? 0.5 : 1
-          }}
-        />
-        <View
-          style={{
-            position: 'absolute',
-            bottom: -wp(10),
-            left: -wp(14),
-            width: wp(25),
-            height: wp(25),
-            borderRadius: wp(25) / 2,
-            backgroundColor: '#cacaca58',
-            transform: [{ scaleX: 1.3 }],
-            opacity: index === 0 ? 0.6 : 1
-          }}
-        />
-
-        {/* Main Content */}
-        <View style={[styles.cardContent, justifyContentSpaceBetween]}>
-          <View style={[alignJustifyCenter, flexDirectionRow]}>
+      {item.name === "Assign Jobs" ? (
+        <LinearGradient
+          colors={['#8B0000', '#dc2626e2', '#2D1B1B']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={[styles.innerCard, { backgroundColor: blackColor, padding: 0 }]}
+        >
+          <Pressable
+            onPress={item?.onPress}
+            style={[styles.innerCard]}
+          >
+            {/* Main Content */}
+            <View style={[styles.cardContent, justifyContentSpaceBetween]}>
+              <View style={[alignJustifyCenter, flexDirectionRow]}>
+                <View
+                  style={{
+                    width: wp(12),
+                    height: wp(12),
+                    borderRadius: 8,
+                    marginRight: spacings.xxLarge,
+                    backgroundColor: 'red', // Even darker red for icon background like image
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <item.iconComponent
+                    name={item.iconName}
+                    size={isTablet ? 35 : 24}
+                    color="#fff"
+                  />
+                </View>
+                <View>
+                  <Text
+                    style={[
+                      styles.actionTitle,
+                      {
+                        color: whiteColor,
+                        fontSize: isIOSAndTablet ? 20 : 16
+                      }
+                    ]}
+                  >
+                    {item.name}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.actionSubtitle,
+                      {
+                        color: whiteColor,
+                        fontSize: isIOSAndTablet ? 16 : 13
+                      }
+                    ]}
+                  >
+                    {item.subtitle}
+                  </Text>
+                </View>
+              </View>
+              <View
+                style={{
+                  width: wp(8),
+                  height: wp(8),
+                  borderRadius: 8,
+                  marginRight: spacings.xxLarge,
+                  padding: spacings.small,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Feather
+                  name="arrow-right"
+                  size={isTablet ? 25 : 23}
+                  color={whiteColor}
+                />
+              </View>
+            </View>
+          </Pressable>
+        </LinearGradient>
+      ) : (
+        <Pressable
+          style={[styles.innerCard, { backgroundColor: blackColor }]}
+          onPress={item?.onPress}
+        >
+          {/* Main Content */}
+          <View style={[styles.cardContent, justifyContentSpaceBetween]}>
+            <View style={[alignJustifyCenter, flexDirectionRow]}>
+              <View
+                style={{
+                  width: wp(12),
+                  height: wp(12),
+                  borderRadius: 8,
+                  marginRight: spacings.xxLarge,
+                  backgroundColor: (item?.color),
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <item.iconComponent
+                  name={item.iconName}
+                  size={isTablet ? 35 : 24}
+                  color="#fff"
+                />
+              </View>
+              <View>
+                <Text
+                  style={[
+                    styles.actionTitle,
+                    {
+                      color: whiteColor,
+                      fontSize: isIOSAndTablet ? 20 : 16
+                    }
+                  ]}
+                >
+                  {item.name}
+                </Text>
+                <Text
+                  style={[
+                    styles.actionSubtitle,
+                    {
+                      color: whiteColor,
+                      fontSize: isIOSAndTablet ? 16 : 13
+                    }
+                  ]}
+                >
+                  {item.subtitle}
+                </Text>
+              </View>
+            </View>
             <View
               style={{
-                width: wp(12),
-                height: wp(12),
+                width: wp(8),
+                height: wp(8),
                 borderRadius: 8,
                 marginRight: spacings.xxLarge,
-                backgroundColor: (item?.color),
-                borderColor: "#fff",
-                borderWidth: 0.5,
+                padding: spacings.small,
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <item.iconComponent
-                name={item.iconName}
-                size={isTablet ? 35 : 24}
-                color="#fff"
+              <Feather
+                name="arrow-right"
+                size={isTablet ? 25 : 23}
+                color={whiteColor}
               />
             </View>
-            <View>
-              <Text
-                style={[
-                  styles.actionTitle,
-                  { color: item.backgroundColor === blueColor ? whiteColor : blackColor, fontSize: isIOSAndTablet ? 20 : 16 }
-                ]}
-              >
-                {item.name}
-              </Text>
-              <Text
-                style={[
-                  styles.actionSubtitle,
-                  { color: item.backgroundColor === blueColor ? whiteColor : blackColor, fontSize: isIOSAndTablet ? 16 : 13 }
-                ]}
-              >
-                {item.subtitle}
-              </Text>
-            </View>
           </View>
-          <View
-            style={{
-              width: wp(8),
-              height: wp(8),
-              borderRadius: 8,
-              marginRight: spacings.xxLarge,
-              padding: spacings.small,
-              backgroundColor: item?.color,
-              borderColor: "#cacacaff",
-              borderWidth: 0.5,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Feather
-              name="arrow-right"
-              size={isTablet ? 25 : 20}
-              color={whiteColor}
-            />
-          </View>
-        </View>
-      </Pressable>
+        </Pressable>
+      )}
     </View>
   );
 
   return (
     <View style={[styles.container, flex]}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={{ marginBottom: isTablet ? hp(5) : Platform.OS === "android" ? hp(5.5) : hp(5) }}>
-          <ImageBackground source={HEADER_BACKGROUND} style={{
+        <View style={{ marginBottom: isTablet ? hp(5) : Platform.OS === "android" ? hp(2) : hp(5) }}>
+          {/* <ImageBackground source={HEADER_BACKGROUND} style={{
             resizeMode: "contain",
             height: isIOSAndTablet
               ? !isSearching
@@ -703,278 +690,285 @@ const HomeScreen = ({ navigation }) => {
                   ? Platform.OS === "android" ? hp(30) : hp(22)
                   : Platform.OS === "android" ? hp(37.5) : hp(30),
             backgroundColor: !isTablet && Platform.OS === "ios" ? blueColor : "transparent"
-          }}>
-            <View style={[styles.header, { justifyContent: "space-between" }]}>
-              {/* Left side */}
-              {technicianType === "single-technician" ? (
-                isSearching ? (
-                  // 🔙 Back button
-                  <Pressable
-                    onPress={() => {
-                      setIsSearching(false);
-                      setSearchVinText('');
-                      setVinSearchResults(null);
-                    }}
-                    style={{
-                      borderRadius: 10,
-                      backgroundColor: whiteColor,
-                      borderColor: "#fff",
-                      borderWidth: 0.5,
-                      padding: spacings.large,
-                    }}
-                  >
-                    <Feather name="arrow-left" size={25} color={blueColor} />
-                  </Pressable>
-                ) : (
-                  // 👤 Profile button
-                  <Pressable
-                    onPress={() => navigation.navigate("ProfileStackScreen")}
-                    style={{
-                      borderRadius: 10,
-                      backgroundColor: whiteColor,
-                      borderColor: "#fff",
-                      borderWidth: 0.5,
-                      padding: spacings.large,
-                    }}
-                  >
-                    <Feather name="user" size={25} color={blueColor} />
-                  </Pressable>
-                )
+          }}> */}
+          <View style={[styles.header, { justifyContent: "space-between" }]}>
+            {/* Left side */}
+            {technicianType === "single-technician" ? (
+              isSearching ? (
+                // 🔙 Back button
+                <Pressable
+                  onPress={() => {
+                    setIsSearching(false);
+                    setSearchVinText('');
+                    setVinSearchResults(null);
+                  }}
+                  style={{
+                    borderRadius: 10,
+                    // backgroundColor: whiteColor,
+                    // borderColor: "#fff",
+                    // borderWidth: 0.5,
+                    padding: spacings.large,
+                    height: hp(6.5)
+                  }}
+                >
+                  <Feather name="arrow-left" size={25} color={whiteColor} />
+                </Pressable>
               ) : (
-                // 👇 Not single tech → search mode me Back button left me
-                isSearching ? (
-                  <Pressable
-                    onPress={() => {
-                      setIsSearching(false);
-                      setSearchVinText('');
-                      setVinSearchResults(null);
-                    }}
-                    style={{
-                      borderRadius: 10,
-                      backgroundColor: whiteColor,
-                      borderColor: "#fff",
-                      borderWidth: 0.5,
-                      padding: spacings.large,
-                    }}
-                  >
-                    <Feather name="arrow-left" size={25} color={blueColor} />
-                  </Pressable>
-                ) : (
-                  <View style={{ width: 50 }} /> // default empty
-                )
-              )}
-
-              {/* Center logo */}
-              <Image
-                source={APP_NAME_IMAGE}
-                style={[styles.profileImage, { resizeMode: "contain", width: isIOSAndTablet ? 80 : 60, height: isIOSAndTablet ? 80 : 60 }]}
-              />
-
-              {/* Right side */}
-              {technicianType === "single-technician" ? (
-                isSearching ? (
-                  // 👤 Profile (when searching)
-                  <Pressable
-                    onPress={() => navigation.navigate("ProfileStackScreen")}
-                    style={{
-                      borderRadius: 10,
-                      backgroundColor: whiteColor,
-                      borderColor: "#fff",
-                      borderWidth: 0.5,
-                      padding: spacings.large,
-                    }}
-                  >
-                    <Feather name="user" size={25} color={blueColor} />
-                  </Pressable>
-                ) : (
-                  // 🔍 Search
-                  <Pressable
-                    onPress={() => setIsSearching(true)}
-                    style={{
-                      borderRadius: 10,
-                      backgroundColor: whiteColor,
-                      borderColor: "#fff",
-                      borderWidth: 0.5,
-                      padding: spacings.large,
-                    }}
-                  >
-                    <Feather name="search" size={25} color={blueColor} />
-                  </Pressable>
-                )
+                // 👤 Profile button
+                <Pressable
+                  onPress={() => navigation.navigate("ProfileStackScreen")}
+                  style={{
+                    borderRadius: 10,
+                    // backgroundColor: whiteColor,
+                    // borderColor: "#fff",
+                    // borderWidth: 0.5,
+                    padding: spacings.large,
+                    height: hp(6.5)
+                  }}
+                >
+                  <Feather name="user" size={25} color={whiteColor} />
+                </Pressable>
+              )
+            ) : (
+              // 👇 Not single tech → search mode me Back button left me
+              isSearching ? (
+                <Pressable
+                  onPress={() => {
+                    setIsSearching(false);
+                    setSearchVinText('');
+                    setVinSearchResults(null);
+                  }}
+                  style={{
+                    borderRadius: 10,
+                    // backgroundColor: whiteColor,
+                    // borderColor: "#fff",
+                    // borderWidth: 0.5,
+                    padding: spacings.large,
+                    height: hp(6.5)
+                  }}
+                >
+                  <Feather name="arrow-left" size={25} color={whiteColor} />
+                </Pressable>
               ) : (
-                // 👇 Not single tech → search mode me right side empty
-                isSearching ? (
-                  <View style={{ width: 50 }} />
-                ) : (
-                  // Default → Search icon
-                  <Pressable
-                    onPress={() => setIsSearching(true)}
-                    style={{
-                      borderRadius: 10,
-                      backgroundColor: whiteColor,
-                      borderColor: "#fff",
-                      borderWidth: 0.5,
-                      padding: spacings.large,
-                    }}
-                  >
-                    <Feather name="search" size={25} color={blueColor} />
-                  </Pressable>
-                )
-              )}
-            </View>
+                <View style={{ width: 50 }} /> // default empty
+              )
+            )}
 
-            {isSearching && (
-              <View style={styles.searchContainer}>
-                <View style={[styles.searchTextInput, { height: isTablet ? hp(4) : hp(5.5), flexDirection: "row", alignItems: "center", justifyContent: "space-between" }]}>
-                  <TextInput
-                    placeholder="Enter VIN number"
-                    placeholderTextColor={grayColor}
-                    style={[styles.input, { flex: 1, fontSize: 16, color: blueColor }]}
-                    value={searchVinText}
-                    onChangeText={handleVinTextChange}
-                    autoCapitalize="characters"
+            {/* Center logo */}
+            <Image
+              source={APP_ICON_IMAGE}
+              style={[styles.profileImage, { resizeMode: "contain", width: isIOSAndTablet ? 80 : wp(35), height: isIOSAndTablet ? 80 : hp(13) }]}
+            />
+
+            {/* Right side */}
+            {technicianType === "single-technician" ? (
+              isSearching ? (
+                // 👤 Profile (when searching)
+                <Pressable
+                  onPress={() => navigation.navigate("ProfileStackScreen")}
+                  style={{
+                    borderRadius: 10,
+                    // backgroundColor: whiteColor,
+                    // borderColor: "#fff",
+                    // borderWidth: 0.5,
+                    padding: spacings.large,
+                    height: hp(6.5)
+                  }}
+                >
+                  <Feather name="user" size={25} color={whiteColor} />
+                </Pressable>
+              ) : (
+                // 🔍 Search
+                <Pressable
+                  onPress={() => setIsSearching(true)}
+                  style={{
+                    borderRadius: 10,
+                    // backgroundColor: whiteColor,
+                    // borderColor: "#fff",
+                    // borderWidth: 0.5,
+                    padding: spacings.large,
+                    height: hp(6.5)
+                  }}
+                >
+                  <Feather name="search" size={25} color={whiteColor} />
+                </Pressable>
+              )
+            ) : (
+              // 👇 Not single tech → search mode me right side empty
+              isSearching ? (
+                <View style={{ width: 50 }} />
+              ) : (
+                // Default → Search icon
+                <Pressable
+                  onPress={() => setIsSearching(true)}
+                  style={{
+                    borderRadius: 10,
+                    // backgroundColor: whiteColor,
+                    // borderColor: "#fff",
+                    // borderWidth: 0.5,
+                    padding: spacings.large,
+                    height: hp(6.5)
+                  }}
+                >
+                  <Feather name="search" size={25} color={whiteColor} />
+                </Pressable>
+              )
+            )}
+          </View>
+          <Text style={{ color: whiteColor, fontWeight: style.fontWeightThin1x.fontWeight, textAlign: "center", fontSize: style.fontSizeLarge1x.fontSize, paddingTop: spacings.large }}>Prorevv</Text>
+
+          {isSearching && (
+            <View style={styles.searchContainer}>
+              <View style={[styles.searchTextInput, { height: isTablet ? hp(4) : hp(5.5), flexDirection: "row", alignItems: "center", justifyContent: "space-between" }]}>
+                <TextInput
+                  placeholder="Enter VIN number"
+                  placeholderTextColor={grayColor}
+                  style={[styles.input, { flex: 1, fontSize: 16, color: blueColor }]}
+                  value={searchVinText}
+                  onChangeText={handleVinTextChange}
+                  autoCapitalize="characters"
+                />
+                {isSearchingVin && (
+                  <Feather
+                    name="loader"
+                    size={20}
+                    color={blueColor}
+                    style={{ marginRight: spacings.small }}
                   />
-                  {isSearchingVin && (
-                    <Feather
-                      name="loader"
-                      size={20}
-                      color={blueColor}
-                      style={{ marginRight: spacings.small }}
-                    />
-                  )}
-                  <TouchableOpacity
-                    style={styles.scanButton}
-                    onPress={openScanner}
-                  >
-                    <MaterialIcons name="qr-code-scanner" size={24} color="#252837" />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            )}
-
-            {/* VIN Search Results - Show above search input */}
-            {isSearching && vinSearchResults && (
-              <Pressable style={[styles.vinResultsContainer,{top: isTablet ? hp(14) : hp(19)}]} onPress={() => navigation.navigate("VehicleDetailsScreen", {
-                vehicleId: vinSearchResults.id,
-              })}>
-                {vinSearchResults.noResult ? (
-                  <View style={styles.noResultContainer}>
-                    <Text style={styles.noResultText}>No result found</Text>
-                    <Text style={styles.noResultSubText}>Try searching with a different VIN number</Text>
-                  </View>
-                ) : (
-                  <View style={styles.vinDetailsCard}>
-                    <View style={styles.vinDetailRow}>
-                      <Text style={styles.vinDetailLabel}>VIN:</Text>
-                      <Text style={styles.vinDetailValue}>{vinSearchResults.vin}</Text>
-                    </View>
-                    <View style={styles.vinDetailRow}>
-                      <Text style={styles.vinDetailLabel}>Make:</Text>
-                      <Text style={styles.vinDetailValue}>{vinSearchResults.make || 'N/A'}</Text>
-                    </View>
-                    <View style={styles.vinDetailRow}>
-                      <Text style={styles.vinDetailLabel}>Model:</Text>
-                      <Text style={styles.vinDetailValue}>{vinSearchResults.model || 'N/A'}</Text>
-                    </View>
-                    <View style={styles.vinDetailRow}>
-                      <Text style={styles.vinDetailLabel}>Customer:</Text>
-                      <Text style={styles.vinDetailValue}>
-                        {vinSearchResults.customer ? vinSearchResults.customer.fullName || 'N/A' : 'No result found'}
-                      </Text>
-                    </View>
-                  </View>
                 )}
-              </Pressable>
-            )}
+                <TouchableOpacity
+                  style={styles.scanButton}
+                  onPress={openScanner}
+                >
+                  <MaterialIcons name="qr-code-scanner" size={24} color="#252837" />
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
 
-            <View style={styles.totalOverview}>
-              <Text style={[styles.greeting, {
-                color: blackColor,
-                textAlign: "center",
-                fontSize: isIOSAndTablet
-                  ? style.fontSizeMedium2x.fontSize
-                  : isTablet
-                    ? style.fontSizeMedium.fontSize
-                    : style.fontSizeNormal2x.fontSize,
-              }]}>
-                Total Overview
-              </Text>
-              <View style={{ flexDirection: "row", justifyContent: technicianType != "ifs" ? "space-between" : "space-around", marginTop: spacings.large }}>
-                {/* Active Jobs */}
-                <Pressable style={styles.overviewCard} onPress={() => { navigation.navigate("CreateJobScreen") }}>
-                  {/* <View style={styles.overviewCardIcon}>
+          {/* VIN Search Results - Show above search input */}
+          {isSearching && vinSearchResults && (
+            <Pressable style={[styles.vinResultsContainer, { top: isTablet ? Platform.OS === 'ios' ? hp(25) : hp(24) : Platform.OS === 'ios' ? hp(28.5) : hp(31.5) }]} onPress={() => navigation.navigate("VehicleDetailsScreen", {
+              vehicleId: vinSearchResults.id,
+            })}>
+              {vinSearchResults.noResult ? (
+                <View style={styles.noResultContainer}>
+                  <Text style={styles.noResultText}>No result found</Text>
+                  <Text style={styles.noResultSubText}>Try searching with a different VIN number</Text>
+                </View>
+              ) : (
+                <View style={styles.vinDetailsCard}>
+                  <View style={styles.vinDetailRow}>
+                    <Text style={styles.vinDetailLabel}>VIN:</Text>
+                    <Text style={styles.vinDetailValue}>{vinSearchResults.vin}</Text>
+                  </View>
+                  <View style={styles.vinDetailRow}>
+                    <Text style={styles.vinDetailLabel}>Make:</Text>
+                    <Text style={styles.vinDetailValue}>{vinSearchResults.make || 'N/A'}</Text>
+                  </View>
+                  <View style={styles.vinDetailRow}>
+                    <Text style={styles.vinDetailLabel}>Model:</Text>
+                    <Text style={styles.vinDetailValue}>{vinSearchResults.model || 'N/A'}</Text>
+                  </View>
+                  <View style={styles.vinDetailRow}>
+                    <Text style={styles.vinDetailLabel}>Customer:</Text>
+                    <Text style={styles.vinDetailValue}>
+                      {vinSearchResults.customer ? vinSearchResults.customer.fullName || 'N/A' : 'No result found'}
+                    </Text>
+                  </View>
+                </View>
+              )}
+            </Pressable>
+          )}
+
+          <View style={styles.totalOverview}>
+            <Text style={[styles.greeting, {
+              color: whiteColor,
+              textAlign: "center",
+              fontSize: isIOSAndTablet
+                ? style.fontSizeMedium2x.fontSize
+                : isTablet
+                  ? style.fontSizeMedium.fontSize
+                  : style.fontSizeNormal2x.fontSize,
+            }]}>
+              Total Overview
+            </Text>
+            <View style={{ flexDirection: "row", justifyContent: technicianType != "ifs" ? "space-between" : "space-around", marginTop: spacings.large }}>
+              {/* Active Jobs */}
+              <Pressable style={styles.overviewCard} onPress={() => { navigation.navigate("CreateJobScreen") }}>
+                {/* <View style={styles.overviewCardIcon}>
                     <Ionicons name="bag-add-outline" size={25} color='#FF5733' />
                   </View> */}
-                  <Text style={[styles.overviewNumber, {
-                    color: '#FF5733',
-                    fontSize: isIOSAndTablet ? style.fontSizeMedium2x.fontSize : style.fontSizeNormal2x.fontSize
-                  }]}>
-                    {technicianType === "manager"
-                      ? (dashboardData?.jobsuperadmin ?? 0)
-                      : (dashboardData?.AppJobCount ?? 0)}
-                  </Text>
-                  <Text style={[styles.overviewText,
-                  {
-                    fontSize:
-                      isIOSAndTablet
-                        ? style.fontSizeMedium.fontSize
-                        : isTablet
-                          ? style.fontSizeNormal1x.fontSize
-                          : style.fontSizeSmall2x.fontSize,
-                  }]}>
-                    Active Jobs
-                  </Text>
-                </Pressable>
+                <Text style={[styles.overviewNumber, {
+                  color: 'red',
+                  fontSize: isIOSAndTablet ? style.fontSizeMedium2x.fontSize : style.fontSizeMedium.fontSize
+                }]}>
+                  {technicianType === "manager"
+                    ? (dashboardData?.jobsuperadmin ?? 0)
+                    : (dashboardData?.AppJobCount ?? 0)}
+                </Text>
+                <Text style={[styles.overviewText,
+                {
+                  fontSize:
+                    isIOSAndTablet
+                      ? style.fontSizeMedium.fontSize
+                      : isTablet
+                        ? style.fontSizeNormal1x.fontSize
+                        : style.fontSizeSmall2x.fontSize,
+                }]}>
+                  Active Jobs
+                </Text>
+              </Pressable>
 
-                {/* Customers */}
-                {technicianType != "ifs" && <Pressable style={styles.overviewCard} onPress={() => { navigation.navigate("CustomerInfo") }}>
-                  {/* <View style={styles.overviewCardIcon}>
+              {/* Customers */}
+              {technicianType != "ifs" && <Pressable style={styles.overviewCard} onPress={() => { navigation.navigate("CustomerInfo") }}>
+                {/* <View style={styles.overviewCardIcon}>
                     <Feather name="users" size={25} color='#28A745' />
                   </View> */}
-                  <Text style={[styles.overviewNumber, {
-                    color: '#8A2BE2',
-                    fontSize: isIOSAndTablet ? style.fontSizeMedium2x.fontSize : style.fontSizeNormal2x.fontSize
-                  }]}>
-                    {technicianType === "manager"
-                      ? (dashboardData?.Customersuperadmin ?? 0)
-                      : (dashboardData?.AppCustomerCount ?? 0)}
-                  </Text>
-                  <Text style={[styles.overviewText,
-                  {
-                    fontSize:
-                      isIOSAndTablet
-                        ? style.fontSizeMedium.fontSize
-                        : isTablet
-                          ? style.fontSizeNormal1x.fontSize
-                          : style.fontSizeSmall2x.fontSize,
-                  }]}>Customers</Text>
-                </Pressable>}
+                <Text style={[styles.overviewNumber, {
+                  color: 'red',
+                  fontSize: isIOSAndTablet ? style.fontSizeMedium2x.fontSize : style.fontSizeMedium.fontSize
+                }]}>
+                  {technicianType === "manager"
+                    ? (dashboardData?.Customersuperadmin ?? 0)
+                    : (dashboardData?.AppCustomerCount ?? 0)}
+                </Text>
+                <Text style={[styles.overviewText,
+                {
+                  fontSize:
+                    isIOSAndTablet
+                      ? style.fontSizeMedium.fontSize
+                      : isTablet
+                        ? style.fontSizeNormal1x.fontSize
+                        : style.fontSizeSmall2x.fontSize,
+                }]}>Customers</Text>
+              </Pressable>}
 
-                {/* Vehicles */}
-                <Pressable style={styles.overviewCard} onPress={() => { navigation.navigate("VinListScreen") }}>
-                  {/* <View style={styles.overviewCardIcon}>
+              {/* Vehicles */}
+              <Pressable style={styles.overviewCard} onPress={() => { navigation.navigate("VinListScreen") }}>
+                {/* <View style={styles.overviewCardIcon}>
                     <Ionicons name="car-outline" size={25} color='#8A2BE2' />
                   </View> */}
-                  <Text style={[styles.overviewNumber, {
-                    color: '#e2682bff', fontSize: isIOSAndTablet ? style.fontSizeMedium2x.fontSize : style.fontSizeNormal2x.fontSize
-                  }]}>
-                    {technicianType === "manager"
-                      ? (dashboardData?.Vehiclesuperadmin ?? 0)
-                      : (dashboardData?.AppVehicleCount ?? 0)}
-                  </Text>
-                  <Text style={[styles.overviewText,
-                  {
-                    fontSize:
-                      isIOSAndTablet
-                        ? style.fontSizeMedium.fontSize
-                        : isTablet
-                          ? style.fontSizeNormal1x.fontSize
-                          : style.fontSizeSmall2x.fontSize,
-                  }]}>Vehicles</Text>
-                </Pressable>
-              </View>
+                <Text style={[styles.overviewNumber, {
+                  color: 'red', fontSize: isIOSAndTablet ? style.fontSizeMedium2x.fontSize : style.fontSizeMedium.fontSize
+                }]}>
+                  {technicianType === "manager"
+                    ? (dashboardData?.Vehiclesuperadmin ?? 0)
+                    : (dashboardData?.AppVehicleCount ?? 0)}
+                </Text>
+                <Text style={[styles.overviewText,
+                {
+                  fontSize:
+                    isIOSAndTablet
+                      ? style.fontSizeMedium.fontSize
+                      : isTablet
+                        ? style.fontSizeNormal1x.fontSize
+                        : style.fontSizeSmall2x.fontSize,
+                }]}>Vehicles</Text>
+              </Pressable>
             </View>
-          </ImageBackground>
+          </View>
+          {/* </ImageBackground> */}
         </View>
         <FlatList
           data={cardData}
@@ -992,7 +986,7 @@ export default HomeScreen
 const styles = StyleSheet.create({
   container: {
     // padding: spacings.large,
-    backgroundColor: whiteColor
+    backgroundColor: blackColor
   },
   searchContainer: {
     marginTop: spacings.Large2x,
@@ -1021,7 +1015,6 @@ const styles = StyleSheet.create({
   },
   vinResultsContainer: {
     position: 'absolute',
-    top: hp(19), // Adjust this value based on your header height
     left: spacings.large,
     right: spacings.large,
     backgroundColor: whiteColor,
@@ -1090,16 +1083,16 @@ const styles = StyleSheet.create({
     paddingTop: spacings.xxxLarge,
     borderBottomLeftRadius: 50,
     borderBottomRightRadius: 50,
-    alignItems: "center",
+    // alignItems: "center",
     justifyContent: "center"
   },
   profileImage: {
     borderRadius: 8,
-    marginRight: spacings.xxLarge,
+    // marginRight: spacings.xxLarge,
     padding: spacings.small,
-    backgroundColor: '#cacaca58',
-    borderColor: "#fff",
-    borderWidth: .5
+    // backgroundColor: '#cacaca58',
+    // borderColor: "#fff",
+    // borderWidth: .5
   },
   greeting: {
     color: '#fff',
@@ -1112,16 +1105,17 @@ const styles = StyleSheet.create({
     paddingVertical: spacings.small
   },
   totalOverview: {
-    backgroundColor: '#fff',
+    backgroundColor: blackColor,
     borderRadius: 12,
     padding: spacings.xxxLarge,
-    margin: spacings.xxxLarge,
-    elevation: 5,
+    marginHorizontal: spacings.xxxLarge,
+    marginTop: spacings.large,
+    // elevation: 5,
     // iOS shadow
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
+    // shadowColor: '#000',
+    // shadowOffset: { width: 0, height: 4 },
+    // shadowOpacity: 0.15,
+    // shadowRadius: 8,
   },
   overviewCard: {
     alignItems: 'center',
@@ -1142,7 +1136,7 @@ const styles = StyleSheet.create({
   },
   overviewText: {
     fontSize: style.fontSizeSmall2x.fontSize,
-    color: '#555',
+    color: whiteColor,
     marginTop: 4,
   },
   actionCard: {
@@ -1170,7 +1164,7 @@ const styles = StyleSheet.create({
   shadowWrapper: {
     borderRadius: 12,
     marginBottom: spacings.xxLarge,
-    marginHorizontal: spacings.xxxxLarge,
+    marginHorizontal: spacings.small2x,
     elevation: 5, // Android shadow
     shadowColor: '#000', // iOS shadow
     shadowOffset: { width: 0, height: 4 },

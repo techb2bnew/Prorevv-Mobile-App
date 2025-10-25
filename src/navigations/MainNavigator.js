@@ -97,7 +97,7 @@ export default function MainNavigator() {
                     return (
                         <View
                             style={{
-                                backgroundColor: focused ? '#3B6981' : "transparent",
+                                // backgroundColor: focused ? '#3B6981' : "transparent",
                                 // paddingVertical: 6,
                                 // paddingHorizontal: 12,
                                 borderRadius: 8,
@@ -110,13 +110,13 @@ export default function MainNavigator() {
                             <IconComponent
                                 name={iconName}
                                 size={24}
-                                color={focused ? "#fff" : grayColor}
+                                color={focused ? "red" : whiteColor}
                             />
                         </View>
                     );
                 },
-                tabBarActiveTintColor: '#3B6981',
-                tabBarInactiveTintColor: grayColor,
+                tabBarActiveTintColor: 'red',
+                tabBarInactiveTintColor: whiteColor,
                 tabBarStyle: shouldHideTabBar(route) || route.name === "Invoice"
                     ? { display: "none" }
                     : {
@@ -126,7 +126,7 @@ export default function MainNavigator() {
                         // backgroundColor: lightBlueColor,
                         // borderRadius: 50,
                         // borderWidth: 1,
-                        // borderTopWidth: 1,
+                        borderTopWidth: 0,
                         // borderColor: blueColor,
                         // // shadowColor: "#000",
                         // // shadowOffset: { width: 0, height: 4 },
@@ -137,6 +137,7 @@ export default function MainNavigator() {
                         // paddingBottom: 10,
                         // marginHorizontal: 20,
                         // zIndex: 9999
+                        backgroundColor: blackColor
                     },
                 tabBarLabelStyle: {
                     fontSize: isTablet ? 16 : 12,

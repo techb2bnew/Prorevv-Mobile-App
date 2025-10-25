@@ -42,7 +42,7 @@ const JobDropdown = ({
         <View style={{ paddingHorizontal: spacings.large, height: isTablet ? heightPercentageToDP(4) : heightPercentageToDP(6) }}>
             <Pressable
                 style={{
-                    borderColor: blueColor,
+                    borderColor: blackColor,
                     borderWidth: 1,
                     borderRadius: 10,
                     padding: isTablet ? spacings.large : 8,

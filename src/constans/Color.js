@@ -1,7 +1,7 @@
 export const darkgrayColor = "#252837";
 export const whiteColor = "#fff";
-export const blackColor = "#252837";
-export const grayColor = "#646E77";
+export const blackColor = "black";
+export const grayColor = "#96989aff";
 export const redColor = "#FF0000";
 export const goldColor = "#FFA928";
 export const lightGrayColor = "#D1D4D6";

@@ -42,6 +42,7 @@ export const VIN_LIST_IMAGE = require('./vinList.png');
 export const CIRLE_SCANNER_IMAGE = require('./circleScanner.png');
 export const HEADER_BACKGROUND = require('./headerbackground.png');
 
+export const APP_ICON_IMAGE = require('./appicon.png');
 
 
 
