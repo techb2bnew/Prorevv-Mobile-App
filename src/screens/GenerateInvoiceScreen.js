@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, Text, TextInput, FlatList, Pressable, StyleSheet, TouchableOpacity, ActivityIndicator, Image, Platform, Modal, Dimensions, TouchableWithoutFeedback, ScrollView, Alert, Linking, Keyboard, KeyboardAvoidingView } from 'react-native';
+import { View, Text, TextInput, FlatList, Pressable, StyleSheet, TouchableOpacity, ActivityIndicator, Image, Platform, Modal, Dimensions, TouchableWithoutFeedback, ScrollView, Alert, Linking, Keyboard, KeyboardAvoidingView, useWindowDimensions } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Entypo from 'react-native-vector-icons/Entypo';
@@ -21,6 +21,7 @@ import JobDropdown from '../componets/jobDropdown';
 import CustomButton from '../componets/CustomButton';
 import Toast from 'react-native-simple-toast';
 import RNFS from 'react-native-fs';
+import { useOrientation } from '../OrientationContext';
 
 const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween, textAlign, justifyContentCenter, justifyContentSpaceEvenly } = BaseStyle;
 
@@ -29,7 +30,8 @@ const GenerateInvoiceScreen = ({ navigation,
     setViewType,
     isFilterModalVisible,
     setIsFilterModalVisible }) => {
-    const { width, height } = Dimensions.get("window");
+    const { width, height } = useWindowDimensions();
+    const { orientation } = useOrientation();
     const isTablet = width >= 668 && height >= 1024;
     const isIOSAndTablet = Platform.OS === "ios" && isTablet;
     const [technicianId, setTechnicianId] = useState();
@@ -496,7 +498,14 @@ const GenerateInvoiceScreen = ({ navigation,
                         });
                         const data = await response.json();
                         if (response.ok && data.jobs?.vehicles) {
-                            allVehicles.push(...data.jobs.vehicles);
+                            // Add job estimated cost to each vehicle
+                            const vehiclesWithJobCost = data.jobs.vehicles.map(vehicle => ({
+                                ...vehicle,
+                                jobEstimatedCost: data.jobs.estimatedCost || 0,
+                                jobName: job.jobName,
+                                jobId: job.id
+                            }));
+                            allVehicles.push(...vehiclesWithJobCost);
                             totalEstimatedCost += data.jobs.estimatedCost || 0;
                         }
                     } catch (error) {
@@ -506,7 +515,7 @@ const GenerateInvoiceScreen = ({ navigation,
 
                 setWorkOrdersRawData(allVehicles);
                 setSelectedJobEstimated(totalEstimatedCost);
-                
+
                 // Auto-save existing invoice rates for all vehicles
                 autoSaveExistingRates(allVehicles);
             } else {
@@ -521,7 +530,7 @@ const GenerateInvoiceScreen = ({ navigation,
                     console.log("API Response Data:", data?.jobs);
                     setWorkOrdersRawData(data?.jobs?.vehicles);
                     setSelectedJobEstimated(data?.jobs?.estimatedCost);
-                    
+
                     // Auto-save existing invoice rates for vehicles
                     autoSaveExistingRates(data?.jobs?.vehicles);
                 } else {
@@ -542,29 +551,29 @@ const GenerateInvoiceScreen = ({ navigation,
         for (const vehicle of vehicles) {
             // Check for existing rate in priority order: labourCost -> pdr -> selectedJobEstimated
             const existingRate = vehicle?.labourCost || vehicle?.pdr || selectedJobEstimated;
-            
+
             console.log(`🔍 Vehicle ${vehicle.id}: labourCost=${vehicle?.labourCost}, pdr=${vehicle?.pdr}, selectedJobEstimated=${selectedJobEstimated}`);
-            
+
             if (existingRate && existingRate > 0) {
                 console.log(`💾 Auto-saving vehicle ${vehicle.id} with rate: ${existingRate}`);
-                
+
                 // Add to auto-saving set
                 setAutoSavingVehicles(prev => new Set([...prev, vehicle.id]));
-                
+
                 try {
                     // Use await to ensure proper execution
                     await handleAutoSaveInvoice(vehicle.id, existingRate.toString());
                 } catch (error) {
                     console.error(`Error auto-saving for vehicle ${vehicle.id}:`, error);
                 }
-                
+
                 // Minimal delay for faster processing
                 await new Promise(resolve => setTimeout(resolve, 100));
             } else {
                 console.log(`⏭️ Skipping vehicle ${vehicle.id} - no valid rate found`);
             }
         }
-        
+
         console.log("✅ Auto-save process completed");
     };
 
@@ -800,7 +809,7 @@ const GenerateInvoiceScreen = ({ navigation,
             ...prev,
             [vehicleId]: value
         }));
-        
+
         // Auto-save when user changes value
         if (value && value.trim() !== '') {
             handleAutoSaveInvoice(vehicleId, value);
@@ -809,7 +818,7 @@ const GenerateInvoiceScreen = ({ navigation,
 
     const handleAutoSaveInvoice = async (vehicleId, value) => {
         console.log(`🔄 Auto-saving vehicle ${vehicleId} with value: ${value}`);
-        
+
         // Find the vehicle data
         const vehicle = workOrdersRawData.find(v => v.id === vehicleId);
         if (!vehicle) {
@@ -838,7 +847,7 @@ const GenerateInvoiceScreen = ({ navigation,
         setAutoSavingVehicles(prev => new Set([...prev, vehicleId]));
 
         // Add timeout wrapper for faster processing
-        const timeoutPromise = new Promise((_, reject) => 
+        const timeoutPromise = new Promise((_, reject) =>
             setTimeout(() => reject(new Error('Auto-save timeout')), 5000)
         );
 
@@ -893,8 +902,8 @@ const GenerateInvoiceScreen = ({ navigation,
     const handleSaveInvoice = async (vehicle) => {
         const vehicleId = vehicle.id;
         // Get the actual displayed value from the input
-        const rate = invoiceRates[vehicleId] !== undefined 
-            ? invoiceRates[vehicleId] 
+        const rate = invoiceRates[vehicleId] !== undefined
+            ? invoiceRates[vehicleId]
             : vehicle?.labourCost?.toString() || selectedJobEstimated.toString() || vehicle?.pdr?.toString() || '';
 
         // Step 1: Empty check
@@ -955,92 +964,92 @@ const GenerateInvoiceScreen = ({ navigation,
     };
 
     return (
-        <KeyboardAvoidingView 
-            style={[flex, styles.container]} 
+        <KeyboardAvoidingView
+            style={[flex, styles.container]}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
         >
-            <ScrollView 
+            <ScrollView
                 showsVerticalScrollIndicator={true}
                 keyboardShouldPersistTaps="handled"
-                contentContainerStyle={{ 
-                    flexGrow: 1, 
-                    paddingBottom: isKeyboardOpen ? 100 : 0 
+                contentContainerStyle={{
+                    flexGrow: 1,
+                    paddingBottom: isKeyboardOpen ? 100 : 0
                 }}
                 nestedScrollEnabled={true}
             >
-           
-            
-            <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                <View style={{ paddingHorizontal: spacings.large, width: "50%" }} >
-                    <Text style={[styles.label, { fontSize: style.fontSizeMedium.fontSize, }]}>Select Customer <Text style={{ color: 'red' }}>*</Text></Text>
-                    <CustomerDropdown
-                        data={[{ id: 'all', fullName: 'All Customers', isAllOption: true }, ...customers]}
-                        selectedValue={customerDetails}
-                        onSelect={handleCustomerSelect}
-                        showIcon={false}
-                        rightIcon={true}
-                        titleText="Select Customer"
-                        handleLoadMore={handleLoadMore}
-                        isLoading={isCustomerLoading}
-                    />
+
+
+                <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                    <View style={{ paddingHorizontal: spacings.large, width: "50%" }} >
+                        <Text style={[styles.label, { fontSize: style.fontSizeMedium.fontSize, }]}>Select Customer <Text style={{ color: 'red' }}>*</Text></Text>
+                        <CustomerDropdown
+                            data={[{ id: 'all', fullName: 'All Customers', isAllOption: true }, ...customers]}
+                            selectedValue={customerDetails}
+                            onSelect={handleCustomerSelect}
+                            showIcon={false}
+                            rightIcon={true}
+                            titleText="Select Customer"
+                            handleLoadMore={handleLoadMore}
+                            isLoading={isCustomerLoading}
+                        />
+                    </View>
+
+                    <View style={{ width: "50%" }}>
+                        <Text style={[styles.label, { fontSize: style.fontSizeMedium.fontSize, paddingLeft: spacings.large }]}>Select Job <Text style={{ color: 'red' }}>*</Text></Text>
+                        <JobDropdown
+                            jobs={customerDetails?.isAllOption ?
+                                [{ id: 'all', jobName: 'All Jobs', isAllOption: true }, ...allJobList] :
+                                [{ id: 'all', jobName: 'All Jobs', isAllOption: true }, ...jobList]
+                            }
+                            selectedJobId={selectedJobId}
+                            setSelectedJobId={(id) => {
+                                setSelectedJobId(id);
+                                fetchJobData(id);
+                                setSelectedVehicles([]);
+                                setSelectAll(false);
+                            }}
+                            getJobName={(item) => item?.jobName}
+                        />
+                    </View>
                 </View>
 
-                <View style={{ width: "50%" }}>
-                    <Text style={[styles.label, { fontSize: style.fontSizeMedium.fontSize, paddingLeft: spacings.large }]}>Select Job <Text style={{ color: 'red' }}>*</Text></Text>
-                    <JobDropdown
-                        jobs={customerDetails?.isAllOption ?
-                            [{ id: 'all', jobName: 'All Jobs', isAllOption: true }, ...allJobList] :
-                            [{ id: 'all', jobName: 'All Jobs', isAllOption: true }, ...jobList]
-                        }
-                        selectedJobId={selectedJobId}
-                        setSelectedJobId={(id) => {
-                            setSelectedJobId(id);
-                            fetchJobData(id);
-                            setSelectedVehicles([]);
-                            setSelectAll(false);
-                        }}
-                        getJobName={(item) => item?.jobName}
-                    />
-                </View>
-            </View>
-
-            <View style={{
-                paddingHorizontal: spacings.large,
-                paddingBottom: spacings.large,
-                marginTop: spacings.large,
-            }}>
                 <View style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    borderWidth: 1,
-                    borderColor: blueColor,
-                    borderRadius: 8,
-                    backgroundColor: whiteColor,
                     paddingHorizontal: spacings.large,
+                    paddingBottom: spacings.large,
+                    marginTop: spacings.large,
                 }}>
-                    <TextInput
-                        placeholder="Search VIN, Make or Model"
-                        value={searchText}
-                        onChangeText={(text) => setSearchText(text)}
-                        style={{
-                            flex: 1,
-                            paddingVertical: spacings.large,
-                            fontSize: 16,
-                            color: blackColor,
-                        }}
-                        placeholderTextColor={grayColor}
-                    />
-                    <Feather name="search" size={20} color={blueColor} />
+                    <View style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        borderWidth: 1,
+                        borderColor: blueColor,
+                        borderRadius: 8,
+                        backgroundColor: whiteColor,
+                        paddingHorizontal: spacings.large,
+                    }}>
+                        <TextInput
+                            placeholder="Search VIN, Make or Model"
+                            value={searchText}
+                            onChangeText={(text) => setSearchText(text)}
+                            style={{
+                                flex: 1,
+                                paddingVertical: spacings.large,
+                                fontSize: 16,
+                                color: blackColor,
+                            }}
+                            placeholderTextColor={grayColor}
+                        />
+                        <Feather name="search" size={20} color={blueColor} />
+                    </View>
                 </View>
-            </View>
-            {/* {technicianType === 'single-technician' && <View style={{ flexDirection: "row", justifyContent: "space-between", width: "100%", paddingHorizontal: spacings.large }}>
-                <Text style={[styles.label, { fontSize: style.fontSizeNormal1x.fontSize }]}>Total Job Cost($)</Text>
-                <Text style={[styles.label, { fontSize: style.fontSizeNormal.fontSize }]}>5000</Text>
-            </View>}
-            */}
+                {/* {technicianType === 'single-technician' && <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%", paddingHorizontal: spacings.large, height: hp(4)}}>
+                    <Text style={[styles.label, { fontSize: style.fontSizeNormal1x.fontSize }]}>Total Job Cost($)</Text>
+                    <Text style={[styles.label, { fontSize: style.fontSizeNormal.fontSize }]}>5000</Text>
+                </View>} */}
 
-            {/* <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacings.large }}>
+
+                {/* <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacings.large }}>
                 <TouchableOpacity
                     onPress={handleSelectAll}
                     style={{
@@ -1053,583 +1062,580 @@ const GenerateInvoiceScreen = ({ navigation,
                     <Text style={{ color: whiteColor }}>{selectAll ? "Deselect All" : "Select All"}</Text>
                 </TouchableOpacity>
             </View> */}
-            {viewType === 'list' && <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(75) : hp(62) : isIOSAndTablet ? hp(75) : hp(62), marginTop: spacings.large, paddingBottom: selectedVehicles?.length > 0 ? hp(8) : 0 }}>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                    <View>
-                        {/* Header Row */}
-                        <View style={[styles.tableHeaderRow, { backgroundColor: blueColor }]}>
-                            <TouchableOpacity
-                                onPress={() => {
-                                    if (selectAll) {
-                                        setSelectAll(false);
-                                        setSelectedVehicles([]);
-                                    } else {
-                                        setSelectAll(true);
-                                        setSelectedVehicles(filteredVehicles); // or filteredVehicles.map(v => v.id) depending on your structure
-                                    }
-                                }}
-                                style={{ width: isTablet ? wp(8) : wp(15), flexDirection: 'row', alignItems: 'center' }}
-                            >
-                                <MaterialIcons
-                                    name={selectAll ? 'check-box' : 'check-box-outline-blank'}
-                                    size={25}
-                                    color={'white'}
-                                />
-                                {/* <Text style={[styles.tableHeader, { marginLeft: 5 }]}>Select</Text> */}
-                            </TouchableOpacity>
-                            <Text style={[styles.tableHeader, { width: isTablet ? wp(25) : wp(55) }]}>VIN</Text>
-                            <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(30) }]}>Make</Text>
-                            <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(30) }]}>Model</Text>
-                            <Text style={[styles.tableHeader, { width: wp(28) }]}>Est Cost($)</Text>
-                            <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(35) }]}>Vehicle price ($)</Text>
-                            <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(35) }]}>Start Date</Text>
-                            <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(35) }]}>End Date</Text>
-                            <Text style={[styles.tableHeader, { width: isIOSAndTablet ? wp(35) : isTablet ? wp(42) : wp(55) }]}>Invoice Rate($)</Text>
-                            <Text style={[styles.tableHeader, { width: isIOSAndTablet ? wp(20) : isTablet ? wp(20) : wp(35), }]}>W O Status</Text>
-                            <Text style={[styles.tableHeader, { width: isIOSAndTablet ? wp(20) : isTablet ? wp(20) : wp(35) }]}>Invoice Status</Text>
-                        </View>
+                {viewType === 'list' && <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(75) : orientation === "LANDSCAPE" ? selectedVehicles?.length > 0 ? hp(58) : hp(60) : hp(62) : isIOSAndTablet ? hp(75) : hp(62), marginTop: spacings.large, paddingBottom: selectedVehicles?.length > 0 ? hp(8) : 0 }}>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                        <View>
+                            {/* Header Row */}
+                            <View style={[styles.tableHeaderRow, { backgroundColor: blueColor }]}>
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        if (selectAll) {
+                                            setSelectAll(false);
+                                            setSelectedVehicles([]);
+                                        } else {
+                                            setSelectAll(true);
+                                            setSelectedVehicles(filteredVehicles); // or filteredVehicles.map(v => v.id) depending on your structure
+                                        }
+                                    }}
+                                    style={{ width: isTablet ? wp(8) : orientation === "LANDSCAPE" ? wp(5) : wp(15), flexDirection: 'row', alignItems: 'center' }}
+                                >
+                                    <MaterialIcons
+                                        name={selectAll ? 'check-box' : 'check-box-outline-blank'}
+                                        size={25}
+                                        color={'white'}
+                                    />
+                                    {/* <Text style={[styles.tableHeader, { marginLeft: 5 }]}>Select</Text> */}
+                                </TouchableOpacity>
+                                <Text style={[styles.tableHeader, { width: isTablet ? wp(25) : orientation === "LANDSCAPE" ? wp(20) : wp(55) }]}>VIN</Text>
+                                <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(30) }]}>Make</Text>
+                                <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(30) }]}>Model</Text>
+                                <Text style={[styles.tableHeader, { width: isTablet ? wp(20) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>Est Cost($)</Text>
+                                <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>Vehicle price ($)</Text>
+                                <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>Start Date</Text>
+                                <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>End Date</Text>
+                                <Text style={[styles.tableHeader, { width: isIOSAndTablet ? wp(35) : isTablet ? wp(42) : orientation === "LANDSCAPE" ? wp(35) : wp(55) }]}>Invoice Rate($)</Text>
+                                <Text style={[styles.tableHeader, { width: isIOSAndTablet ? wp(20) : isTablet ? wp(20) : orientation === "LANDSCAPE" ? wp(15) : wp(35), }]}>W O Status</Text>
+                                <Text style={[styles.tableHeader, { width: isIOSAndTablet ? wp(20) : isTablet ? wp(20) : orientation === "LANDSCAPE" ? wp(20) : wp(35) }]}>Invoice Status</Text>
+                            </View>
 
-                        {/* Data Rows with vertical scroll */}
-                        <ScrollView style={{ height: Platform.OS === "android" ? hp(42) : hp(39) }} showsVerticalScrollIndicator={false}>
-                            <FlatList
-                                data={filteredVehicles}
-                                keyExtractor={(item, index) => index.toString()}
-                                showsVerticalScrollIndicator={false}
-                                renderItem={({ item, index }) => {
-                                    console.log(item);
-                                    const rowStyle = { backgroundColor: index % 2 === 0 ? lightBlueColor : whiteColor };
-                                    const isSelected = selectAll || selectedVehicles.some(v => v.id === item.id);
-                                    return (
-                                        <Pressable key={index.toString()} style={[styles.listItem, rowStyle, { flexDirection: 'row', alignItems: "center" }]} onPress={() => navigation.navigate("VehicleDetailsScreen", { vehicleId: item?.id, from: "report" })}>
-                                            <TouchableOpacity onPress={() => toggleSelection(item)} style={{ width: isTablet ? wp(8) : wp(15) }}>
+                            {/* Data Rows with vertical scroll */}
+                            <ScrollView style={{ height: Platform.OS === "android" ? hp(42) : hp(39) }} showsVerticalScrollIndicator={false}>
+                                <FlatList
+                                    data={filteredVehicles}
+                                    keyExtractor={(item, index) => index.toString()}
+                                    showsVerticalScrollIndicator={false}
+                                    renderItem={({ item, index }) => {
+                                        console.log(item);
+                                        const rowStyle = { backgroundColor: index % 2 === 0 ? lightBlueColor : whiteColor };
+                                        const isSelected = selectAll || selectedVehicles.some(v => v.id === item.id);
+                                        return (
+                                            <Pressable key={index.toString()} style={[styles.listItem, rowStyle, { flexDirection: 'row', alignItems: "center" }]} onPress={() => navigation.navigate("VehicleDetailsScreen", { vehicleId: item?.id, from: "report" })}>
+                                                <TouchableOpacity onPress={() => toggleSelection(item)} style={{ width: isTablet ? wp(8) : orientation === "LANDSCAPE" ? wp(5) : wp(15) }}>
+                                                    <MaterialIcons
+                                                        name={isSelected ? 'check-box' : 'check-box-outline-blank'}
+                                                        size={25}
+                                                        color={isSelected ? blueColor : 'gray'}
+                                                    />
+                                                </TouchableOpacity>
+                                                <Text style={[styles.text, { width: isTablet ? wp(25) : orientation === "LANDSCAPE" ? wp(20) : wp(55) }]}>{item?.vin || '-'}</Text>
+                                                <Text style={[styles.text, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(30), paddingRight: spacings.normal }]}>{item?.make || '-'}</Text>
+                                                <Text style={[styles.text, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(28), paddingRight: spacings.large }]}>{item?.model || '-'}</Text>
+                                                <Text style={[styles.text, { width: isTablet ? wp(20) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>
+                                                    {item?.jobEstimatedCost ? `$${item.jobEstimatedCost}` : selectedJobEstimated ? `$${selectedJobEstimated}` : '-'}
+                                                </Text>
+                                                <Text style={[styles.text, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>
+                                                    {item?.labourCost ? `$${item.labourCost}` : '-'}
+                                                </Text>
+
+                                                <Text style={[styles.text, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}> {item?.startDate
+                                                    ? new Date(item?.startDate).toLocaleDateString("en-US", {
+                                                        month: "short",
+                                                        day: "numeric",
+                                                        year: "numeric",
+                                                    })
+                                                    : "-"}</Text>
+                                                <Text style={[styles.text, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}> {item?.endDate
+                                                    ? new Date(item?.endDate).toLocaleDateString("en-US", {
+                                                        month: "long",
+                                                        day: "numeric",
+                                                        year: "numeric",
+                                                    })
+                                                    : "-"}</Text>
+
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 8, width: isIOSAndTablet ? wp(35) : isTablet ? wp(42) : orientation === "LANDSCAPE" ? wp(35) : wp(55) }}>
+                                                    <TextInput
+                                                        ref={(ref) => {
+                                                            if (ref) inputRefs.current[item.id] = ref;
+                                                        }}
+                                                        style={{
+                                                            borderWidth: 1,
+                                                            borderColor: 'gray',
+                                                            padding: 8,
+                                                            borderRadius: 5,
+                                                            width: isIOSAndTablet ? wp(23) : orientation === "LANDSCAPE" ? wp(23) : wp(30),
+                                                            marginRight: 10,
+                                                        }}
+                                                        keyboardType="numeric"
+                                                        placeholder="Enter rate"
+                                                        value={
+                                                            invoiceRates[item.id] !== undefined
+                                                                ? invoiceRates[item.id]
+                                                                : item?.labourCost?.toString() || item?.jobEstimatedCost?.toString() || selectedJobEstimated.toString() || item?.pdr?.toString() || ''
+                                                        }
+                                                        onChangeText={(value) => handleInvoiceChange(item.id, value)}
+                                                    />
+                                                    <TouchableOpacity
+                                                        onPress={() => handleSaveInvoice(item)}
+                                                        style={{
+                                                            backgroundColor: blueColor,
+                                                            paddingHorizontal: 12,
+                                                            paddingVertical: 10,
+                                                            borderRadius: 5
+                                                        }}
+                                                    >
+                                                        <Text style={{ color: 'white' }}>
+                                                            {autoSavingVehicles.has(item.id) ? 'Saving...' : 'Save'}
+                                                        </Text>
+                                                    </TouchableOpacity>
+
+                                                </View>
+
+
+                                                <View style={[getStatusStyle(item?.vehicleStatus), alignJustifyCenter, { height: isTablet ? hp(2) : hp(4) }]}>
+                                                    <Text
+                                                        style={{
+                                                            color: getStatusText(item?.vehicleStatus) === "Complete" ? greenColor : blackColor
+                                                        }}>
+                                                        {getStatusText(item?.vehicleStatus)}
+                                                    </Text>
+                                                </View>
+
+                                                {/* Invoice Status */}
+                                                <View style={[getStatusStyle(item?.generatedInvoiceStatus, "invoice"), alignJustifyCenter, { height: isTablet ? hp(2) : hp(4), marginLeft: isTablet ? wp(10) : wp(10) }]}>
+                                                    <Text
+                                                        style={{
+                                                            color: getStatusText(item?.generatedInvoiceStatus, "invoice") === "Generated" ? greenColor : goldColor
+                                                        }}>
+                                                        {getStatusText(item?.generatedInvoiceStatus, "invoice")}
+                                                    </Text>
+                                                </View>
+
+                                            </Pressable>
+                                        );
+                                    }}
+
+                                    ListEmptyComponent={() => {
+                                        let message = '';
+                                        if (!customerDetails?.id && !selectedJobId) {
+                                            message = "Please select customer and job";
+                                        } else if (customerDetails?.id && !selectedJobId) {
+                                            message = "Please select a job";
+                                        } else {
+                                            message = "No vehicle list found";
+                                        }
+
+                                        return (
+                                            <View style={styles.emptyContainer}>
+                                                <Text style={styles.emptyText}>{message}</Text>
+                                            </View>
+                                        );
+                                    }}
+
+                                />
+                            </ScrollView>
+                        </View>
+                    </ScrollView>
+                </View>}
+
+                {viewType === 'grid' && (
+                    <ScrollView
+                        style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(75) : hp(65) : isIOSAndTablet ? hp(75) : hp(60), paddingTop: hp(4), paddingBottom: selectedVehicles?.length > 0 ? hp(8) : 0 }}
+                        showsVerticalScrollIndicator={false}
+                        keyboardShouldPersistTaps="handled"
+                        nestedScrollEnabled={true}
+                    >
+                        {filteredVehicles.length > 0 && <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                            <TouchableOpacity
+                                onPress={handleSelectAll}
+                                style={{
+                                    backgroundColor: blueColor,
+                                    paddingVertical: 4,
+                                    paddingHorizontal: 4,
+                                    borderRadius: 10,
+                                    position: "absolute",
+                                    right: 10,
+                                    bottom: 2
+                                }}
+                            >
+                                <Text style={{ color: whiteColor }}>{selectAll ? "Deselect All" : "Select All"}</Text>
+                            </TouchableOpacity>
+                        </View>}
+                        <FlatList
+                            data={filteredVehicles}
+                            keyExtractor={(item, index) => index.toString()}
+                            showsVerticalScrollIndicator={false}
+                            contentContainerStyle={{ paddingVertical: 10 }}
+                            renderItem={({ item, index }) => {
+                                const isSelected = selectAll || selectedVehicles.some(v => v.id === item.id);
+                                return (
+                                    <Pressable style={{
+                                        backgroundColor: index % 2 === 0 ? lightBlueColor : whiteColor,
+                                        borderRadius: 10,
+                                        padding: 10,
+                                        marginBottom: 10,
+                                        marginHorizontal: 10,
+                                        borderWidth: 1,
+                                        borderColor: blueColor
+                                    }}
+                                        onPress={() => navigation.navigate("VehicleDetailsScreen", { vehicleId: item?.id, from: "report" })}>
+                                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+                                            <TouchableOpacity onPress={() => toggleSelection(item)} style={{ position: "absolute", right: -5, top: -10, zIndex: 999 }}>
                                                 <MaterialIcons
                                                     name={isSelected ? 'check-box' : 'check-box-outline-blank'}
                                                     size={25}
                                                     color={isSelected ? blueColor : 'gray'}
                                                 />
                                             </TouchableOpacity>
-                                            <Text style={[styles.text, { width: isTablet ? wp(25) : wp(55) }]}>{item?.vin || '-'}</Text>
-                                            <Text style={[styles.text, { width: isTablet ? wp(15) : wp(30), paddingRight: spacings.normal }]}>{item?.make || '-'}</Text>
-                                            <Text style={[styles.text, { width: isTablet ? wp(15) : wp(28), paddingRight: spacings.large }]}>{item?.model || '-'}</Text>
-                                            <Text style={[styles.text, { width: wp(28) }]}>
-                                                {selectedJobEstimated ? `$${selectedJobEstimated}` : '-'}
-                                            </Text>
-                                            <Text style={[styles.text, { width: isTablet ? wp(15) : wp(35) }]}>
-                                                {item?.labourCost ? `$${item.labourCost}` : '-'}
-                                            </Text>
 
-                                            <Text style={[styles.text, { width: isTablet ? wp(15) : wp(35) }]}> {item?.startDate
-                                                ? new Date(item?.startDate).toLocaleDateString("en-US", {
-                                                    month: "short",
-                                                    day: "numeric",
-                                                    year: "numeric",
-                                                })
-                                                : "-"}</Text>
-                                            <Text style={[styles.text, { width: isTablet ? wp(15) : wp(35) }]}> {item?.endDate
-                                                ? new Date(item?.endDate).toLocaleDateString("en-US", {
-                                                    month: "long",
-                                                    day: "numeric",
-                                                    year: "numeric",
-                                                })
-                                                : "-"}</Text>
-
-                                            <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 8, width: isIOSAndTablet ? wp(35) : isTablet ? wp(42) : wp(55) }}>
-                                                <TextInput
-                                                    ref={(ref) => {
-                                                        if (ref) inputRefs.current[item.id] = ref;
-                                                    }}
-                                                    style={{
-                                                        borderWidth: 1,
-                                                        borderColor: 'gray',
-                                                        padding: 8,
-                                                        borderRadius: 5,
-                                                        width: isIOSAndTablet ? wp(23) : wp(30),
-                                                        marginRight: 10,
-                                                    }}
-                                                    keyboardType="numeric"
-                                                    placeholder="Enter rate"
-                                                    value={
-                                                        invoiceRates[item.id] !== undefined
-                                                            ? invoiceRates[item.id]
-                                                            : item?.labourCost?.toString() || selectedJobEstimated.toString() || item?.pdr?.toString() || ''
-                                                    }
-                                                    onChangeText={(value) => handleInvoiceChange(item.id, value)}
-                                                />
-                                                <TouchableOpacity
-                                                    onPress={() => handleSaveInvoice(item)}
-                                                    style={{
-                                                        backgroundColor: blueColor,
-                                                        paddingHorizontal: 12,
-                                                        paddingVertical: 10,
-                                                        borderRadius: 5
-                                                    }}
-                                                >
-                                                    <Text style={{ color: 'white' }}>
-                                                        {autoSavingVehicles.has(item.id) ? 'Saving...' : 'Save'}
-                                                    </Text>
-                                                </TouchableOpacity>
-
+                                            <View style={{ width: '48%', marginBottom: 9 }}>
+                                                <Text style={{ color: '#555', fontSize: 10 }}>VIN</Text>
+                                                <Text >{item?.vin}</Text>
+                                            </View>
+                                            <View style={{ width: '48%', marginBottom: 9 }}>
+                                                <Text style={{ color: '#555', fontSize: 10 }}>Make</Text>
+                                                <Text >{item?.make}</Text>
+                                            </View>
+                                            <View style={{ width: '48%', marginBottom: 9 }}>
+                                                <Text style={{ color: '#555', fontSize: 10 }}>Model</Text>
+                                                <Text >{item?.model}</Text>
+                                            </View>
+                                            <View style={{ width: '48%', marginBottom: 9 }}>
+                                                <Text style={{ color: '#555', fontSize: 10 }}>Vehicle price($)</Text>
+                                                <Text >{item?.labourCost ? `$${item.labourCost}` : '-'} </Text>
                                             </View>
 
+                                            <View style={{ width: '48%', marginBottom: 9 }}>
+                                                <Text style={{ color: '#555', fontSize: 10 }}>Estimated Cost($)</Text>
+                                                <Text >{item?.jobEstimatedCost ? `$${item.jobEstimatedCost}` : selectedJobEstimated ? `$${selectedJobEstimated}` : '-'} </Text>
+                                            </View>
+                                            <View style={{ width: '48%', marginBottom: 9 }}>
+                                                <Text style={{ color: '#555', fontSize: 10 }}>Start Date</Text>
+                                                <Text >{item?.startDate
+                                                    ? new Date(item?.startDate).toLocaleDateString("en-US", {
+                                                        month: "long",
+                                                        day: "numeric",
+                                                        year: "numeric",
+                                                    })
+                                                    : "-"} </Text>
+                                            </View>
+                                            <View style={{ width: '48%', marginBottom: 9 }}>
+                                                <Text style={{ color: '#555', fontSize: 10 }}>End Date</Text>
+                                                <Text >{item?.endDate
+                                                    ? new Date(item?.endDate).toLocaleDateString("en-US", {
+                                                        month: "long",
+                                                        day: "numeric",
+                                                        year: "numeric",
+                                                    })
+                                                    : "-"} </Text>
+                                            </View>
+                                            <View style={[{ width: '100%', marginBottom: 9 }]}>
+                                                <Text style={{ color: '#555', fontSize: 10 }}>Invoice Rate ($)</Text>
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10, marginBottom: 10 }}>
+                                                    <TextInput
+                                                        ref={(ref) => {
+                                                            if (ref) inputRefs.current[item.id] = ref;
+                                                        }}
+                                                        style={{
+                                                            borderWidth: 1,
+                                                            borderColor: 'gray',
+                                                            padding: 8,
+                                                            borderRadius: 5,
+                                                            width: "50%",
+                                                            marginRight: 10,
+                                                        }}
+                                                        keyboardType="numeric"
+                                                        placeholder="Enter rate"
+                                                        value={
+                                                            invoiceRates[item.id] !== undefined
+                                                                ? invoiceRates[item.id]
+                                                                : item?.labourCost?.toString() || item?.jobEstimatedCost?.toString() || selectedJobEstimated.toString() || item?.pdr?.toString() || ''
+                                                        }
+                                                        onChangeText={(value) => handleInvoiceChange(item.id, value)}
+                                                    />
 
-                                            <View style={[getStatusStyle(item?.vehicleStatus), alignJustifyCenter, { height: isTablet ? hp(2) : hp(4) }]}>
+
+                                                    <TouchableOpacity
+                                                        onPress={() => handleSaveInvoice(item)}
+                                                        style={{
+                                                            backgroundColor: blueColor,
+                                                            paddingHorizontal: 12,
+                                                            paddingVertical: 10,
+                                                            borderRadius: 5
+                                                        }}
+                                                    >
+                                                        <Text style={{ color: 'white' }}>
+                                                            {autoSavingVehicles.has(item.id) ? 'Saving...' : 'Save'}
+                                                        </Text>
+                                                    </TouchableOpacity>
+
+                                                </View>
+                                            </View>
+                                            <View style={[{ width: '48%', marginBottom: 9 }]}>
+                                                <Text style={{ color: '#555', fontSize: 10 }}>W O Status</Text>
                                                 <Text
                                                     style={{
-                                                        color: getStatusText(item?.vehicleStatus) === "Complete" ? greenColor : blackColor
+                                                        color: getStatusText(item?.vehicleStatus) === "Complete" ?
+                                                            greenColor : getStatusText(item?.vehicleStatus) === "In Progress" ?
+                                                                blackColor :
+                                                                goldColor,
                                                     }}>
                                                     {getStatusText(item?.vehicleStatus)}
                                                 </Text>
                                             </View>
 
-                                            {/* Invoice Status */}
-                                            <View style={[getStatusStyle(item?.generatedInvoiceStatus, "invoice"), alignJustifyCenter, { height: isTablet ? hp(2) : hp(4), marginLeft: isTablet ? wp(10) : wp(10) }]}>
+                                            <View style={[{ width: '48%', marginBottom: 9 }]}>
+                                                <Text style={{ color: '#555', fontSize: 10 }}>Incoice Status</Text>
                                                 <Text
                                                     style={{
-                                                        color: getStatusText(item?.generatedInvoiceStatus, "invoice") === "Generated" ? greenColor : goldColor
+                                                        color: getStatusText(item?.generatedInvoiceStatus) === "Complete" ?
+                                                            greenColor : getStatusText(item?.generatedInvoiceStatus) === "inprogress" ?
+                                                                redColor :
+                                                                goldColor,
                                                     }}>
                                                     {getStatusText(item?.generatedInvoiceStatus, "invoice")}
                                                 </Text>
                                             </View>
-
-                                        </Pressable>
-                                    );
-                                }}
-
-                                ListEmptyComponent={() => {
-                                    let message = '';
-                                    if (!customerDetails?.id && !selectedJobId) {
-                                        message = "Please select customer and job";
-                                    } else if (customerDetails?.id && !selectedJobId) {
-                                        message = "Please select a job";
-                                    } else {
-                                        message = "No vehicle list found";
-                                    }
-
-                                    return (
-                                        <View style={styles.emptyContainer}>
-                                            <Text style={styles.emptyText}>{message}</Text>
                                         </View>
-                                    );
-                                }}
 
-                            />
-                        </ScrollView>
-                    </View>
-                </ScrollView>
-            </View>}
-
-            {viewType === 'grid' && (
-                <ScrollView 
-                    style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(75) : hp(65) : isIOSAndTablet ? hp(75) : hp(60), marginTop: spacings.large, paddingBottom: selectedVehicles?.length > 0 ? hp(8) : 0 }}
-                    showsVerticalScrollIndicator={true}
-                    keyboardShouldPersistTaps="handled"
-                    nestedScrollEnabled={true}
-                >
-                    {filteredVehicles.length > 0 && <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacings.large }}>
-                        <TouchableOpacity
-                            onPress={handleSelectAll}
-                            style={{
-                                backgroundColor: blueColor,
-                                paddingVertical: 4,
-                                paddingHorizontal: 4,
-                                borderRadius: 10,
-                                position: "absolute",
-                                right: 10,
-                                bottom: -15
+                                    </Pressable>
+                                )
                             }}
-                        >
-                            <Text style={{ color: whiteColor }}>{selectAll ? "Deselect All" : "Select All"}</Text>
-                        </TouchableOpacity>
-                    </View>}
-                    <FlatList
-                        data={filteredVehicles}
-                        keyExtractor={(item, index) => index.toString()}
-                        showsVerticalScrollIndicator={false}
-                        contentContainerStyle={{ paddingVertical: 10 }}
-                        renderItem={({ item, index }) => {
-                            const isSelected = selectAll || selectedVehicles.some(v => v.id === item.id);
+                            ListEmptyComponent={() => {
+                                let message = '';
+                                if (!customerDetails?.id && !selectedJobId) {
+                                    message = "Please select customer and job";
+                                } else if (customerDetails?.id && !selectedJobId) {
+                                    message = "Please select a job";
+                                } else {
+                                    message = "No vehicle list found";
+                                }
 
-                            return (
-                                <Pressable style={{
-                                    backgroundColor: index % 2 === 0 ? lightBlueColor : whiteColor,
-                                    borderRadius: 10,
-                                    padding: 10,
-                                    marginBottom: 10,
-                                    marginHorizontal: 10,
-                                    borderWidth: 1,
-                                    borderColor: blueColor
-                                }}
-                                    onPress={() => navigation.navigate("VehicleDetailsScreen", { vehicleId: item?.id, from: "report" })}>
-                                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-                                        <TouchableOpacity onPress={() => toggleSelection(item)} style={{ position: "absolute", right: -5, top: -10, zIndex: 999 }}>
-                                            <MaterialIcons
-                                                name={isSelected ? 'check-box' : 'check-box-outline-blank'}
-                                                size={25}
-                                                color={isSelected ? blueColor : 'gray'}
-                                            />
-                                        </TouchableOpacity>
-
-                                        <View style={{ width: '48%', marginBottom: 9 }}>
-                                            <Text style={{ color: '#555', fontSize: 10 }}>VIN</Text>
-                                            <Text >{item?.vin}</Text>
-                                        </View>
-                                        <View style={{ width: '48%', marginBottom: 9 }}>
-                                            <Text style={{ color: '#555', fontSize: 10 }}>Make</Text>
-                                            <Text >{item?.make}</Text>
-                                        </View>
-                                        <View style={{ width: '48%', marginBottom: 9 }}>
-                                            <Text style={{ color: '#555', fontSize: 10 }}>Model</Text>
-                                            <Text >{item?.model}</Text>
-                                        </View>
-                                        <View style={{ width: '48%', marginBottom: 9 }}>
-                                            <Text style={{ color: '#555', fontSize: 10 }}>Vehicle price($)</Text>
-                                            <Text >{item?.labourCost ? `$${item.labourCost}` : '-'} </Text>
-                                        </View>
-
-                                        <View style={{ width: '48%', marginBottom: 9 }}>
-                                            <Text style={{ color: '#555', fontSize: 10 }}>Estimated Cost($)</Text>
-                                            <Text >{selectedJobEstimated ? `$${selectedJobEstimated}` : '-'} </Text>
-                                        </View>
-                                        <View style={{ width: '48%', marginBottom: 9 }}>
-                                            <Text style={{ color: '#555', fontSize: 10 }}>Start Date</Text>
-                                            <Text >{item?.startDate
-                                                ? new Date(item?.startDate).toLocaleDateString("en-US", {
-                                                    month: "long",
-                                                    day: "numeric",
-                                                    year: "numeric",
-                                                })
-                                                : "-"} </Text>
-                                        </View>
-                                        <View style={{ width: '48%', marginBottom: 9 }}>
-                                            <Text style={{ color: '#555', fontSize: 10 }}>End Date</Text>
-                                            <Text >{item?.endDate
-                                                ? new Date(item?.endDate).toLocaleDateString("en-US", {
-                                                    month: "long",
-                                                    day: "numeric",
-                                                    year: "numeric",
-                                                })
-                                                : "-"} </Text>
-                                        </View>
-                                        <View style={[{ width: '100%', marginBottom: 9 }]}>
-                                            <Text style={{ color: '#555', fontSize: 10 }}>Invoice Rate ($)</Text>
-                                            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10, marginBottom: 10 }}>
-                                                <TextInput
-                                                    ref={(ref) => {
-                                                        if (ref) inputRefs.current[item.id] = ref;
-                                                    }}
-                                                    style={{
-                                                        borderWidth: 1,
-                                                        borderColor: 'gray',
-                                                        padding: 8,
-                                                        borderRadius: 5,
-                                                        width: "50%",
-                                                        marginRight: 10,
-                                                    }}
-                                                    keyboardType="numeric"
-                                                    placeholder="Enter rate"
-                                                    value={
-                                                        invoiceRates[item.id] !== undefined
-                                                            ? invoiceRates[item.id]
-                                                            : item?.labourCost?.toString() || selectedJobEstimated.toString() || item?.pdr?.toString() || ''
-                                                    }
-                                                    onChangeText={(value) => handleInvoiceChange(item.id, value)}
-                                                />
-
-
-                                                <TouchableOpacity
-                                                    onPress={() => handleSaveInvoice(item)}
-                                                    style={{
-                                                        backgroundColor: blueColor,
-                                                        paddingHorizontal: 12,
-                                                        paddingVertical: 10,
-                                                        borderRadius: 5
-                                                    }}
-                                                >
-                                                    <Text style={{ color: 'white' }}>
-                                                        {autoSavingVehicles.has(item.id) ? 'Saving...' : 'Save'}
-                                                    </Text>
-                                                </TouchableOpacity>
-
-                                            </View>
-                                        </View>
-                                        <View style={[{ width: '48%', marginBottom: 9 }]}>
-                                            <Text style={{ color: '#555', fontSize: 10 }}>W O Status</Text>
-                                            <Text
-                                                style={{
-                                                    color: getStatusText(item?.vehicleStatus) === "Complete" ?
-                                                        greenColor : getStatusText(item?.vehicleStatus) === "In Progress" ?
-                                                            blackColor :
-                                                            goldColor,
-                                                }}>
-                                                {getStatusText(item?.vehicleStatus)}
-                                            </Text>
-                                        </View>
-
-                                        <View style={[{ width: '48%', marginBottom: 9 }]}>
-                                            <Text style={{ color: '#555', fontSize: 10 }}>Incoice Status</Text>
-                                            <Text
-                                                style={{
-                                                    color: getStatusText(item?.generatedInvoiceStatus) === "Complete" ?
-                                                        greenColor : getStatusText(item?.generatedInvoiceStatus) === "inprogress" ?
-                                                            redColor :
-                                                            goldColor,
-                                                }}>
-                                                {getStatusText(item?.generatedInvoiceStatus, "invoice")}
-                                            </Text>
-                                        </View>
+                                return (
+                                    <View style={styles.emptyContainer}>
+                                        <Text style={styles.emptyText}>{message}</Text>
                                     </View>
-
-                                </Pressable>
-                            )
-                        }}
-
-
-                        ListEmptyComponent={() => {
-                            let message = '';
-                            if (!customerDetails?.id && !selectedJobId) {
-                                message = "Please select customer and job";
-                            } else if (customerDetails?.id && !selectedJobId) {
-                                message = "Please select a job";
-                            } else {
-                                message = "No vehicle list found";
-                            }
-
-                            return (
-                                <View style={styles.emptyContainer}>
-                                    <Text style={styles.emptyText}>{message}</Text>
-                                </View>
-                            );
-                        }}
-                    />
-
-                </ScrollView>)}
-
-            {selectedVehicles.length > 0 && <View style={{ position: "absolute", bottom: 0, backgroundColor: whiteColor, width: wp(100), flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: spacings.large }}>
-                <CustomButton
-                    title={"Export"}
-                    loading={isExportLoading}
-                    disabled={isExportLoading}
-                    onPress={handleExportCSV}
-                    style={{ width: "24%", marginBottom: 0 }}
-                />
-                <CustomButton
-                    title={"Print"}
-                    loading={isLoading}
-                    disabled={isLoading}
-                    onPress={handleExport}
-                    style={{ width: "24%", marginBottom: 0 }}
-                />
-
-                <CustomButton
-                    title="Generate Invoice"
-                    loading={loading}
-                    disabled={loading}
-                    onPress={() => {
-                        console.log("selectedVehicles", selectedVehicles);
-
-                        const missingPdrVehicles = selectedVehicles.filter(vehicle => {
-                            const rate = invoiceRates[vehicle.id] ?? vehicle?.pdr; // ✅ fallback to vehicle.pdr
-                            return !rate || rate.toString().trim().length === 0;
-                        });
-
-                        if (missingPdrVehicles.length > 0) {
-                            Toast.show("Please add invoice cost first for all selected vehicles.");
-                            return;
-                        }
-
-                        // ✅ All good, open modal
-                        setSelectedDate(null);
-                        setShowDateModal(true);
-                    }}
-                    style={{ width: "48%", marginBottom: 0 }}
-                />
-            </View>}
-
-            {showDateModal && (
-                <View
-                    style={{
-                        position: "absolute",
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        backgroundColor: 'rgba(0,0,0,0.5)',
-                        justifyContent: "center",
-                        alignItems: "center",
-                        zIndex: 999,
-                    }}
-                >
-                    <View
-                        style={{
-                            width: "88%",
-                            backgroundColor: whiteColor,
-                            borderRadius: 20,
-                            padding: spacings.xxxxLarge,
-                            elevation: 6,
-                            shadowColor: "#000",
-                            shadowOffset: { width: 0, height: 3 },
-                            shadowOpacity: 0.2,
-                            shadowRadius: 6,
-                        }}
-                    >
-                        <Text
-                            style={{
-                                fontSize: style.fontSizeMedium.fontSize,
-                                fontWeight: style.fontWeightThin1x.fontWeight,
-                                textAlign: "center",
-                                marginBottom: 24,
-                                color: blackColor,
+                                );
                             }}
-                        >
-                            Please select the date you want to send for invoice generation
-                        </Text>
-
-                        <TouchableOpacity
-                            onPress={() => setShowDatePicker(true)}
-                            style={{
-                                paddingVertical: spacings.xLarge,
-                                borderRadius: 10,
-                                backgroundColor: verylightGrayColor,
-                                borderWidth: 1,
-                                borderColor: lightGrayColor,
-                                justifyContent: "center",
-                                alignItems: "center",
-                                marginBottom: 16,
-                            }}
-                        >
-                            <Text style={{ fontSize: style.fontSizeNormal2x.fontSize, color: blackColor }}>
-                                {selectedDate
-                                    ? selectedDate.toLocaleDateString("en-GB", {
-                                        day: '2-digit',
-                                        month: 'long',
-                                        year: 'numeric'
-                                    })
-                                    : "Select Date"}
-                            </Text>
-                        </TouchableOpacity>
-
-                        <DatePicker
-                            modal
-                            open={showDatePicker}
-                            date={selectedDate || new Date()}
-                            mode="date"
-                            onConfirm={(date) => {
-                                setShowDatePicker(false);
-                                setSelectedDate(date);
-                            }}
-                            onCancel={() => setShowDatePicker(false)}
                         />
 
-                        <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 10 }}>
-                            <CustomButton
-                                title="Today Date"
-                                onPress={handleCancelDate}
-                                style={{
-                                    width: "48%",
-                                    backgroundColor: lightGrayColor,
-                                    borderRadius: 10,
-                                    marginBottom: 0
-                                }}
-                                loading={cancelLoading}
-                                disabled={cancelLoading}
-                                textStyle={{ color: blackColor }}
-                            />
+                    </ScrollView>)}
 
-                            <CustomButton
-                                title="Submit"
-                                onPress={handleSubmitDate}
-                                style={{
-                                    width: "48%",
-                                    backgroundColor: blueColor,
-                                    borderRadius: 10,
-                                    marginBottom: 0
-                                }}
-                                loading={submitLoading}
-                                disabled={submitLoading}
-                                textStyle={{ color: whiteColor }}
-                            />
-                        </View>
-                    </View>
-                </View>
-            )}
+                {selectedVehicles.length > 0 && <View style={{ position: "absolute", bottom: orientation === "LANDSCAPE" ? hp(4) : 0, backgroundColor: whiteColor, width: wp(100), flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: spacings.large }}>
+                    <CustomButton
+                        title={"Export"}
+                        loading={isExportLoading}
+                        disabled={isExportLoading}
+                        onPress={handleExportCSV}
+                        style={{ width: "24%", marginBottom: 0 }}
+                    />
+                    <CustomButton
+                        title={"Print"}
+                        loading={isLoading}
+                        disabled={isLoading}
+                        onPress={handleExport}
+                        style={{ width: "24%", marginBottom: 0 }}
+                    />
 
-            <Modal
-                visible={isFilterModalVisible}
-                animationType="slide"
-                transparent
-                onRequestClose={() => setIsFilterModalVisible(false)}
-            >
-                <TouchableOpacity
-                    style={{
-                        flex: 1,
-                        backgroundColor: 'rgba(0,0,0,0.5)'
-                    }}
-                    activeOpacity={1}
-                    onPressOut={() => setIsFilterModalVisible(false)}
-                >
+                    <CustomButton
+                        title="Generate Invoice"
+                        loading={loading}
+                        disabled={loading}
+                        onPress={() => {
+                            console.log("selectedVehicles", selectedVehicles);
+
+                            const missingPdrVehicles = selectedVehicles.filter(vehicle => {
+                                const rate = invoiceRates[vehicle.id] ?? vehicle?.pdr; // ✅ fallback to vehicle.pdr
+                                return !rate || rate.toString().trim().length === 0;
+                            });
+
+                            if (missingPdrVehicles.length > 0) {
+                                Toast.show("Please add invoice cost first for all selected vehicles.");
+                                return;
+                            }
+
+                            // ✅ All good, open modal
+                            setSelectedDate(null);
+                            setShowDateModal(true);
+                        }}
+                        style={{ width: "48%", marginBottom: 0 }}
+                    />
+                </View>}
+
+                {showDateModal && (
                     <View
                         style={{
-                            position: 'absolute',
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            right: 0,
                             bottom: 0,
-                            width: '100%',
-                            backgroundColor: 'white',
-                            padding: 20,
-                            borderTopLeftRadius: 20,
-                            borderTopRightRadius: 20
+                            backgroundColor: 'rgba(0,0,0,0.5)',
+                            justifyContent: "center",
+                            alignItems: "center",
+                            zIndex: 999,
                         }}
                     >
-                        {/* Status Filter Buttons */}
-                        <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 10 }}>Work Order Status</Text>
-                        <View style={{ flexDirection: 'row', marginBottom: 20 }}>
-                            {['all', 'inprogress', 'completed'].map(status => (
-                                <TouchableOpacity
-                                    key={status}
-                                    onPress={() => setStatusFilter(status)}
+                        <View
+                            style={{
+                                width: "88%",
+                                backgroundColor: whiteColor,
+                                borderRadius: 20,
+                                padding: spacings.xxxxLarge,
+                                elevation: 6,
+                                shadowColor: "#000",
+                                shadowOffset: { width: 0, height: 3 },
+                                shadowOpacity: 0.2,
+                                shadowRadius: 6,
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    fontSize: style.fontSizeMedium.fontSize,
+                                    fontWeight: style.fontWeightThin1x.fontWeight,
+                                    textAlign: "center",
+                                    marginBottom: 24,
+                                    color: blackColor,
+                                }}
+                            >
+                                Please select the date you want to send for invoice generation
+                            </Text>
+
+                            <TouchableOpacity
+                                onPress={() => setShowDatePicker(true)}
+                                style={{
+                                    paddingVertical: spacings.xLarge,
+                                    borderRadius: 10,
+                                    backgroundColor: verylightGrayColor,
+                                    borderWidth: 1,
+                                    borderColor: lightGrayColor,
+                                    justifyContent: "center",
+                                    alignItems: "center",
+                                    marginBottom: 16,
+                                }}
+                            >
+                                <Text style={{ fontSize: style.fontSizeNormal2x.fontSize, color: blackColor }}>
+                                    {selectedDate
+                                        ? selectedDate.toLocaleDateString("en-GB", {
+                                            day: '2-digit',
+                                            month: 'long',
+                                            year: 'numeric'
+                                        })
+                                        : "Select Date"}
+                                </Text>
+                            </TouchableOpacity>
+
+                            <DatePicker
+                                modal
+                                open={showDatePicker}
+                                date={selectedDate || new Date()}
+                                mode="date"
+                                onConfirm={(date) => {
+                                    setShowDatePicker(false);
+                                    setSelectedDate(date);
+                                }}
+                                onCancel={() => setShowDatePicker(false)}
+                            />
+
+                            <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 10 }}>
+                                <CustomButton
+                                    title="Today Date"
+                                    onPress={handleCancelDate}
                                     style={{
-                                        paddingVertical: 8,
-                                        paddingHorizontal: 20,
-                                        backgroundColor: statusFilter === status ? blueColor : lightGrayColor,
+                                        width: "48%",
+                                        backgroundColor: lightGrayColor,
                                         borderRadius: 10,
-                                        marginRight: 10
-                                    }}>
-                                    <Text style={{ color: statusFilter === status ? whiteColor : blackColor }}>
-                                        {status === 'all' ? 'All' : status === 'inprogress' ? 'In Progress' : 'Completed'}
+                                        marginBottom: 0
+                                    }}
+                                    loading={cancelLoading}
+                                    disabled={cancelLoading}
+                                    textStyle={{ color: blackColor }}
+                                />
+
+                                <CustomButton
+                                    title="Submit"
+                                    onPress={handleSubmitDate}
+                                    style={{
+                                        width: "48%",
+                                        backgroundColor: blueColor,
+                                        borderRadius: 10,
+                                        marginBottom: 0
+                                    }}
+                                    loading={submitLoading}
+                                    disabled={submitLoading}
+                                    textStyle={{ color: whiteColor }}
+                                />
+                            </View>
+                        </View>
+                    </View>
+                )}
+
+                <Modal
+                    visible={isFilterModalVisible}
+                    animationType="slide"
+                    transparent
+                    onRequestClose={() => setIsFilterModalVisible(false)}
+                >
+                    <TouchableOpacity
+                        style={{
+                            flex: 1,
+                            backgroundColor: 'rgba(0,0,0,0.5)'
+                        }}
+                        activeOpacity={1}
+                        onPressOut={() => setIsFilterModalVisible(false)}
+                    >
+                        <View
+                            style={{
+                                position: 'absolute',
+                                bottom: 0,
+                                width: '100%',
+                                backgroundColor: 'white',
+                                padding: 20,
+                                borderTopLeftRadius: 20,
+                                borderTopRightRadius: 20
+                            }}
+                        >
+                            {/* Status Filter Buttons */}
+                            <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 10 }}>Work Order Status</Text>
+                            <View style={{ flexDirection: 'row', marginBottom: 20 }}>
+                                {['all', 'inprogress', 'completed'].map(status => (
+                                    <TouchableOpacity
+                                        key={status}
+                                        onPress={() => setStatusFilter(status)}
+                                        style={{
+                                            paddingVertical: 8,
+                                            paddingHorizontal: 20,
+                                            backgroundColor: statusFilter === status ? blueColor : lightGrayColor,
+                                            borderRadius: 10,
+                                            marginRight: 10
+                                        }}>
+                                        <Text style={{ color: statusFilter === status ? whiteColor : blackColor }}>
+                                            {status === 'all' ? 'All' : status === 'inprogress' ? 'In Progress' : 'Completed'}
+                                        </Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+
+                            {/* Date Pickers */}
+                            <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 10 }}>Date Range</Text>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 }}>
+                                <TouchableOpacity
+                                    onPress={() => setIsStartPickerOpen(true)}
+                                    style={[styles.datePicker, flexDirectionRow, alignItemsCenter, { flex: 1, marginRight: 10 }]}>
+                                    <Text style={styles.dateText}>
+                                        {startDate ? startDate.toLocaleDateString("en-US", {
+                                            month: "long",
+                                            day: "numeric",
+                                            year: "numeric",
+                                        }) : "Select Date"}
                                     </Text>
+                                    <Feather name="calendar" size={20} color={blackColor} />
                                 </TouchableOpacity>
-                            ))}
-                        </View>
 
-                        {/* Date Pickers */}
-                        <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 10 }}>Date Range</Text>
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 }}>
-                            <TouchableOpacity
-                                onPress={() => setIsStartPickerOpen(true)}
-                                style={[styles.datePicker, flexDirectionRow, alignItemsCenter, { flex: 1, marginRight: 10 }]}>
-                                <Text style={styles.dateText}>
-                                    {startDate ? startDate.toLocaleDateString("en-US", {
-                                        month: "long",
-                                        day: "numeric",
-                                        year: "numeric",
-                                    }) : "Select Date"}
-                                </Text>
-                                <Feather name="calendar" size={20} color={blackColor} />
-                            </TouchableOpacity>
+                                <TouchableOpacity
+                                    onPress={() => setIsEndPickerOpen(true)}
+                                    style={[styles.datePicker, flexDirectionRow, alignItemsCenter, { flex: 1 }]}>
+                                    <Text style={styles.dateText}>
+                                        {endDate ? endDate.toLocaleDateString("en-US", {
+                                            month: "long",
+                                            day: "numeric",
+                                            year: "numeric",
+                                        }) : "Select Date"}
+                                    </Text>
+                                    <Feather name="calendar" size={20} color={blackColor} />
+                                </TouchableOpacity>
+                            </View>
 
-                            <TouchableOpacity
-                                onPress={() => setIsEndPickerOpen(true)}
-                                style={[styles.datePicker, flexDirectionRow, alignItemsCenter, { flex: 1 }]}>
-                                <Text style={styles.dateText}>
-                                    {endDate ? endDate.toLocaleDateString("en-US", {
-                                        month: "long",
-                                        day: "numeric",
-                                        year: "numeric",
-                                    }) : "Select Date"}
-                                </Text>
-                                <Feather name="calendar" size={20} color={blackColor} />
-                            </TouchableOpacity>
-                        </View>
-
-                        {/* <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 10 }}>Invoice Status</Text>
+                            {/* <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 10 }}>Invoice Status</Text>
                         <View style={{ flexDirection: 'row', marginBottom: 20 }}>
                             {['all', 'paid', 'unpaid'].map(status => (
                                 <TouchableOpacity
@@ -1649,52 +1655,52 @@ const GenerateInvoiceScreen = ({ navigation,
                             ))}
                         </View> */}
 
-                        {/* Apply Button */}
-                        <TouchableOpacity
-                            onPress={() => {
-                                setIsFilterModalVisible(false);
-                            }}
-                            style={{
-                                backgroundColor: blueColor,
-                                paddingVertical: 12,
-                                borderRadius: 10,
-                                alignItems: 'center'
-                            }}>
-                            <Text style={{ color: whiteColor, fontSize: 16 }}>Apply Filter</Text>
-                        </TouchableOpacity>
-                    </View>
-                </TouchableOpacity>
-            </Modal>
+                            {/* Apply Button */}
+                            <TouchableOpacity
+                                onPress={() => {
+                                    setIsFilterModalVisible(false);
+                                }}
+                                style={{
+                                    backgroundColor: blueColor,
+                                    paddingVertical: 12,
+                                    borderRadius: 10,
+                                    alignItems: 'center'
+                                }}>
+                                <Text style={{ color: whiteColor, fontSize: 16 }}>Apply Filter</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </TouchableOpacity>
+                </Modal>
 
-            <DatePicker
-                modal
-                open={isStartPickerOpen}
-                date={tempStartDate}
-                mode="date"
-                onConfirm={(date) => {
-                    setStartDate(date);
-                    setTempStartDate(date);
-                    setIsStartPickerOpen(false);
-                    setIsDateFilterActive(true); // activate filtering
-                }}
-                onCancel={() => setIsStartPickerOpen(false)}
-            />
+                <DatePicker
+                    modal
+                    open={isStartPickerOpen}
+                    date={tempStartDate}
+                    mode="date"
+                    onConfirm={(date) => {
+                        setStartDate(date);
+                        setTempStartDate(date);
+                        setIsStartPickerOpen(false);
+                        setIsDateFilterActive(true); // activate filtering
+                    }}
+                    onCancel={() => setIsStartPickerOpen(false)}
+                />
 
-            <DatePicker
-                modal
-                open={isEndPickerOpen}
-                date={tempEndDate}
-                mode="date"
-                minimumDate={startDate}
-                onConfirm={(date) => {
-                    const newEndDate = date;
-                    setEndDate(newEndDate);
-                    setTempEndDate(newEndDate);
-                    setIsEndPickerOpen(false);
-                    setIsDateFilterActive(true); // activate filtering
-                }}
-                onCancel={() => setIsEndPickerOpen(false)}
-            />
+                <DatePicker
+                    modal
+                    open={isEndPickerOpen}
+                    date={tempEndDate}
+                    mode="date"
+                    minimumDate={startDate}
+                    onConfirm={(date) => {
+                        const newEndDate = date;
+                        setEndDate(newEndDate);
+                        setTempEndDate(newEndDate);
+                        setIsEndPickerOpen(false);
+                        setIsDateFilterActive(true); // activate filtering
+                    }}
+                    onCancel={() => setIsEndPickerOpen(false)}
+                />
 
 
             </ScrollView>

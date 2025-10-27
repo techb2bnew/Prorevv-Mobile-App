@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dimensions, KeyboardAvoidingView, Platform, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { Dimensions, KeyboardAvoidingView, Platform, SafeAreaView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from './src/utils';
 import { BaseStyle } from './src/constans/Style';
 import SplashScreen from './src/screens/SplashScreen';
@@ -16,21 +16,21 @@ import InternetToast from './src/componets/InternetToast';
 import ReactNativeBiometrics from "react-native-biometrics";
 import axios from 'axios';
 import { TabBarProvider } from './src/TabBarContext';
+import { OrientationProvider } from './src/OrientationContext';
 const { flex, alignItemsCenter, alignJustifyCenter } = BaseStyle;
-const { width, height } = Dimensions.get('window');
 import Orientation from 'react-native-orientation-locker';
 import { NativeModules } from 'react-native';
 import { API_BASE_URL } from './src/constans/Constants';
 
 
 function App(): React.JSX.Element {
+  const { width, height } = useWindowDimensions();
   const [isLoading, setIsLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isBiometricModalVisible, setIsBiometricModalVisible] = useState(false);
   const [isConnected, setIsConnected] = useState(true);
   const [toastMessage, setToastMessage] = useState('');
   const [toastVisible, setToastVisible] = useState(false);
-  const [keyboardHeight, setKeyboardHeight] = useState(hp(100));
   const [userRole, setUserRole] = useState<string | null>(null); // ✅ Add userRole
   const [currentOrientation, setCurrentOrientation] = useState<string>('PORTRAIT'); // ✅ Add current orientation state
 
@@ -305,14 +305,6 @@ function App(): React.JSX.Element {
       };
     }
   }, []);
-
-  // useEffect(() => {
-  //   if (Platform.OS === 'ios') {
-  //     setKeyboardHeight(isLoggedIn ? hp(90.5) : hp(100));
-  //   } else {
-  //     setKeyboardHeight(hp(100));
-  //   }
-  // }, [isLoggedIn]);
 
   const checkTechnicianStatus = async () => {
     try {
@@ -659,28 +651,30 @@ function App(): React.JSX.Element {
   };
 
   return (
-    <SafeAreaView style={[flex, { backgroundColor: blackColor }]}>
-      <KeyboardAvoidingView
-        style={{
-          height:
-            Platform.OS === 'ios'
-              ? isTablet ? hp(98) : hp(93.5)
-              : isTablet ? hp(98) : hp(100),
-        }}
-      >
-        {isLoading ? (
-          <SplashScreen />
-        ) : (
-          <TabBarProvider>
-            <NavigationContainer>
-              {isLoggedIn ? <MainNavigator /> : <AuthStack />}
-            </NavigationContainer>
-          </TabBarProvider>
-        )}
-        {isBiometricModalVisible && <BiometricModal isBiometricModalVisible={isBiometricModalVisible} setIsBiometricModalVisible={setIsBiometricModalVisible} />}
-        <InternetToast message={toastMessage} visible={toastVisible} />
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+    <OrientationProvider>
+      <SafeAreaView style={[flex, { backgroundColor: blackColor }]}>
+        <KeyboardAvoidingView
+          style={{
+            height:
+              Platform.OS === 'ios'
+                ? isTablet ? hp(98) : hp(93.5)
+                : isTablet ? hp(98) : hp(100),
+          }}
+        >
+          {isLoading ? (
+            <SplashScreen />
+          ) : (
+            <TabBarProvider>
+              <NavigationContainer>
+                {isLoggedIn ? <MainNavigator /> : <AuthStack />}
+              </NavigationContainer>
+            </TabBarProvider>
+          )}
+          {isBiometricModalVisible && <BiometricModal isBiometricModalVisible={isBiometricModalVisible} setIsBiometricModalVisible={setIsBiometricModalVisible} />}
+          <InternetToast message={toastMessage} visible={toastVisible} />
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </OrientationProvider>
   );
 }
 

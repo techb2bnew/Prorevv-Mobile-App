@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, CheckBox, Image, Alert, Dimensions, KeyboardAvoidingView, ScrollView, Keyboard, Platform, Modal, Linking, Pressable } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, CheckBox, Image, Alert, Dimensions, KeyboardAvoidingView, ScrollView, Keyboard, Platform, Modal, Linking, Pressable, useWindowDimensions } from 'react-native';
 import CustomTextInput from '../componets/CustomTextInput';
 import { blackColor, blueColor, ExtraExtralightOrangeColor, grayColor, lightBlueColor, lightOrangeColor, mediumGray, orangeColor, whiteColor } from '../constans/Color';
 import { APP_NAME_IMAGE, REGISTRICT_IMAGE } from '../assests/images';
@@ -16,11 +16,12 @@ import SuccessModal from '../componets/Modal/SuccessModal';
 import Ionicons from 'react-native-vector-icons/dist/Ionicons';
 import Fontisto from 'react-native-vector-icons/dist/Fontisto';
 import Feather from 'react-native-vector-icons/dist/Feather';
-const { width, height } = Dimensions.get('window');
+// const { width, height } = Dimensions.get('window');
 
 const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween } = BaseStyle;
 
 const LoginScreen = ({ navigation }) => {
+    const { width, height } = useWindowDimensions();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [rememberMe, setRememberMe] = useState(true);
@@ -357,7 +358,7 @@ const styles = StyleSheet.create({
     box: {
         backgroundColor: lightBlueColor,
         height: "100%",
-        width: wp(100),
+        width: "100%",
         borderTopLeftRadius: 40,
         borderTopRightRadius: 40,
         padding: spacings.Large1x

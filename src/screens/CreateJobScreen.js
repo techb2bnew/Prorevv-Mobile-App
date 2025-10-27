@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, Pressable, ScrollView, Alert, ScrollViewBase, Image, ActivityIndicator, Platform, KeyboardAvoidingView, Modal, Keyboard, Dimensions, TouchableWithoutFeedback } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, Pressable, ScrollView, Alert, ScrollViewBase, Image, ActivityIndicator, Platform, KeyboardAvoidingView, Modal, Keyboard, Dimensions, TouchableWithoutFeedback, useWindowDimensions } from 'react-native';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { blackColor, blueColor, grayColor, greenColor, lightBlueColor, mediumGray, orangeColor, redColor, whiteColor } from '../constans/Color';
@@ -27,13 +27,15 @@ import DatePicker from "react-native-date-picker";
 import CustomerDropdown from '../componets/CustomerDropdown';
 import Feather from 'react-native-vector-icons/Feather';
 import AntDesign from 'react-native-vector-icons/AntDesign';
+import { useOrientation } from '../OrientationContext';
 
 
 const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween, textAlign } = BaseStyle;
 
 const CreateJobScreen = ({ route }) => {
     //   const { jobId } = route?.params;
-    const { width, height } = Dimensions.get("window");
+    const { width, height } = useWindowDimensions();
+    const { orientation } = useOrientation(); 
     const isTablet = width >= 668 && height >= 1024;
     const navigation = useNavigation();
     const [customers, setCustomers] = useState([]);
@@ -654,7 +656,7 @@ const CreateJobScreen = ({ route }) => {
                 {!isAddMode && <View style={{
                     flexDirection: 'row',
                     position: "absolute",
-                    top: Platform.OS === "android" ? isTablet ? hp(1) : 10 : isTablet ? 20 : 13,
+                    top: Platform.OS === "android" ? isTablet ? hp(1) : orientation === "LANDSCAPE" ? hp(2.5) : 10 : isTablet ? 20 : 13,
                     right: 10,
                     zIndex: 10
                 }}>
@@ -664,26 +666,26 @@ const CreateJobScreen = ({ route }) => {
                         style={[{
                             backgroundColor: viewType === 'list' ? blueColor : whiteColor,
                             width: isTablet ? wp(8) : wp(12),
-                            height: hp(4.5),
+                            height: orientation === "LANDSCAPE" ? hp(6.5) : hp(4.5),
                             justifyContent: 'center',
                             alignItems: 'center',
                             borderRadius: 5,
                             marginRight: 10,
 
                         }]}>
-                        <Ionicons name="list" size={isTablet ? 35 : 20} color={viewType === 'list' ? whiteColor : blackColor} />
+                        <Ionicons name="list" size={isTablet ? 35 : orientation === "LANDSCAPE" ? 35 : 20} color={viewType === 'list' ? whiteColor : blackColor} />
                     </TouchableOpacity>
                     <TouchableOpacity
                         onPress={() => setViewType('grid')}
                         style={[, {
                             backgroundColor: viewType === 'grid' ? blueColor : whiteColor,
                             width: isTablet ? wp(8) : wp(12),
-                            height: hp(4.5),
+                            height: orientation === "LANDSCAPE" ? hp(6.5) : hp(4.5),
                             justifyContent: 'center',
                             alignItems: 'center',
                             borderRadius: 5,
                         }]}>
-                        <Ionicons name="grid-sharp" size={isTablet ? 35 : 20} color={viewType === 'grid' ? whiteColor : blackColor} />
+                        <Ionicons name="grid-sharp" size={isTablet ? 35 : orientation === "LANDSCAPE" ? 35 : 20} color={viewType === 'grid' ? whiteColor : blackColor} />
                     </TouchableOpacity>
 
                 </View>}
@@ -695,13 +697,13 @@ const CreateJobScreen = ({ route }) => {
                                     <View style={{ backgroundColor: whiteColor }}>
                                         {/* Table Header */}
                                         <View style={[styles.tableHeader, flexDirectionRow]}>
-                                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) : wp(25) }]}>Job Title</Text>
-                                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) : wp(33) }]}>Number of W.O</Text>
-                                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(20) : wp(33) }]}>Customer Name</Text>
-                                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) : wp(33) }]}>Est Cost</Text>
-                                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) : wp(33) }]}>Start Date</Text>
-                                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) : wp(33) }]}>End Date</Text>
-                                            <Text style={[styles.tableHeaderText, { width: wp(25) }]}>Action</Text>
+                                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(25) }]}>Job Title</Text>
+                                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(33) }]}>Number of W.O</Text>
+                                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(20) : orientation === "LANDSCAPE" ? wp(20) : wp(33) }]}>Customer Name</Text>
+                                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(33) }]}>Est Cost</Text>
+                                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(33) }]}>Start Date</Text>
+                                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(33) }]}>End Date</Text>
+                                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(25) : orientation === "LANDSCAPE" ? wp(15) : wp(25) }]}>Action</Text>
                                         </View>
 
                                         {/* Table Rows */}
@@ -727,13 +729,13 @@ const CreateJobScreen = ({ route }) => {
                                                             jobId: item?.id
                                                         })}
                                                     >
-                                                        <Text style={[styles.tableText, { width: isTablet ? wp(20) : wp(30), paddingRight: spacings.large }]}>{capitalize(item.jobName) || '—'}</Text>
-                                                        <Text style={[styles.tableText, { width: isTablet ? wp(10) : wp(30), paddingLeft: spacings.large }]}>{item?.vehicles?.length}</Text>
-                                                        <Text style={[styles.tableText, { width: isTablet ? wp(20) : wp(35) }]}>{capitalize(item.customer?.fullName) || '—'}</Text>
-                                                        <Text style={[styles.tableText, { width: isTablet ? wp(15) : wp(30) }]}>
+                                                        <Text style={[styles.tableText, { width: isTablet ? wp(20) : orientation === "LANDSCAPE" ? wp(20) : wp(30), paddingRight: spacings.large }]}>{capitalize(item.jobName) || '—'}</Text>
+                                                        <Text style={[styles.tableText, { width: isTablet ? wp(10) : orientation === "LANDSCAPE" ? wp(10) : wp(30), paddingLeft: spacings.large }]}>{item?.vehicles?.length}</Text>
+                                                        <Text style={[styles.tableText, { width: isTablet ? wp(20) : orientation === "LANDSCAPE" ? wp(20) : wp(35) }]}>{capitalize(item.customer?.fullName) || '—'}</Text>
+                                                        <Text style={[styles.tableText, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(30) }]}>
                                                             {item.estimatedCost ? `$${item.estimatedCost}` : '—'}
                                                         </Text>
-                                                        <Text style={[styles.tableText, { width: isTablet ? wp(15) : wp(33) }]}>
+                                                        <Text style={[styles.tableText, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(33) }]}>
                                                             {item.startDate
                                                                 ? new Date(item.startDate).toLocaleDateString('en-US', {
                                                                     month: 'short',
@@ -742,7 +744,7 @@ const CreateJobScreen = ({ route }) => {
                                                                 })
                                                                 : '—'}
                                                         </Text>
-                                                        <Text style={[styles.tableText, { width: isTablet ? wp(15) : wp(33) }]}>
+                                                        <Text style={[styles.tableText, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(33) }]}>
                                                             {item.endDate
                                                                 ? new Date(item.endDate).toLocaleDateString('en-US', {
                                                                     month: 'short',

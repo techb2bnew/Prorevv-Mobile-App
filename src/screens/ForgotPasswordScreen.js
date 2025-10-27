@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Alert, Image, ScrollView, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Alert, Image, ScrollView, Dimensions, useWindowDimensions } from 'react-native';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from '../utils';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import OTPTextInput from 'react-native-otp-textinput';
@@ -13,6 +13,7 @@ import { API_BASE_URL, EMAIL, EMAIL_NOT_RECEIVED, ENTER_FOUR_DIGIT_CODE, ENTER_F
 import SuccessModal from '../componets/Modal/SuccessModal';
 import Header from '../componets/Header';
 import { FORGOT_PASSWORD_IMAGE, OTP_VERIFICATION_IMAGE } from '../assests/images';
+import { useOrientation } from '../OrientationContext';
 const { flex, alignItemsCenter, flexDirectionRow, alignJustifyCenter, positionAbsolute, borderRadius5, borderWidth1, textAlign } = BaseStyle;
 const { width, height } = Dimensions.get('window');
 
@@ -34,6 +35,8 @@ const ForgotPasswordScreen = ({ navigation }) => {
     const [loadingEmail, setLoadingEmail] = useState(false);
     const [loadingOtp, setLoadingOtp] = useState(false);
     const [loadingPassword, setLoadingPassword] = useState(false);
+    const { width, height } = useWindowDimensions();
+    const { orientation } = useOrientation();
     const isTablet = width >= 668 && height >= 1024;
     const isIOSAndTablet = Platform.OS === "ios" && isTablet;
 
@@ -307,13 +310,13 @@ const ForgotPasswordScreen = ({ navigation }) => {
                     {currentStep === 'otp' && (
                         <View style={styles.box}>
                             <Image source={OTP_VERIFICATION_IMAGE} style={{ width: "100%", height: isTablet ? hp(50) : hp(40), resizeMode: 'contain', zIndex: 999, alignSelf: "center" }} />
-                            <View style={[{ width: '100%', height: hp(10) }, alignJustifyCenter]}>
+                            <View style={[{ width: '100%', height: hp(10),marginTop: orientation === "LANDSCAPE" ? hp(5) : 0 }, alignJustifyCenter]}>
                                 <OTPTextInput
                                     handleTextChange={handleOTPChange}
                                     inputCount={4}
                                     tintColor={blackColor}
                                     offTintColor={mediumGray}
-                                    textInputStyle={[styles.otpInput, { color: blackColor, width: isTablet ? wp(10) : wp(13), height: isTablet ? wp(10) : wp(13) }]}
+                                    textInputStyle={[styles.otpInput, { color: blackColor, width: isTablet ? wp(10) : orientation === "LANDSCAPE" ? hp(8) : wp(13), height: isTablet ? wp(10) : orientation === "LANDSCAPE" ? hp(8) : wp(13) }]}
                                 />
                                 {otpError && <Text style={styles.error}>{otpError}</Text>}
                             </View>

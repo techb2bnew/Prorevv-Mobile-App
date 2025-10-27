@@ -7,6 +7,7 @@ const { width, height } = Dimensions.get('window');
 import Feather from 'react-native-vector-icons/Feather';
 import Toast from 'react-native-simple-toast';
 import { spacings } from "../constans/Fonts";
+import { useOrientation } from "../OrientationContext";
 
 const CustomerDropdown = ({ data, selectedValue, onSelect, showIcon, rightIcon, titleText, handleLoadMore, isLoading, disabled }) => {
     const [visible, setVisible] = useState(false);
@@ -14,6 +15,7 @@ const CustomerDropdown = ({ data, selectedValue, onSelect, showIcon, rightIcon, 
     const userPressed = useRef(false);
     const [dropdownHeight, setDropdownHeight] = useState(0);
     const dropdownRef = useRef(null);
+    const { orientation } = useOrientation();
 
     const handleOpenDropdown = () => {
         userPressed.current = true;
@@ -33,8 +35,8 @@ const CustomerDropdown = ({ data, selectedValue, onSelect, showIcon, rightIcon, 
 
 
     return (
-        <View style={[styles.container, { height: isTablet ? heightPercentageToDP(4) : heightPercentageToDP(6) }]}>
-            <Pressable style={styles.dropdownButton} onPress={() => {
+        <View style={[styles.container, { height: isTablet ? heightPercentageToDP(4) : orientation === "LANDSCAPE" ? heightPercentageToDP(8) : heightPercentageToDP(6) }]}>
+            <Pressable style={[styles.dropdownButton, { padding: isTablet ? spacings.large : 8 }]} onPress={() => {
                 if (!disabled) {
                     handleOpenDropdown();
                 } else {
@@ -129,7 +131,6 @@ const styles = StyleSheet.create({
     dropdownButton: {
         borderWidth: 1,
         borderColor: blueColor,
-        padding: 8,
         borderRadius: 10,
         backgroundColor: "#fff",
         flexDirection: "row",

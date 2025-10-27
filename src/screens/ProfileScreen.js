@@ -1,4 +1,4 @@
-import { Alert, Image, Pressable, StyleSheet, Text, TouchableOpacity, View, PermissionsAndroid, Platform, ActivityIndicator, TextInput, TouchableWithoutFeedback, KeyboardAvoidingView, Keyboard, Modal, Linking, Dimensions } from 'react-native'
+import { Alert, Image, Pressable, StyleSheet, Text, TouchableOpacity, View, PermissionsAndroid, Platform, ActivityIndicator, TextInput, TouchableWithoutFeedback, KeyboardAvoidingView, Keyboard, Modal, Linking, Dimensions, useWindowDimensions } from 'react-native'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { blackColor, blueColor, grayColor, greenColor, lightBlueColor, mediumGray, orangeColor, redColor, whiteColor } from '../constans/Color';
 import { BaseStyle } from '../constans/Style';
@@ -25,11 +25,13 @@ import { DELETE_ACCOUNT_IMAGE, LOGOUT_IMAGE } from '../assests/images';
 import Header from '../componets/Header';
 import { useEditing, useTabBar } from '../TabBarContext';
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
-const { width, height } = Dimensions.get('window');
+import { useOrientation } from '../OrientationContext';
 
 const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween, textAlign, justifyContentCenter } = BaseStyle;
 
 const ProfileScreen = ({ navigation }) => {
+  const { width, height } = useWindowDimensions();
+  const { orientation } = useOrientation();
   const [technicianId, setTechnicianId] = useState(null);
   const [technicianType, setTechnicianType] = useState(null);
   const [imageUri, setImageUri] = useState(null);
@@ -776,8 +778,8 @@ const ProfileScreen = ({ navigation }) => {
           right: 15,
           // backgroundColor: blueColor,
           borderColor: blueColor,
-          width: isTablet ? wp(8) : wp(9),
-          height: isTablet ? wp(6) : wp(8),
+          width: isTablet ? wp(8) : orientation === "LANDSCAPE" ? wp(5) : wp(9),
+          height: isTablet ? wp(6) : orientation === "LANDSCAPE" ? wp(5) : wp(8),
           borderRadius: 5,
           borderWidth: 2,
           justifyContent: "center",
@@ -788,7 +790,7 @@ const ProfileScreen = ({ navigation }) => {
       </TouchableOpacity>}
       {!isEditing ?
         <View style={[styles.container]}>
-          <View style={{ height: Platform.OS === "android" ? roleType === "single-technician" ? hp(90) : hp(82.5) : roleType === "single-technician" ? hp(90) : hp(75.5), width: "100%" }}>
+          <View style={{ height: Platform.OS === "android" ? roleType === "single-technician" ? orientation === "LANDSCAPE" ? hp(85) : hp(90) : hp(82.5) : roleType === "single-technician" ? hp(90) : hp(75.5), width: "100%" }}>
             <ScrollView
               contentContainerStyle={{ backgroundColor: whiteColor }}
               showsVerticalScrollIndicator={false}
@@ -797,9 +799,9 @@ const ProfileScreen = ({ navigation }) => {
               <View style={[styles.userdetailsBox, { padding: spacings.xLarge, borderWidth: 2, borderColor: lightBlueColor, backgroundColor: whiteColor }]}>
                 <View style={[flexDirectionRow, alignItemsCenter]}>
                   {imageUri ? (
-                    <Image source={{ uri: imageUri }} style={[styles.image, { borderRadius: isTablet ? isIOsAndTablet ? 1000 : 100 : 50 }]} />
+                    <Image source={{ uri: imageUri }} style={[styles.image, { borderRadius: isTablet ? isIOsAndTablet ? 1000 : 100 : orientation === "LANDSCAPE" ? 200 : 50 }]} />
                   ) : (
-                    <View style={[styles.fallbackContainer, { borderRadius: isTablet ? isIOsAndTablet ? 1000 : 100 : 50 }]}>
+                    <View style={[styles.fallbackContainer, { borderRadius: isTablet ? isIOsAndTablet ? 1000 : 100 : orientation === "LANDSCAPE" ? 200 : 50 }]}>
                       <Text style={[styles.fallbackText, { fontSize: isTablet ? 90 : 40 }]}>{getInitials(profile?.firstName)}</Text>
                     </View>
                   )}
@@ -812,7 +814,7 @@ const ProfileScreen = ({ navigation }) => {
                     </Text>
                   </View>
                 </View>
-                <TouchableOpacity style={[{ backgroundColor: blueColor, width: "100%", height: isTablet ? wp(6) : wp(9.5), borderRadius: 50, marginTop: spacings.large }, alignJustifyCenter, flexDirectionRow]}
+                <TouchableOpacity style={[{ backgroundColor: blueColor, width: "100%", height: isTablet ? wp(6) : orientation === "LANDSCAPE" ? wp(5) : wp(9.5), borderRadius: 50, marginTop: spacings.large }, alignJustifyCenter, flexDirectionRow]}
                   onPress={() => { setIsEditing(true) }}>
                   <Text style={{ fontSize: 16, fontWeight: style.fontWeightThin1x.fontWeight, color: whiteColor, marginHorizontal: 8 }}>
                     Edit
@@ -979,7 +981,7 @@ const ProfileScreen = ({ navigation }) => {
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
 
             <ScrollView
-              contentContainerStyle={{ flexGrow: 1, marginBottom: 100, paddingBottom: hp(12), backgroundColor: whiteColor }}
+              contentContainerStyle={{ flexGrow: 1, marginBottom: 100, paddingBottom: orientation === "LANDSCAPE" ? hp(15) : hp(12), backgroundColor: whiteColor }}
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
             >
@@ -1001,7 +1003,7 @@ const ProfileScreen = ({ navigation }) => {
                         <Image source={{ uri: imageUri }} style={[styles.image, { width: wp(25), height: wp(25), borderRadius: isTablet ? isIOsAndTablet ? 1000 : 100 : 50 }]} />
                       ) : (
                         <View style={[styles.fallbackContainer, { borderRadius: isTablet ? isIOsAndTablet ? 1000 : 100 : 50 }]}>
-                           <Text style={[styles.fallbackText, { fontSize: isTablet ? 90 : 40 }]}>{getInitials(profile?.firstName)}</Text>
+                          <Text style={[styles.fallbackText, { fontSize: isTablet ? 90 : 40 }]}>{getInitials(profile?.firstName)}</Text>
                         </View>
                       )}
                       <View style={[styles.cameraIconContainer, {
@@ -1129,7 +1131,7 @@ const ProfileScreen = ({ navigation }) => {
             </ScrollView>
 
           </TouchableWithoutFeedback>
-          <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+          <TouchableOpacity style={[styles.saveButton, { marginBottom: orientation === "LANDSCAPE" ? hp(5) : 10 }]} onPress={handleSave}>
             {isEditingLoading ? (
               <ActivityIndicator size="small" color={whiteColor} />
             ) : (

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Image, Platform, Dimensions, Modal, ScrollView, ActivityIndicator, TouchableWithoutFeedback, Pressable, Keyboard } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Image, Platform, Dimensions, Modal, ScrollView, ActivityIndicator, TouchableWithoutFeedback, Pressable, Keyboard, useWindowDimensions } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { whiteColor, lightGrayColor, blueColor, redColor, goldColor, greenColor, verylightGrayColor, grayColor, blackColor, orangeColor, mediumGray, lightBlueColor } from '../constans/Color'
 import Header from '../componets/Header';
@@ -15,13 +15,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import DatePicker from "react-native-date-picker";
 import JobDropdown from '../componets/jobDropdown';
+import { useOrientation } from '../OrientationContext';
 
 
-const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween, textAlign } = BaseStyle;
+const { flex, alignItemsCenter, flexDirectionRow } = BaseStyle;
 
 
 const VinListScreen = ({ navigation, route }) => {
-    const { width, height } = Dimensions.get("window");
+    const { width, height } = useWindowDimensions();
+    const { orientation } = useOrientation();
     const isTablet = width >= 668 && height >= 1024;
     const isIOSAndTablet = Platform.OS === "ios" && isTablet;
     const [activeTab, setActiveTab] = useState('workOrder');
@@ -556,7 +558,7 @@ const VinListScreen = ({ navigation, route }) => {
             <View style={{
                 flexDirection: 'row',
                 position: "absolute",
-                top: Platform.OS === "android" ? isTablet ? hp(1) : 10 : isTablet ? 20 : 13,
+                top: Platform.OS === "android" ? isTablet ? hp(1) : orientation === "LANDSCAPE" ? hp(2.5) : 10 : isTablet ? 20 : 13,
                 right: 10,
                 zIndex: 10
             }}>
@@ -565,26 +567,26 @@ const VinListScreen = ({ navigation, route }) => {
                     style={[styles.tabButton, {
                         backgroundColor: viewType === 'list' ? grayColor : whiteColor,
                         width: isTablet ? wp(8) : wp(12),
-                        height: hp(4.5),
+                        height: orientation === "LANDSCAPE" ? hp(6.5) : hp(4.5),
                         justifyContent: 'center',
                         alignItems: 'center',
                         borderRadius: 5,
                         marginRight: 10,
 
                     }]}>
-                    <Ionicons name="list" size={isTablet ? 35 : 20} color={viewType === 'list' ? blackColor : blackColor} />
+                    <Ionicons name="list" size={isTablet ? 35 : orientation === "LANDSCAPE" ? 35 : 20} color={viewType === 'list' ? blackColor : blackColor} />
                 </TouchableOpacity>
                 <TouchableOpacity
                     onPress={() => setViewType('grid')}
                     style={[styles.tabButton, {
                         backgroundColor: viewType === 'grid' ? grayColor : whiteColor,
                         width: isTablet ? wp(8) : wp(12),
-                        height: hp(4.5),
+                        height: orientation === "LANDSCAPE" ? hp(6.5) : hp(4.5),
                         justifyContent: 'center',
                         alignItems: 'center',
                         borderRadius: 5,
                     }]}>
-                    <Ionicons name="grid-sharp" size={isTablet ? 35 : 20} color={viewType === 'grid' ? blackColor : blackColor} />
+                    <Ionicons name="grid-sharp" size={isTablet ? 35 : orientation === "LANDSCAPE" ? 35 : 20} color={viewType === 'grid' ? blackColor : blackColor} />
                 </TouchableOpacity>
 
             </View>
@@ -684,7 +686,7 @@ const VinListScreen = ({ navigation, route }) => {
 
             {/* Search */}
             <View style={[flexDirectionRow]}>
-                <View style={[styles.searchTextInput, flexDirectionRow, { height: isTablet ? hp(4) : hp(5.5), width: isTablet ? wp(87) : wp(75) }]}>
+                <View style={[styles.searchTextInput, flexDirectionRow, { height: isTablet ? hp(4) : hp(5.5), width: isTablet ? wp(87) : orientation === "LANDSCAPE" ? wp(87) : wp(75) }]}>
                     <TextInput
                         placeholder="Search Vin Make Model/Scan"
                         placeholderTextColor={grayColor}
@@ -711,24 +713,24 @@ const VinListScreen = ({ navigation, route }) => {
                 <View>
                     <View style={[styles.tableHeader, flexDirectionRow]}>
                         {/* <Text style={[styles.tableHeaderText, { width: wp(30) }]}>JobName</Text> */}
-                        <Text style={[styles.tableHeaderText, { width: isTablet ? wp(25) : wp(52) }]}>VIN No.</Text>
-                        <Text style={[styles.tableHeaderText, { width: isTablet ? wp(13) : wp(25) }]}>Make</Text>
-                        <Text style={[styles.tableHeaderText, { width: isTablet ? wp(13) : wp(35) }]}>Model</Text>
-                        <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) : wp(35) }]}>Job Name</Text>
-                        <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) : wp(35) }]}>Start Date</Text>
-                        <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) : wp(35) }]}>End Date</Text>
+                        <Text style={[styles.tableHeaderText, { width: isTablet ? wp(25) : orientation === "LANDSCAPE" ? wp(25) : wp(52) }]}>VIN No.</Text>
+                        <Text style={[styles.tableHeaderText, { width: isTablet ? wp(13) : orientation === "LANDSCAPE" ? wp(13) : wp(25) }]}>Make</Text>
+                        <Text style={[styles.tableHeaderText, { width: isTablet ? wp(13) : orientation === "LANDSCAPE" ? wp(13) : wp(35) }]}>Model</Text>
+                        <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>Job Name</Text>
+                        <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>Start Date</Text>
+                        <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>End Date</Text>
 
                         {technicianType === "manager" && (
-                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(25) : wp(40) }]}>Assigned Tech</Text>
+                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(25) : orientation === "LANDSCAPE" ? wp(25) : wp(40) }]}>Assigned Tech</Text>
                         )}
                         {/* <Text style={[styles.tableHeaderText, { width: wp(35) }]}>Status</Text> */}
 
                         {/* <Text style={[styles.tableHeaderText, { width: wp(45) }]}>Cost Estimate</Text> */}
-                        <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) : wp(35), }]}>Action</Text>
+                        <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35), }]}>Action</Text>
 
                     </View>
 
-                    <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(62) : hp(45) : isIOSAndTablet ? hp(62) : hp(43) }}>
+                    <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(67) : orientation === "LANDSCAPE" ? hp(47) : hp(45) : isIOSAndTablet ? hp(62) : hp(43) }}>
                         <FlatList
                             // data={selectedJobId ? selectedJobVehicles : filteredData}
                             data={finalVehicleList}
@@ -742,7 +744,7 @@ const VinListScreen = ({ navigation, route }) => {
                                         style={[
                                             styles.tableRow,
                                             flexDirectionRow,
-                                            { backgroundColor: index % 2 === 0 ? lightGrayColor : grayColor },
+                                            { backgroundColor: index % 2 === 0 ? lightGrayColor : whiteColor },
                                         ]}
                                         onPress={() => navigation.navigate("VehicleDetailsScreen", {
                                             vehicleId: item.id,
@@ -750,11 +752,11 @@ const VinListScreen = ({ navigation, route }) => {
                                         })}
                                     >
                                         {/* <Text style={[styles.tableText, { width: wp(30), paddingLeft: spacings.small }]}>{item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}</Text> */}
-                                        <Text style={[styles.tableText, { width: isTablet ? wp(25) : wp(55) }]}>{item?.vin}</Text>
-                                        <Text style={[styles.tableText, { width: isTablet ? wp(13) : wp(25), paddingRight: spacings.large }]}>{item?.make}</Text>
-                                        <Text style={[styles.tableText, { width: isTablet ? wp(13) : wp(35) }]}>{item?.model}</Text>
-                                        <Text style={[styles.tableText, { width: isTablet ? wp(15) : wp(35), paddingRight: spacings.large }]}>{item?.jobName}</Text>
-                                        <Text style={[styles.tableText, { width: isTablet ? wp(15) : wp(35) }]}>
+                                        <Text style={[styles.tableText, { width: isTablet ? wp(25) : orientation === "LANDSCAPE" ? wp(25) : wp(55) }]}>{item?.vin}</Text>
+                                        <Text style={[styles.tableText, { width: isTablet ? wp(13) : orientation === "LANDSCAPE" ? wp(13) : wp(25), paddingRight: spacings.large }]}>{item?.make}</Text>
+                                        <Text style={[styles.tableText, { width: isTablet ? wp(13) : orientation === "LANDSCAPE" ? wp(13) : wp(35) }]}>{item?.model}</Text>
+                                        <Text style={[styles.tableText, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35), paddingRight: spacings.large }]}>{item?.jobName}</Text>
+                                        <Text style={[styles.tableText, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>
                                             {item?.startDate
                                                 ? new Date(item.startDate).toLocaleDateString("en-US", {
                                                     month: "short",
@@ -764,7 +766,7 @@ const VinListScreen = ({ navigation, route }) => {
                                                 : "-"}
                                         </Text>
 
-                                        <Text style={[styles.tableText, { width: isTablet ? wp(15) : wp(35) }]}>
+                                        <Text style={[styles.tableText, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>
                                             {item?.endDate
                                                 ? new Date(item.endDate).toLocaleDateString("en-US", {
                                                     month: "short",
@@ -788,7 +790,7 @@ const VinListScreen = ({ navigation, route }) => {
                                                     .join(', ') || '—'}
                                             </Text>
                                         )}
-                                        <View style={{ flexDirection: "row", alignItems: "center", width: isTablet ? wp(15) : wp(35) }} >
+                                        <View style={{ flexDirection: "row", alignItems: "center", width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }} >
                                             <Pressable onPress={() => navigation.navigate("VehicleDetailsScreen", {
                                                 vehicleId: item.id,
                                                 from: activeTab === "partnerOrder" ? "partner" : "workOrder"
@@ -844,7 +846,7 @@ const VinListScreen = ({ navigation, route }) => {
                 </View>
             </ScrollView>}
 
-            {viewType === "grid" && <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(65) : hp(52) : isIOSAndTablet ? hp(63) : hp(48) }}>
+            {viewType === "grid" && <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(65) : orientation === "LANDSCAPE" ? hp(47) : hp(52) : isIOSAndTablet ? hp(63) : hp(48), }}>
                 <FlatList
                     // data={selectedJobId ? selectedJobVehicles : filteredData}
                     data={finalVehicleList}
@@ -855,7 +857,7 @@ const VinListScreen = ({ navigation, route }) => {
                     onRefresh={handleRefresh}
                     renderItem={({ item, index }) => (
                         <Pressable style={{
-                            backgroundColor: index % 2 === 0 ? lightGrayColor : grayColor,
+                            backgroundColor: index % 2 === 0 ? lightGrayColor : whiteColor,
                             borderRadius: 10,
                             padding: 10,
                             marginBottom: 10,

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { View, StyleSheet, Text, ScrollView, Image, Pressable, TouchableOpacity, Platform, KeyboardAvoidingView, ActivityIndicator, Modal, TextInput, Dimensions, PermissionsAndroid, Alert, FlatList } from "react-native";
+import { View, StyleSheet, Text, ScrollView, Image, Pressable, TouchableOpacity, Platform, KeyboardAvoidingView, ActivityIndicator, Modal, TextInput, Dimensions, PermissionsAndroid, Alert, FlatList, useWindowDimensions } from "react-native";
 import CustomButton from '../componets/CustomButton';
 import CustomTextInput from '../componets/CustomTextInput';
 import { blackColor, blueColor, grayColor, lightBlueColor, lightGrayColor, lightOrangeColor, lightShadeBlue, mediumGray, orangeColor, redColor, whiteColor } from "../constans/Color";
@@ -21,6 +21,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { launchCamera, launchImageLibrary } from "react-native-image-picker";
 import { Image as ImageCompressor } from 'react-native-compressor';
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
+import { useOrientation } from "../OrientationContext";
 
 const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween, textAlign } = BaseStyle;
 
@@ -30,7 +31,8 @@ const CustomerInfoScreen = ({ navigation }) => {
     const [technicianId, setTechnicianId] = useState();
     const [technicianType, setTechnicianType] = useState();
     const [isConnected, setIsConnected] = useState(true);
-    const { width, height } = Dimensions.get("window");
+    const { width, height } = useWindowDimensions();
+    const { orientation } = useOrientation();
     const [submitLoading, setSubmitLoading] = useState(false);
     const [customers, setCustomers] = useState([]);
     const [page, setPage] = useState(1);
@@ -424,7 +426,7 @@ const CustomerInfoScreen = ({ navigation }) => {
                 {!isAddMode && <View style={{
                     flexDirection: 'row',
                     position: "absolute",
-                    top: Platform.OS === "android" ? isTablet ? hp(1) : 10 : isTablet ? 20 : 13,
+                    top: Platform.OS === "android" ? isTablet ? hp(1) : orientation === "LANDSCAPE" ? hp(2.5) : 10 : isTablet ? 20 : 13,
                     right: 10,
                     zIndex: 10
                 }}>
@@ -434,7 +436,7 @@ const CustomerInfoScreen = ({ navigation }) => {
                         style={[{
                             backgroundColor: viewType === 'list' ? blueColor : whiteColor,
                             width: isTablet ? wp(8) : wp(12),
-                            height: hp(4.5),
+                            height: orientation === "LANDSCAPE" ? hp(6.5) : hp(4.5),
                             justifyContent: 'center',
                             alignItems: 'center',
                             borderRadius: 5,
@@ -442,20 +444,20 @@ const CustomerInfoScreen = ({ navigation }) => {
                             borderWidth: 1
 
                         }]}>
-                        <Ionicons name="list" size={isTablet ? 35 : 20} color={viewType === 'list' ? whiteColor : blackColor} />
+                        <Ionicons name="list" size={isTablet ? 35 : orientation === "LANDSCAPE" ? 35 : 20} color={viewType === 'list' ? whiteColor : blackColor} />
                     </TouchableOpacity>
                     <TouchableOpacity
                         onPress={() => setViewType('grid')}
                         style={[, {
                             backgroundColor: viewType === 'grid' ? blueColor : whiteColor,
                             width: isTablet ? wp(8) : wp(12),
-                            height: hp(4.5),
+                            height: orientation === "LANDSCAPE" ? hp(6.5) : hp(4.5),
                             justifyContent: 'center',
                             alignItems: 'center',
                             borderRadius: 5,
                             borderWidth: 1
                         }]}>
-                        <Ionicons name="grid-sharp" size={isTablet ? 35 : 20} color={viewType === 'grid' ? whiteColor : blackColor} />
+                        <Ionicons name="grid-sharp" size={isTablet ? 35 : orientation === "LANDSCAPE" ? 35 : 20} color={viewType === 'grid' ? whiteColor : blackColor} />
                     </TouchableOpacity>
 
                 </View>}
@@ -468,11 +470,11 @@ const CustomerInfoScreen = ({ navigation }) => {
                                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                                     <View>
                                         <View style={[styles.tableHeader, flexDirectionRow]}>
-                                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(20) : wp(40) }]}>Name</Text>
-                                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(20) : wp(40) }]}>Phone</Text>
-                                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(25) : wp(60) }]}>Email</Text>
-                                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(45) : wp(80) }]}>Address</Text>
-                                            <Text style={[styles.tableHeaderText, { width: wp(20) }]}>Action</Text>
+                                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(20) : orientation === "LANDSCAPE" ? wp(20) : wp(40) }]}>Name</Text>
+                                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(20) : orientation === "LANDSCAPE" ? wp(20) : wp(40) }]}>Phone</Text>
+                                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(25) : orientation === "LANDSCAPE" ? wp(20) : wp(60) }]}>Email</Text>
+                                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(45) : orientation === "LANDSCAPE" ? wp(32) : wp(80) }]}>Address</Text>
+                                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(20) : orientation === "LANDSCAPE" ? wp(20) : wp(20) }]}>Action</Text>
 
                                         </View>
                                         <FlatList
@@ -484,10 +486,10 @@ const CustomerInfoScreen = ({ navigation }) => {
                                                     flexDirectionRow,
                                                     { backgroundColor: index % 2 === 0 ? lightBlueColor : whiteColor }
                                                 ]}>
-                                                    <Text style={[styles.tableText, { width: isTablet ? wp(20) : wp(40) }]}>{capitalize(item.fullName) || '—'}</Text>
-                                                    <Text style={[styles.tableText, { width: isTablet ? wp(20) : wp(40) }]}>{item.phoneNumber || '—'}</Text>
-                                                    <Text style={[styles.tableText, { width: isTablet ? wp(25) : wp(60) }]}>{item.email || '—'}</Text>
-                                                    <Text style={[styles.tableText, { width: isTablet ? wp(40) : wp(70) }]}>{item.address || '—'}</Text>
+                                                    <Text style={[styles.tableText, { width: isTablet ? wp(20) : orientation === "LANDSCAPE" ? wp(20) : wp(40) }]}>{capitalize(item.fullName) || '—'}</Text>
+                                                    <Text style={[styles.tableText, { width: isTablet ? wp(20) : orientation === "LANDSCAPE" ? wp(20) : wp(40) }]}>{item.phoneNumber || '—'}</Text>
+                                                    <Text style={[styles.tableText, { width: isTablet ? wp(25) : orientation === "LANDSCAPE" ? wp(20) : wp(60) }]}>{item.email || '—'}</Text>
+                                                    <Text style={[styles.tableText, { width: isTablet ? wp(40) : orientation === "LANDSCAPE" ? wp(30) : wp(70) }]}>{item.address || '—'}</Text>
                                                     <TouchableOpacity
                                                         onPress={() => {
                                                             setIsEditMode(true);
@@ -509,7 +511,7 @@ const CustomerInfoScreen = ({ navigation }) => {
                                                         }}
 
                                                     >
-                                                        <AntDesign name="edit" style={[styles.tableText, { width: wp(20), marginLeft: 40 }]} size={28} color={blueColor} />
+                                                        <AntDesign name="edit" style={[styles.tableText, { width: isTablet ? wp(20) : orientation === "LANDSCAPE" ? wp(20) : wp(20), marginLeft: 40 }]} size={28} color={blueColor} />
                                                     </TouchableOpacity>
                                                 </View>
                                             )}
@@ -576,37 +578,6 @@ const CustomerInfoScreen = ({ navigation }) => {
                                     keyExtractor={(item, index) => index.toString()}
                                     contentContainerStyle={{ padding: 10 }}
                                     showsVerticalScrollIndicator={false}
-                                    // renderItem={({ item }) => (
-                                    //     <View style={{
-                                    //         backgroundColor: whiteColor,
-                                    //         padding: 10,
-                                    //         margin: 5,
-                                    //         borderRadius: 10,
-                                    //         flex: 1,
-                                    //         // elevation: 2,
-                                    //         borderColor: blueColor,
-                                    //         borderWidth: 1
-                                    //     }}>
-                                    //         <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-                                    //             <View style={{ width: '48%', marginBottom: 10 }}>
-                                    //                 <Text style={{ color: '#555', fontSize: 11 }}>Name</Text>
-                                    //                 <Text>{capitalize(item.fullName) || '—'}</Text>
-                                    //             </View>
-                                    //             <View style={{ width: '48%', marginBottom: 10 }}>
-                                    //                 <Text style={{ color: '#555', fontSize: 11 }}>Email</Text>
-                                    //                 <Text >{item.email || '—'}</Text>
-                                    //             </View>
-                                    //             <View style={{ width: '48%', marginBottom: 10 }}>
-                                    //                 <Text style={{ color: '#555', fontSize: 11 }}>Phone Number</Text>
-                                    //                 <Text >{item.phoneNumber || '—'}</Text>
-                                    //             </View>
-                                    //             <View style={{ width: '48%', marginBottom: 10 }}>
-                                    //                 <Text style={{ color: '#555', fontSize: 11 }}>Address</Text>
-                                    //                 <Text numberOfLines={2} ellipsizeMode="tail">{item.address || '—'}</Text>
-                                    //             </View>
-                                    //         </View>
-                                    //     </View>
-                                    // )}
                                     renderItem={({ item }) => {
                                         const initials = item.fullName?.charAt(0)?.toUpperCase();
 
@@ -724,7 +695,7 @@ const CustomerInfoScreen = ({ navigation }) => {
                                     onPress={() => setIsAddMode(true)}
                                     style={{
                                         position: 'absolute',
-                                        bottom: hp(5),
+                                        bottom: hp(8),
                                         right: wp(8),
                                         backgroundColor: blueColor,
                                         width: 60,
@@ -860,7 +831,7 @@ const CustomerInfoScreen = ({ navigation }) => {
                 )}
 
             </KeyboardAvoidingView>
-            {isAddMode && <View style={[{ backgroundColor: whiteColor, paddingTop: spacings.xLarge, paddingHorizontal: spacings.xxxLarge }, alignJustifyCenter]}>
+            {isAddMode && <View style={[{ backgroundColor: whiteColor, paddingTop: spacings.xLarge, paddingHorizontal: spacings.xxxLarge, marginBottom: orientation === "LANDSCAPE" ? spacings.xxxxLarge : 0 }, alignJustifyCenter]}>
                 <CustomButton
                     title={isEditMode ? "Update" : "Submit"}
                     onPress={() => handleSubmit(null, setSubmitLoading)}
@@ -909,7 +880,7 @@ const styles = StyleSheet.create({
     button: {
         // marginTop: 2,
         width: wp(90),
-        marginBottom: spacings.large
+        marginBottom: spacings.xLarge
     },
     footerText: {
         marginTop: spacings.Large2x,

@@ -26,7 +26,7 @@ const CustomDropdown = ({ data, country, selectedValue, onSelect, showIcon, righ
 
     return (
         <View style={[styles.container, { height: isTablet ? heightPercentageToDP(4) : heightPercentageToDP(6) }]}>
-            <Pressable style={styles.dropdownButton}
+            <Pressable style={[styles.dropdownButton,{padding: isTablet ? spacings.large : 8}]}
                 onPress={handleOpenDropdown}>
                 {showIcon && <MaterialCommunityIcons name={"flag"} size={22} color={mediumGray} />}
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContainer}>

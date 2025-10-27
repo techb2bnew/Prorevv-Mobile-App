@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, Pressable, ScrollView, Alert, ScrollViewBase, Image, ActivityIndicator, Platform, KeyboardAvoidingView, Modal, Keyboard, Dimensions, TouchableWithoutFeedback } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, Pressable, ScrollView, Alert, ScrollViewBase, Image, ActivityIndicator, Platform, KeyboardAvoidingView, Modal, Keyboard, Dimensions, TouchableWithoutFeedback, useWindowDimensions } from 'react-native';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { blackColor, blueColor, grayColor, greenColor, lightBlueColor, mediumGray, orangeColor, redColor, whiteColor } from '../constans/Color';
@@ -21,11 +21,13 @@ import Toast from 'react-native-simple-toast';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import DatePicker from "react-native-date-picker";
 import Feather from 'react-native-vector-icons/Feather';
+import { useOrientation } from '../OrientationContext';
 
 const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween, textAlign } = BaseStyle;
 
 const WorkOrderScreenTwo = ({ route }) => {
-    const { width, height } = Dimensions.get("window");
+    const { width, height } = useWindowDimensions();
+    const { orientation } = useOrientation();
     const isTablet = width >= 668 && height >= 1024;
     const navigation = useNavigation();
     const [vin, setVin] = useState('' || vehicleDetails);
@@ -979,7 +981,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                     <View style={[flexDirectionRow, alignItemsCenter, justifyContentSpaceBetween]}>
                                         <TextInput
                                             placeholder="Enter VIN Manually"
-                                            style={[styles.vinInput, { width: isTablet ? wp(60) : wp(50), height: isTablet ? hp(3.5) : hp(5.5) }]}
+                                            style={[styles.vinInput, { width: isTablet ? wp(60) : orientation === "LANDSCAPE" ? wp(60) : wp(50), height: isTablet ? hp(3.5) : hp(5.5) }]}
                                             value={vin}
                                             onChangeText={(text) => {
                                                 setVin(text || route?.params?.vehicleInfo?.vin);

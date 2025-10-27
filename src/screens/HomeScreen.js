@@ -901,7 +901,7 @@ const HomeScreen = ({ navigation }) => {
                   </View> */}
                 <Text style={[styles.overviewNumber, {
                   color: 'red',
-                  fontSize: isIOSAndTablet ? style.fontSizeMedium2x.fontSize : style.fontSizeMedium.fontSize
+                  fontSize: isIOSAndTablet ? style.fontSizeMedium2x.fontSize : style.fontSizeLarge1x.fontSize
                 }]}>
                   {technicianType === "manager"
                     ? (dashboardData?.jobsuperadmin ?? 0)
@@ -927,7 +927,7 @@ const HomeScreen = ({ navigation }) => {
                   </View> */}
                 <Text style={[styles.overviewNumber, {
                   color: 'red',
-                  fontSize: isIOSAndTablet ? style.fontSizeMedium2x.fontSize : style.fontSizeMedium.fontSize
+                  fontSize: isIOSAndTablet ? style.fontSizeMedium2x.fontSize : style.fontSizeLarge1x.fontSize
                 }]}>
                   {technicianType === "manager"
                     ? (dashboardData?.Customersuperadmin ?? 0)
@@ -950,7 +950,7 @@ const HomeScreen = ({ navigation }) => {
                     <Ionicons name="car-outline" size={25} color='#8A2BE2' />
                   </View> */}
                 <Text style={[styles.overviewNumber, {
-                  color: 'red', fontSize: isIOSAndTablet ? style.fontSizeMedium2x.fontSize : style.fontSizeMedium.fontSize
+                  color: 'red', fontSize: isIOSAndTablet ? style.fontSizeMedium2x.fontSize : style.fontSizeLarge1x.fontSize
                 }]}>
                   {technicianType === "manager"
                     ? (dashboardData?.Vehiclesuperadmin ?? 0)

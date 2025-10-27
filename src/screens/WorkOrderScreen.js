@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, Pressable, ScrollView, Alert, ScrollViewBase, Image, ActivityIndicator, Platform, KeyboardAvoidingView, Modal, Keyboard, Dimensions, TouchableWithoutFeedback } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, Pressable, ScrollView, Alert, ScrollViewBase, Image, ActivityIndicator, Platform, KeyboardAvoidingView, Modal, Keyboard, Dimensions, TouchableWithoutFeedback, useWindowDimensions } from 'react-native';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { BaseStyle } from '../constans/Style';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from '../utils';
@@ -13,12 +13,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_BASE_URL } from '../constans/Constants';
 import CustomerDropdown from '../componets/CustomerDropdown';
 import { useRoute } from '@react-navigation/native';
+import { useOrientation } from '../OrientationContext';
 
 const WorkOrderScreen = ({ navigation, route }) => {
-  // const route = useRoute();
-// console.log("vehicleIdvehicleIdvehicleId",route?.params?.vehicleId);
-
-  const { width, height } = Dimensions.get("window");
+  const { width, height } = useWindowDimensions();
+  const { orientation } = useOrientation();
   const [selectedJob, setSelectedJob] = useState(null);
   const [selectedJobName, setSelectedJobName] = useState("");
   const [searchText, setSearchText] = useState('');

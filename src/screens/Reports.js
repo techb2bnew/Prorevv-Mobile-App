@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, Text, TextInput, FlatList, Pressable, StyleSheet, TouchableOpacity, ActivityIndicator, Image, Platform, Modal, Dimensions, TouchableWithoutFeedback, ScrollView, Alert } from 'react-native';
+import { View, Text, TextInput, FlatList, Pressable, StyleSheet, TouchableOpacity, ActivityIndicator, Image, Platform, Modal, Dimensions, TouchableWithoutFeedback, ScrollView, Alert, useWindowDimensions } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Entypo from 'react-native-vector-icons/Entypo';
@@ -18,6 +18,7 @@ import NetInfo from "@react-native-community/netinfo";
 import Header from '../componets/Header';
 import { API_BASE_URL } from '../constans/Constants';
 import Share from 'react-native-share';
+import { useOrientation } from '../OrientationContext';
 
 
 const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween, textAlign, justifyContentCenter, justifyContentSpaceEvenly } = BaseStyle;
@@ -26,6 +27,8 @@ const Reports = ({ navigation }) => {
     const [search, setSearch] = useState('');
     const [jobHistoryData, setjobHistoryData] = useState([])
     const [technicianId, setTechnicianId] = useState();
+    const [technicianName, setTechnicianName] = useState();
+
     const [technicianType, setTechnicianType] = useState();
     const [loading, setLoading] = useState(true);
     const [startDate, setStartDate] = useState(null);
@@ -41,7 +44,8 @@ const Reports = ({ navigation }) => {
     const [jobPage, setJobPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
-    const { width, height } = Dimensions.get("window");
+    const { width, height } = useWindowDimensions();
+    const { orientation } = useOrientation();
     const isTablet = width >= 668 && height >= 1024;
     const isIOSAndTablet = Platform.OS === "ios" && isTablet;
     const [activeTab, setActiveTab] = useState("WorkOrders");
@@ -62,66 +66,12 @@ const Reports = ({ navigation }) => {
     const [customerRefreshing, setCustomerRefreshing] = useState(false);
     const [selectedJobs, setSelectedJobs] = useState([]);
     const [isCompletingJobs, setIsCompletingJobs] = useState(false);
+    const [selectedWorkOrders, setSelectedWorkOrders] = useState([]);
+    const [isCompletingWorkOrders, setIsCompletingWorkOrders] = useState(false);
 
 
     const toggleModal = () => {
         setModalVisible(!isModalVisible);
-    };
-
-    // Job selection functions
-    const toggleJobSelection = (jobId) => {
-        setSelectedJobs(prev => {
-            if (prev.includes(jobId)) {
-                return prev.filter(id => id !== jobId);
-            } else {
-                return [...prev, jobId];
-            }
-        });
-    };
-
-    const clearSelectedJobs = () => {
-        setSelectedJobs([]);
-    };
-
-    const completeSelectedJobs = async () => {
-        if (selectedJobs.length === 0) return;
-
-        setIsCompletingJobs(true);
-        try {
-            const token = await AsyncStorage.getItem("auth_token");
-            if (!token) {
-                console.error("No token found");
-                return;
-            }
-console.log("selectedJobs",selectedJobs);
-
-            // API call to complete selected jobs
-            const response = await axios.post(
-                `${API_BASE_URL}/completeJobs`,
-                { jobIds: selectedJobs },
-                {
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
-            );
-
-            if (response.data.success) {
-                // Refresh the job list
-                await fetchJobHistory(1, false);
-                // Clear selected jobs
-                setSelectedJobs([]);
-                Alert.alert("Success", "Selected jobs have been completed successfully!");
-            } else {
-                Alert.alert("Error", "Failed to complete jobs. Please try again.");
-            }
-        } catch (error) {
-            console.error("Error completing jobs:", error);
-            Alert.alert("Error", "Failed to complete jobs. Please try again.");
-        } finally {
-            setIsCompletingJobs(false);
-        }
     };
 
     const handleSort = (order, type) => {
@@ -261,8 +211,13 @@ console.log("selectedJobs",selectedJobs);
                 const storedData = await AsyncStorage.getItem("userDeatils");
                 if (storedData) {
                     const parsedData = JSON.parse(storedData);
+                    console.log("parsedData", parsedData);
                     setTechnicianId(parsedData?.id);
                     setTechnicianType(parsedData?.types);
+                    const storedName = await AsyncStorage.getItem('technicianName');
+                    if (storedName) {
+                        setTechnicianName(storedName);
+                    };
                 }
             } catch (error) {
                 console.error("Error fetching stored user:", error);
@@ -592,6 +547,11 @@ console.log("selectedJobs",selectedJobs);
         setFilteredCustomer(filteredCustomer);
     }, [activeStatus, jobsRawData, workOrdersRawData, search, customerJobs]);
 
+    // Clear selected work orders when switching tabs or status
+    // useEffect(() => {
+    //     setSelectedWorkOrders([]);
+    // }, [activeTab, activeStatus]);
+
     const handleRefreshVehicle = async () => {
         try {
             setRefreshing(true);
@@ -680,6 +640,94 @@ console.log("selectedJobs",selectedJobs);
         // exportToCSV(exportData, ['jobName', 'vin', 'make', 'model', 'startDate', 'endDate', 'status', 'assignedTechnicians'], 'work_orders.csv');
     };
 
+    // Work Order Selection Functions
+    const toggleWorkOrderSelection = (workOrderId) => {
+        setSelectedWorkOrders(prev => {
+            if (prev.includes(workOrderId)) {
+                return prev.filter(id => id !== workOrderId);
+            } else {
+                return [...prev, workOrderId];
+            }
+        });
+    };
+
+    const handleCompleteSelectedWorkOrders = async () => {
+        if (selectedWorkOrders.length === 0) {
+            Alert.alert("No Selection", "Please select work orders to complete.");
+            return;
+        }
+
+        try {
+            setIsCompletingWorkOrders(true);
+            const token = await AsyncStorage.getItem("auth_token");
+            const storedData = await AsyncStorage.getItem("userDeatils");
+
+            if (!storedData) {
+                Alert.alert("Error", "User data not found.");
+                return;
+            }
+
+            const storedName = await AsyncStorage.getItem('technicianName');
+            if (storedName) {
+                setTechnicianName(storedName);
+            }
+
+            // Create array of vehicles to update
+            const vehiclesToUpdate = selectedWorkOrders.map(vehicleId => ({
+                vehicleId: Number(vehicleId),  // Convert to number
+                vehicleStatus: true,  // Boolean true, not string "true"
+                completedBy: technicianName
+            }));
+
+            console.log("Updating vehicles:", vehiclesToUpdate);
+
+            const apiUrl = `${API_BASE_URL}/updateVehicleStatus`;
+
+            const headers = {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`,
+            };
+
+            console.log("Request Body (Array):", JSON.stringify(vehiclesToUpdate, null, 2));
+
+            const response = await fetch(apiUrl, {
+                method: "POST",
+                headers,
+                body: JSON.stringify(vehiclesToUpdate),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                console.log("API Response Data:", data);
+
+                // Refresh the data
+                await fetchVehicalInfo(page);
+                setSelectedWorkOrders([]);
+            } else {
+                console.log("Error", data.error);
+            }
+        } catch (error) {
+            console.error("Error completing work orders:", error);
+        } finally {
+            setIsCompletingWorkOrders(false);
+        }
+    };
+
+    const handleClearAllWorkOrders = () => {
+        setSelectedWorkOrders([]);
+    };
+
+    const handleSelectAllWorkOrders = () => {
+        if (selectedWorkOrders.length === filteredWorkOrders.length) {
+            // If all are selected, deselect all
+            setSelectedWorkOrders([]);
+        } else {
+            // Select all work orders
+            setSelectedWorkOrders(filteredWorkOrders.map(item => item?.id));
+        }
+    };
+
     return (
         <View style={[flex, styles.container]}>
             {/* Header */}
@@ -688,7 +736,7 @@ console.log("selectedJobs",selectedJobs);
             {activeTab === 'WorkOrders' &&
                 <View style={{
                     flexDirection: 'row', position: "absolute",
-                    top: Platform.OS === "android" ? isTablet ? hp(1) : 10 : isTablet ? 20 : 13,
+                    top: Platform.OS === "android" ? isTablet ? hp(1) : orientation === "LANDSCAPE" ? hp(2.5) : 10 : isTablet ? 20 : 13,
                     right: -10,
                     justifyContent: "center",
                     alignItems: "center",
@@ -696,19 +744,21 @@ console.log("selectedJobs",selectedJobs);
 
                     <TouchableOpacity
                         onPress={() => setViewType('list')}
-                        style={[styles.tabButton, { backgroundColor: viewType === 'list' ? blueColor : whiteColor, margin: 0, marginRight: 10, width: isTablet ? wp(8) : wp(12), height: hp(4.5) }]}>
-                        <Ionicons name="list" size={isTablet ? 35 : 20} color={viewType === 'list' ? whiteColor : blackColor} />
+                        style={[styles.tabButton, {
+                            backgroundColor: viewType === 'list' ? blueColor : whiteColor, margin: 0, marginRight: 10, width: isTablet ? wp(8) : wp(12), height: orientation === "LANDSCAPE" ? hp(6.5) : hp(4.5),
+                        }]}>
+                        <Ionicons name="list" size={isTablet ? 35 : orientation === "LANDSCAPE" ? 35 : 20} color={viewType === 'list' ? whiteColor : blackColor} />
                     </TouchableOpacity>
                     <TouchableOpacity
                         onPress={() => setViewType('grid')}
-                        style={[styles.tabButton, { backgroundColor: viewType === 'grid' ? blueColor : whiteColor, width: isTablet ? wp(8) : wp(12), height: hp(4.5), marginRight: 10 }]}>
-                        <Ionicons name="grid-sharp" size={isTablet ? 35 : 20} color={viewType === 'grid' ? whiteColor : blackColor} />
+                        style={[styles.tabButton, { backgroundColor: viewType === 'grid' ? blueColor : whiteColor, width: isTablet ? wp(8) : wp(12), height: orientation === "LANDSCAPE" ? hp(6.5) : hp(4.5), marginRight: 10 }]}>
+                        <Ionicons name="grid-sharp" size={isTablet ? 35 : orientation === "LANDSCAPE" ? 35 : 20} color={viewType === 'grid' ? whiteColor : blackColor} />
                     </TouchableOpacity>
                     <TouchableOpacity
                         onPress={handleExport}
-                        style={[{ backgroundColor: blueColor, width: isTablet ? wp(8) : wp(12), height: hp(4.5), marginRight: 20, borderRadius: 5, borderWidth: 1, alignItems: "center", justifyContent: "center" }]}>
+                        style={[{ backgroundColor: blueColor, width: isTablet ? wp(8) : wp(12), height: orientation === "LANDSCAPE" ? hp(6.5) : hp(4.5), marginRight: 20, borderRadius: 5, borderWidth: 1, alignItems: "center", justifyContent: "center" }]}>
                         {/* <Ionicons name="print-outline" size={isTablet ? 35 : 20} color={whiteColor} /> */}
-                        <Text style={{ color: whiteColor }}>Print</Text>
+                        <Text style={{ color: whiteColor, fontSize: isTablet ? style.fontSizeMedium.fontSize : orientation === "LANDSCAPE" ? style.fontSizeLarge1x.fontSize : style.fontSizeSmall1x.fontSize }}>Print</Text>
                     </TouchableOpacity>
                 </View>
             }
@@ -785,7 +835,7 @@ console.log("selectedJobs",selectedJobs);
                         Platform.OS === "android"
                             ? isTablet
                                 ? wp(87)
-                                : wp(78)
+                                : orientation === "LANDSCAPE" ? "86%" : wp(78)
                             : isTablet
                                 ? wp(88)
                                 : wp(80),
@@ -799,7 +849,7 @@ console.log("selectedJobs",selectedJobs);
                     />
                     <Feather name="search" size={20} color={blackColor} />
 
-                    <TouchableOpacity style={[styles.filterButton, { top: isTablet ? Platform.OS === "android" ? hp(1) : hp(1) : hp(0.5), right: isTablet ? Platform.OS === "android" ? -80 : -100 : -60 }]}
+                    <TouchableOpacity style={[styles.filterButton, { top: isTablet ? Platform.OS === "android" ? hp(1) : hp(1) : orientation === "LANDSCAPE" ? hp(0.8) : hp(0.5), right: isTablet ? Platform.OS === "android" ? -80 : -100 : orientation === "LANDSCAPE" ? -160 : -60 }]}
                         onPress={toggleModal}
                     >
                         <Image source={SORT_IMAGE} resizeMode='contain' style={{ width: isTablet ? wp(7) : wp(10), height: hp(3.2) }} />
@@ -820,31 +870,54 @@ console.log("selectedJobs",selectedJobs);
                     </TouchableOpacity>}
                 </View>
                 {/* Status Filters */}
-                <View style={styles.statusFilterContainer}>
-                    {['Completed', 'InProgress'].map(status => {
-                        if (activeTab === "Customers") {
-                            return
-                        }
-                        const dataList = activeTab === "Jobs" ? jobsRawData : activeTab === "Customers" ? customerJobs : workOrdersRawData;
-                        const count = filterByStatus(dataList, status, activeTab).length;
+                <View style={[styles.statusFilterContainer, { justifyContent: 'space-between' }]}>
+                    <View style={{ flexDirection: 'row', gap: 10 }}>
+                        {['Completed', 'InProgress'].map(status => {
+                            if (activeTab === "Customers") {
+                                return
+                            }
+                            const dataList = activeTab === "Jobs" ? jobsRawData : activeTab === "Customers" ? customerJobs : workOrdersRawData;
+                            const count = filterByStatus(dataList, status, activeTab).length;
 
-                        return (
-                            <TouchableOpacity
-                                key={status}
-                                onPress={() => setActiveStatus(status)}
-                                style={[
-                                    styles.statusButton,
-                                    activeStatus === status && styles.activeStatus,
-                                    { width: isTablet ? wp(20) : wp(35), height: hp(4) },
-                                    alignJustifyCenter
-                                ]}
-                            >
-                                <Text style={[styles.statusText, activeStatus === status && styles.activeStatusText]}>
-                                    {status === 'InProgress' ? 'In Progress' : status} ({count})
-                                </Text>
-                            </TouchableOpacity>
-                        );
-                    })}
+                            return (
+                                <TouchableOpacity
+                                    key={status}
+                                    onPress={() => setActiveStatus(status)}
+                                    style={[
+                                        styles.statusButton,
+                                        activeStatus === status && styles.activeStatus,
+                                        { width: isTablet ? wp(20) : wp(35), height: hp(4) },
+                                        alignJustifyCenter
+                                    ]}
+                                >
+                                    <Text style={[styles.statusText, activeStatus === status && styles.activeStatusText]}>
+                                        {status === 'InProgress' ? 'In Progress' : status} ({count})
+                                    </Text>
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </View>
+
+                    {/* Select All / Deselect All Button */}
+                    {activeTab === 'WorkOrders' && activeStatus === 'InProgress' && selectedWorkOrders.length > 0 && (
+                        <TouchableOpacity
+                            onPress={handleSelectAllWorkOrders}
+                            style={{
+                                backgroundColor: blueColor,
+                                paddingVertical: isTablet ? spacings.large : 2,
+                                paddingHorizontal: isTablet ? spacings.xxLarge : spacings.large,
+                                borderRadius: 5,
+                                alignItems: "center",
+                                justifyContent: "center"
+                            }}
+                        >
+                            <Text style={{ color: whiteColor, fontWeight: style.fontWeightThin.fontWeight, fontSize: isTablet ? style.fontSizeMedium.fontSize : style.fontSizeSmall1x.fontSize }}>
+                                {selectedWorkOrders.length === filteredWorkOrders.length && filteredWorkOrders.length > 0
+                                    ? 'Deselect All'
+                                    : 'Select All'}
+                            </Text>
+                        </TouchableOpacity>
+                    )}
                 </View>
             </View>
 
@@ -853,21 +926,16 @@ console.log("selectedJobs",selectedJobs);
                 <>
                     {/* Table Header */}
                     <View style={styles.tableHeaderRow}>
-                        {activeStatus === 'InProgress' && (
-                            <Text style={[styles.tableHeader, { width: "15%" }]}>Select</Text>
-                        )}
-                        <Text style={[styles.tableHeader, { width: activeStatus === 'InProgress' ? "30%" : "40%" }]}>Job Name</Text>
-                        <Text style={[styles.tableHeader, { width: "30%" }]}>Number of W.O</Text>
-                        <Text style={[styles.tableHeader, { width: activeStatus === 'InProgress' ? "20%" : "20%", textAlign: isTablet ? "left" : "center" }]}>Action</Text>
+                        <Text style={[styles.tableHeader, { width: "40%" }]}>Job Name</Text>
+                        <Text style={[styles.tableHeader, { width: "35%" }]}>Number of W.O</Text>
+                        <Text style={[styles.tableHeader, { width: activeStatus === 'InProgress' ? "20%" : "20%", textAlign: isTablet ? "left" : orientation === "LANDSCAPE" ? "left" : "center" }]}>Action</Text>
 
                     </View>
 
                     {/* FlatList for Jobs only */}
-                    <View style={{ 
-                        width: "100%", 
-                        height: activeStatus === 'InProgress' && selectedJobs.length > 0 
-                            ? (Platform.OS === "android" ? isTablet ? hp(55) : hp(42) : isIOSAndTablet ? hp(53) : hp(38))
-                            : (Platform.OS === "android" ? isTablet ? hp(59.5) : hp(50) : isIOSAndTablet ? hp(60) : hp(45.5)),
+                    <View style={{
+                        width: "100%",
+                        height: (Platform.OS === "android" ? isTablet ? hp(59.5) : orientation === "LANDSCAPE" ? hp(45) : hp(50) : isIOSAndTablet ? hp(60) : hp(45.5)),
                     }}>
                         <FlatList
                             data={filteredJobs}
@@ -889,20 +957,7 @@ console.log("selectedJobs",selectedJobs);
                                             jobId: item?.id
                                         })}
                                     >
-                                        <View style={{ width: "15%", justifyContent: "center" }}>
-                                            {activeStatus === 'InProgress' && (
-                                                <TouchableOpacity
-                                                    style={[styles.checkbox, isSelected && styles.checkboxSelected]}
-                                                    onPress={(e) => {
-                                                        e.stopPropagation();
-                                                        toggleJobSelection(item?.id);
-                                                    }}
-                                                >
-                                                    {isSelected && <Ionicons name="checkmark" size={16} color={whiteColor} />}
-                                                </TouchableOpacity>
-                                            )}
-                                        </View>
-                                        <Text style={[styles.text, { width: activeStatus === 'InProgress' ? "30%" : "44%", paddingRight: spacings.xxxxLarge }]}>
+                                        <Text style={[styles.text, { width: "44%", paddingRight: spacings.xxxxLarge }]}>
                                             {item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}
                                         </Text>
                                         <Text style={[styles.text, { width: "30%" }]}>
@@ -937,33 +992,16 @@ console.log("selectedJobs",selectedJobs);
                             }}
                         />
                     </View>
-
-                    {/* Complete Selected Jobs Button - Only show for InProgress jobs */}
-                    {activeStatus === 'InProgress' && selectedJobs.length > 0 && (
-                        <View style={styles.completeButtonContainer}>
-                            <TouchableOpacity
-                                style={[styles.completeButton, isCompletingJobs && styles.completeButtonDisabled]}
-                                onPress={completeSelectedJobs}
-                                disabled={isCompletingJobs}
-                            >
-                                <Text style={styles.completeButtonText}>
-                                    {isCompletingJobs ? 'Completing...' : `Complete Selected Jobs`}
-                                </Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={styles.clearButton}
-                                onPress={clearSelectedJobs}
-                            >
-                                <Text style={styles.clearButtonText}>Clear Selection</Text>
-                            </TouchableOpacity>
-                        </View>
-                    )}
                 </>
             )}
 
             {/* WorkOrders */}
             {activeTab === 'WorkOrders' && viewType === 'grid' ? (
-                <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(62.5) : hp(55) : isIOSAndTablet ? hp(62) : hp(49) }}>
+                <View style={{
+                    width: "100%",
+                    height: Platform.OS === "android" ? isTablet ? selectedWorkOrders.length > 0 ? hp(55) : hp(62) : selectedWorkOrders.length > 0 ? orientation === "LANDSCAPE" ? hp(42) : hp(47) : orientation === "LANDSCAPE" ? hp(48) : hp(55)
+                        : isIOSAndTablet ? hp(58) : selectedWorkOrders.length > 0 ? hp(42) : hp(49)
+                }}>
                     <FlatList
                         data={filteredWorkOrders}
                         keyExtractor={(item, index) => index.toString()}
@@ -971,88 +1009,101 @@ console.log("selectedJobs",selectedJobs);
                         contentContainerStyle={{ paddingVertical: 10 }}
                         refreshing={refreshing}
                         onRefresh={handleRefreshVehicle}
-                        renderItem={({ item, index }) => (
-                            <Pressable style={{
-                                backgroundColor: index % 2 === 0 ? lightBlueColor : whiteColor,
-                                borderRadius: 10,
-                                padding: 10,
-                                marginBottom: 10,
-                                marginHorizontal: 10,
-                                borderWidth: 1,
-                                borderColor: blueColor
-                            }}
-                                onPress={() => navigation.navigate("VehicleDetailsScreen", { vehicleId: item?.id, from: "report" })}>
-                                <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-                                    <Pressable
-                                        onPress={() => navigation.navigate("WorkOrderScreenTwo", {
-                                            vehicleId: item.id,
-                                        })}
-                                        style={{ position: "absolute", right: -5, top: -10, zIndex: 999 }}>
-                                        {/* <Text style={styles.viewText}>Edit</Text> */}
-                                        <AntDesign name="edit" size={20} color={blackColor} />
+                        renderItem={({ item, index }) => {
+                            const isSelected = selectedWorkOrders.includes(item?.id);
+                            return (
+                                <Pressable style={{
+                                    backgroundColor: index % 2 === 0 ? lightBlueColor : whiteColor,
+                                    borderRadius: 10,
+                                    padding: 10,
+                                    marginBottom: 10,
+                                    marginHorizontal: 10,
+                                    borderWidth: 1,
+                                    borderColor: blueColor
+                                }}
+                                    onPress={() => navigation.navigate("VehicleDetailsScreen", { vehicleId: item?.id, from: "report" })}>
+                                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+                                        {/* Selection Checkbox - Only show for InProgress */}
+                                        {activeStatus === 'InProgress' && (
+                                            <Pressable
+                                                onPress={() => toggleWorkOrderSelection(item?.id)}
+                                                style={[styles.checkbox, isSelected && styles.checkboxSelected, { position: "absolute", right: -10, top: -6, zIndex: 1000 }]}
+                                            >
+                                                {isSelected && <AntDesign name="check" size={12} color={whiteColor} />}
+                                            </Pressable>
+                                        )}
 
-                                    </Pressable>
-                                    <View style={{ width: '48%', marginBottom: 9 }}>
-                                        <Text style={{ color: '#555', fontSize: 10 }}>Job Name</Text>
-                                        <Text >{item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}</Text>
-                                    </View>
-                                    <View style={{ width: '48%', marginBottom: 9 }}>
-                                        <Text style={{ color: '#555', fontSize: 10 }}>VIN</Text>
-                                        <Text >{item?.vin}</Text>
-                                    </View>
-                                    <View style={{ width: '48%', marginBottom: 9 }}>
-                                        <Text style={{ color: '#555', fontSize: 10 }}>Make</Text>
-                                        <Text >{item?.make}</Text>
-                                    </View>
-                                    <View style={{ width: '48%', marginBottom: 9 }}>
-                                        <Text style={{ color: '#555', fontSize: 10 }}>Model</Text>
-                                        <Text >{item?.model}</Text>
-                                    </View>
-                                    <View style={{ width: '48%', marginBottom: 9 }}>
-                                        <Text style={{ color: '#555', fontSize: 10 }}>Start Date</Text>
-                                        <Text >
-                                            {item?.startDate
-                                                ? new Date(item?.startDate).toLocaleDateString("en-US", {
-                                                    month: "long",
-                                                    day: "numeric",
-                                                    year: "numeric",
-                                                })
-                                                : "-"}
-                                        </Text>
-                                    </View>
-                                    <View style={{ width: '48%', marginBottom: 9 }}>
-                                        <Text style={{ color: '#555', fontSize: 10 }}>End Date</Text>
-                                        <Text >
-                                            {item?.endDate
-                                                ? new Date(item?.endDate).toLocaleDateString("en-US", {
-                                                    month: "long",
-                                                    day: "numeric",
-                                                    year: "numeric",
-                                                })
-                                                : "-"}
-                                        </Text>
-                                    </View>
-                                    {technicianType === "manager" && <View style={{ width: '48%', marginBottom: 9 }}>
-                                        <Text style={{ color: '#555', fontSize: 10 }}>Assigned Tech</Text>
-                                        <Text style={[styles.text, { width: wp(30) }]}>
-                                            {item?.assignedTechnicians?.length > 0
-                                                ? item?.assignedTechnicians
-                                                    .map(tech => `${tech.firstName} ${tech.lastName}`)
-                                                    .join(', ')
-                                                : '-'}
-                                        </Text>
-                                    </View>}
-                                    <View style={{ width: '48%', marginBottom: 9 }}>
-                                        <Text style={{ color: '#555', fontSize: 10 }}>Status</Text>
+                                        <Pressable
+                                            onPress={() => navigation.navigate("WorkOrderScreenTwo", {
+                                                vehicleId: item.id,
+                                            })}
+                                            style={{ position: "absolute", right: 25, top: -6, zIndex: 999 }}>
+                                            {/* <Text style={styles.viewText}>Edit</Text> */}
+                                            <AntDesign name="edit" size={20} color={blackColor} />
 
-                                        <Text style={[{ fontSize: 15, fontWeight: '700', color: item?.vehicleStatus === true ? greenColor : blackColor }]}>
-                                            {getStatusText(item?.vehicleStatus)}
-                                        </Text>
-                                    </View>
-                                </View>
+                                        </Pressable>
+                                        <View style={{ width: '48%', marginBottom: 9 }}>
+                                            <Text style={{ color: '#555', fontSize: 10 }}>Job Name</Text>
+                                            <Text >{item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}</Text>
+                                        </View>
+                                        <View style={{ width: '48%', marginBottom: 9 }}>
+                                            <Text style={{ color: '#555', fontSize: 10 }}>VIN</Text>
+                                            <Text >{item?.vin}</Text>
+                                        </View>
+                                        <View style={{ width: '48%', marginBottom: 9 }}>
+                                            <Text style={{ color: '#555', fontSize: 10 }}>Make</Text>
+                                            <Text >{item?.make}</Text>
+                                        </View>
+                                        <View style={{ width: '48%', marginBottom: 9 }}>
+                                            <Text style={{ color: '#555', fontSize: 10 }}>Model</Text>
+                                            <Text >{item?.model}</Text>
+                                        </View>
+                                        <View style={{ width: '48%', marginBottom: 9 }}>
+                                            <Text style={{ color: '#555', fontSize: 10 }}>Start Date</Text>
+                                            <Text >
+                                                {item?.startDate
+                                                    ? new Date(item?.startDate).toLocaleDateString("en-US", {
+                                                        month: "long",
+                                                        day: "numeric",
+                                                        year: "numeric",
+                                                    })
+                                                    : "-"}
+                                            </Text>
+                                        </View>
+                                        <View style={{ width: '48%', marginBottom: 9 }}>
+                                            <Text style={{ color: '#555', fontSize: 10 }}>End Date</Text>
+                                            <Text >
+                                                {item?.endDate
+                                                    ? new Date(item?.endDate).toLocaleDateString("en-US", {
+                                                        month: "long",
+                                                        day: "numeric",
+                                                        year: "numeric",
+                                                    })
+                                                    : "-"}
+                                            </Text>
+                                        </View>
+                                        {technicianType === "manager" && <View style={{ width: '48%', marginBottom: 9 }}>
+                                            <Text style={{ color: '#555', fontSize: 10 }}>Assigned Tech</Text>
+                                            <Text style={[styles.text, { width: wp(30) }]}>
+                                                {item?.assignedTechnicians?.length > 0
+                                                    ? item?.assignedTechnicians
+                                                        .map(tech => `${tech.firstName} ${tech.lastName}`)
+                                                        .join(', ')
+                                                    : '-'}
+                                            </Text>
+                                        </View>}
+                                        <View style={{ width: '48%', marginBottom: 9 }}>
+                                            <Text style={{ color: '#555', fontSize: 10 }}>Status</Text>
 
-                            </Pressable>
-                        )}
+                                            <Text style={[{ fontSize: 15, fontWeight: '700', color: item?.vehicleStatus === true ? greenColor : blackColor }]}>
+                                                {getStatusText(item?.vehicleStatus)}
+                                            </Text>
+                                        </View>
+                                    </View>
+
+                                </Pressable>
+                            );
+                        }}
                         onEndReached={() => {
                             if (!loading && hasMore) {
                                 fetchVehicalInfo(page + 1);
@@ -1078,22 +1129,26 @@ console.log("selectedJobs",selectedJobs);
 
                 </View>
             ) : activeTab === 'WorkOrders' && viewType === 'list' ? (
-                <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(62.5) : hp(54) : isIOSAndTablet ? hp(62) : hp(49) }}>
+                <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? selectedWorkOrders.length > 0 ? hp(56) : hp(62) : selectedWorkOrders.length > 0 ? orientation === "LANDSCAPE" ? hp(42) : hp(40) : hp(54) : isIOSAndTablet ? hp(62) : selectedWorkOrders.length > 0 ? hp(42) : hp(49) }}>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                         <View>
                             {/* Header Row */}
                             <View style={[styles.tableHeaderRow, { backgroundColor: blueColor }]}>
-                                <Text style={[styles.tableHeader, { width: isTablet ? wp(13) : wp(30) }]}>Job Name</Text>
-                                <Text style={[styles.tableHeader, { width: isTablet ? wp(25) : wp(55) }]}>VIN</Text>
-                                <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(35) }]}>Make</Text>
-                                <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(30) }]}>Model</Text>
-                                {technicianType === "manager" && <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(35) }]}>Assigned Tech</Text>}
-                                <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(35) }]}>Start Date</Text>
-                                <Text style={[styles.tableHeader, { width: isTablet ? wp(18) : wp(35) }]}>End Date</Text>
+                                {/* Checkbox column - only show for InProgress */}
+                                {activeStatus === 'InProgress' && (
+                                    <Text style={[styles.tableHeader, { width: isTablet ? wp(13) : orientation === "LANDSCAPE" ? wp(8) : wp(15), alignItems: 'center' }]}>Select</Text>
+                                )}
+                                <Text style={[styles.tableHeader, { width: isTablet ? wp(13) : orientation === "LANDSCAPE" ? wp(13) : wp(30) }]}>Job Name</Text>
+                                <Text style={[styles.tableHeader, { width: isTablet ? wp(25) : orientation === "LANDSCAPE" ? wp(25) : wp(55) }]}>VIN</Text>
+                                <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>Make</Text>
+                                <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(30) }]}>Model</Text>
+                                {technicianType === "manager" && <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>Assigned Tech</Text>}
+                                <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>Start Date</Text>
+                                <Text style={[styles.tableHeader, { width: isTablet ? wp(18) : orientation === "LANDSCAPE" ? wp(18) : wp(35) }]}>End Date</Text>
 
                                 {/* <Text style={[styles.tableHeader, { width: wp(30) }]}>Cost Estimate</Text> */}
-                                <Text style={[styles.tableHeader, { paddingRight: isTablet ? 30 : 0, width: isIOSAndTablet ? wp(10) : isTablet ? wp(20) : wp(35) }]}>Status</Text>
-                                <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : wp(35), }]}>Action</Text>
+                                <Text style={[styles.tableHeader, { paddingRight: isTablet ? 30 : 0, width: isIOSAndTablet ? wp(10) : isTablet ? wp(20) : orientation === "LANDSCAPE" ? wp(20) : wp(35) }]}>Status</Text>
+                                <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35), }]}>Action</Text>
                             </View>
 
                             {/* Data Rows with vertical scroll */}
@@ -1106,27 +1161,37 @@ console.log("selectedJobs",selectedJobs);
                                     onRefresh={handleRefreshVehicle}
                                     renderItem={({ item, index }) => {
                                         const rowStyle = { backgroundColor: index % 2 === 0 ? lightBlueColor : whiteColor };
+                                        const isSelected = selectedWorkOrders.includes(item?.id);
                                         return (
                                             <Pressable key={index.toString()} style={[styles.listItem, rowStyle, { flexDirection: 'row', alignItems: "center" }]} onPress={() => navigation.navigate("VehicleDetailsScreen", { vehicleId: item?.id, from: "report" })}>
-                                                <Text style={[styles.text, { width: isTablet ? wp(13) : wp(30), paddingLeft: spacings.small }]}>{item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}</Text>
-                                                <Text style={[styles.text, { width: isTablet ? wp(25) : wp(57) }]}>{item?.vin || '-'}</Text>
-                                                <Text style={[styles.text, { width: isTablet ? wp(15) : wp(35) }]}>{item?.make || '-'}</Text>
-                                                <Text style={[styles.text, { width: isTablet ? wp(15) : wp(30) }]}>{item?.model || '-'}</Text>
-                                                {technicianType === "manager" && <Text style={[styles.text, { width: isTablet ? wp(14) : wp(30) }]}>
+                                                {/* Selection Checkbox - Only show for InProgress */}
+                                                {activeStatus === 'InProgress' && (
+                                                    <Pressable
+                                                        onPress={() => toggleWorkOrderSelection(item?.id)}
+                                                        style={[styles.checkbox, isSelected && styles.checkboxSelected, { marginRight: isTablet ? wp(10) : orientation === "LANDSCAPE" ? wp(6) : wp(10) }]}
+                                                    >
+                                                        {isSelected && <AntDesign name="check" size={12} color={whiteColor} />}
+                                                    </Pressable>
+                                                )}
+                                                <Text style={[styles.text, { width: isTablet ? wp(13) : orientation === "LANDSCAPE" ? wp(13) : wp(30), paddingLeft: spacings.small }]}>{item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}</Text>
+                                                <Text style={[styles.text, { width: isTablet ? wp(25) : orientation === "LANDSCAPE" ? wp(25) : wp(57) }]}>{item?.vin || '-'}</Text>
+                                                <Text style={[styles.text, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>{item?.make || '-'}</Text>
+                                                <Text style={[styles.text, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(30) }]}>{item?.model || '-'}</Text>
+                                                {technicianType === "manager" && <Text style={[styles.text, { width: isTablet ? wp(14) : orientation === "LANDSCAPE" ? wp(14) : wp(30) }]}>
                                                     {item?.assignedTechnicians?.length > 0
                                                         ? item?.assignedTechnicians
                                                             .map(tech => `${tech.firstName} ${tech.lastName}`)
                                                             .join(', ')
                                                         : '-'}
                                                 </Text>}
-                                                <Text style={[styles.text, { width: isTablet ? wp(15) : wp(35) }]}> {item?.startDate
+                                                <Text style={[styles.text, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}> {item?.startDate
                                                     ? new Date(item?.startDate).toLocaleDateString("en-US", {
                                                         month: "short",
                                                         day: "numeric",
                                                         year: "numeric",
                                                     })
                                                     : "-"}</Text>
-                                                <Text style={[styles.text, { width: isTablet ? wp(15) : wp(35) }]}>{item?.endDate
+                                                <Text style={[styles.text, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>{item?.endDate
                                                     ? new Date(item?.endDate).toLocaleDateString("en-US", {
                                                         month: "short",
                                                         day: "numeric",
@@ -1146,7 +1211,7 @@ console.log("selectedJobs",selectedJobs);
                                                     </Text>
                                                 </View>
 
-                                                <View style={{ flexDirection: "row", alignItems: "center", marginLeft: isTablet ? 0 : wp(10), width: isIOSAndTablet ? wp(10) : isTablet ? wp(30) : wp(20), justifyContent: "center" }} >
+                                                <View style={{ flexDirection: "row", alignItems: "center", marginLeft: isTablet ? 0 : wp(10), width: isIOSAndTablet ? wp(10) : isTablet ? wp(30) : orientation === "LANDSCAPE" ? wp(20) : wp(20), justifyContent: "center" }} >
                                                     <Pressable onPress={() => navigation.navigate("VehicleDetailsScreen", {
                                                         vehicleId: item.id,
                                                         from: activeTab === "partnerOrder" ? "partner" : "workOrder"
@@ -1193,17 +1258,41 @@ console.log("selectedJobs",selectedJobs);
                 </View>
             ) : null}
 
+            {/* Bottom Buttons for Work Orders - Only show for InProgress work orders */}
+            {activeTab === 'WorkOrders' && activeStatus === 'InProgress' && selectedWorkOrders.length > 0 && (
+                <View style={[styles.completeButtonContainer]}>
+                    <TouchableOpacity
+                        style={[
+                            styles.completeButton,
+                            selectedWorkOrders.length === 0 && styles.completeButtonDisabled
+                        ]}
+                        onPress={handleCompleteSelectedWorkOrders}
+                        disabled={selectedWorkOrders.length === 0}
+                    >
+                        <Text style={styles.completeButtonText}>
+                            Complete Selected ({selectedWorkOrders.length})
+                        </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={styles.clearButton}
+                        onPress={handleClearAllWorkOrders}
+                    >
+                        <Text style={styles.clearButtonText}>Clear All</Text>
+                    </TouchableOpacity>
+                </View>
+            )}
 
             {activeTab === 'Customers' && (
                 <>
                     <View style={[styles.tableHeaderRow]}>
-                        <Text style={[styles.tableHeader, { width: "40%" }]}>Customer Name</Text>
-                        <Text style={[styles.tableHeader, { width: "40%" }]}>Number of Jobs</Text>
-                        <Text style={[styles.tableHeader, { width: "20%", textAlign: "center" }]}>Action</Text>
+                        <Text style={[styles.tableHeader, { width: orientation === "LANDSCAPE" ? "43%" : "40%" }]}>Customer Name</Text>
+                        <Text style={[styles.tableHeader, { width: orientation === "LANDSCAPE" ? "43%" : "40%" }]}>Number of Jobs</Text>
+                        <Text style={[styles.tableHeader, { width: "20%", textAlign: orientation === "LANDSCAPE" ? "left" : "center" }]}>Action</Text>
 
                     </View>
 
-                    <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(69) : hp(64) : isIOSAndTablet ? hp(69) : hp(58) }}>
+                    <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(69) : orientation === "LANDSCAPE" ? hp(58) : hp(64) : isIOSAndTablet ? hp(69) : hp(58) }}>
                         <FlatList
                             data={filteredCustomer}
                             keyExtractor={(item, index) => item?.vin || index.toString()}
@@ -1643,13 +1732,13 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingHorizontal: spacings.medium,
-        paddingVertical: spacings.small,
+        paddingHorizontal: spacings.large,
         backgroundColor: lightBlueColor,
-        marginHorizontal: spacings.small,
+        marginHorizontal: spacings.medium,
         borderRadius: 8,
-        marginBottom: spacings.small,
+        marginVertical: spacings.small,
         height: hp(6),
+        width: wp(98),
     },
     completeButton: {
         backgroundColor: blueColor,
@@ -1657,7 +1746,7 @@ const styles = StyleSheet.create({
         paddingVertical: spacings.small,
         borderRadius: 8,
         // flex: 1,
-        width:wp(45),
+        width: wp(42),
         // marginRight: spacings.medium,
         height: hp(4),
         justifyContent: 'center',
@@ -1677,9 +1766,9 @@ const styles = StyleSheet.create({
         paddingVertical: spacings.small,
         borderRadius: 8,
         height: hp(4),
-        width: wp(45),
+        width: wp(42),
         justifyContent: 'center',
-        alignItems:'center'
+        alignItems: 'center'
     },
     clearButtonText: {
         color: blackColor,
