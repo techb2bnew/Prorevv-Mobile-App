@@ -23,6 +23,8 @@ const ConfirmationModal = ({
       visible={visible}
       animationType="fade"
       onRequestClose={onClose}
+      presentationStyle="overFullScreen"
+      supportedOrientations={["portrait", "landscape-left", "landscape-right"]}
     >
       <Pressable style={styles.modalOverlay} onPress={onClose}>
         <View style={[styles.modalBox, { width: isTablet ? wp(70) : wp(80) }]}>

@@ -57,7 +57,7 @@ const CustomerDropdown = ({ data, selectedValue, onSelect, showIcon, rightIcon, 
                     </View>}
             </Pressable>
 
-            <Modal transparent visible={visible} animationType="slide">
+            <Modal transparent visible={visible} animationType="slide" presentationStyle="overFullScreen" supportedOrientations={["portrait", "landscape-left", "landscape-right"]}>
                 <Pressable style={styles.overlay} onPress={handleCloseDropdown} />
                 {dropdownHeight > 0 && (
                     <View style={{

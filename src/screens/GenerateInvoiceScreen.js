@@ -1101,7 +1101,7 @@ const GenerateInvoiceScreen = ({ navigation,
                             {/* Data Rows with vertical scroll */}
                             <ScrollView style={{ height: Platform.OS === "android" ? hp(42) : hp(39) }} showsVerticalScrollIndicator={false}>
                                 <FlatList
-                                    data={filteredVehicles}
+                                    data={filteredVehicles?.reverse()}
                                     keyExtractor={(item, index) => index.toString()}
                                     showsVerticalScrollIndicator={false}
                                     renderItem={({ item, index }) => {
@@ -1121,7 +1121,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                                 <Text style={[styles.text, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(30), paddingRight: spacings.normal }]}>{item?.make || '-'}</Text>
                                                 <Text style={[styles.text, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(28), paddingRight: spacings.large }]}>{item?.model || '-'}</Text>
                                                 <Text style={[styles.text, { width: isTablet ? wp(20) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>
-                                                    {item?.jobEstimatedCost ? `$${item.jobEstimatedCost}` : selectedJobEstimated ? `$${selectedJobEstimated}` : '-'}
+                                                    {!item?.labourCost ? `(${item?.jobEstimatedCost ? `$${item.jobEstimatedCost}` : selectedJobEstimated ? `$${selectedJobEstimated}` : '-'})` : '-'}
                                                 </Text>
                                                 <Text style={[styles.text, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>
                                                     {item?.labourCost ? `$${item.labourCost}` : '-'}
@@ -1136,7 +1136,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                                     : "-"}</Text>
                                                 <Text style={[styles.text, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}> {item?.endDate
                                                     ? new Date(item?.endDate).toLocaleDateString("en-US", {
-                                                        month: "long",
+                                                        month: "short",
                                                         day: "numeric",
                                                         year: "numeric",
                                                     })
@@ -1174,7 +1174,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                                         }}
                                                     >
                                                         <Text style={{ color: 'white' }}>
-                                                            {autoSavingVehicles.has(item.id) ? 'Saving...' : 'Save'}
+                                                            Save
                                                         </Text>
                                                     </TouchableOpacity>
 
@@ -1251,7 +1251,7 @@ const GenerateInvoiceScreen = ({ navigation,
                             </TouchableOpacity>
                         </View>}
                         <FlatList
-                            data={filteredVehicles}
+                            data={filteredVehicles?.reverse()}
                             keyExtractor={(item, index) => index.toString()}
                             showsVerticalScrollIndicator={false}
                             contentContainerStyle={{ paddingVertical: 10 }}
@@ -1296,13 +1296,15 @@ const GenerateInvoiceScreen = ({ navigation,
 
                                             <View style={{ width: '48%', marginBottom: 9 }}>
                                                 <Text style={{ color: '#555', fontSize: 10 }}>Estimated Cost($)</Text>
-                                                <Text >{item?.jobEstimatedCost ? `$${item.jobEstimatedCost}` : selectedJobEstimated ? `$${selectedJobEstimated}` : '-'} </Text>
+                                                <Text >
+                                                  {!item?.labourCost ?  (item?.jobEstimatedCost ? `$${item.jobEstimatedCost}` : selectedJobEstimated ? `$${selectedJobEstimated}` : '-') : '-'}
+                                                </Text>
                                             </View>
                                             <View style={{ width: '48%', marginBottom: 9 }}>
                                                 <Text style={{ color: '#555', fontSize: 10 }}>Start Date</Text>
                                                 <Text >{item?.startDate
                                                     ? new Date(item?.startDate).toLocaleDateString("en-US", {
-                                                        month: "long",
+                                                        month: "short",
                                                         day: "numeric",
                                                         year: "numeric",
                                                     })
@@ -1312,7 +1314,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                                 <Text style={{ color: '#555', fontSize: 10 }}>End Date</Text>
                                                 <Text >{item?.endDate
                                                     ? new Date(item?.endDate).toLocaleDateString("en-US", {
-                                                        month: "long",
+                                                        month: "short",
                                                         day: "numeric",
                                                         year: "numeric",
                                                     })
@@ -1354,7 +1356,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                                         }}
                                                     >
                                                         <Text style={{ color: 'white' }}>
-                                                            {autoSavingVehicles.has(item.id) ? 'Saving...' : 'Save'}
+                                                            Save
                                                         </Text>
                                                     </TouchableOpacity>
 
@@ -1410,7 +1412,7 @@ const GenerateInvoiceScreen = ({ navigation,
 
                     </ScrollView>)}
 
-                {selectedVehicles.length > 0 && <View style={{ position: "absolute", bottom: orientation === "LANDSCAPE" ? hp(4) : 0, backgroundColor: whiteColor, width: wp(100), flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: spacings.large }}>
+                {selectedVehicles.length > 0 && <View style={{ position: "absolute", bottom: orientation === "LANDSCAPE" ? isIOSAndTablet ? hp(1) : hp(4) : 0, backgroundColor: whiteColor, width: wp(100), flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: spacings.large }}>
                     <CustomButton
                         title={"Export"}
                         loading={isExportLoading}
@@ -1564,6 +1566,8 @@ const GenerateInvoiceScreen = ({ navigation,
                     animationType="slide"
                     transparent
                     onRequestClose={() => setIsFilterModalVisible(false)}
+                    presentationStyle="overFullScreen"
+                    supportedOrientations={["portrait", "landscape-left", "landscape-right"]}
                 >
                     <TouchableOpacity
                         style={{

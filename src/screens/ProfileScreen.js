@@ -774,12 +774,12 @@ const ProfileScreen = ({ navigation }) => {
         disabled={loading}
         style={{
           position: "absolute",
-          top: Platform.OS === "android" ? isTablet ? 20 : 13 : isTablet ? 20 : 13,
+          top: Platform.OS === "android" ? isTablet ? 20 : 13 : isTablet ? orientation === "LANDSCAPE" ? 1 : 20 : 13,
           right: 15,
           // backgroundColor: blueColor,
           borderColor: blueColor,
-          width: isTablet ? wp(8) : orientation === "LANDSCAPE" ? wp(5) : wp(9),
-          height: isTablet ? wp(6) : orientation === "LANDSCAPE" ? wp(5) : wp(8),
+          width: isTablet ? orientation === "LANDSCAPE" ? wp(5) : wp(8) : orientation === "LANDSCAPE" ? wp(5) : wp(9),
+          height: isTablet ? orientation === "LANDSCAPE" ? wp(5) : wp(6) : orientation === "LANDSCAPE" ? wp(5) : wp(8),
           borderRadius: 5,
           borderWidth: 2,
           justifyContent: "center",
@@ -945,6 +945,8 @@ const ProfileScreen = ({ navigation }) => {
                 transparent={true}
                 animationType="fade"
                 onRequestClose={() => setModalVisible(false)}
+                presentationStyle="overFullScreen"
+                supportedOrientations={["portrait", "landscape-left", "landscape-right"]}
               >
                 <Pressable style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
                   <View style={styles.modalBox}>

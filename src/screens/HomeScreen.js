@@ -17,6 +17,7 @@ import Octicons from 'react-native-vector-icons/Octicons';
 
 
 import Toast from 'react-native-simple-toast';
+import { useOrientation } from '../OrientationContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -39,6 +40,8 @@ const HomeScreen = ({ navigation }) => {
   const [vinSearchResults, setVinSearchResults] = useState(null);
   const [isSearchingVin, setIsSearchingVin] = useState(false);
   const [allVehicles, setAllVehicles] = useState([]);
+  const { orientation } = useOrientation();
+  const [selectedCard, setSelectedCard] = useState(null);
 
   const cardData = [
     {
@@ -99,7 +102,7 @@ const HomeScreen = ({ navigation }) => {
       subtitle: technicianType === "ifs" ? "Browse saved VINs" : "Manage assign Jobs",
       image: technicianType === "ifs" ? VIN_LIST_IMAGE : ADD_VEHICLE_IMAGE,
       backgroundColor: whiteColor,
-      color: redColor,
+      color: blackColor,
       onPress: () => {
         if (technicianType === "ifs") {
           navigation.navigate("VinListScreen")
@@ -168,6 +171,12 @@ const HomeScreen = ({ navigation }) => {
           const storedbusinessLogo = await AsyncStorage.getItem('businessLogo');
           if (storedName) {
             setbLogo(storedbusinessLogo);
+          }
+
+          // load last selected home card
+          const lastSelected = await AsyncStorage.getItem('home_selected_card');
+          if (lastSelected) {
+            setSelectedCard(lastSelected);
           }
 
           const token = await AsyncStorage.getItem('auth_token');
@@ -376,10 +385,10 @@ const HomeScreen = ({ navigation }) => {
 
       // Use the same API as VinListScreen
       const apiUrl = technicianType === "manager"
-        ? `${API_BASE_URL}/fetchVehicalInfo?page=1&roleType=${technicianType}`
+        ? `${API_BASE_URL}/fetchVehicalInfo?page=1&roleType=${technicianType}&limit=1000`
         : technicianType === "ifs"
-          ? `${API_BASE_URL}/fetchtechVehicleInfo?page=1&userId=${technicianId}`
-          : `${API_BASE_URL}/fetchVehicalInfo?page=1&roleType=${technicianType}&userId=${technicianId}`;
+          ? `${API_BASE_URL}/fetchtechVehicleInfo?page=1&userId=${technicianId}&limit=1000`
+          : `${API_BASE_URL}/fetchVehicalInfo?page=1&roleType=${technicianType}&userId=${technicianId}&limit=1000`;
 
       const response = await axios.get(apiUrl, {
         headers: {
@@ -404,9 +413,9 @@ const HomeScreen = ({ navigation }) => {
     setIsSearchingVin(true);
     try {
       // If we don't have vehicles loaded yet, fetch them first
-      if (allVehicles.length === 0) {
-        await fetchAllVehicles();
-      }
+      // if (allVehicles.length === 0) {
+      await fetchAllVehicles();
+      // }
 
       // Filter vehicles based on search text
       const filteredVehicles = allVehicles.filter(vehicle =>
@@ -523,7 +532,7 @@ const HomeScreen = ({ navigation }) => {
 
   const renderCard = ({ item, index }) => (
     <View style={styles.shadowWrapper}>
-      {item.name === "Assign Jobs" ? (
+      {selectedCard === item.name ? (
         <LinearGradient
           colors={['#8B0000', '#dc2626e2', '#2D1B1B']}
           start={{ x: 0, y: 0 }}
@@ -531,7 +540,13 @@ const HomeScreen = ({ navigation }) => {
           style={[styles.innerCard, { backgroundColor: blackColor, padding: 0 }]}
         >
           <Pressable
-            onPress={item?.onPress}
+            onPress={async () => {
+              try {
+                setSelectedCard(item.name);
+                await AsyncStorage.setItem('home_selected_card', item.name);
+              } catch (e) {}
+              item?.onPress && item.onPress();
+            }}
             style={[styles.innerCard]}
           >
             {/* Main Content */}
@@ -601,8 +616,14 @@ const HomeScreen = ({ navigation }) => {
         </LinearGradient>
       ) : (
         <Pressable
-          style={[styles.innerCard, { backgroundColor: blackColor }]}
-          onPress={item?.onPress}
+          style={[styles.innerCard, { backgroundColor: "#5f5d5d3c" }]}
+          onPress={async () => {
+            try {
+              setSelectedCard(item.name);
+              await AsyncStorage.setItem('home_selected_card', item.name);
+            } catch (e) {}
+            item?.onPress && item.onPress();
+          }}
         >
           {/* Main Content */}
           <View style={[styles.cardContent, justifyContentSpaceBetween]}>
@@ -757,7 +778,7 @@ const HomeScreen = ({ navigation }) => {
             {/* Center logo */}
             <Image
               source={APP_ICON_IMAGE}
-              style={[styles.profileImage, { resizeMode: "contain", width: isIOSAndTablet ? 80 : wp(35), height: isIOSAndTablet ? 80 : hp(13) }]}
+              style={[styles.profileImage, { resizeMode: "contain", width: isIOSAndTablet ? wp(35) : wp(30), height: isIOSAndTablet ? hp(10) : hp(10) }]}
             />
 
             {/* Right side */}

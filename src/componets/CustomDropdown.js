@@ -6,8 +6,9 @@ import MaterialCommunityIcons from 'react-native-vector-icons/dist/MaterialCommu
 const { width, height } = Dimensions.get('window');
 import Feather from 'react-native-vector-icons/Feather';
 import Toast from 'react-native-simple-toast';
+import { spacings } from "../constans/Fonts";
 
-const CustomDropdown = ({ data, country, selectedValue, onSelect, showIcon, rightIcon, titleText, state }) => {
+const CustomDropdown = ({ data, country,selectedValue, onSelect, showIcon, rightIcon, titleText, state }) => {
     const [visible, setVisible] = useState(false);
     const isTablet = width >= 668 && height >= 1024;
     // console.log(data);
@@ -47,7 +48,7 @@ const CustomDropdown = ({ data, country, selectedValue, onSelect, showIcon, righ
                     </View>}
             </Pressable>
 
-            <Modal transparent visible={visible} animationType="slide">
+            <Modal transparent visible={visible} animationType="slide" presentationStyle="overFullScreen" supportedOrientations={["portrait", "landscape-left", "landscape-right"]}>
                 <Pressable style={styles.overlay} onPress={handleCloseDropdown} />
                 {/* <View style={{ position: "absolute", bottom: heightPercentageToDP(49), left: widthPercentageToDP(45) }}>
                     <Feather name="chevron-down" size={55} color={blackColor} />

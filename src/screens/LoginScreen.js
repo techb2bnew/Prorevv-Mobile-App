@@ -16,12 +16,14 @@ import SuccessModal from '../componets/Modal/SuccessModal';
 import Ionicons from 'react-native-vector-icons/dist/Ionicons';
 import Fontisto from 'react-native-vector-icons/dist/Fontisto';
 import Feather from 'react-native-vector-icons/dist/Feather';
+import { useOrientation } from '../OrientationContext';
 // const { width, height } = Dimensions.get('window');
 
 const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween } = BaseStyle;
 
 const LoginScreen = ({ navigation }) => {
     const { width, height } = useWindowDimensions();
+    const { orientation } = useOrientation(); 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [rememberMe, setRememberMe] = useState(true);
@@ -273,7 +275,7 @@ const LoginScreen = ({ navigation }) => {
                         disabled={isLoading}
                     />
 
-                    <View style={[alignJustifyCenter, { marginTop: isTablet ? hp(25) : hp(10) }]}>
+                    <View style={[alignJustifyCenter, { marginTop: isTablet ? orientation === "LANDSCAPE" ? hp(18) : hp(25) : hp(10) }]}>
                         <View style={[flexDirectionRow]}>
                             <Text style={styles.noAccountText}>{DONT_HAVE_ACCOUNT} </Text>
                             <TouchableOpacity onPress={handelSignUpCliked}>
@@ -296,6 +298,8 @@ const LoginScreen = ({ navigation }) => {
                     transparent={true}
                     animationType="fade"
                     onRequestClose={() => setSupportModalVisible(false)}
+                    presentationStyle="overFullScreen"
+                    supportedOrientations={["portrait", "landscape-left", "landscape-right"]}
                 >
                     <Pressable style={styles.modalOverlay} onPress={() => setSupportModalVisible(false)}>
                         <View style={styles.modalBox}>

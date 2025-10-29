@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { View, Text, FlatList, Image, TouchableOpacity, Dimensions, StyleSheet, ImageBackground, Animated, Easing } from 'react-native';
+import { View, Text, FlatList, Image, TouchableOpacity, Dimensions, StyleSheet, ImageBackground, Animated, Easing, useWindowDimensions } from 'react-native';
 import { blueColor, lightBlueColor } from '../constans/Color';
 import Ionicons from 'react-native-vector-icons/dist/Ionicons';
 import { WELCOME_ON_BOARDING_IMAGE } from '../assests/images'
@@ -7,6 +7,7 @@ import { BaseStyle } from '../constans/Style';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from '../utils';
 import { style, spacings } from '../constans/Fonts';
 import CustomButton from '../componets/CustomButton';
+import { useOrientation } from '../OrientationContext';
 const { width, height } = Dimensions.get('window');
 const onboardingData = [
   {
@@ -31,12 +32,15 @@ const onboardingData = [
 
 const OnboardingScreen = ({ navigation }) => {
   const flatListRef = useRef(null);
+  const { width, height } = useWindowDimensions();
+  const { orientation } = useOrientation();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showWelcomeScreen, setShowWelcomeScreen] = useState(true);
   const slideAnim = useRef(new Animated.Value(height)).current;
-
   // Function to check if the device is a tablet
   const isTablet = width >= 668 && height >= 1024;
+  const isIOSAndTablet = Platform.OS === "ios" && isTablet;
+
   const handleScroll = (event) => {
     const index = Math.round(event.nativeEvent.contentOffset.x / width);
     setCurrentIndex(index);
@@ -77,14 +81,14 @@ const OnboardingScreen = ({ navigation }) => {
   if (showWelcomeScreen) {
     return (
       <ImageBackground source={WELCOME_ON_BOARDING_IMAGE} style={styles.welcomeContainer}>
-        <View style={styles.welcomeTextContainer}>
-          <Text style={styles.welcomeTitle}>Welcome to Prorevv!</Text>
+        <View style={[styles.welcomeTextContainer, { alignItems: isIOSAndTablet ? "flex-start" : orientation === "LANDSCAPE" ? "flex-start" : 'center' }]}>
+          <Text style={[styles.welcomeTitle]}>Welcome to Prorevv!</Text>
           <Text style={styles.welcomeDescription}>
             Manage car servicing like a pro.Scan VINs, assign tasks, and track job progress — all in one smart app.
           </Text>
         </View>
         <View style={[styles.welcomeButtonContainer, {
-          width: width * (isTablet ? 0.95 : 0.90),
+          width: width * (isTablet ? 0.95 : orientation === "LANDSCAPE" ? 0.95 : 0.90),
         }]}>
           <CustomButton title={"Let's get you started!"} onPress={startOnboarding} />
         </View>
@@ -147,7 +151,7 @@ const OnboardingScreen = ({ navigation }) => {
         </View>
       ) : (
         // Show this on other steps
-        <View style={[styles.buttonContainer, { left: isTablet ? wp(47) : wp(43) }]}>
+        <View style={[styles.buttonContainer, { left: isTablet ? wp(47) : orientation === "LANDSCAPE" ? wp(48) : wp(43) }]}>
           <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
             <Ionicons name="chevron-forward" size={24} color="#fff" />
           </TouchableOpacity>
@@ -177,7 +181,6 @@ const styles = StyleSheet.create({
     bottom: height * 0.3,
     width: width * 0.85,
     left: 25,
-    alignItems: 'center',
   },
   welcomeTitle: {
     fontSize: 40,

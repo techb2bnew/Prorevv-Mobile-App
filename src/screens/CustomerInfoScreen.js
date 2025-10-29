@@ -426,7 +426,7 @@ const CustomerInfoScreen = ({ navigation }) => {
                 {!isAddMode && <View style={{
                     flexDirection: 'row',
                     position: "absolute",
-                    top: Platform.OS === "android" ? isTablet ? hp(1) : orientation === "LANDSCAPE" ? hp(2.5) : 10 : isTablet ? 20 : 13,
+                    top: Platform.OS === "android" ? isTablet ? hp(1) : orientation === "LANDSCAPE" ? hp(2.5) : 10 : isTablet ? orientation === "LANDSCAPE" ? hp(.2) : 20 : 13,
                     right: 10,
                     zIndex: 10
                 }}>

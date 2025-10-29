@@ -470,7 +470,7 @@ const JobDetailsScreen = ({ navigation, route }) => {
             </Pressable>
           )}
           {/* Image Modal */}
-          <Modal visible={imageModalVisible} transparent={true} animationType="fade">
+          <Modal visible={imageModalVisible} transparent={true} animationType="fade" presentationStyle="overFullScreen" supportedOrientations={["portrait", "landscape-left", "landscape-right"]}>
             <View style={styles.modalContainer}>
               <TouchableOpacity onPress={() => setImageModalVisible(false)} style={styles.closeButton}>
                 <Ionicons name="close-circle-sharp" size={35} color={whiteColor} />

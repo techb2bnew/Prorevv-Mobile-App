@@ -301,7 +301,7 @@ const InvoiceHistoryScreen = ({ navigation,
                 </View>
             </View>
 
-            {viewType === 'list' && <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(82.5) : orientation === "LANDSCAPE" ? hp(71.5) : hp(77) : isIOSAndTablet ? hp(82) : hp(73), paddingBottom: selectedVehicles?.length > 0 ? hp(8) : 0}}>
+            {viewType === 'list' && <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(82.5) : orientation === "LANDSCAPE" ? hp(71.5) : hp(77) : isIOSAndTablet ? orientation === "LANDSCAPE" ? hp(79.5) : hp(82) : hp(73), paddingBottom: selectedVehicles?.length > 0 ? hp(8) : 0 }}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                     <View>
                         {/* Header Row */}
@@ -702,7 +702,9 @@ const InvoiceHistoryScreen = ({ navigation,
             <Modal
                 visible={isFilterModalVisible}
                 animationType="slide"
-                transparent
+                transparent={true}
+                presentationStyle="overFullScreen"
+                supportedOrientations={["portrait", "landscape-left", "landscape-right"]}
                 onRequestClose={() => setIsFilterModalVisible(false)}
             >
                 <TouchableOpacity

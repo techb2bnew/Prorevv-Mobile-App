@@ -52,7 +52,7 @@ const Reports = ({ navigation }) => {
     const [activeStatus, setActiveStatus] = useState("InProgress");
     const [filteredJobs, setFilteredJobs] = useState([]);
     const [filteredWorkOrders, setFilteredWorkOrders] = useState([]);
-    const [viewType, setViewType] = useState('list');
+    const [viewType, setViewType] = useState('grid');
     const [jobsRawData, setJobsRawData] = useState([])
     const [workOrdersRawData, setWorkOrdersRawData] = useState([]);
     const [refreshing, setRefreshing] = useState(false);
@@ -736,7 +736,7 @@ const Reports = ({ navigation }) => {
             {activeTab === 'WorkOrders' &&
                 <View style={{
                     flexDirection: 'row', position: "absolute",
-                    top: Platform.OS === "android" ? isTablet ? hp(1) : orientation === "LANDSCAPE" ? hp(2.5) : 10 : isTablet ? 20 : 13,
+                    top: Platform.OS === "android" ? isTablet ? hp(1) : orientation === "LANDSCAPE" ? hp(2.5) : 10 : isTablet ? orientation === "LANDSCAPE" ? hp(0.2) : 20 : 13,
                     right: -10,
                     justifyContent: "center",
                     alignItems: "center",
@@ -849,7 +849,7 @@ const Reports = ({ navigation }) => {
                     />
                     <Feather name="search" size={20} color={blackColor} />
 
-                    <TouchableOpacity style={[styles.filterButton, { top: isTablet ? Platform.OS === "android" ? hp(1) : hp(1) : orientation === "LANDSCAPE" ? hp(0.8) : hp(0.5), right: isTablet ? Platform.OS === "android" ? -80 : -100 : orientation === "LANDSCAPE" ? -160 : -60 }]}
+                    <TouchableOpacity style={[styles.filterButton, { top: isTablet ? Platform.OS === "android" ? hp(1) : hp(1) : orientation === "LANDSCAPE" ? hp(0.8) : hp(0.5), right: isTablet ? Platform.OS === "android" ? -80 : orientation === "LANDSCAPE" ? -130 : -100 : orientation === "LANDSCAPE" ? -160 : -60 }]}
                         onPress={toggleModal}
                     >
                         <Image source={SORT_IMAGE} resizeMode='contain' style={{ width: isTablet ? wp(7) : wp(10), height: hp(3.2) }} />
@@ -1000,7 +1000,7 @@ const Reports = ({ navigation }) => {
                 <View style={{
                     width: "100%",
                     height: Platform.OS === "android" ? isTablet ? selectedWorkOrders.length > 0 ? hp(55) : hp(62) : selectedWorkOrders.length > 0 ? orientation === "LANDSCAPE" ? hp(42) : hp(47) : orientation === "LANDSCAPE" ? hp(48) : hp(55)
-                        : isIOSAndTablet ? hp(58) : selectedWorkOrders.length > 0 ? hp(42) : hp(49)
+                        : isIOSAndTablet ? selectedWorkOrders.length > 0 ? orientation === "LANDSCAPE" ? hp(47) : hp(55) : orientation === "LANDSCAPE" ? hp(55) : hp(62) : selectedWorkOrders.length > 0 ? hp(42) : hp(49)
                 }}>
                     <FlatList
                         data={filteredWorkOrders}
@@ -1129,7 +1129,10 @@ const Reports = ({ navigation }) => {
 
                 </View>
             ) : activeTab === 'WorkOrders' && viewType === 'list' ? (
-                <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? selectedWorkOrders.length > 0 ? hp(56) : hp(62) : selectedWorkOrders.length > 0 ? orientation === "LANDSCAPE" ? hp(42) : hp(40) : hp(54) : isIOSAndTablet ? hp(62) : selectedWorkOrders.length > 0 ? hp(42) : hp(49) }}>
+                <View style={{
+                    width: "100%", height: Platform.OS === "android" ? isTablet ? selectedWorkOrders.length > 0 ? hp(56) : hp(62) : selectedWorkOrders.length > 0 ? orientation === "LANDSCAPE" ? hp(42) : hp(40) : hp(54)
+                        : isIOSAndTablet ? selectedWorkOrders.length > 0 ? hp(55) : hp(62) : selectedWorkOrders.length > 0 ? hp(42) : hp(49)
+                }}>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                         <View>
                             {/* Header Row */}
@@ -1353,7 +1356,7 @@ const Reports = ({ navigation }) => {
 
             {/* Sorting Modal */}
             {isModalVisible && (
-                <Modal animationType="slide" transparent={true} visible={isModalVisible} onRequestClose={toggleModal}>
+                <Modal animationType="slide" transparent={true} visible={isModalVisible} onRequestClose={toggleModal} presentationStyle="overFullScreen" supportedOrientations={["portrait", "landscape-left", "landscape-right"]}>
                     <TouchableWithoutFeedback onPress={toggleModal}>
                         <View style={styles.modalOverlay}>
                             <Feather name="chevron-down" size={55} color={blackColor} />

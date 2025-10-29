@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, TextInput, FlatList, Pressable, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView, Image, Linking, Modal, Dimensions } from 'react-native';
+import { View, Text, TextInput, FlatList, Pressable, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView, Image, Linking, Modal, Dimensions, useWindowDimensions } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from '../utils';
 import { blackColor, whiteColor, grayColor, mediumGray, orangeColor, redColor, greenColor, blueColor, lightBlueColor } from '../constans/Color';
@@ -15,6 +15,7 @@ import NetInfo from "@react-native-community/netinfo";
 import Header from '../componets/Header';
 import { useFocusEffect } from '@react-navigation/native';
 import { API_BASE_URL } from '../constans/Constants';
+import { useOrientation } from '../OrientationContext';
 
 const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween, textAlign, justifyContentCenter, justifyContentSpaceEvenly } = BaseStyle;
 
@@ -25,7 +26,8 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [imageModalVisible, setImageModalVisible] = useState(false);
   const [technicianType, setTechnicianType] = useState();
-  const { width, height } = Dimensions.get("window");
+  const { width, height } = useWindowDimensions();
+  const { orientation } = useOrientation();
   const isTablet = width >= 668 && height >= 1024;
   const isIOsAndTablet = Platform.OS === "ios" && isTablet;
   const [customerJobs, setCustomerJobs] = useState([]);
@@ -371,7 +373,7 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
               <View style={[styles.row, styles.headerRow]}>
                 <Text style={[styles.cell, styles.headerText, { width: "40%" }]}>VIN</Text>
                 <Text style={[styles.cell, styles.headerText, { width: "40%" }]}>Status</Text>
-                <Text style={[styles.cell, styles.headerText, { width: "20%" }]}>Action</Text>
+                <Text style={[styles.cell, styles.headerText, { width: "20%", textAlign: orientation === "LANDSCAPE" ? 'left' : 'center',marginLeft: orientation === "LANDSCAPE" ? wp(3) : 0 }]}>Action</Text>
               </View>
 
               {/* List */}
@@ -390,7 +392,7 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
           )}
 
           {/* Image Modal */}
-          <Modal visible={imageModalVisible} transparent animationType="fade">
+          <Modal visible={imageModalVisible} transparent animationType="fade" presentationStyle="overFullScreen" supportedOrientations={["portrait", "landscape-left", "landscape-right"]}>
             <View style={styles.modalContainer}>
               <TouchableOpacity onPress={() => setImageModalVisible(false)} style={styles.closeButton}>
                 <Ionicons name="close-circle-sharp" size={35} color="#fff" />

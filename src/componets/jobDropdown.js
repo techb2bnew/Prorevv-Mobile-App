@@ -69,7 +69,7 @@ const JobDropdown = ({
             </Pressable>
 
             {/* Modal starts */}
-            <Modal visible={visible} animationType="slide" transparent>
+            <Modal visible={visible} animationType="slide" transparent presentationStyle="overFullScreen" supportedOrientations={["portrait", "landscape-left", "landscape-right"]}>
                 <Pressable
                     style={{
                         flex: 1,

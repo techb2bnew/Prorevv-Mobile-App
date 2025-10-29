@@ -994,7 +994,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                             placeholderTextColor={mediumGray}
 
                                         />
-                                        <TouchableOpacity style={[styles.fetchButton, alignJustifyCenter, { paddingVertical: !isTablet ? spacings.normalx : spacings.xxLarge, width: wp(30), height: isTablet ? hp(3.5) : hp(5.5) }]}
+                                        <TouchableOpacity style={[styles.fetchButton, alignJustifyCenter, { paddingVertical: !isTablet ? spacings.normalx : orientation === "LANDSCAPE" ? spacings.normalx : spacings.xxLarge, width: wp(30), height: isTablet ? hp(3.5) : hp(5.5) }]}
                                             onPress={() => fetchCarDetails(vin)}
                                             disabled={isLoadingCarDetails} >
                                             {isLoadingCarDetails ? (
@@ -1275,7 +1275,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                         <View style={[styles.datePickerContainer, { marginBottom: 15, color: blackColor }]}>
                                             <Pressable
                                                 // onPress={() => setIsStartPickerOpen(true)} 
-                                                style={[styles.datePicker, flexDirectionRow, alignItemsCenter]}>
+                                                style={[styles.datePicker, flexDirectionRow, alignItemsCenter, { opacity: 0.5 }]}>
                                                 <Text style={styles.dateText}>
                                                     {startDate && startDate instanceof Date && !isNaN(startDate.getTime())
                                                         ? startDate.toLocaleDateString("en-US", {
@@ -1560,6 +1560,8 @@ const WorkOrderScreenTwo = ({ route }) => {
                             visible={duplicateVinModal}
                             animationType="slide"
                             onRequestClose={() => setDuplicateVinModal(false)}
+                            presentationStyle="overFullScreen"
+                            supportedOrientations={["portrait", "landscape-left", "landscape-right"]}
                         >
                             <View style={styles.modalContainer}>
                                 <View style={styles.modalContent}>

@@ -17,7 +17,7 @@ const SuccessModal = ({ visible, onClose, onPressContinue, headingText, text, bu
   };
 
   return (
-    <Modal visible={visible} transparent={true} animationType="slide">
+    <Modal visible={visible} transparent={true} animationType="slide" presentationStyle="overFullScreen" supportedOrientations={["portrait", "landscape-left", "landscape-right"]}>
       <View style={[styles.modalContainer, flex, alignJustifyCenter]}>
         <View style={[styles.modalContent, borderRadius10, alignJustifyCenter, { backgroundColor: whiteColor, width: button2Text ? wp(95) : wp(85), }]}>
           <Image source={image ? image : SUCCESS_IMAGE} style={styles.image} resizeMode="contain" />

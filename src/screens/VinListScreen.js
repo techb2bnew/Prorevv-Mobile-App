@@ -37,7 +37,7 @@ const VinListScreen = ({ navigation, route }) => {
     const [loading, setLoading] = useState(false);
     const [technicianType, setTechnicianType] = useState();
     const [technicianId, setTechnicianId] = useState();
-    const [viewType, setViewType] = useState('list');
+    const [viewType, setViewType] = useState('grid');
     const [refreshing, setRefreshing] = useState(false);
     const [sortOrder, setSortOrder] = useState("newest");
     const [startDate, setStartDate] = useState(null);
@@ -558,7 +558,7 @@ const VinListScreen = ({ navigation, route }) => {
             <View style={{
                 flexDirection: 'row',
                 position: "absolute",
-                top: Platform.OS === "android" ? isTablet ? hp(1) : orientation === "LANDSCAPE" ? hp(2.5) : 10 : isTablet ? 20 : 13,
+                top: Platform.OS === "android" ? isTablet ? hp(1) : orientation === "LANDSCAPE" ? hp(2.5) : 10 : isTablet ? orientation === "LANDSCAPE" ? hp(.8) : 20 : 13,
                 right: 10,
                 zIndex: 10
             }}>
@@ -567,7 +567,7 @@ const VinListScreen = ({ navigation, route }) => {
                     style={[styles.tabButton, {
                         backgroundColor: viewType === 'list' ? grayColor : whiteColor,
                         width: isTablet ? wp(8) : wp(12),
-                        height: orientation === "LANDSCAPE" ? hp(6.5) : hp(4.5),
+                        height: orientation === "LANDSCAPE" ? isIOSAndTablet ? hp(5.5) : hp(6.5) : hp(4.5),
                         justifyContent: 'center',
                         alignItems: 'center',
                         borderRadius: 5,
@@ -581,7 +581,7 @@ const VinListScreen = ({ navigation, route }) => {
                     style={[styles.tabButton, {
                         backgroundColor: viewType === 'grid' ? grayColor : whiteColor,
                         width: isTablet ? wp(8) : wp(12),
-                        height: orientation === "LANDSCAPE" ? hp(6.5) : hp(4.5),
+                        height: orientation === "LANDSCAPE" ? isIOSAndTablet ? hp(5.5) : hp(6.5) : hp(4.5),
                         justifyContent: 'center',
                         alignItems: 'center',
                         borderRadius: 5,
@@ -733,7 +733,7 @@ const VinListScreen = ({ navigation, route }) => {
                     <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(67) : orientation === "LANDSCAPE" ? hp(47) : hp(45) : isIOSAndTablet ? hp(62) : hp(43) }}>
                         <FlatList
                             // data={selectedJobId ? selectedJobVehicles : filteredData}
-                            data={finalVehicleList}
+                            data={finalVehicleList?.reverse()}
                             keyExtractor={(item, index) => index.toString()}
                             showsVerticalScrollIndicator={false}
                             refreshing={refreshing}
@@ -846,10 +846,10 @@ const VinListScreen = ({ navigation, route }) => {
                 </View>
             </ScrollView>}
 
-            {viewType === "grid" && <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(65) : orientation === "LANDSCAPE" ? hp(47) : hp(52) : isIOSAndTablet ? hp(63) : hp(48), }}>
+            {viewType === "grid" && <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(65) : orientation === "LANDSCAPE" ? hp(47) : hp(52) : isIOSAndTablet ? orientation === "LANDSCAPE" ? hp(59) : hp(65) : hp(48), }}>
                 <FlatList
                     // data={selectedJobId ? selectedJobVehicles : filteredData}
-                    data={finalVehicleList}
+                    data={finalVehicleList?.reverse()}
                     keyExtractor={(item, index) => index.toString()}
                     showsVerticalScrollIndicator={false}
                     contentContainerStyle={{ paddingVertical: 10 }}
@@ -1061,7 +1061,7 @@ const VinListScreen = ({ navigation, route }) => {
             </Modal>}
 
 
-            {showVinModal && <Modal visible={showVinModal} transparent animationType="fade">
+            {showVinModal && <Modal visible={showVinModal} transparent animationType="fade" presentationStyle="overFullScreen" supportedOrientations={["portrait", "landscape-left", "landscape-right"]}>
                 <View style={styles.vinModalOverlay}>
                     <View style={styles.vinModalContainer}>
                         <TouchableOpacity style={styles.vinModalClose} onPress={() => {

@@ -1,4 +1,5 @@
 export const SPLASH_IMAGE = require('./splashScreen.png');
+export const SPLASH_IMAGE_LANDSCAPE = require('./landscapeSplash.png');
 export const APP_NAME_IMAGE = require('./appLogo.png');
 export const SUCCESS_IMAGE = require('./success.png');
 export const HOME_IMAGE = require('./home.png');
