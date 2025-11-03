@@ -72,10 +72,10 @@ const InvoiceDetailsScreen = ({ route, navigation }) => {
     const renderItem = ({ item, index }) => (
         <Pressable
             onPress={() => navigation.navigate('VehicleDetailsScreen', { vehicleId: item.id })}
-            style={[styles.row, { backgroundColor: index % 2 === 0 ? lightBlueColor : whiteColor },]}
+            style={[styles.row, { backgroundColor: index % 2 === 0 ? lightGrayColor : whiteColor },]}
         >
             <Text style={[styles.cell, { width: isIOsAndTablet ? "40%" : "44%", paddingLeft: spacings.small2x }]}>{item?.vin || 'N/A'}</Text>
-            <Text style={[styles.cell, { color: item.vehicleStatus ? 'green' : 'red', width: isIOsAndTablet ? "43%" : "38%", }]}>
+            <Text style={[styles.cell, { color: item.vehicleStatus ? 'green' : 'black', width: isIOsAndTablet ? "43%" : "38%", }]}>
                 {item?.vehicleStatus ? 'Complete' : 'In Progress'}
             </Text>
             <Pressable onPress={() => navigation.navigate("VehicleDetailsScreen", {
@@ -88,7 +88,7 @@ const InvoiceDetailsScreen = ({ route, navigation }) => {
     return (
         <View style={{ flex: 1, backgroundColor: whiteColor }}>
             <Header title={"Invoice History"} />
-            <View style={[styles.card, { borderColor: blueColor, borderWidth: 1, margin: 10 }]}>
+            <View style={[styles.card, { borderColor: blackColor, borderWidth: 1, margin: 10, backgroundColor: lightGrayColor }]}>
                 <View style={styles.rowItem}>
                     <View style={styles.leftCol}>
                         <Text style={styles.label}>Invoice Number</Text>
@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
     headerRow: {
         borderBottomWidth: 1,
         borderColor: '#ccc',
-        backgroundColor: blueColor
+        backgroundColor: blackColor
     },
     row: {
         flexDirection: 'row',

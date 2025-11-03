@@ -616,7 +616,7 @@ const HomeScreen = ({ navigation }) => {
         </LinearGradient>
       ) : (
         <Pressable
-          style={[styles.innerCard, { backgroundColor: "#5f5d5d3c" }]}
+          style={[styles.innerCard, { backgroundColor: "#5f5d5d28" }]}
           onPress={async () => {
             try {
               setSelectedCard(item.name);
@@ -844,7 +844,7 @@ const HomeScreen = ({ navigation }) => {
                 <TextInput
                   placeholder="Enter VIN number"
                   placeholderTextColor={grayColor}
-                  style={[styles.input, { flex: 1, fontSize: 16, color: blueColor }]}
+                  style={[styles.input, { flex: 1, fontSize: 16, color: blackColor }]}
                   value={searchVinText}
                   onChangeText={handleVinTextChange}
                   autoCapitalize="characters"
@@ -853,7 +853,7 @@ const HomeScreen = ({ navigation }) => {
                   <Feather
                     name="loader"
                     size={20}
-                    color={blueColor}
+                    color={blackColor}
                     style={{ marginRight: spacings.small }}
                   />
                 )}
@@ -1028,7 +1028,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 16,
-    color: blueColor,
+    color:blackColor,
   },
   scanButton: {
     padding: spacings.small,
@@ -1091,7 +1091,7 @@ const styles = StyleSheet.create({
   },
   vinDetailValue: {
     fontSize: 14,
-    color: blueColor,
+    color: blackColor,
     flex: 2,
     textAlign: 'right',
   },

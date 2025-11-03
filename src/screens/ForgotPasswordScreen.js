@@ -5,7 +5,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import OTPTextInput from 'react-native-otp-textinput';
 import MaterialCommunityIcons from 'react-native-vector-icons/dist/MaterialCommunityIcons';
 import CustomButton from '../componets/CustomButton';
-import CustomTextInput from '../componets/CustomTextInput'; // Import CustomTextInput
+import CustomTextInput from '../componets/CustomTextInput';
 import { BaseStyle } from '../constans/Style';
 import { spacings, style } from '../constans/Fonts';
 import { blackColor, blueColor, grayColor, lightBlueColor, lightOrangeColor, mediumGray, redColor, whiteColor } from '../constans/Color';
@@ -14,6 +14,7 @@ import SuccessModal from '../componets/Modal/SuccessModal';
 import Header from '../componets/Header';
 import { FORGOT_PASSWORD_IMAGE, OTP_VERIFICATION_IMAGE } from '../assests/images';
 import { useOrientation } from '../OrientationContext';
+import LinearGradient from 'react-native-linear-gradient';
 const { flex, alignItemsCenter, flexDirectionRow, alignJustifyCenter, positionAbsolute, borderRadius5, borderWidth1, textAlign } = BaseStyle;
 const { width, height } = Dimensions.get('window');
 
@@ -268,154 +269,179 @@ const ForgotPasswordScreen = ({ navigation }) => {
                             ? () => setCurrentStep("otp")
                             : () => navigation.goBack()
                 } />
-            <ScrollView
-                contentContainerStyle={{ height: hp(70) }}
-                keyboardShouldPersistTaps="handled"
-                bounces={false}
+            <LinearGradient
+                colors={['#400000', '#000000', '#000000']}
+                start={{ x: 1, y: 0 }}
+                end={{ x: 0.4, y: 0.5 }}
+                style={{ width: '100%', height: '100%' }}
             >
+                <ScrollView
+                    contentContainerStyle={{ height: hp(70) }}
+                    keyboardShouldPersistTaps="handled"
+                    bounces={false}
+                >
 
-                <View style={[styles.container, { backgroundColor: whiteColor }]}>
-                    {currentStep === 'email' && (
-                        <View style={styles.box}>
-                            <Image source={FORGOT_PASSWORD_IMAGE} style={{ width: "90%", height: isTablet ? hp(50) : hp(40), resizeMode: 'contain', zIndex: 999, alignSelf: "center" }} />
-                            <CustomTextInput
-                                label={"Email"}
-                                placeholder={"Enter your email"}
-                                value={email}
-                                onChangeText={(text) => {
-                                    const updatedText = text.charAt(0).toLowerCase() + text.slice(1);
-                                    setEmail(updatedText);
-                                    if (emailError) {
-                                        setEmailError('');
-                                    }
-                                }}
-                                keyboardType="email-address"
-                                required={true}
-                                leftIcon={
-                                    <View>
-                                        <MaterialCommunityIcons name={"email"} size={22} color={mediumGray} />
-                                    </View>
-                                }
-                            />
-                            {emailError && <Text style={styles.error}>{emailError}</Text>}
-                            <View style={styles.smallCircle} />
-                            <View style={{ marginVertical: hp(5) }}>
-                                <CustomButton title="Confirm"
-                                    onPress={handleEmailSubmit}
-                                    loading={loadingEmail} disabled={loadingEmail} />
-                            </View>
-                        </View>
-                    )}
-
-                    {currentStep === 'otp' && (
-                        <View style={styles.box}>
-                            <Image source={OTP_VERIFICATION_IMAGE} style={{ width: "100%", height: isTablet ? hp(50) : hp(40), resizeMode: 'contain', zIndex: 999, alignSelf: "center" }} />
-                            <View style={[{ width: '100%', height: hp(10),marginTop: orientation === "LANDSCAPE" ? hp(5) : 0 }, alignJustifyCenter]}>
-                                <OTPTextInput
-                                    handleTextChange={handleOTPChange}
-                                    inputCount={4}
-                                    tintColor={blackColor}
-                                    offTintColor={mediumGray}
-                                    textInputStyle={[styles.otpInput, { color: blackColor, width: isTablet ? wp(10) : orientation === "LANDSCAPE" ? hp(8) : wp(13), height: isTablet ? wp(10) : orientation === "LANDSCAPE" ? hp(8) : wp(13) }]}
-                                />
-                                {otpError && <Text style={styles.error}>{otpError}</Text>}
-                            </View>
-
-                            {countdown > 0 ? (
-                                <Text style={[styles.footerText, textAlign]}> Resend OTP in {countdown}s</Text>
-                            ) : (<Text style={[styles.footerText, textAlign]}>
-                                {EMAIL_NOT_RECEIVED}
-                                <Text style={styles.loginText} onPress={handlePressResend} disabled={!isResendEnabled}>
-                                    {RESEND_CODE}
-                                </Text>
-                            </Text>)}
-                            <View style={styles.smallCircle} />
-
-                            <View style={{ marginVertical: hp(5) }}>
-                                <CustomButton title="Confirm"
-                                    onPress={handleOTPSubmit}
-                                    loading={loadingOtp} disabled={loadingOtp} />
-                            </View>
-                        </View>
-                    )}
-
-                    {currentStep === 'password' && (
-                        <View style={styles.box}>
-                            <Text style={[styles.text, textAlign]}>Please Set New Password</Text>
-                            <View style={{ zIndex: 999 }}>
+                    <View style={[styles.container,]}>
+                        {currentStep === 'email' && (
+                            <View style={styles.box}>
+                                <Image source={FORGOT_PASSWORD_IMAGE} style={{ width: "90%", height: isTablet ? hp(50) : hp(40), resizeMode: 'contain', zIndex: 999, alignSelf: "center" }} />
                                 <CustomTextInput
-                                    label={PASSWORD}
-                                    placeholder={PASSWORD}
-                                    value={password}
-                                    onChangeText={setPassword}
-                                    secureTextEntry={!showPassword}
-                                    required={true}
-                                    rightIcon={
-                                        <MaterialCommunityIcons
-                                            name={showPassword ? 'eye' : 'eye-off'}
-                                            size={20}
-                                            color={grayColor}
-                                            onPress={toggleShowPassword}
-                                        />
-                                    }
-                                    leftIcon={
-                                        <View>
-                                            <MaterialCommunityIcons name={"lock"} size={22} color={mediumGray} />
-                                        </View>
-                                    }
-                                />
-                                {passwordError && <Text style={styles.error}>{passwordError}</Text>}
-                                <CustomTextInput
-                                    label="Confirm Password"
-                                    placeholder="Confirm Password"
-                                    value={confirmPassword}
+                                    label={"Email"}
+                                    placeholder={"Enter your email"}
+                                    value={email}
                                     onChangeText={(text) => {
-                                        setConfirmPassword(text);
-                                        if (passwordError) {
-                                            setPasswordError('');
+                                        const updatedText = text.charAt(0).toLowerCase() + text.slice(1);
+                                        setEmail(updatedText);
+                                        if (emailError) {
+                                            setEmailError('');
                                         }
                                     }}
-                                    secureTextEntry={!showConfirmPassword}
+                                    keyboardType="email-address"
                                     required={true}
-                                    rightIcon={
-                                        <MaterialCommunityIcons
-                                            name={showConfirmPassword ? 'eye' : 'eye-off'}
-                                            size={20}
-                                            color={grayColor}
-                                            onPress={toggleShowConfirmPassword}
-                                        />
-                                    }
                                     leftIcon={
                                         <View>
-                                            <MaterialCommunityIcons name={"lock"} size={22} color={mediumGray} />
+                                            <MaterialCommunityIcons name={"email"} size={22} color={mediumGray} />
                                         </View>
                                     }
+                                    labelStyle={{
+                                        fontSize: 14,
+                                        fontWeight: '500',
+                                        color: whiteColor,
+                                        marginBottom: 5,
+                                    }}
                                 />
-                                {confirmPasswordError && <Text style={styles.error}>{confirmPasswordError}</Text>}
+                                {emailError && <Text style={styles.error}>{emailError}</Text>}
+                                <View style={styles.smallCircle} />
+                                <View style={{ marginVertical: hp(5) }}>
+                                    <CustomButton title="Confirm"
+                                        onPress={handleEmailSubmit}
+                                        loading={loadingEmail} disabled={loadingEmail} style={{ backgroundColor: redColor }} />
+                                </View>
                             </View>
-                            <View style={{ marginVertical: hp(5), zIndex: 999 }}>
-                                <CustomButton title="Continue"
-                                    onPress={handlePasswordSubmit}
-                                    loading={loadingPassword} disabled={loadingPassword} />
-                            </View>
-                            {!isIOSAndTablet && <View
-                                style={[styles.circle,
-                                {
-                                    width: isTablet ? 1200 : 650, height: isTablet ? 1200 : 650,
-                                    borderRadius: isTablet ? 2000 : 1000, bottom: isTablet ? -300 : -100, left: isTablet ? -10 : 0
-                                }]} />}
-                        </View>
-                    )}
+                        )}
 
-                    {successModalVisible && <SuccessModal
-                        visible={successModalVisible}
-                        onClose={() => setSuccessModalVisible(false)}
-                        headingText={"Password Changed"}
-                        text={"Password reset successful! You can now log in with your new password."}
-                        onPressContinue={() => { setSuccessModalVisible(false), navigation.goBack(); }}
-                    />}
-                </View>
-            </ScrollView>
+                        {currentStep === 'otp' && (
+                            <View style={styles.box}>
+                                <Image source={OTP_VERIFICATION_IMAGE} style={{ width: "100%", height: isTablet ? hp(50) : hp(40), resizeMode: 'contain', zIndex: 999, alignSelf: "center" }} />
+                                <View style={[{ width: '100%', height: hp(10), marginTop: orientation === "LANDSCAPE" ? hp(5) : 0 }, alignJustifyCenter]}>
+                                    <OTPTextInput
+                                        handleTextChange={handleOTPChange}
+                                        inputCount={4}
+                                        tintColor={whiteColor}
+                                        offTintColor={mediumGray}
+                                        textInputStyle={[styles.otpInput, { color: whiteColor, width: isTablet ? wp(10) : orientation === "LANDSCAPE" ? hp(8) : wp(13), height: isTablet ? wp(10) : orientation === "LANDSCAPE" ? hp(8) : wp(13) }]}
+                                    />
+                                    {otpError && <Text style={styles.error}>{otpError}</Text>}
+                                </View>
+
+                                {countdown > 0 ? (
+                                    <Text style={[styles.footerText, textAlign]}> Resend OTP in {countdown}s</Text>
+                                ) : (<Text style={[styles.footerText, textAlign]}>
+                                    {EMAIL_NOT_RECEIVED}
+                                    <Text style={styles.loginText} onPress={handlePressResend} disabled={!isResendEnabled}>
+                                        {RESEND_CODE}
+                                    </Text>
+                                </Text>)}
+                                <View style={styles.smallCircle} />
+
+                                <View style={{ marginVertical: hp(5) }}>
+                                    <CustomButton title="Confirm"
+                                        onPress={handleOTPSubmit}
+                                        loading={loadingOtp} disabled={loadingOtp} style={{ backgroundColor: redColor }} />
+                                </View>
+                            </View>
+                        )}
+
+                        {currentStep === 'password' && (
+                            <View style={styles.box}>
+                                <Text style={[styles.text, textAlign]}>Please Set New Password</Text>
+                                <View style={{ zIndex: 999 }}>
+                                    <CustomTextInput
+                                        label={PASSWORD}
+                                        placeholder={PASSWORD}
+                                        value={password}
+                                        onChangeText={setPassword}
+                                        secureTextEntry={!showPassword}
+                                        required={true}
+                                        rightIcon={
+                                            <MaterialCommunityIcons
+                                                name={showPassword ? 'eye' : 'eye-off'}
+                                                size={20}
+                                                color={grayColor}
+                                                onPress={toggleShowPassword}
+                                            />
+                                        }
+                                        leftIcon={
+                                            <View>
+                                                <MaterialCommunityIcons name={"lock"} size={22} color={mediumGray} />
+                                            </View>
+                                        }
+                                        labelStyle={{
+                                            fontSize: 14,
+                                            fontWeight: '500',
+                                            color: whiteColor,
+                                            marginBottom: 5,
+                                        }}
+                                    />
+                                    {passwordError && <Text style={styles.error}>{passwordError}</Text>}
+                                    <CustomTextInput
+                                        label="Confirm Password"
+                                        placeholder="Confirm Password"
+                                        value={confirmPassword}
+                                        onChangeText={(text) => {
+                                            setConfirmPassword(text);
+                                            if (passwordError) {
+                                                setPasswordError('');
+                                            }
+                                        }}
+                                        secureTextEntry={!showConfirmPassword}
+                                        required={true}
+                                        rightIcon={
+                                            <MaterialCommunityIcons
+                                                name={showConfirmPassword ? 'eye' : 'eye-off'}
+                                                size={20}
+                                                color={grayColor}
+                                                onPress={toggleShowConfirmPassword}
+                                            />
+                                        }
+                                        leftIcon={
+                                            <View>
+                                                <MaterialCommunityIcons name={"lock"} size={22} color={mediumGray} />
+                                            </View>
+                                        }
+                                        labelStyle={{
+                                            fontSize: 14,
+                                            fontWeight: '500',
+                                            color: whiteColor,
+                                            marginBottom: 5,
+                                        }}
+                                    />
+                                    {confirmPasswordError && <Text style={styles.error}>{confirmPasswordError}</Text>}
+                                </View>
+                                <View style={{ marginVertical: hp(5), zIndex: 999 }}>
+                                    <CustomButton title="Continue"
+                                        onPress={handlePasswordSubmit}
+                                        loading={loadingPassword} disabled={loadingPassword} style={{ backgroundColor: redColor }} />
+                                </View>
+                                {!isIOSAndTablet && <View
+                                    style={[styles.circle,
+                                    {
+                                        width: isTablet ? 1200 : 650, height: isTablet ? 1200 : 650,
+                                        borderRadius: isTablet ? 2000 : 1000, bottom: isTablet ? -300 : -100, left: isTablet ? -10 : 0
+                                    }]} />}
+                            </View>
+                        )}
+
+                        {successModalVisible && <SuccessModal
+                            visible={successModalVisible}
+                            onClose={() => setSuccessModalVisible(false)}
+                            headingText={"Password Changed"}
+                            text={"Password reset successful! You can now log in with your new password."}
+                            onPressContinue={() => { setSuccessModalVisible(false), navigation.goBack(); }}
+                        />}
+                    </View>
+                </ScrollView>
+            </LinearGradient>
         </KeyboardAvoidingView>
     );
 };
@@ -425,7 +451,7 @@ export default ForgotPasswordScreen;
 const styles = StyleSheet.create({
     container: {
         padding: spacings.large,
-        backgroundColor: whiteColor
+        // backgroundColor: whiteColor
     },
     box: {
         width: '100%', height: hp(100), padding: spacings.large,
@@ -437,7 +463,7 @@ const styles = StyleSheet.create({
     text: {
         fontSize: 25,
         fontWeight: '600',
-        color: blackColor,
+        color: whiteColor,
     },
     destext: {
         color: grayColor,
@@ -447,7 +473,7 @@ const styles = StyleSheet.create({
     otpInput: {
         borderWidth: 1,
         fontSize: 20,
-        color: blackColor,
+        color: whiteColor,
         borderRadius: 5,
     },
     error: {
@@ -457,12 +483,12 @@ const styles = StyleSheet.create({
     },
     footerText: {
         marginTop: spacings.Large1x,
-        color: blackColor,
+        color: whiteColor,
         fontSize: style.fontSizeNormal.fontSize
     },
     loginText: {
         fontSize: style.fontSizeNormal.fontSize,
-        color: blueColor,
+        color: redColor,
         fontWeight: style.fontWeightThin1x.fontWeight,
     },
     circle: {

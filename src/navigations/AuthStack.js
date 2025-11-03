@@ -43,15 +43,15 @@ export default function AuthStack() {
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      {/* {isFirstLaunch && ( */}
+      {isFirstLaunch && (
         <Stack.Screen name="OnBoard" component={OnboardingScreen} />
-      {/* )} */}
-      <Stack.Screen name="Login" component={LoginScreen}options={{ gestureEnabled: false }}/>
+      )}
+      <Stack.Screen name="Login" component={LoginScreen} options={{ gestureEnabled: false }} />
       {/* <Stack.Screen name="JoinAs" component={JoinAsScreen} /> */}
-      <Stack.Screen name="Register" component={SignUpScreen} options={{ gestureEnabled: false }}/>
+      <Stack.Screen name="Register" component={SignUpScreen} options={{ gestureEnabled: false }} />
       <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} options={{ gestureEnabled: false }} />
-      <Stack.Screen name="MainNavigator" component={MainNavigator} options={{ gestureEnabled: false }}/>
-      <Stack.Screen name="HowToPlay" component={HowToPlayScreen} options={{ gestureEnabled: false }}/>
+      <Stack.Screen name="MainNavigator" component={MainNavigator} options={{ gestureEnabled: false }} />
+      <Stack.Screen name="HowToPlay" component={HowToPlayScreen} options={{ gestureEnabled: false }} />
     </Stack.Navigator>
   );
 }

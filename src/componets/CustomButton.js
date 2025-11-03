@@ -1,6 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, Pressable, View } from 'react-native';
-import { blueColor, orangeColor, whiteColor } from '../constans/Color';
+import { blackColor, blueColor, orangeColor, whiteColor } from '../constans/Color';
 import { spacings, style } from '../constans/Fonts';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -63,7 +63,7 @@ const CustomButton = ({
 
 const styles = StyleSheet.create({
     button: {
-        backgroundColor: blueColor,
+        backgroundColor: blackColor,
         padding: spacings.xLarge,
         borderRadius: 10,
         marginBottom: spacings.Large1x,

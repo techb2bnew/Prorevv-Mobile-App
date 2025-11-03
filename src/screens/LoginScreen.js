@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, CheckBox, Image, Alert, Dimensions, KeyboardAvoidingView, ScrollView, Keyboard, Platform, Modal, Linking, Pressable, useWindowDimensions } from 'react-native';
 import CustomTextInput from '../componets/CustomTextInput';
-import { blackColor, blueColor, ExtraExtralightOrangeColor, grayColor, lightBlueColor, lightOrangeColor, mediumGray, orangeColor, whiteColor } from '../constans/Color';
+import { blackColor, blueColor, ExtraExtralightOrangeColor, grayColor, lightBlueColor, lightOrangeColor, mediumGray, orangeColor, redColor, whiteColor } from '../constans/Color';
 import { APP_NAME_IMAGE, REGISTRICT_IMAGE } from '../assests/images';
 import { BaseStyle } from '../constans/Style';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from '../utils';
@@ -17,13 +17,14 @@ import Ionicons from 'react-native-vector-icons/dist/Ionicons';
 import Fontisto from 'react-native-vector-icons/dist/Fontisto';
 import Feather from 'react-native-vector-icons/dist/Feather';
 import { useOrientation } from '../OrientationContext';
+import LinearGradient from 'react-native-linear-gradient';
 // const { width, height } = Dimensions.get('window');
 
 const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween } = BaseStyle;
 
 const LoginScreen = ({ navigation }) => {
     const { width, height } = useWindowDimensions();
-    const { orientation } = useOrientation(); 
+    const { orientation } = useOrientation();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [rememberMe, setRememberMe] = useState(true);
@@ -186,21 +187,27 @@ const LoginScreen = ({ navigation }) => {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={{ flex: 1 }}
         >
-            {/* <TouchableWithoutFeedback onPress={Keyboard.dismiss}> */}
-            <ScrollView
-                contentContainerStyle={[styles.container, { height: hp(100) }]}
-                keyboardShouldPersistTaps="handled"
-                showsVerticalScrollIndicator={false}
+            <LinearGradient
+                colors={['#400000', '#000000', '#000000']}
+                start={{ x: 1, y: 0 }}
+                end={{ x: 0.4, y: 1 }}
             >
-                {/* <View style={[styles.container, flex]}> */}
-                {/* Logo Section */}
-                <View style={[styles.logoContainer, alignJustifyCenter, { height: isTablet ? hp(35) : hp(27) }]}>
-                    <Image
-                        source={APP_NAME_IMAGE}
-                        style={[styles.logo, resizeModeContain, { height: isTablet ? hp(15) : hp(9) }]}
-                    />
+                {/* <TouchableWithoutFeedback onPress={Keyboard.dismiss}> */}
+                <ScrollView
+                    contentContainerStyle={[styles.container, { height: hp(100) }]}
+                    keyboardShouldPersistTaps="handled"
+                    showsVerticalScrollIndicator={false}
+                >
 
-                    {/* {isRegistered ?
+                    {/* <View style={[styles.container, flex]}> */}
+                    {/* Logo Section */}
+                    <View style={[styles.logoContainer, alignJustifyCenter, { height: isTablet ? hp(35) : hp(27) }]}>
+                        <Image
+                            source={APP_NAME_IMAGE}
+                            style={[styles.logo, resizeModeContain, { height: isTablet ? hp(15) : hp(9) }]}
+                        />
+
+                        {/* {isRegistered ?
                     <View style={[styles.messageBox, { padding: isTablet ? 8 : 5, }]}>
                         <Text style={[styles.messageText, { fontWeight: style.fontWeightThin.fontWeight }]}>
                             Thank you for signing up!
@@ -213,129 +220,143 @@ const LoginScreen = ({ navigation }) => {
                         </Text>
                     </View>
                     : */}
-                    {/* <> */}
-                    <Text style={styles.title}>Welcome Back!</Text>
-                    {/* <Text style={{ marginVertical: spacings.small }}>Join our Prorevv</Text> */}
-                    {/* </> */}
-                    {/* } */}
-                </View>
-
-                <View style={styles.box}>
-                    {/* Input Fields */}
-                    <Text style={[styles.title, { fontSize: style.fontSizeLargeXX.fontSize }]}>Login</Text>
-
-                    <CustomTextInput
-                        placeholder="Enter your email"
-                        value={email}
-                        onChangeText={text => {
-                            const updatedText = text.charAt(0).toLowerCase() + text.slice(1);
-                            setEmail(updatedText);
-                            if (emailError) {
-                                setEmailError('');
-                            }
-                        }}
-                        label="Email"
-                    />
-                    {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
-
-                    <CustomTextInput
-                        placeholder="Enter your Password"
-                        value={password}
-                        secureTextEntry={!isPasswordVisible}
-                        onChangeText={text => {
-                            setPassword(text);
-                            if (passwordError) {
-                                setPasswordError('');
-                            }
-                        }}
-                        label="Password"
-                        rightIcon={
-                            <TouchableOpacity onPress={() => setPasswordVisible(!isPasswordVisible)}>
-                                <MaterialCommunityIcons name={isPasswordVisible ? "eye" : "eye-off"} size={20} color={grayColor} />
-                            </TouchableOpacity>
-                        }
-                    />
-                    {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
-
-                    {error ? <Text style={styles.errorText}>{error}</Text> : null}
-                    {/* Remember Me and Forgot Password */}
-                    <View style={[styles.optionsRow, flexDirectionRow, justifyContentSpaceBetween, alignItemsCenter]}>
-                        <View style={[flexDirectionRow, alignItemsCenter]}>
-                        </View>
-                        <TouchableOpacity onPress={handleForgotPassword}>
-                            <Text style={styles.forgotPassword}>{FORGOT_PASSWORD}</Text>
-                        </TouchableOpacity>
+                        {/* <> */}
+                        <Text style={styles.title}>Welcome Back!</Text>
+                        {/* <Text style={{ marginVertical: spacings.small }}>Join our Prorevv</Text> */}
+                        {/* </> */}
+                        {/* } */}
                     </View>
 
-                    {/* Login Button */}
-                    <CustomButton
-                        title="Login"
-                        onPress={handleLogin}
-                        loading={isLoading}
-                        disabled={isLoading}
-                    />
+                    <View style={styles.box}>
+                        {/* Input Fields */}
+                        <Text style={[styles.title, { fontSize: style.fontSizeLargeXX.fontSize }]}>Login</Text>
 
-                    <View style={[alignJustifyCenter, { marginTop: isTablet ? orientation === "LANDSCAPE" ? hp(18) : hp(25) : hp(10) }]}>
-                        <View style={[flexDirectionRow]}>
-                            <Text style={styles.noAccountText}>{DONT_HAVE_ACCOUNT} </Text>
-                            <TouchableOpacity onPress={handelSignUpCliked}>
-                                <Text style={styles.signUpText}>{SIGN_UP}</Text>
+                        <CustomTextInput
+                            placeholder="Enter your email"
+                            value={email}
+                            onChangeText={text => {
+                                const updatedText = text.charAt(0).toLowerCase() + text.slice(1);
+                                setEmail(updatedText);
+                                if (emailError) {
+                                    setEmailError('');
+                                }
+                            }}
+                            label="Email"
+                            labelStyle={{
+                                fontSize: 14,
+                                fontWeight: '500',
+                                color: whiteColor,
+                                marginBottom: 5,
+                            }}
+                        />
+                        {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
+
+                        <CustomTextInput
+                            placeholder="Enter your Password"
+                            value={password}
+                            secureTextEntry={!isPasswordVisible}
+                            onChangeText={text => {
+                                setPassword(text);
+                                if (passwordError) {
+                                    setPasswordError('');
+                                }
+                            }}
+                            label="Password"
+                            labelStyle={{
+                                fontSize: 14,
+                                fontWeight: '500',
+                                color: whiteColor,
+                                marginBottom: 5,
+                            }}
+                            rightIcon={
+                                <TouchableOpacity onPress={() => setPasswordVisible(!isPasswordVisible)}>
+                                    <MaterialCommunityIcons name={isPasswordVisible ? "eye" : "eye-off"} size={20} color={grayColor} />
+                                </TouchableOpacity>
+                            }
+                        />
+                        {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
+
+                        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+                        {/* Remember Me and Forgot Password */}
+                        <View style={[styles.optionsRow, flexDirectionRow, justifyContentSpaceBetween, alignItemsCenter]}>
+                            <View style={[flexDirectionRow, alignItemsCenter]}>
+                            </View>
+                            <TouchableOpacity onPress={handleForgotPassword}>
+                                <Text style={styles.forgotPassword}>{FORGOT_PASSWORD}</Text>
                             </TouchableOpacity>
                         </View>
-                        <Text style={[styles.noAccountText, { marginVertical: 10 }]}>Or</Text>
-                        <View style={[flexDirectionRow]}>
-                            <Text style={styles.noAccountText}>Facing any Issue ? </Text>
-                            <TouchableOpacity onPress={() => setSupportModalVisible(true)}>
-                                <Text style={styles.signUpText}>Contact Support </Text>
-                            </TouchableOpacity>
-                        </View>
 
-                    </View>
+                        {/* Login Button */}
+                        <CustomButton
+                            title="Login"
+                            onPress={handleLogin}
+                            loading={isLoading}
+                            disabled={isLoading}
+                            style={{ backgroundColor: redColor }}
+                        />
 
-                </View>
-                {supportModalVisible && <Modal
-                    visible={supportModalVisible}
-                    transparent={true}
-                    animationType="fade"
-                    onRequestClose={() => setSupportModalVisible(false)}
-                    presentationStyle="overFullScreen"
-                    supportedOrientations={["portrait", "landscape-left", "landscape-right"]}
-                >
-                    <Pressable style={styles.modalOverlay} onPress={() => setSupportModalVisible(false)}>
-                        <View style={styles.modalBox}>
-                            <View style={styles.modalHeader}>
-                                <Text style={styles.modalTitle}>Contact Support</Text>
-                                <TouchableOpacity onPress={() => setSupportModalVisible(false)}>
-                                    <Ionicons name="close-circle" size={28} color={blueColor} />
+                        <View style={[alignJustifyCenter, { marginTop: isTablet ? orientation === "LANDSCAPE" ? hp(18) : hp(25) : hp(10) }]}>
+                            <View style={[flexDirectionRow]}>
+                                <Text style={styles.noAccountText}>{DONT_HAVE_ACCOUNT} </Text>
+                                <TouchableOpacity onPress={handelSignUpCliked}>
+                                    <Text style={styles.signUpText}>{SIGN_UP}</Text>
+                                </TouchableOpacity>
+                            </View>
+                            <Text style={[styles.noAccountText, { marginVertical: 10 }]}>Or</Text>
+                            <View style={[flexDirectionRow]}>
+                                <Text style={styles.noAccountText}>Facing any Issue ? </Text>
+                                <TouchableOpacity onPress={() => setSupportModalVisible(true)}>
+                                    <Text style={styles.signUpText}>Contact Support </Text>
                                 </TouchableOpacity>
                             </View>
 
-                            <View style={styles.modalContent}>
-                                <TouchableOpacity onPress={() => Linking.openURL(`mailto:${SUPPORT_EMAIL}`)} style={styles.contactItem}>
-                                    <Fontisto name="email" size={25} color={blueColor} />
-                                    <Text style={styles.contactText}>{SUPPORT_EMAIL}</Text>
-                                </TouchableOpacity>
-
-                                <TouchableOpacity onPress={() => Linking.openURL(`tel:${SUPPORT_MOBILE}`)} style={styles.contactItem}>
-                                    <Feather name="phone" size={24} color={blueColor} />
-                                    <Text style={styles.contactText}>{SUPPORT_MOBILE}</Text>
-                                </TouchableOpacity>
-                            </View>
                         </View>
-                    </Pressable>
-                </Modal>}
-                {modalVisible && <SuccessModal
-                    visible={modalVisible}
-                    onClose={() => setModalVisible(false)}
-                    image={REGISTRICT_IMAGE}
-                    headingText={modalTitle}
-                    text={modalMessage}
-                    buttonText={'Okay'}
-                    onPressContinue={() => { setModalVisible(false), setError(""), setEmailError(""), setPasswordError("") }}
-                />}
 
-                {/* </View > */}
-            </ScrollView>
+                    </View>
+                    {supportModalVisible && <Modal
+                        visible={supportModalVisible}
+                        transparent={true}
+                        animationType="fade"
+                        onRequestClose={() => setSupportModalVisible(false)}
+                        presentationStyle="overFullScreen"
+                        supportedOrientations={["portrait", "landscape-left", "landscape-right"]}
+                    >
+                        <Pressable style={styles.modalOverlay} onPress={() => setSupportModalVisible(false)}>
+                            <View style={styles.modalBox}>
+                                <View style={styles.modalHeader}>
+                                    <Text style={styles.modalTitle}>Contact Support</Text>
+                                    <TouchableOpacity onPress={() => setSupportModalVisible(false)}>
+                                        <Ionicons name="close-circle" size={28} color={redColor} />
+                                    </TouchableOpacity>
+                                </View>
+
+                                <View style={styles.modalContent}>
+                                    <TouchableOpacity onPress={() => Linking.openURL(`mailto:${SUPPORT_EMAIL}`)} style={styles.contactItem}>
+                                        <Fontisto name="email" size={25} color={redColor} />
+                                        <Text style={styles.contactText}>{SUPPORT_EMAIL}</Text>
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity onPress={() => Linking.openURL(`tel:${SUPPORT_MOBILE}`)} style={styles.contactItem}>
+                                        <Feather name="phone" size={24} color={redColor} />
+                                        <Text style={styles.contactText}>{SUPPORT_MOBILE}</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        </Pressable>
+                    </Modal>}
+                    {modalVisible && <SuccessModal
+                        visible={modalVisible}
+                        onClose={() => setModalVisible(false)}
+                        image={REGISTRICT_IMAGE}
+                        headingText={modalTitle}
+                        text={modalMessage}
+                        buttonText={'Okay'}
+                        onPressContinue={() => { setModalVisible(false), setError(""), setEmailError(""), setPasswordError("") }}
+                    />}
+
+                    {/* </View > */}
+                </ScrollView>
+            </LinearGradient>
             {/* </TouchableWithoutFeedback> */}
         </KeyboardAvoidingView>
     );
@@ -344,7 +365,7 @@ const LoginScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         paddingTop: spacings.Large1x,
-        backgroundColor: whiteColor
+        // backgroundColor: whiteColor
     },
     logoContainer: {
         height: hp(25),
@@ -357,10 +378,10 @@ const styles = StyleSheet.create({
     title: {
         fontSize: style.fontSizeLarge3x.fontSize,
         fontWeight: style.fontWeightMedium.fontWeight,
-        color: blackColor,
+        color: whiteColor,
     },
     box: {
-        backgroundColor: lightBlueColor,
+        // backgroundColor: whiteColor,
         height: "100%",
         width: "100%",
         borderTopLeftRadius: 40,
@@ -378,16 +399,16 @@ const styles = StyleSheet.create({
     },
     forgotPassword: {
         fontSize: style.fontSizeNormal.fontSize,
-        color: blueColor,
+        color: whiteColor,
         textDecorationLine: "underline"
     },
     noAccountText: {
         fontSize: style.fontSizeNormal.fontSize,
-        color: blackColor,
+        color: whiteColor,
     },
     signUpText: {
         fontSize: style.fontSizeNormal.fontSize,
-        color: blueColor,
+        color: redColor,
         fontWeight: style.fontWeightThin1x.fontWeight,
     },
     checkBoxContainer: {
@@ -473,7 +494,7 @@ const styles = StyleSheet.create({
     contactText: {
         marginLeft: 10,
         fontSize: 16,
-        color: blueColor,
+        color: blackColor,
         textDecorationLine: "underline",
     },
 });

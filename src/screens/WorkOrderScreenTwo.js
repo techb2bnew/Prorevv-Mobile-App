@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, Pressable, ScrollView, Alert, ScrollViewBase, Image, ActivityIndicator, Platform, KeyboardAvoidingView, Modal, Keyboard, Dimensions, TouchableWithoutFeedback, useWindowDimensions } from 'react-native';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { blackColor, blueColor, grayColor, greenColor, lightBlueColor, mediumGray, orangeColor, redColor, whiteColor } from '../constans/Color';
+import { blackColor, blueColor, grayColor, greenColor, lightBlueColor, lightGrayColor, mediumGray, orangeColor, redColor, whiteColor } from '../constans/Color';
 import { BaseStyle } from '../constans/Style';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from '../utils';
 import { style, spacings } from '../constans/Fonts';
@@ -950,7 +950,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                         (
                             <Text style={[styles.label, { fontSize: style.fontSizeLarge.fontSize, marginTop: 10, marginLeft: 10 }]}>Scan Vehicle <Text style={{ color: 'red' }}>*</Text></Text>
                         ) : (
-                            <Text style={[styles.label, { fontSize: style.fontSizeLarge.fontSize, marginTop: 10, marginLeft: 10, color: blueColor }]}>VIN : {vin}</Text>
+                            <Text style={[styles.label, { fontSize: style.fontSizeLarge.fontSize, marginTop: 10, marginLeft: 10, color: blackColor }]}>VIN : {vin}</Text>
                         )}
 
                     <View style={[styles.container]}>
@@ -1059,7 +1059,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                 {isSaveVisible && (
                                     <View style={styles.saveButtonContainer}>
                                         <TouchableOpacity
-                                            style={[{ backgroundColor: blueColor, padding: spacings.large, borderRadius: 15 }]}
+                                            style={[{ backgroundColor: blackColor, padding: spacings.large, borderRadius: 15 }]}
                                             onPress={() => {
                                                 console.log("updated value", updatedValues);
 
@@ -1091,7 +1091,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                         )}
                                         keyExtractor={(item, index) => index.toString()}
                                         numColumns={2}
-                                        contentContainerStyle={[styles.details, justifyContentSpaceBetween, { borderWidth: 1, borderRadius: 5, marginVertical: 8, borderColor: blueColor }]}
+                                        contentContainerStyle={[styles.details, justifyContentSpaceBetween, { borderWidth: 1, borderRadius: 5, marginVertical: 8, borderColor: blackColor }]}
                                         renderItem={({ item, index }) => {
                                             return item?.Value ? (
                                                 <View style={[styles.detailItem]}>
@@ -1140,9 +1140,9 @@ const WorkOrderScreenTwo = ({ route }) => {
                                         {isEditing ? (
                                             <Text style={[styles.editButtonText, { borderWidth: 1, paddingHorizontal: 5, borderColor: greenColor, borderRadius: 4 }]}>Save</Text>
                                         ) : (
-                                            <View style={{ borderWidth: 1, paddingHorizontal: 5, borderColor: blueColor, borderRadius: 4, flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
-                                                <Text style={[styles.editButtonText, { color: blueColor }]}>Edit</Text>
-                                                <Ionicons name="pencil-sharp" size={15} color={blueColor} style={{ marginLeft: 5 }} />
+                                            <View style={{ borderWidth: 1, paddingHorizontal: 5, borderColor: blackColor, borderRadius: 4, flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
+                                                <Text style={[styles.editButtonText, { color: blackColor }]}>Edit</Text>
+                                                <Ionicons name="pencil-sharp" size={15} color={blackColor} style={{ marginLeft: 5 }} />
                                             </View>
                                         )}
                                     </TouchableOpacity>)}
@@ -1170,17 +1170,17 @@ const WorkOrderScreenTwo = ({ route }) => {
                                         }}
                                         placeholder="Select a Color"
                                         style={{
-                                            borderColor: blueColor,
+                                            borderColor: blackColor,
                                             borderWidth: 1,
                                             marginBottom: 10,
                                             zIndex: 1000,
                                             borderRadius: 10,
                                         }}
                                         dropDownContainerStyle={{
-                                            borderColor: blueColor,
+                                            borderColor: blackColor,
                                             borderWidth: 1,
                                             zIndex: 100000,
-                                            backgroundColor: '#5a8298f7',
+                                            backgroundColor: lightGrayColor,
                                             maxHeight: hp(15)
                                         }}
                                         listMode="SCROLLVIEW"
@@ -1228,7 +1228,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                         />
                                         {jobDescriptionError && <Text style={{ color: 'red' }}>{jobDescriptionError}</Text>}
                                         <View style={[flexDirectionRow, justifyContentSpaceBetween]}>
-                                            <TouchableOpacity style={[flexDirectionRow, alignJustifyCenter, styles.addMore, { backgroundColor: blueColor, borderRadius: 10 }]} onPress={addNewField}>
+                                            <TouchableOpacity style={[flexDirectionRow, alignJustifyCenter, styles.addMore, { backgroundColor: blackColor, borderRadius: 10 }]} onPress={addNewField}>
                                                 <Text style={styles.addMoreText}>Add More</Text>
                                                 <Ionicons name="add-circle-outline" size={18} color={whiteColor} />
                                             </TouchableOpacity>
@@ -1238,7 +1238,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                                         setJobDescription([{ jobDescription: '', cost: '' }]);
                                                         setTextInputHeights({});
                                                     }}
-                                                    style={[flexDirectionRow, alignJustifyCenter, styles.addMore, { backgroundColor: blueColor, borderRadius: 10 }]}
+                                                    style={[flexDirectionRow, alignJustifyCenter, styles.addMore, { backgroundColor: blackColor, borderRadius: 10 }]}
                                                 >
                                                     <Text style={styles.addMoreText}>Clear</Text>
                                                     <Ionicons name="trash-outline" size={18} color="white" />
@@ -1360,7 +1360,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                                     <TouchableOpacity
                                                         style={{
                                                             position: 'absolute', top: -5, right: -5,
-                                                            borderRadius: 15, padding: 3, backgroundColor: blueColor
+                                                            borderRadius: 15, padding: 3, backgroundColor: blackColor
                                                         }}
                                                         onPress={() => removeImage(index)}
                                                     >
@@ -1406,7 +1406,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                             <Text style={styles.label}>Selected Technician</Text>
                                             <View style={{
                                                 borderWidth: 1,
-                                                borderColor: blueColor,
+                                                borderColor: blackColor,
                                                 borderRadius: 8,
                                                 // height: hp(20), // Fixed height is good
                                                 overflow: "hidden",
@@ -1426,7 +1426,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                                                 style={[
                                                                     styles.techItem,
                                                                     {
-                                                                        backgroundColor: selected ? lightBlueColor : "#fff",
+                                                                        backgroundColor: selected ? lightGrayColor : "#fff",
                                                                         paddingVertical: 10,
                                                                         paddingHorizontal: 12,
                                                                     },
@@ -1443,7 +1443,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                                                         <Icon
                                                                             name={selected ? "checkbox-marked" : "checkbox-blank-outline"}
                                                                             size={24}
-                                                                            color={selected ? blueColor : "#ccc"}
+                                                                            color={selected ? blackColor : "#ccc"}
                                                                             type="MaterialCommunityIcons"
                                                                         />
                                                                     </TouchableOpacity>
@@ -1493,7 +1493,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                                 />
                                             </View>
                                             <TouchableOpacity
-                                                style={[flexDirectionRow, alignJustifyCenter, { backgroundColor: blueColor, borderRadius: 10, width: wp(35), alignSelf: "flex-end" }]}
+                                                style={[flexDirectionRow, alignJustifyCenter, { backgroundColor: blackColor, borderRadius: 10, width: wp(35), alignSelf: "flex-end" }]}
                                                 onPress={() => {
                                                     fetchTechnicians(1);
                                                 }}
@@ -1511,7 +1511,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                             title={route?.params?.vehicleId ? "Update" : "Submit"}
                                             onPress={() => handleSubmitJob(true, setSubmitLoading)}
                                             loading={submitLoading}
-                                            style={{ width: (route?.params?.vehicleId) ? "100%" : wp(33) }}
+                                            style={{ width: (route?.params?.vehicleId) ? "100%" : wp(33), backgroundColor: blackColor }}
                                             disabled={submitLoading || scanLoading}
                                         />
 
@@ -1525,7 +1525,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                             // navigation.navigate('ScannerScreen');
                                             // }}
                                             loading={scanLoading}
-                                            style={{ width: wp(50) }}
+                                            style={{ width: wp(50), backgroundColor: blackColor }}
                                             disabled={submitLoading || scanLoading}
                                         />}
                                     </View>
@@ -1655,7 +1655,7 @@ const styles = StyleSheet.create({
     searchContainer: {
         backgroundColor: whiteColor,
         borderWidth: 1,
-        borderColor: blueColor,
+        borderColor: blackColor,
         borderRadius: 50,
         paddingHorizontal: 11,
         fontSize: style.fontSizeNormal.fontSize,
@@ -1671,7 +1671,7 @@ const styles = StyleSheet.create({
         marginTop: spacings.large,
         borderRadius: 5,
         borderWidth: 1,
-        borderColor: blueColor,
+        borderColor: blackColor,
         maxHeight: hp(13)
     },
     customerItem: {
@@ -1682,14 +1682,14 @@ const styles = StyleSheet.create({
     vinInput: {
         backgroundColor: whiteColor,
         borderWidth: 1,
-        borderColor: blueColor,
+        borderColor: blackColor,
         borderRadius: 10,
         padding: spacings.large,
         color: blackColor,
         fontSize: style.fontSizeNormal1x.fontSize,
     },
     fetchButton: {
-        backgroundColor: blueColor,
+        backgroundColor: blackColor,
         borderRadius: 10,
         height: hp(5),
     },
@@ -1711,7 +1711,7 @@ const styles = StyleSheet.create({
         color: blackColor,
     },
     scanButton: {
-        backgroundColor: blueColor,
+        backgroundColor: blackColor,
         paddingVertical: spacings.xLarge,
         borderRadius: 10,
         marginTop: spacings.Large1x
@@ -1742,7 +1742,7 @@ const styles = StyleSheet.create({
     },
     uploadImage: {
         width: "100%",
-        borderColor: blueColor,
+        borderColor: blackColor,
         borderRadius: 10,
         borderWidth: 1,
         borderStyle: 'dashed',
@@ -1751,7 +1751,7 @@ const styles = StyleSheet.create({
     },
     notesInput: {
         borderWidth: 1,
-        borderColor: blueColor,
+        borderColor: blackColor,
         borderRadius: 8,
         padding: 10,
         fontSize: 14,
@@ -1788,7 +1788,7 @@ const styles = StyleSheet.create({
     },
     input: {
         borderWidth: 1,
-        borderColor: blueColor,
+        borderColor: blackColor,
         padding: spacings.large,
         borderRadius: 10,
         height: hp(5),
@@ -1838,7 +1838,7 @@ const styles = StyleSheet.create({
     cancelButton: {
         width: "45%",
         paddingVertical: 8,
-        backgroundColor: blueColor,
+        backgroundColor: blackColor,
         borderRadius: 5,
         alignItems: "center",
         marginRight: 10,
@@ -1878,7 +1878,7 @@ const styles = StyleSheet.create({
     techItem: {
         paddingVertical: 10,
         paddingHorizontal: 15,
-        borderBottomColor: blueColor,
+        borderBottomColor: blackColor,
         borderBottomWidth: 1,
         backgroundColor: "#fff",
     },
@@ -1893,7 +1893,7 @@ const styles = StyleSheet.create({
         padding: spacings.large,
         justifyContent: "space-between",
         borderWidth: 1,
-        borderColor: blueColor,
+        borderColor: blackColor,
         borderRadius: 10
 
     },

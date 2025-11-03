@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Modal, TouchableOpacity, StyleSheet, Image, Pressable, Dimensions } from 'react-native';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from '../../utils';
-import { blueColor, orangeColor } from '../../constans/Color';
+import { blackColor, blueColor, orangeColor } from '../../constans/Color';
 const { width, height } = Dimensions.get('window');
 
 const ConfirmationModal = ({
@@ -12,7 +12,7 @@ const ConfirmationModal = ({
   message = "This action cannot be undone.",
   confirmText = "Confirm",
   cancelText = "Cancel",
-  confirmColor = blueColor,
+  confirmColor = blackColor,
   iconName
 }) => {
   const isTablet = width >= 668 && height >= 1024;

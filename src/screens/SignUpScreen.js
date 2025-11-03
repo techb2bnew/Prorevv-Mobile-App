@@ -20,6 +20,7 @@ import SuccessModal from "../componets/Modal/SuccessModal";
 import Header from "../componets/Header";
 import { useFocusEffect, useRoute } from '@react-navigation/native';
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
+import LinearGradient from "react-native-linear-gradient";
 
 const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween, textAlign } = BaseStyle;
 
@@ -369,7 +370,7 @@ const SignUpScreen = ({ navigation }) => {
         fetchCountries();
     }, []);
 
-    
+
 
     useEffect(() => {
         fetchCountries();
@@ -460,102 +461,331 @@ const SignUpScreen = ({ navigation }) => {
             style={[flex]}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-            <Header title={"Register"} onBack={() => { navigation.goBack(); 
+            <Header title={"Register"} onBack={() => {
+                navigation.goBack();
             }} />
             {isLoadingState && (
                 <View style={styles.loadingOverlay}>
-                    <ActivityIndicator size="large" color={blueColor} />
+                    <ActivityIndicator size="large" color={blackColor} />
                 </View>
             )}
-            <ScrollView style={[styles.container, flex]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}
+
+            <ScrollView style={[styles.container, flex]} showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled"
             >
-                <Text style={[styles.subtitle, textAlign]}>{CREATE_YOUE_NEW_ACCOUNT}</Text>
-                <TouchableOpacity onPress={openFrontCamera} style={[styles.circleButton, { marginTop: spacings.large }]}>
-                    {capturedImage ? (
-                        <>
-                            <Image source={{ uri: capturedImage }} style={styles.image} />
-                            <View style={[{
-                                position: "absolute", width: 30, height: 30,
-                                bottom: 2, right: 0, borderRadius: 50, backgroundColor: whiteColor,
-                                borderColor: blueColor, borderWidth: 1
-                            }, alignJustifyCenter]}>
-                                <Ionicons name="camera" size={20} color={blueColor} />
+                <LinearGradient
+                    colors={['#400000', '#000000', '#000000']}
+                    start={{ x: 1, y: 0 }}
+                    end={{ x: 0.4, y: 0.5 }}
+                >
+                    <View style={{ padding: 20 }}>
+                        <Text style={[styles.subtitle, textAlign]}>{CREATE_YOUE_NEW_ACCOUNT}</Text>
+                        <TouchableOpacity onPress={openFrontCamera} style={[styles.circleButton, { marginTop: spacings.large }]}>
+                            {capturedImage ? (
+                                <>
+                                    <Image source={{ uri: capturedImage }} style={styles.image} />
+                                    <View style={[{
+                                        position: "absolute", width: 30, height: 30,
+                                        bottom: 2, right: 0, borderRadius: 50, backgroundColor: whiteColor,
+                                        borderColor: redColor, borderWidth: 1
+                                    }, alignJustifyCenter]}>
+                                        <Ionicons name="camera" size={20} color={redColor} />
 
-                            </View>
-                        </>
-                    ) : (
-                        <Ionicons name="camera" size={35} color={blueColor} />
-                    )}
-                </TouchableOpacity>
-                <Text style={[styles.label, textAlign, { marginVertical: spacings.large }]}>
-                    Profile Image
-                </Text>
-                <Text style={[styles.label, textAlign, { fontSize: 11, color: redColor }]}>
-                    Note - To ensure account verification, please use a profile picture that clearly shows your face. Accounts with other types of images may be rejected.
-                </Text>
-                {enterpriseValue === "Single-Technician" && (
-                    <>
+                                    </View>
+                                </>
+                            ) : (
+                                <Ionicons name="camera" size={35} color={redColor} />
+                            )}
+                        </TouchableOpacity>
+                        <Text style={[styles.label, textAlign, { marginVertical: spacings.large }]}>
+                            Profile Image
+                        </Text>
+                        <Text style={[styles.label, textAlign, { fontSize: 11, color: redColor }]}>
+                            Note - To ensure account verification, please use a profile picture that clearly shows your face. Accounts with other types of images may be rejected.
+                        </Text>
+                        {enterpriseValue === "Single-Technician" && (
+                            <>
+                                <CustomTextInput
+                                    label="Business Name (Optional)"
+                                    placeholder="Enter your business name"
+                                    value={formData.businessName}
+                                    onChangeText={(text) => handleInputChange("businessName", text)}
+                                    required={false}
+                                    labelStyle={{
+                                        fontSize: 14,
+                                        fontWeight: '500',
+                                        color: whiteColor,
+                                        marginBottom: 5,
+                                    }}
+                                />
+                                {errors.businessName && <Text style={styles.error}>{errors.businessName}</Text>}
+                                <View style={styles.phoneContainer}>
+                                    <Text style={styles.label}>
+                                        Business Logo (Optional)
+                                    </Text>
+                                    {!businessLogo ? (
+                                        <TouchableOpacity
+                                            onPress={async () => {
+                                                try {
+                                                    if (Platform.OS === 'android') {
+                                                        const granted = await PermissionsAndroid.request(
+                                                            PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+                                                            {
+                                                                title: "Storage Permission",
+                                                                message: "App needs access to your storage to select images",
+                                                                buttonPositive: "OK",
+                                                            }
+                                                        );
+                                                        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+                                                            Alert.alert("Permission Denied", "You need to allow storage access to select images.");
+                                                            return;
+                                                        }
+                                                    }
+
+                                                    // Launch image picker
+                                                    const result = await launchImageLibrary({
+                                                        mediaType: 'photo',
+                                                        quality: 0.8,
+                                                        selectionLimit: 1, // Only allow single selection
+                                                    });
+
+                                                    if (!result.didCancel && result.assets && result.assets.length > 0) {
+                                                        const selectedImage = result.assets[0];
+                                                        console.log(selectedImage);
+
+                                                        // Compress the image
+                                                        const compressedImage = await ImageCompressor.compress(selectedImage.uri, {
+                                                            maxWidth: 1024,
+                                                            maxHeight: 1024,
+                                                            quality: 0.8,
+                                                            compressionMethod: 'auto'
+                                                        });
+
+                                                        // Set the compressed image URI in state
+                                                        setBusinessLogo(compressedImage);
+                                                    }
+                                                } catch (err) {
+                                                    console.log("Error picking business logo:", err);
+                                                }
+                                            }}
+                                            style={[{
+                                                width: "100%",
+                                                borderColor: redColor,
+                                                borderRadius: 10,
+                                                borderWidth: 1,
+                                                borderStyle: 'dashed',
+                                                padding: spacings.small2x,
+                                            }, alignJustifyCenter]}
+                                        >
+                                            <Ionicons name="cloud-upload-outline" size={30} color={grayColor} />
+                                            <Text style={{ marginTop: 5, fontSize: 12, color: whiteColor }}>Upload Business Logo</Text>
+                                            <Text style={[styles.label, { fontSize: 10, color: grayColor }]}>
+                                                (Only image files will be accepted)
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ) : (
+                                        <View style={{ marginTop: 10, alignItems: "center", position: "relative" }}>
+                                            <Image
+                                                source={{ uri: businessLogo }}
+                                                style={{ width: 100, height: 100, borderRadius: 5 }}
+                                            />
+                                            <TouchableOpacity
+                                                onPress={() => setBusinessLogo(null)}
+                                                style={{
+                                                    position: "absolute",
+                                                    top: -5,
+                                                    right: -5,
+                                                    backgroundColor: "red",
+                                                    borderRadius: 10,
+                                                    width: 20,
+                                                    height: 20,
+                                                    justifyContent: "center",
+                                                    alignItems: "center",
+                                                }}
+                                            >
+                                                <Text style={{ color: "white", fontSize: 12 }}>X</Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    )}
+                                    {errors.businessLogo && <Text style={styles.error}>{errors.businessLogo}</Text>}
+                                </View>
+                            </>
+                        )}
+                        {/* Input fields */}
                         <CustomTextInput
-                            label="Business Name (Optional)"
-                            placeholder="Enter your business name"
-                            value={formData.businessName}
-                            onChangeText={(text) => handleInputChange("businessName", text)}
-                            required={false}
+                            label="First Name"
+                            placeholder="Enter your first name"
+                            value={formData.firstName}
+                            onChangeText={(text) => handleInputChange("firstName", text)}
+                            required={true}
+                            maxLength={20}
+                            labelStyle={{
+                                fontSize: 14,
+                                fontWeight: '500',
+                                color: whiteColor,
+                                marginBottom: 5,
+                            }}
                         />
-                        {errors.businessName && <Text style={styles.error}>{errors.businessName}</Text>}
+                        {errors.firstName && <Text style={styles.error}>{errors.firstName}</Text>}
+
+                        <CustomTextInput
+                            label="Last Name"
+                            placeholder="Enter your last name"
+                            value={formData.lastName}
+                            onChangeText={(text) => handleInputChange("lastName", text)}
+                            required={true}
+                            maxLength={20}
+                            labelStyle={{
+                                fontSize: 14,
+                                fontWeight: '500',
+                                color: whiteColor,
+                                marginBottom: 5,
+                            }}
+                        />
+                        {errors.lastName && <Text style={styles.error}>{errors.lastName}</Text>}
+
+                        <CustomTextInput
+                            label="Email"
+                            placeholder="Enter your email"
+                            value={formData.email}
+                            onChangeText={(text) => {
+                                const updatedText = text.charAt(0).toLowerCase() + text.slice(1);
+                                handleInputChange("email", updatedText);
+                            }}
+                            required={true}
+                            labelStyle={{
+                                fontSize: 14,
+                                fontWeight: '500',
+                                color: whiteColor,
+                                marginBottom: 5,
+                            }}
+                        />
+                        {errors.email && <Text style={styles.error}>{errors.email}</Text>}
+
                         <View style={styles.phoneContainer}>
                             <Text style={styles.label}>
-                                Business Logo (Optional)
+                                Phone Number<Text style={styles.asterisk}> *</Text>
                             </Text>
-                            {!businessLogo ? (
-                                <TouchableOpacity
-                                    onPress={async () => {
-                                        try {
-                                            if (Platform.OS === 'android') {
-                                                const granted = await PermissionsAndroid.request(
-                                                    PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-                                                    {
-                                                        title: "Storage Permission",
-                                                        message: "App needs access to your storage to select images",
-                                                        buttonPositive: "OK",
-                                                    }
-                                                );
-                                                if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-                                                    Alert.alert("Permission Denied", "You need to allow storage access to select images.");
-                                                    return;
-                                                }
-                                            }
+                            <PhoneInput
+                                ref={phoneInput}
+                                defaultValue={formData.phoneNumber.replace(/^\+\d+\s?-?\s?/, '')}
+                                defaultCode="US"
+                                layout="second"
+                                onChangeFormattedText={(text) => handleInputChange("phoneNumber", text)}
+                                containerStyle={styles.phoneInput}
+                                textContainerStyle={styles.phoneText}
+                                textInputStyle={[styles.phoneTextInput, { marginBottom: isTablet ? 12 : 0 }]}
+                                textInputProps={{
+                                    maxLength: 13,
+                                    keyboardType: "default",
+                                }}
+                                flagButtonStyle={styles.flagButton}
+                                placeholder="Enter your phone number"
+                            />
+                        </View>
+                        {errors.phoneNumber && <Text style={styles.error}>{errors.phoneNumber}</Text>}
+                        <View style={styles.phoneContainer}>
+                            <Text style={styles.label}>
+                                Address<Text style={styles.asterisk}> *</Text>
+                            </Text>
+                            <View style={{ flex: 1, position: 'relative', zIndex: 999 }}>
+                                <GooglePlacesAutocomplete
+                                    ref={googleRef}
+                                    placeholder="Enter Your Address"
+                                    fetchDetails={true}
+                                    onPress={(data, details = null) => {
+                                        console.log('Selected:', data?.description);
+                                        handleInputChange("address", data?.description);
+                                        // Update text manually
+                                        googleRef.current?.setAddressText(data?.description);
 
-                                            // Launch image picker
-                                            const result = await launchImageLibrary({
-                                                mediaType: 'photo',
-                                                quality: 0.8,
-                                                selectionLimit: 1, // Only allow single selection
-                                            });
-
-                                            if (!result.didCancel && result.assets && result.assets.length > 0) {
-                                                const selectedImage = result.assets[0];
-                                                console.log(selectedImage);
-
-                                                // Compress the image
-                                                const compressedImage = await ImageCompressor.compress(selectedImage.uri, {
-                                                    maxWidth: 1024,
-                                                    maxHeight: 1024,
-                                                    quality: 0.8,
-                                                    compressionMethod: 'auto'
-                                                });
-
-                                                // Set the compressed image URI in state
-                                                setBusinessLogo(compressedImage);
-                                            }
-                                        } catch (err) {
-                                            console.log("Error picking business logo:", err);
-                                        }
+                                        // Delay the blur slightly to ensure suggestions unmount properly
+                                        setTimeout(() => {
+                                            googleRef.current?.blur();
+                                        }, 100);
                                     }}
+                                    enablePoweredByContainer={false}
+                                    // keepResultsAfterBlur={Platform.OS === "android" ? false : true}
+                                    query={{
+                                        key: GOOGLE_MAP_API_KEY,
+                                        language: 'en',
+                                    }}
+                                    styles={{
+                                        container: {
+                                            flex: 1,
+                                            zIndex: 999,
+                                        },
+                                        listView: {
+                                            zIndex: 999,
+                                            elevation: 5,
+                                            backgroundColor: "#fff",
+                                            marginTop: 5,
+                                        },
+                                        textInputContainer: {
+                                            zIndex: 999,
+                                        },
+                                        textInput: {
+                                            height: 44,
+                                            borderWidth: 1,
+                                            borderColor: blueColor,
+                                            borderRadius: 50,
+                                            paddingHorizontal: 16,
+                                            backgroundColor: '#fff',
+                                        },
+                                    }}
+                                />
+                            </View>
+                        </View>
+                        {errors.address && <Text style={styles.error}>{errors.address}</Text>}
+                        <CustomTextInput
+                            label="Secondary Email (Optional)"
+                            placeholder="Enter your secondary email"
+                            value={formData.secondaryEmail}
+                            // onChangeText={(text) => handleInputChange("secondaryEmail", text)}
+                            onChangeText={(text) => {
+                                const updatedText = text.charAt(0).toLowerCase() + text.slice(1);
+                                handleInputChange("secondaryEmail", updatedText);  // Update the form data with modified email
+                            }}
+                            labelStyle={{
+                                fontSize: 14,
+                                fontWeight: '500',
+                                color: whiteColor,
+                                marginBottom: 5,
+                            }}
+                        />
+                        {errors.secondaryEmail && <Text style={styles.error}>{errors.secondaryEmail}</Text>}
+                        <View style={styles.phoneContainer}>
+                            <Text style={styles.label}>
+                                Secondary Phone Number (Optional)
+                            </Text>
+                            <PhoneInput
+                                ref={phoneInput}
+                                defaultValue={formData.secondaryPhoneNumber}
+                                defaultCode="US"
+                                layout="second"
+                                onChangeFormattedText={(text) => handleInputChange("secondaryPhoneNumber", text)}
+                                textInputProps={{
+                                    maxLength: 13,
+                                    keyboardType: "default",
+                                }}
+                                containerStyle={styles.phoneInput}
+                                textContainerStyle={styles.phoneText}
+                                textInputStyle={[styles.phoneTextInput, { marginBottom: isTablet ? 12 : 0 }]}
+                                flagButtonStyle={styles.flagButton}
+                                placeholder="Enter your secondary phone number"
+                            />
+                        </View>
+                        {errors.secondaryPhoneNumber && <Text style={styles.error}>{errors.secondaryPhoneNumber}</Text>}
+                        <View style={styles.phoneContainer}>
+                            <Text style={styles.label}>
+                                Tax Forms (Optional)
+                            </Text>
+                            {files.length === 0 ? (
+                                <TouchableOpacity
+                                    onPress={pickFile}
                                     style={[{
                                         width: "100%",
-                                        borderColor: blueColor,
+                                        borderColor: redColor,
                                         borderRadius: 10,
                                         borderWidth: 1,
                                         borderStyle: 'dashed',
@@ -563,327 +793,151 @@ const SignUpScreen = ({ navigation }) => {
                                     }, alignJustifyCenter]}
                                 >
                                     <Ionicons name="cloud-upload-outline" size={30} color={grayColor} />
-                                    <Text style={{ marginTop: 5, fontSize: 12 }}>Upload Business Logo</Text>
+                                    <Text style={{ marginTop: 5, fontSize: 12, color: whiteColor }}>Upload File</Text>
                                     <Text style={[styles.label, { fontSize: 10, color: grayColor }]}>
-                                        (Only image files will be accepted)
+                                        (Only PDF, PNG, JPEG, and WEBP files will be accepted)
                                     </Text>
                                 </TouchableOpacity>
                             ) : (
-                                <View style={{ marginTop: 10, alignItems: "center", position: "relative" }}>
-                                    <Image
-                                        source={{ uri: businessLogo }}
-                                        style={{ width: 100, height: 100, borderRadius: 5 }}
-                                    />
-                                    <TouchableOpacity
-                                        onPress={() => setBusinessLogo(null)}
-                                        style={{
-                                            position: "absolute",
-                                            top: -5,
-                                            right: -5,
-                                            backgroundColor: "red",
-                                            borderRadius: 10,
-                                            width: 20,
-                                            height: 20,
-                                            justifyContent: "center",
-                                            alignItems: "center",
-                                        }}
-                                    >
-                                        <Text style={{ color: "white", fontSize: 12 }}>X</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            )}
-                            {errors.businessLogo && <Text style={styles.error}>{errors.businessLogo}</Text>}
-                        </View>
-                    </>
-                )}
-                {/* Input fields */}
-                <CustomTextInput
-                    label="First Name"
-                    placeholder="Enter your first name"
-                    value={formData.firstName}
-                    onChangeText={(text) => handleInputChange("firstName", text)}
-                    required={true}
-                    maxLength={20}
-                />
-                {errors.firstName && <Text style={styles.error}>{errors.firstName}</Text>}
-
-                <CustomTextInput
-                    label="Last Name"
-                    placeholder="Enter your last name"
-                    value={formData.lastName}
-                    onChangeText={(text) => handleInputChange("lastName", text)}
-                    required={true}
-                    maxLength={20}
-                />
-                {errors.lastName && <Text style={styles.error}>{errors.lastName}</Text>}
-
-                <CustomTextInput
-                    label="Email"
-                    placeholder="Enter your email"
-                    value={formData.email}
-                    onChangeText={(text) => {
-                        const updatedText = text.charAt(0).toLowerCase() + text.slice(1);
-                        handleInputChange("email", updatedText);
-                    }}
-                    required={true}
-                />
-                {errors.email && <Text style={styles.error}>{errors.email}</Text>}
-
-                <View style={styles.phoneContainer}>
-                    <Text style={styles.label}>
-                        Phone Number<Text style={styles.asterisk}> *</Text>
-                    </Text>
-                    <PhoneInput
-                        ref={phoneInput}
-                        defaultValue={formData.phoneNumber.replace(/^\+\d+\s?-?\s?/, '')}
-                        defaultCode="US"
-                        layout="second"
-                        onChangeFormattedText={(text) => handleInputChange("phoneNumber", text)}
-                        containerStyle={styles.phoneInput}
-                        textContainerStyle={styles.phoneText}
-                        textInputStyle={[styles.phoneTextInput, { marginBottom: isTablet ? 12 : 0 }]}
-                        textInputProps={{
-                            maxLength: 13,
-                            keyboardType: "default",
-                        }}
-                        flagButtonStyle={styles.flagButton}
-                        placeholder="Enter your phone number"
-                    />
-                </View>
-                {errors.phoneNumber && <Text style={styles.error}>{errors.phoneNumber}</Text>}
-                <View style={styles.phoneContainer}>
-                    <Text style={styles.label}>
-                        Address<Text style={styles.asterisk}> *</Text>
-                    </Text>
-                    <View style={{ flex: 1, position: 'relative', zIndex: 999 }}>
-                        <GooglePlacesAutocomplete
-                            ref={googleRef}
-                            placeholder="Enter Your Address"
-                            fetchDetails={true}
-                            onPress={(data, details = null) => {
-                                console.log('Selected:', data?.description);
-                                handleInputChange("address", data?.description);
-                                // Update text manually
-                                googleRef.current?.setAddressText(data?.description);
-
-                                // Delay the blur slightly to ensure suggestions unmount properly
-                                setTimeout(() => {
-                                    googleRef.current?.blur();
-                                }, 100);
-                            }}
-                            enablePoweredByContainer={false}
-                            // keepResultsAfterBlur={Platform.OS === "android" ? false : true}
-                            query={{
-                                key: GOOGLE_MAP_API_KEY,
-                                language: 'en',
-                            }}
-                            styles={{
-                                container: {
-                                    flex: 1,
-                                    zIndex: 999,
-                                },
-                                listView: {
-                                    zIndex: 999,
-                                    elevation: 5,
-                                    backgroundColor: "#fff",
-                                    marginTop: 5,
-                                },
-                                textInputContainer: {
-                                    zIndex: 999,
-                                },
-                                textInput: {
-                                    height: 44,
-                                    borderWidth: 1,
-                                    borderColor: blueColor,
-                                    borderRadius: 50,
-                                    paddingHorizontal: 16,
-                                    backgroundColor: '#fff',
-                                },
-                            }}
-                        />
-                    </View>
-                </View>
-                {errors.address && <Text style={styles.error}>{errors.address}</Text>}
-                <CustomTextInput
-                    label="Secondary Email (Optional)"
-                    placeholder="Enter your secondary email"
-                    value={formData.secondaryEmail}
-                    // onChangeText={(text) => handleInputChange("secondaryEmail", text)}
-                    onChangeText={(text) => {
-                        const updatedText = text.charAt(0).toLowerCase() + text.slice(1);
-                        handleInputChange("secondaryEmail", updatedText);  // Update the form data with modified email
-                    }}
-                />
-                {errors.secondaryEmail && <Text style={styles.error}>{errors.secondaryEmail}</Text>}
-                <View style={styles.phoneContainer}>
-                    <Text style={styles.label}>
-                        Secondary Phone Number (Optional)
-                    </Text>
-                    <PhoneInput
-                        ref={phoneInput}
-                        defaultValue={formData.secondaryPhoneNumber}
-                        defaultCode="US"
-                        layout="second"
-                        onChangeFormattedText={(text) => handleInputChange("secondaryPhoneNumber", text)}
-                        textInputProps={{
-                            maxLength: 13,
-                            keyboardType: "default",
-                        }}
-                        containerStyle={styles.phoneInput}
-                        textContainerStyle={styles.phoneText}
-                        textInputStyle={[styles.phoneTextInput, { marginBottom: isTablet ? 12 : 0 }]}
-                        flagButtonStyle={styles.flagButton}
-                        placeholder="Enter your secondary phone number"
-                    />
-                </View>
-                {errors.secondaryPhoneNumber && <Text style={styles.error}>{errors.secondaryPhoneNumber}</Text>}
-                <View style={styles.phoneContainer}>
-                    <Text style={styles.label}>
-                        Tax Forms (Optional)
-                    </Text>
-                    {files.length === 0 ? (
-                        <TouchableOpacity
-                            onPress={pickFile}
-                            style={[{
-                                width: "100%",
-                                borderColor: blueColor,
-                                borderRadius: 10,
-                                borderWidth: 1,
-                                borderStyle: 'dashed',
-                                padding: spacings.small2x,
-                            }, alignJustifyCenter]}
-                        >
-                            <Ionicons name="cloud-upload-outline" size={30} color={grayColor} />
-                            <Text style={{ marginTop: 5, fontSize: 12 }}>Upload File</Text>
-                            <Text style={[styles.label, { fontSize: 10, color: grayColor }]}>
-                                (Only PDF, PNG, JPEG, and WEBP files will be accepted)
-                            </Text>
-                        </TouchableOpacity>
-                    ) : (
-                        <FlatList
-                            data={filesWithAddButton}
-                            numColumns={4}
-                            keyExtractor={(item, index) => index.toString()}
-                            renderItem={({ item, index }) => (
-                                item.isAddButton ? (
-                                    files.length < 10 && (
-                                        <TouchableOpacity
-                                            onPress={pickFile}
-                                            style={{
-                                                width: 68.5,
-                                                height: 68.5,
-                                                borderRadius: 5,
-                                                backgroundColor: "#eee",
-                                                justifyContent: "center",
-                                                alignItems: "center",
-                                                margin: 5,
-                                            }}
-                                        >
-                                            <Ionicons name="add" size={24} color="black" />
-                                        </TouchableOpacity>
-                                    )
-                                ) : (
-                                    <View style={{ margin: 5, alignItems: "center", position: "relative" }}>
-                                        {item.type.startsWith("image/") ? (
-                                            <Image
-                                                source={{ uri: item.uri }}
-                                                style={{ width: 68.5, height: 68.5, borderRadius: 5 }}
-                                            />
+                                <FlatList
+                                    data={filesWithAddButton}
+                                    numColumns={4}
+                                    keyExtractor={(item, index) => index.toString()}
+                                    renderItem={({ item, index }) => (
+                                        item.isAddButton ? (
+                                            files.length < 10 && (
+                                                <TouchableOpacity
+                                                    onPress={pickFile}
+                                                    style={{
+                                                        width: 68.5,
+                                                        height: 68.5,
+                                                        borderRadius: 5,
+                                                        backgroundColor: "#eee",
+                                                        justifyContent: "center",
+                                                        alignItems: "center",
+                                                        margin: 5,
+                                                    }}
+                                                >
+                                                    <Ionicons name="add" size={24} color="black" />
+                                                </TouchableOpacity>
+                                            )
                                         ) : (
-                                            <View
-                                                style={{
-                                                    width: 68.5,
-                                                    height: 68.5,
-                                                    borderRadius: 5,
-                                                    backgroundColor: "#ccc",
-                                                    justifyContent: "center",
-                                                    alignItems: "center",
-                                                }}
-                                            >
-                                                <Text style={{ fontSize: 8, textAlign: "center" }}>{item.name}</Text>
+                                            <View style={{ margin: 5, alignItems: "center", position: "relative" }}>
+                                                {item.type.startsWith("image/") ? (
+                                                    <Image
+                                                        source={{ uri: item.uri }}
+                                                        style={{ width: 68.5, height: 68.5, borderRadius: 5 }}
+                                                    />
+                                                ) : (
+                                                    <View
+                                                        style={{
+                                                            width: 68.5,
+                                                            height: 68.5,
+                                                            borderRadius: 5,
+                                                            backgroundColor: "#ccc",
+                                                            justifyContent: "center",
+                                                            alignItems: "center",
+                                                        }}
+                                                    >
+                                                        <Text style={{ fontSize: 8, textAlign: "center" }}>{item.name}</Text>
+                                                    </View>
+                                                )}
+
+                                                <TouchableOpacity
+                                                    onPress={() => removeFile(index)}
+                                                    style={{
+                                                        position: "absolute",
+                                                        top: -5,
+                                                        right: -5,
+                                                        backgroundColor: "red",
+                                                        borderRadius: 10,
+                                                        width: 20,
+                                                        height: 20,
+                                                        justifyContent: "center",
+                                                        alignItems: "center",
+                                                    }}
+                                                >
+                                                    <Text style={{ color: "white", fontSize: 12 }}>X</Text>
+                                                </TouchableOpacity>
                                             </View>
-                                        )}
-
-                                        <TouchableOpacity
-                                            onPress={() => removeFile(index)}
-                                            style={{
-                                                position: "absolute",
-                                                top: -5,
-                                                right: -5,
-                                                backgroundColor: "red",
-                                                borderRadius: 10,
-                                                width: 20,
-                                                height: 20,
-                                                justifyContent: "center",
-                                                alignItems: "center",
-                                            }}
-                                        >
-                                            <Text style={{ color: "white", fontSize: 12 }}>X</Text>
-                                        </TouchableOpacity>
-                                    </View>
-                                )
+                                        )
+                                    )}
+                                />
                             )}
+                        </View>
+
+                        <CustomTextInput
+                            label="Password"
+                            placeholder="Enter your password"
+                            value={formData.password}
+                            onChangeText={(text) => handleInputChange("password", text)}
+                            secureTextEntry={!isPasswordVisible}
+                            required={true}
+                            rightIcon={
+                                <TouchableOpacity onPress={() => setPasswordVisible(!isPasswordVisible)}>
+                                    <MaterialCommunityIcons name={isPasswordVisible ? "eye" : "eye-off"} size={20} color={grayColor} />
+                                </TouchableOpacity>
+                            }
+                            labelStyle={{
+                                fontSize: 14,
+                                fontWeight: '500',
+                                color: whiteColor,
+                                marginBottom: 5,
+                            }}
                         />
-                    )}
-                </View>
+                        {errors.password && <Text style={styles.error}>{errors.password}</Text>}
 
-                <CustomTextInput
-                    label="Password"
-                    placeholder="Enter your password"
-                    value={formData.password}
-                    onChangeText={(text) => handleInputChange("password", text)}
-                    secureTextEntry={!isPasswordVisible}
-                    required={true}
-                    rightIcon={
-                        <TouchableOpacity onPress={() => setPasswordVisible(!isPasswordVisible)}>
-                            <MaterialCommunityIcons name={isPasswordVisible ? "eye" : "eye-off"} size={20} color={grayColor} />
-                        </TouchableOpacity>
-                    }
-                />
-                {errors.password && <Text style={styles.error}>{errors.password}</Text>}
+                        <CustomTextInput
+                            label="Confirm Password"
+                            placeholder="Confirm your password"
+                            value={formData.confirmPassword}
+                            onChangeText={(text) => handleInputChange("confirmPassword", text)}
+                            secureTextEntry={!isConfirmPasswordVisible}
+                            required={true}
+                            rightIcon={
+                                <TouchableOpacity onPress={() => setConfirmPasswordVisible(!isConfirmPasswordVisible)}>
+                                    <MaterialCommunityIcons name={isConfirmPasswordVisible ? "eye" : "eye-off"} size={20} color={grayColor} />
+                                </TouchableOpacity>
+                            }
+                            labelStyle={{
+                                fontSize: 14,
+                                fontWeight: '500',
+                                color: whiteColor,
+                                marginBottom: 5,
+                            }}
+                        />
+                        {errors.confirmPassword && <Text style={styles.error}>{errors.confirmPassword}</Text>}
+                        {errors.apiError && <Text style={styles.error}>{errors.apiError}</Text>}
 
-                <CustomTextInput
-                    label="Confirm Password"
-                    placeholder="Confirm your password"
-                    value={formData.confirmPassword}
-                    onChangeText={(text) => handleInputChange("confirmPassword", text)}
-                    secureTextEntry={!isConfirmPasswordVisible}
-                    required={true}
-                    rightIcon={
-                        <TouchableOpacity onPress={() => setConfirmPasswordVisible(!isConfirmPasswordVisible)}>
-                            <MaterialCommunityIcons name={isConfirmPasswordVisible ? "eye" : "eye-off"} size={20} color={grayColor} />
-                        </TouchableOpacity>
-                    }
-                />
-                {errors.confirmPassword && <Text style={styles.error}>{errors.confirmPassword}</Text>}
-                {errors.apiError && <Text style={styles.error}>{errors.apiError}</Text>}
-
-                <CustomButton title="Register" onPress={handleRegister} style={styles.button} loading={isLoading} disabled={isLoading} />
-                {/* </>
+                        <CustomButton title="Register" onPress={handleRegister} style={styles.button} loading={isLoading} disabled={isLoading} />
+                        {/* </>
                 )} */}
 
-                <Text style={[styles.footerText, textAlign]}>
-                    {ALREADY_HAVE_AN_ACCOUNT}{" "}
-                    <Text style={styles.loginText} onPress={handleLogin}>
-                        {LOGIN}
-                    </Text>
-                </Text>
-                {successModalVisible && <SuccessModal
-                    visible={successModalVisible}
-                    onClose={() => setSuccessModalVisible(false)}
-                    headingText={"Thank You for signing up!"}
-                    text={"Your account request has been submitted successfully and is currently under review by our team. You will receive an email notification once your account is approved."}
-                    onPressContinue={() => { setSuccessModalVisible(false), navigation.navigate("Login"); }}
-                />}
+                        <Text style={[styles.footerText, textAlign]}>
+                            {ALREADY_HAVE_AN_ACCOUNT}{" "}
+                            <Text style={styles.loginText} onPress={handleLogin}>
+                                {LOGIN}
+                            </Text>
+                        </Text>
+                        {successModalVisible && <SuccessModal
+                            visible={successModalVisible}
+                            onClose={() => setSuccessModalVisible(false)}
+                            headingText={"Thank You for signing up!"}
+                            text={"Your account request has been submitted successfully and is currently under review by our team. You will receive an email notification once your account is approved."}
+                            onPressContinue={() => { setSuccessModalVisible(false), navigation.navigate("Login"); }}
+                        />}
+                    </View>
+                </LinearGradient>
             </ScrollView>
+
         </KeyboardAvoidingView>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: whiteColor,
-        paddingTop: 20
+        // backgroundColor: whiteColor,
+        // paddingTop: 20
     },
     logoContainer: {
         marginBottom: spacings.Large1x,
@@ -896,18 +950,18 @@ const styles = StyleSheet.create({
     },
     content: {
         paddingHorizontal: spacings.Large2x,
-        paddingBottom: spacings.Large2x
+        paddingVertical: spacings.Large2x
     },
     title: {
         fontSize: style.fontSizeLargeXX.fontSize,
         fontWeight: style.fontWeightMedium.fontWeight,
-        color: blackColor,
+        color: whiteColor,
         marginVertical: spacings.large,
     },
     subtitle: {
         fontSize: style.fontSizeLargeXX.fontSize,
         fontWeight: style.fontWeightMedium.fontWeight,
-        color: blackColor,
+        color: whiteColor,
     },
 
     halfInput: {
@@ -917,15 +971,16 @@ const styles = StyleSheet.create({
     },
     button: {
         marginTop: spacings.Large2x,
+        backgroundColor: redColor,
     },
     footerText: {
         marginTop: spacings.Large2x,
         marginBottom: spacings.large,
-        color: blackColor,
+        color: whiteColor,
     },
     loginText: {
         fontSize: style.fontSizeNormal.fontSize,
-        color: blueColor,
+        color: redColor,
         fontWeight: style.fontWeightThin1x.fontWeight,
     },
     phoneContainer: {
@@ -933,13 +988,13 @@ const styles = StyleSheet.create({
     },
     label: {
         fontSize: 14,
-        color: blackColor,
+        color: whiteColor,
         marginBottom: 7,
         fontWeight: "500",
     },
     phoneInput: {
         borderWidth: 1,
-        borderColor: blueColor,
+        borderColor: blackColor,
         borderRadius: 50,
         height: 42,
         width: "100%",
@@ -983,12 +1038,12 @@ const styles = StyleSheet.create({
         width: 100,
         height: 100,
         borderRadius: 50,
-        backgroundColor: lightBlueColor,
+        backgroundColor: whiteColor,
         alignItems: "center",
         justifyContent: "center",
         // overflow: "hidden",
         borderWidth: 1,
-        borderColor: blueColor,
+        borderColor: redColor,
         alignSelf: "center"
     },
     image: {

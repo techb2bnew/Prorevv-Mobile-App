@@ -1,6 +1,6 @@
 import { Alert, Image, Pressable, StyleSheet, Text, TouchableOpacity, View, PermissionsAndroid, Platform, ActivityIndicator, TextInput, TouchableWithoutFeedback, KeyboardAvoidingView, Keyboard, Modal, Linking, Dimensions, useWindowDimensions } from 'react-native'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { blackColor, blueColor, grayColor, greenColor, lightBlueColor, mediumGray, orangeColor, redColor, whiteColor } from '../constans/Color';
+import { blackColor, blueColor, grayColor, greenColor, lightBlueColor, lightGrayColor, mediumGray, orangeColor, redColor, whiteColor } from '../constans/Color';
 import { BaseStyle } from '../constans/Style';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from '../utils';
 import { style, spacings } from '../constans/Fonts';
@@ -777,7 +777,7 @@ const ProfileScreen = ({ navigation }) => {
           top: Platform.OS === "android" ? isTablet ? 20 : 13 : isTablet ? orientation === "LANDSCAPE" ? 1 : 20 : 13,
           right: 15,
           // backgroundColor: blueColor,
-          borderColor: blueColor,
+          borderColor: lightGrayColor,
           width: isTablet ? orientation === "LANDSCAPE" ? wp(5) : wp(8) : orientation === "LANDSCAPE" ? wp(5) : wp(9),
           height: isTablet ? orientation === "LANDSCAPE" ? wp(5) : wp(6) : orientation === "LANDSCAPE" ? wp(5) : wp(8),
           borderRadius: 5,
@@ -786,7 +786,7 @@ const ProfileScreen = ({ navigation }) => {
           alignItems: "center",
         }}
       >
-        <Ionicons name="power" size={25} color={redColor} />
+        <Ionicons name="power" size={20} color={redColor} />
       </TouchableOpacity>}
       {!isEditing ?
         <View style={[styles.container]}>
@@ -796,7 +796,7 @@ const ProfileScreen = ({ navigation }) => {
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
             >
-              <View style={[styles.userdetailsBox, { padding: spacings.xLarge, borderWidth: 2, borderColor: lightBlueColor, backgroundColor: whiteColor }]}>
+              <View style={[styles.userdetailsBox, { padding: spacings.xLarge, borderWidth: 2, borderColor: blackColor, backgroundColor: whiteColor }]}>
                 <View style={[flexDirectionRow, alignItemsCenter]}>
                   {imageUri ? (
                     <Image source={{ uri: imageUri }} style={[styles.image, { borderRadius: isTablet ? isIOsAndTablet ? 1000 : 100 : orientation === "LANDSCAPE" ? 200 : 50 }]} />
@@ -814,7 +814,7 @@ const ProfileScreen = ({ navigation }) => {
                     </Text>
                   </View>
                 </View>
-                <TouchableOpacity style={[{ backgroundColor: blueColor, width: "100%", height: isTablet ? wp(6) : orientation === "LANDSCAPE" ? wp(5) : wp(9.5), borderRadius: 50, marginTop: spacings.large }, alignJustifyCenter, flexDirectionRow]}
+                <TouchableOpacity style={[{ backgroundColor: blackColor, width: "100%", height: isTablet ? wp(6) : orientation === "LANDSCAPE" ? wp(5) : wp(9.5), borderRadius: 50, marginTop: spacings.large }, alignJustifyCenter, flexDirectionRow]}
                   onPress={() => { setIsEditing(true) }}>
                   <Text style={{ fontSize: 16, fontWeight: style.fontWeightThin1x.fontWeight, color: whiteColor, marginHorizontal: 8 }}>
                     Edit
@@ -826,7 +826,7 @@ const ProfileScreen = ({ navigation }) => {
               <View style={[styles.userdetailsBox, alignJustifyCenter]}>
                 <View style={[{ width: wp(100), height: 'auto', paddingLeft: spacings.xLarge }, flexDirectionRow]}>
                   <View style={{ padding: spacings.xLarge }}>
-                    <Feather name="phone" size={25} color={blueColor} />
+                    <Feather name="phone" size={25} color={blackColor} />
                   </View>
                   <TouchableOpacity
                     style={{ paddingVertical: spacings.xLarge }}
@@ -838,7 +838,7 @@ const ProfileScreen = ({ navigation }) => {
                 {/* <View style={[styles.separator, { marginVertical: spacings.large }]} /> */}
                 <View style={[{ width: wp(100), height: 'auto', paddingLeft: spacings.xLarge }, flexDirectionRow]}>
                   <View style={{ padding: spacings.xLarge }}>
-                    <Fontisto name="email" size={25} color={blueColor} />
+                    <Fontisto name="email" size={25} color={blackColor} />
                   </View>
                   <TouchableOpacity
                     style={{ paddingVertical: spacings.xLarge }}
@@ -850,7 +850,7 @@ const ProfileScreen = ({ navigation }) => {
                 {/* <View style={[styles.separator, { marginVertical: spacings.large }]} /> */}
                 <View style={[{ width: wp(100), height: 'auto', paddingLeft: spacings.xLarge }, flexDirectionRow]}>
                   <View style={{ padding: spacings.xLarge }}>
-                    <Feather name="map-pin" size={24} color={blueColor} />
+                    <Feather name="map-pin" size={24} color={blackColor} />
                   </View>
                   <View style={{ paddingVertical: spacings.large, width: "80%" }}>
                     <Text
@@ -879,7 +879,7 @@ const ProfileScreen = ({ navigation }) => {
                 {/* {businessName && <View style={[styles.separator, { marginVertical: spacings.large }]} />} */}
                 {businessName && <View style={[{ width: wp(100), height: 'auto', paddingLeft: spacings.xLarge }, flexDirectionRow]}>
                   <View style={{ padding: spacings.xLarge }}>
-                    <Ionicons name="business-outline" size={25} color={blueColor} />
+                    <Ionicons name="business-outline" size={25} color={blackColor} />
                   </View>
                   <View style={{ paddingVertical: spacings.xLarge }}>
                     <Text style={[styles.text, { fontSize: style.fontSizeNormal1x.fontSize, paddingTop: 3, fontWeight: style.fontWeightThin1x.fontWeight }]}>{businessName}</Text>
@@ -890,7 +890,7 @@ const ProfileScreen = ({ navigation }) => {
               <View style={[styles.userdetailsBox, alignJustifyCenter,]}>
                 <TouchableOpacity style={[{ width: wp(100), height: 'auto', paddingLeft: spacings.xLarge }, flexDirectionRow]} onPress={() => setModalVisible(true)}>
                   <View style={{ padding: spacings.xLarge }}>
-                    <MaterialIcons name="support-agent" size={24} color={blueColor} />
+                    <MaterialIcons name="support-agent" size={24} color={blackColor} />
                   </View>
                   <View style={{ paddingVertical: spacings.xLarge }}>
                     <Text style={[styles.text, { fontSize: style.fontSizeNormal1x.fontSize, paddingTop: 3, fontWeight: style.fontWeightThin1x.fontWeight }]}>Contact Support</Text>
@@ -898,7 +898,7 @@ const ProfileScreen = ({ navigation }) => {
                 </TouchableOpacity>
                 <TouchableOpacity style={[{ width: wp(100), height: 'auto', paddingLeft: spacings.xLarge }, flexDirectionRow]} onPress={() => { navigation.navigate("FeedBackScreen", { emailParam: email }) }}>
                   <View style={{ padding: spacings.xLarge }}>
-                    <MaterialCommunityIcons name="message-text-lock-outline" size={24} color={blueColor} />
+                    <MaterialCommunityIcons name="message-text-lock-outline" size={24} color={blackColor} />
                   </View>
                   <View style={{ paddingVertical: spacings.xLarge }}>
                     <Text style={[styles.text, { fontSize: style.fontSizeNormal1x.fontSize, paddingTop: 3, fontWeight: style.fontWeightThin1x.fontWeight }]}>Feedback & Issue Report</Text>
@@ -908,7 +908,7 @@ const ProfileScreen = ({ navigation }) => {
               <View style={[styles.userdetailsBox, alignJustifyCenter]}>
                 <TouchableOpacity style={[{ width: wp(100), height: 'auto', paddingLeft: spacings.xLarge }, flexDirectionRow]} onPress={() => navigation.navigate("HowToPlay")}>
                   <View style={{ padding: spacings.xLarge }}>
-                    <MaterialCommunityIcons name="gesture-spread" size={25} color={blueColor} />
+                    <MaterialCommunityIcons name="gesture-spread" size={25} color={blackColor} />
                   </View>
                   <View style={{ paddingVertical: spacings.xLarge }}>
                     <Text style={[styles.text, { fontSize: style.fontSizeNormal1x.fontSize, paddingTop: 3, fontWeight: style.fontWeightThin1x.fontWeight }]}>How To Use</Text>
@@ -954,7 +954,7 @@ const ProfileScreen = ({ navigation }) => {
                     <View style={styles.modalHeader}>
                       <Text style={styles.modalTitle}>Contact Support</Text>
                       <TouchableOpacity onPress={() => setModalVisible(false)}>
-                        <Ionicons name="close-circle" size={28} color={blueColor} />
+                        <Ionicons name="close-circle" size={28} color={blackColor} />
                       </TouchableOpacity>
                     </View>
 
@@ -962,13 +962,13 @@ const ProfileScreen = ({ navigation }) => {
                     <View style={styles.modalContent}>
                       {/* Email Open */}
                       <TouchableOpacity onPress={() => Linking.openURL(`mailto:${SUPPORT_EMAIL}`)} style={styles.contactItem}>
-                        <Fontisto name="email" size={25} color={blueColor} />
+                        <Fontisto name="email" size={25} color={blackColor} />
                         <Text style={styles.contactText}>{SUPPORT_EMAIL}</Text>
                       </TouchableOpacity>
 
                       {/* Phone Dial */}
                       <TouchableOpacity onPress={() => Linking.openURL(`tel:${SUPPORT_MOBILE}`)} style={styles.contactItem}>
-                        <Feather name="phone" size={24} color={blueColor} />
+                        <Feather name="phone" size={24} color={blackColor} />
                         <Text style={styles.contactText}>{SUPPORT_MOBILE}</Text>
                       </TouchableOpacity>
                     </View>
@@ -989,7 +989,7 @@ const ProfileScreen = ({ navigation }) => {
             >
               {isLoadingState && (
                 <View style={styles.loadingOverlay}>
-                  <ActivityIndicator size="large" color={blueColor} />
+                  <ActivityIndicator size="large" color={blackColor} />
                 </View>
               )}
               <View style={[styles.container]}>
@@ -1011,7 +1011,7 @@ const ProfileScreen = ({ navigation }) => {
                       <View style={[styles.cameraIconContainer, {
                         bottom: isTablet ? isIOsAndTablet ? 20 : 15 : 5,
                         right: isTablet ? isIOsAndTablet ? 20 : 15 : -1,
-                        backgroundColor: blueColor,
+                        backgroundColor: blackColor,
                         width: isTablet ? 35 : 25,
                         height: isTablet ? 35 : 25,
                         borderRadius: isTablet ? 25 : 15
@@ -1029,14 +1029,14 @@ const ProfileScreen = ({ navigation }) => {
                       {businessLogoUri ? (
                         <Image source={{ uri: businessLogoUri }} style={[styles.image, { width: wp(25), height: wp(25), borderRadius: isTablet ? isIOsAndTablet ? 1000 : 100 : 50 }]} />
                       ) : (
-                        <View style={[styles.fallbackContainer, { backgroundColor: '#ddd', borderRadius: isTablet ? isIOsAndTablet ? 1000 : 100 : 50 }]}>
-                          <Ionicons name="business-outline" size={30} color={blackColor} />
+                        <View style={[styles.fallbackContainer, { backgroundColor:blackColor, borderRadius: isTablet ? isIOsAndTablet ? 1000 : 100 : 50 }]}>
+                          <Ionicons name="business-outline" size={30} color={whiteColor} />
                         </View>
                       )}
                       <View style={[styles.cameraIconContainer, {
                         bottom: isTablet ? isIOsAndTablet ? 20 : 15 : 5,
                         right: isTablet ? isIOsAndTablet ? 20 : 15 : -1,
-                        backgroundColor: blueColor,
+                        backgroundColor: blackColor,
                         width: isTablet ? 35 : 25,
                         height: isTablet ? 35 : 25,
                         borderRadius: isTablet ? 25 : 15
@@ -1098,7 +1098,7 @@ const ProfileScreen = ({ navigation }) => {
                       flagButtonStyle={styles.flagButton}
                     />
                   </View>
-                  <View style={[styles.inputGroup, { height: isTablet ? hp(5) : hp(10) }]}>
+                  <View style={[styles.inputGroup, { height: isTablet ? orientation === "LANDSCAPE" ? hp(8) : hp(5) : hp(10) }]}>
                     <Text style={styles.label}>Address</Text>
                     <TextInput style={styles.input} value={address} onChangeText={setAddress} placeholder="Enter Address" />
                   </View>
@@ -1161,7 +1161,7 @@ const styles = StyleSheet.create({
   },
   userdetailsBox: {
     width: "100%",
-    backgroundColor: lightBlueColor,
+    backgroundColor: lightGrayColor,
     borderRadius: 10,
     marginTop: 8,
     padding: spacings.large
@@ -1181,7 +1181,7 @@ const styles = StyleSheet.create({
   fallbackContainer: {
     width: wp(25),
     height: wp(25),
-    backgroundColor: blueColor,
+    backgroundColor: blackColor,
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 100
@@ -1195,7 +1195,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 5,
     right: -1,
-    backgroundColor: blueColor,
+    backgroundColor: blackColor,
     width: 25,
     height: 25,
     borderRadius: 15,
@@ -1227,13 +1227,13 @@ const styles = StyleSheet.create({
   input: {
     height: 41.2,
     borderWidth: 1,
-    borderColor: blueColor,
+    borderColor: blackColor,
     borderRadius: 50,
     paddingHorizontal: spacings.large,
     backgroundColor: "#fff",
   },
   saveButton: {
-    backgroundColor: blueColor,
+    backgroundColor: blackColor,
     padding: spacings.large,
     borderRadius: 8,
     alignItems: "center",
@@ -1288,7 +1288,7 @@ const styles = StyleSheet.create({
   contactText: {
     marginLeft: 10,
     fontSize: 16,
-    color: blueColor,
+    color: blackColor,
     textDecorationLine: "underline",
   },
   modalBox: {
@@ -1323,7 +1323,7 @@ const styles = StyleSheet.create({
   },
   phoneInput: {
     borderWidth: 1,
-    borderColor: blueColor,
+    borderColor: blackColor,
     borderRadius: 50,
     height: 42,
     width: "100%",

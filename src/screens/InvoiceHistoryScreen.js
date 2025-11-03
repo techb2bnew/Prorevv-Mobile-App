@@ -280,7 +280,7 @@ const InvoiceHistoryScreen = ({ navigation,
                     flexDirection: 'row',
                     alignItems: 'center',
                     borderWidth: 1,
-                    borderColor: blueColor,
+                    borderColor: blackColor,
                     borderRadius: 8,
                     backgroundColor: whiteColor,
                     paddingHorizontal: spacings.large,
@@ -297,7 +297,7 @@ const InvoiceHistoryScreen = ({ navigation,
                         }}
                         placeholderTextColor={grayColor}
                     />
-                    <Feather name="search" size={20} color={blueColor} />
+                    <Feather name="search" size={20} color={blackColor} />
                 </View>
             </View>
 
@@ -305,7 +305,7 @@ const InvoiceHistoryScreen = ({ navigation,
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                     <View>
                         {/* Header Row */}
-                        <View style={[styles.tableHeaderRow, { backgroundColor: blueColor }]}>
+                        <View style={[styles.tableHeaderRow, { backgroundColor: blackColor }]}>
                             {/* <Text style={[styles.tableHeader, { width: wp(15) }]}>Select</Text> */}
                             <Text style={[styles.tableHeader, { width: isTablet ? wp(20) : orientation === "LANDSCAPE" ? wp(20) : wp(35) }]}>Invoice Number</Text>
                             <Text style={[styles.tableHeader, { width: isTablet ? wp(20) : orientation === "LANDSCAPE" ? wp(20) : wp(35) }]}>Customer Name</Text>
@@ -326,7 +326,7 @@ const InvoiceHistoryScreen = ({ navigation,
                                 keyExtractor={(item, index) => item.id?.toString() || index.toString()}
                                 showsVerticalScrollIndicator={false}
                                 renderItem={({ item, index }) => {
-                                    const rowStyle = { backgroundColor: index % 2 === 0 ? lightBlueColor : whiteColor };
+                                    const rowStyle = { backgroundColor: index % 2 === 0 ? lightGrayColor : whiteColor };
                                     const isSelected = selectedVehicles.some(v => v.id === item.id);
                                     // console.log("📦 Rendering item:", item);
 
@@ -395,7 +395,7 @@ const InvoiceHistoryScreen = ({ navigation,
                                                             fontSize: 14,
                                                             padding: 4,
                                                             borderWidth: 1,
-                                                            borderColor: blueColor,
+                                                            borderColor: blackColor,
                                                             borderRadius: 8,
                                                             backgroundColor: lightGrayOpacityColor,
                                                             textAlign: 'center'
@@ -422,7 +422,7 @@ const InvoiceHistoryScreen = ({ navigation,
                                                             fontSize: 14,
                                                             padding: 4,
                                                             borderWidth: 1,
-                                                            borderColor: blueColor,
+                                                            borderColor: blackColor,
                                                             borderRadius: 8,
                                                             backgroundColor: whiteColor,
                                                             textAlign: 'center'
@@ -447,7 +447,7 @@ const InvoiceHistoryScreen = ({ navigation,
                                                 }}
                                             >
                                                 {exportingId === item?.id ? (
-                                                    <ActivityIndicator size="small" color={blueColor} />
+                                                    <ActivityIndicator size="small" color={blackColor} />
                                                 ) : (
                                                     <Feather name="download" size={20} color={blackColor} />
                                                 )}
@@ -489,7 +489,7 @@ const InvoiceHistoryScreen = ({ navigation,
                                 onEndReachedThreshold={0.5}
                                 ListFooterComponent={
                                     loadingMore ? (
-                                        <ActivityIndicator size="small" color={blueColor} style={{ marginVertical: 10 }} />
+                                        <ActivityIndicator size="small" color={blackColor} style={{ marginVertical: 10 }} />
                                     ) : null
                                 }
                             />
@@ -539,13 +539,13 @@ const InvoiceHistoryScreen = ({ navigation,
 
                             return (
                                 <Pressable style={{
-                                    backgroundColor: index % 2 === 0 ? lightBlueColor : whiteColor,
+                                    backgroundColor: index % 2 === 0 ? lightGrayColor : whiteColor,
                                     borderRadius: 10,
                                     padding: 10,
                                     marginBottom: 10,
                                     marginHorizontal: 10,
                                     borderWidth: 1,
-                                    borderColor: blueColor
+                                    borderColor: blackColor
                                 }}
                                     onPress={() => navigation.navigate("InvoiceDetailsScreen", { invoiceId: item?.invoiceNumber })}
                                 >
@@ -556,7 +556,7 @@ const InvoiceHistoryScreen = ({ navigation,
                                             style={{ position: "absolute", right: -5, top: -10, zIndex: 999 }}>
 
                                             {exportingId === item?.id ? (
-                                                <ActivityIndicator size="small" color={blueColor} />
+                                                <ActivityIndicator size="small" color={blackColor} />
                                             ) : (
                                                 <Feather name="download" size={20} color={blackColor} />
                                             )}
@@ -603,7 +603,7 @@ const InvoiceHistoryScreen = ({ navigation,
                                                             fontSize: 14,
                                                             padding: 4,
                                                             borderWidth: 1,
-                                                            borderColor: blueColor,
+                                                            borderColor: blackColor,
                                                             borderRadius: 8,
                                                             backgroundColor: lightGrayOpacityColor,
                                                             textAlign: 'center'
@@ -630,7 +630,7 @@ const InvoiceHistoryScreen = ({ navigation,
                                                             fontSize: 14,
                                                             padding: 4,
                                                             borderWidth: 1,
-                                                            borderColor: blueColor,
+                                                            borderColor: blackColor,
                                                             borderRadius: 8,
                                                             backgroundColor: whiteColor,
                                                             textAlign: 'center'
@@ -682,7 +682,7 @@ const InvoiceHistoryScreen = ({ navigation,
                         onEndReachedThreshold={0.5}
                         ListFooterComponent={
                             loadingMore ? (
-                                <ActivityIndicator size="small" color={blueColor} style={{ marginVertical: 10 }} />
+                                <ActivityIndicator size="small" color={blackColor} style={{ marginVertical: 10 }} />
                             ) : null
                         }
                     />
@@ -735,7 +735,7 @@ const InvoiceHistoryScreen = ({ navigation,
                                     style={{
                                         paddingVertical: 8,
                                         paddingHorizontal: 20,
-                                        backgroundColor: invoiceStatusFilter === status ? blueColor : lightGrayColor,
+                                        backgroundColor: invoiceStatusFilter === status ? blackColor : lightGrayColor,
                                         borderRadius: 10,
                                         marginRight: 10
                                     }}>
@@ -782,7 +782,7 @@ const InvoiceHistoryScreen = ({ navigation,
                                 style={{
                                     flex: 1,
                                     paddingVertical: 10,
-                                    backgroundColor: dateSortOrder === 'desc' ? blueColor : lightGrayColor,
+                                    backgroundColor: dateSortOrder === 'desc' ? blackColor : lightGrayColor,
                                     borderRadius: 10,
                                     marginRight: 10,
                                     alignItems: 'center',
@@ -796,7 +796,7 @@ const InvoiceHistoryScreen = ({ navigation,
                                 style={{
                                     flex: 1,
                                     paddingVertical: 10,
-                                    backgroundColor: dateSortOrder === 'asc' ? blueColor : lightGrayColor,
+                                    backgroundColor: dateSortOrder === 'asc' ? blackColor : lightGrayColor,
                                     borderRadius: 10,
                                     alignItems: 'center',
                                 }}
@@ -812,7 +812,7 @@ const InvoiceHistoryScreen = ({ navigation,
                                 style={{
                                     flex: 1,
                                     paddingVertical: 10,
-                                    backgroundColor: nameSortOrder === 'asc' ? blueColor : lightGrayColor,
+                                    backgroundColor: nameSortOrder === 'asc' ? blackColor : lightGrayColor,
                                     borderRadius: 10,
                                     marginRight: 10,
                                     alignItems: 'center',
@@ -826,7 +826,7 @@ const InvoiceHistoryScreen = ({ navigation,
                                 style={{
                                     flex: 1,
                                     paddingVertical: 10,
-                                    backgroundColor: nameSortOrder === 'desc' ? blueColor : lightGrayColor,
+                                    backgroundColor: nameSortOrder === 'desc' ? blackColor : lightGrayColor,
                                     borderRadius: 10,
                                     alignItems: 'center',
                                 }}
@@ -842,7 +842,7 @@ const InvoiceHistoryScreen = ({ navigation,
                                 setIsFilterModalVisible(false);
                             }}
                             style={{
-                                backgroundColor: blueColor,
+                                backgroundColor: blackColor,
                                 paddingVertical: 12,
                                 borderRadius: 10,
                                 alignItems: 'center'
@@ -902,7 +902,7 @@ const styles = StyleSheet.create({
         padding: spacings.medium,
         borderBottomWidth: 1,
         borderColor: '#E6E6E6',
-        backgroundColor: blueColor
+        backgroundColor: blackColor
     },
     tableHeader: {
         fontSize: style.fontSizeNormal.fontSize,

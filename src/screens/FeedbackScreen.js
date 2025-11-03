@@ -305,14 +305,14 @@ const styles = StyleSheet.create({
     input: {
         height: 41.2,
         borderWidth: 1,
-        borderColor: blueColor,
+        borderColor: blackColor,
         borderRadius: 50,
         paddingHorizontal: spacings.large,
         backgroundColor: "#fff",
     },
     textArea: {
         borderWidth: 1,
-        borderColor: blueColor,
+        borderColor: blackColor,
         borderRadius: 5,
         padding: spacings.large,
         height: 100,
@@ -321,7 +321,7 @@ const styles = StyleSheet.create({
     },
     uploadBox: {
         width: "100%",
-        borderColor: blueColor,
+        borderColor: blackColor,
         borderRadius: 10,
         borderWidth: 1,
         borderStyle: 'dashed',
@@ -343,6 +343,7 @@ const styles = StyleSheet.create({
     },
     button: {
         marginTop: spacings.large,
+        backgroundColor:blackColor
     },
     errorText: {
         color: "red",

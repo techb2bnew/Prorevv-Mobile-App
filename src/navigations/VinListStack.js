@@ -16,6 +16,7 @@ import VehicleDetailsScreen from "../screens/VehicleDetailsScreen";
 import NewJobDetailsScreen from "../screens/NewJobDetailsScreen";
 import CreateJobScreen from "../screens/CreateJobScreen";
 import ProfileStack from "./ProfileStack";
+import HomeStack from "./HomeStack";
 
 
 const Stack = createStackNavigator();

@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, Pressable, ScrollView, Alert, ScrollViewBase, Image, ActivityIndicator, Platform, KeyboardAvoidingView, Modal, Keyboard, Dimensions, TouchableWithoutFeedback, useWindowDimensions } from 'react-native';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { blackColor, blueColor, grayColor, greenColor, lightBlueColor, mediumGray, orangeColor, redColor, whiteColor } from '../constans/Color';
+import { blackColor, blueColor, grayColor, greenColor, lightBlueColor, lightGrayColor, mediumGray, orangeColor, redColor, whiteColor } from '../constans/Color';
 import { BaseStyle } from '../constans/Style';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from '../utils';
 import { style, spacings } from '../constans/Fonts';
@@ -664,7 +664,7 @@ const CreateJobScreen = ({ route }) => {
                     <TouchableOpacity
                         onPress={() => setViewType('list')}
                         style={[{
-                            backgroundColor: viewType === 'list' ? blueColor : whiteColor,
+                            backgroundColor: viewType === 'list' ? lightGrayColor : whiteColor,
                             width: isTablet ? wp(8) : wp(12),
                             height: orientation === "LANDSCAPE" ? hp(6.5) : hp(4.5),
                             justifyContent: 'center',
@@ -673,19 +673,19 @@ const CreateJobScreen = ({ route }) => {
                             marginRight: 10,
 
                         }]}>
-                        <Ionicons name="list" size={isTablet ? 35 : orientation === "LANDSCAPE" ? 35 : 20} color={viewType === 'list' ? whiteColor : blackColor} />
+                        <Ionicons name="list" size={isTablet ? 35 : orientation === "LANDSCAPE" ? 35 : 20} color={viewType === 'list' ? blackColor : blackColor} />
                     </TouchableOpacity>
                     <TouchableOpacity
                         onPress={() => setViewType('grid')}
                         style={[, {
-                            backgroundColor: viewType === 'grid' ? blueColor : whiteColor,
+                            backgroundColor: viewType === 'grid' ? lightGrayColor : whiteColor,
                             width: isTablet ? wp(8) : wp(12),
                             height: orientation === "LANDSCAPE" ? hp(6.5) : hp(4.5),
                             justifyContent: 'center',
                             alignItems: 'center',
                             borderRadius: 5,
                         }]}>
-                        <Ionicons name="grid-sharp" size={isTablet ? 35 : orientation === "LANDSCAPE" ? 35 : 20} color={viewType === 'grid' ? whiteColor : blackColor} />
+                        <Ionicons name="grid-sharp" size={isTablet ? 35 : orientation === "LANDSCAPE" ? 35 : 20} color={viewType === 'grid' ? blackColor : blackColor} />
                     </TouchableOpacity>
 
                 </View>}
@@ -709,7 +709,7 @@ const CreateJobScreen = ({ route }) => {
                                         {/* Table Rows */}
                                         {isJobLoading ? (
                                             <View style={{ width: wp(100), justifyContent: 'center', alignItems: 'center', paddingVertical: 20 }}>
-                                                <ActivityIndicator size="large" color={blueColor} />
+                                                <ActivityIndicator size="large" color={blackColor} />
                                                 <Text style={{ marginTop: 10, color: '#555' }}>Loading jobs...</Text>
                                             </View>
                                         ) : (
@@ -722,7 +722,7 @@ const CreateJobScreen = ({ route }) => {
                                                             styles.tableRow,
                                                             flexDirectionRow,
                                                             {
-                                                                backgroundColor: index % 2 === 0 ? lightBlueColor : whiteColor,
+                                                                backgroundColor: index % 2 === 0 ? lightGrayColor : whiteColor,
                                                             },
                                                         ]}
                                                         onPress={() => navigation.navigate("NewJobDetailsScreen", {
@@ -811,7 +811,7 @@ const CreateJobScreen = ({ route }) => {
                                         position: 'absolute',
                                         bottom: hp(8),
                                         right: wp(8),
-                                        backgroundColor: blueColor,
+                                        backgroundColor: blackColor,
                                         width: 60,
                                         height: 60,
                                         borderRadius: 30,
@@ -838,13 +838,13 @@ const CreateJobScreen = ({ route }) => {
                                     showsVerticalScrollIndicator={false}
                                     renderItem={({ item, index }) => (
                                         <Pressable style={{
-                                            backgroundColor: index % 2 === 0 ? '#f4f6ff' : whiteColor,
+                                            backgroundColor: index % 2 === 0 ? lightGrayColor : whiteColor,
                                             borderRadius: 10,
                                             padding: 10,
                                             marginBottom: 10,
                                             //  marginHorizontal: 10,
                                             borderWidth: 1,
-                                            borderColor: blueColor
+                                            borderColor: blackColor
                                         }}
                                             onPress={() => navigation.navigate("NewJobDetailsScreen", {
                                                 jobId: item?.id
@@ -945,7 +945,7 @@ const CreateJobScreen = ({ route }) => {
                                         position: 'absolute',
                                         bottom: hp(5),
                                         right: wp(8),
-                                        backgroundColor: blueColor,
+                                        backgroundColor: blackColor,
                                         width: 60,
                                         height: 60,
                                         borderRadius: 30,
@@ -1108,7 +1108,7 @@ const CreateJobScreen = ({ route }) => {
                                             <Text style={styles.label}>Select Technicians</Text>
                                             <View style={{
                                                 borderWidth: 1,
-                                                borderColor: blueColor,
+                                                borderColor: blackColor,
                                                 borderRadius: 8,
                                                 maxHeight: hp(20),
                                                 overflow: "hidden",
@@ -1133,7 +1133,7 @@ const CreateJobScreen = ({ route }) => {
                                                                 <Icon
                                                                     name={selected ? "checkbox-marked" : "checkbox-blank-outline"}
                                                                     size={24}
-                                                                    color={selected ? blueColor : "#ccc"}
+                                                                    color={selected ? blackColor : "#ccc"}
                                                                     type="MaterialCommunityIcons"
                                                                 />
                                                             </TouchableOpacity>
@@ -1156,7 +1156,7 @@ const CreateJobScreen = ({ route }) => {
                                             <Text style={styles.label}>Select R Technicians</Text>
                                             <View style={{
                                                 borderWidth: 1,
-                                                borderColor: blueColor,
+                                                borderColor: blackColor,
                                                 borderRadius: 8,
                                                 maxHeight: hp(20),
                                                 overflow: "hidden",
@@ -1181,7 +1181,7 @@ const CreateJobScreen = ({ route }) => {
                                                                 <Icon
                                                                     name={selected ? "checkbox-marked" : "checkbox-blank-outline"}
                                                                     size={24}
-                                                                    color={selected ? blueColor : "#ccc"}
+                                                                    color={selected ? blackColor : "#ccc"}
                                                                     type="MaterialCommunityIcons"
                                                                 />
                                                             </TouchableOpacity>
@@ -1234,6 +1234,7 @@ const CreateJobScreen = ({ route }) => {
                                 onPress={handleSubmitJob}
                                 loading={loading}
                                 disabled={loading}
+                                style={{backgroundColor:blackColor}}
                             />
                         </View>
                         {/* </TouchableWithoutFeedback> */}
@@ -1280,7 +1281,7 @@ const styles = StyleSheet.create({
         marginTop: spacings.large,
         borderRadius: 5,
         borderWidth: 1,
-        borderColor: blueColor,
+        borderColor: blackColor,
         maxHeight: hp(13)
     },
     details: {
@@ -1293,7 +1294,7 @@ const styles = StyleSheet.create({
     techItem: {
         paddingVertical: 10,
         paddingHorizontal: 15,
-        borderBottomColor: blueColor,
+        borderBottomColor: blackColor,
         borderBottomWidth: 1,
         backgroundColor: "#fff",
     },
@@ -1351,7 +1352,7 @@ const styles = StyleSheet.create({
         padding: spacings.large,
         justifyContent: "space-between",
         borderWidth: 1,
-        borderColor: blueColor,
+        borderColor: blackColor,
         borderRadius: 20
 
     },
@@ -1368,7 +1369,7 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.15,
         shadowRadius: 4,
-        backgroundColor: blueColor
+        backgroundColor: blackColor
     },
     tableHeaderText: {
         fontWeight: style.fontWeightThin1x.fontWeight,
@@ -1401,7 +1402,7 @@ const styles = StyleSheet.create({
     },
     notesInput: {
         borderWidth: 1,
-        borderColor: blueColor,
+        borderColor: blackColor,
         borderRadius: 8,
         padding: 10,
         fontSize: 14,

@@ -25,6 +25,7 @@ export const LOGOUT_IMAGE = require('./logout.png');
 export const DELETE_ACCOUNT_IMAGE = require('./deleteAccount.png');
 export const TECH_OBJECT_IMAGE = require('./techObject.png');
 export const WELCOME_ON_BOARDING_IMAGE = require('./welcomeonBoarding.png');
+export const WELCOME_ON_BOARDING_LANSCAPE_IMAGE = require('./welcomeLandscape.png');
 export const FORGOT_PASSWORD_IMAGE = require('./forgetPassword.png');
 export const OTP_VERIFICATION_IMAGE = require('./otpVerification.png');
 export const CAROUSAL_ONE_IMAGE = require('./carousal1.png');

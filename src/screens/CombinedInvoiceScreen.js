@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
-import { blueColor, whiteColor, blackColor, lightBlueColor } from '../constans/Color';
+import { blueColor, whiteColor, blackColor, lightBlueColor, grayColor } from '../constans/Color';
 import InvoiceHistoryScreen from './InvoiceHistoryScreen';
 import GenerateInvoiceScreen from './GenerateInvoiceScreen';
 import Header from '../componets/Header';
@@ -37,26 +37,26 @@ const CombinedInvoiceScreen = () => {
                 <TouchableOpacity
                     onPress={() => setViewType('list')}
                     style={[styles.tabButton, {
-                        backgroundColor: viewType === 'list' ? blueColor : whiteColor,
+                        backgroundColor: viewType === 'list' ? grayColor : whiteColor,
                         marginRight: 10
                     }]}>
-                    <Ionicons name="list" size={isTablet ? 35 : 20} color={viewType === 'list' ? whiteColor : blackColor} />
+                    <Ionicons name="list" size={isTablet ? 35 : 20} color={viewType === 'list' ? blackColor : blackColor} />
                 </TouchableOpacity>
                 <TouchableOpacity
                     onPress={() => setViewType('grid')}
                     style={[styles.tabButton, {
-                        backgroundColor: viewType === 'grid' ? blueColor : whiteColor,
+                        backgroundColor: viewType === 'grid' ? grayColor : whiteColor,
                         marginRight: 10
                     }]}>
-                    <Ionicons name="grid-sharp" size={isTablet ? 35 : 20} color={viewType === 'grid' ? whiteColor : blackColor} />
+                    <Ionicons name="grid-sharp" size={isTablet ? 35 : 20} color={viewType === 'grid' ? blackColor : blackColor} />
                 </TouchableOpacity>
                 <TouchableOpacity
                     onPress={() => setIsFilterModalVisible(true)}
                     style={[styles.tabButton, {
-                        backgroundColor: blueColor,
+                        backgroundColor: whiteColor,
                         marginRight: 15
                     }]}>
-                    <Text style={{ color: whiteColor }}>Filter</Text>
+                    <Text style={{ color: blackColor }}>Filter</Text>
                 </TouchableOpacity>
             </View>
         );
@@ -130,14 +130,14 @@ const styles = StyleSheet.create({
     },
     activeTab: {
         borderBottomWidth: 3,
-        borderBottomColor: blueColor,
+        borderBottomColor: blackColor,
     },
     tabText: {
         fontSize: 16,
         color: blackColor,
     },
     activeText: {
-        color: blueColor,
+        color: blackColor,
         fontWeight: 'bold',
     },
     tabButton: {

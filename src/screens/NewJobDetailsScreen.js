@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, TextInput, FlatList, Pressable, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView, Image, Linking, Modal, Dimensions, useWindowDimensions } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from '../utils';
-import { blackColor, whiteColor, grayColor, mediumGray, orangeColor, redColor, greenColor, blueColor, lightBlueColor } from '../constans/Color';
+import { blackColor, whiteColor, grayColor, mediumGray, orangeColor, redColor, greenColor, blueColor, lightBlueColor, lightGrayColor } from '../constans/Color';
 import { BaseStyle } from '../constans/Style';
 import { spacings, style } from '../constans/Fonts';
 import SuccessModal from '../componets/Modal/SuccessModal';
@@ -157,7 +157,7 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
   const renderItem = ({ item, index }) => (
     <Pressable
       onPress={() => navigation.navigate('VehicleDetailsScreen', { vehicleId: item.id })}
-      style={[styles.row, { backgroundColor: index % 2 === 0 ? lightBlueColor : whiteColor },]}
+      style={[styles.row, { backgroundColor: index % 2 === 0 ? lightGrayColor : whiteColor },]}
     >
       <Text style={[styles.cell, { width: isIOsAndTablet ? "40%" : "44%", paddingLeft: spacings.small2x }]}>{item.vin || 'N/A'}</Text>
       <Text style={[styles.cell, { color: item.vehicleStatus ? 'green' : blackColor, width: isIOsAndTablet ? "43%" : "38%", }]}>
@@ -201,10 +201,10 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
               {/* Customer Info Box */}
               <View style={{
                 padding: 16,
-                backgroundColor: lightBlueColor,
+                backgroundColor: lightGrayColor,
                 margin: 10,
                 borderRadius: 10,
-                borderColor: blueColor,
+                borderColor: blackColor,
                 borderWidth: 1
               }}>
                 <View style={styles.rowItem}>
@@ -237,7 +237,7 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
                 flexDirection: 'row',
                 paddingVertical: 12,
                 // paddingHorizontal: 10,
-                backgroundColor: index % 2 === 0 ? whiteColor : lightBlueColor,
+                backgroundColor: index % 2 === 0 ? whiteColor : lightGrayColor,
               }}
               onPress={() => handleJobSelect(item)}
             >
@@ -263,7 +263,7 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
         <ScrollView showsVerticalScrollIndicator={false}>
           {/* Job Info */}
           {jobDetails?.jobName && jobDetails?.customer?.fullName && (
-            <View style={[styles.card, { borderColor: blueColor, borderWidth: 1, margin: 10 }]}>
+            <View style={[styles.card, { borderColor: blackColor, borderWidth: 1, margin: 10 }]}>
               <View style={styles.rowItem}>
                 <View style={styles.leftCol}>
                   <Text style={styles.label}>Job Title</Text>
@@ -449,7 +449,7 @@ const styles = StyleSheet.create({
   },
 
   card: {
-    backgroundColor: lightBlueColor,
+    backgroundColor: lightGrayColor,
     padding: 10,
     borderRadius: 12,
     marginBottom: 15,
@@ -480,7 +480,7 @@ const styles = StyleSheet.create({
   headerRow: {
     borderBottomWidth: 1,
     borderColor: '#ccc',
-    backgroundColor: blueColor
+    backgroundColor: blackColor
   },
   headerText: {
     fontWeight: style.fontWeightThin1x.fontWeight,

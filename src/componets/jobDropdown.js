@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { Feather } from "@expo/vector-icons";
-import { blackColor, blueColor, grayColor, mediumGray, lightBlueColor } from "../constans/Color";
+import { blackColor, blueColor, grayColor, mediumGray, lightBlueColor, whiteColor } from "../constans/Color";
 import { spacings, style } from "../constans/Fonts";
 import { heightPercentageToDP } from "../utils";
 
@@ -107,7 +107,7 @@ const JobDropdown = ({
                                     <Pressable
                                         style={{
                                             padding: spacings.xxLarge,
-                                            backgroundColor: isSelected ? lightBlueColor : "white",
+                                            backgroundColor: isSelected ? blackColor : "white",
                                             borderBottomColor: "#ccc",
                                             borderBottomWidth: 1,
                                             flexDirection: "row",
@@ -115,12 +115,12 @@ const JobDropdown = ({
                                         }}
                                         onPress={() => handleSelect(item)}
                                     >
-                                        <Text style={{ color: blackColor }}>{getJobName(item)}</Text>
+                                        <Text style={{ color: isSelected ? whiteColor : blackColor }}>{getJobName(item)}</Text>
                                         {isSelected && (
                                             <MaterialCommunityIcons
                                                 name="check-circle"
                                                 size={20}
-                                                color={blueColor}
+                                                color={whiteColor}
                                             />
                                         )}
                                     </Pressable>

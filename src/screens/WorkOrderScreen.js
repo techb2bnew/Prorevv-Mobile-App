@@ -278,7 +278,7 @@ const WorkOrderScreen = ({ navigation, route }) => {
           <Text style={styles.label}>Assigned Jobs</Text>
           <View style={{
             maxHeight: hp(40),
-            borderColor: blueColor,
+            borderColor: blackColor,
             borderWidth: 1,
             borderRadius: 10,
             overflow: "hidden"
@@ -290,10 +290,10 @@ const WorkOrderScreen = ({ navigation, route }) => {
               renderItem={({ item, index }) => {
                 const isSelected = selectedJob === item?.id;
                 const backgroundColor = isSelected
-                  ? blueColor
+                  ? blackColor
                   : index % 2 === 0
                     ? whiteColor
-                    : lightBlueColor;
+                    : lightGrayColor;
 
                 return (
                   <Pressable
@@ -330,7 +330,7 @@ const WorkOrderScreen = ({ navigation, route }) => {
               ListFooterComponent={
                 loading ? (
                   <View style={{ paddingVertical: 16, alignItems: 'center', justifyContent: 'center' }}>
-                    <ActivityIndicator size="small" color={blueColor} />
+                    <ActivityIndicator size="small" color={blackColor} />
                   </View>
                 ) : null
               } />
@@ -376,14 +376,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacings.xxLarge,
     alignItems: 'center',
     // height: hp(5.5),
-    borderColor: blueColor,
+    borderColor: blackColor,
     borderWidth: 1,
     marginBottom: spacings.large
   },
   input: {
     flex: 1,
     fontSize: 17,
-    color: blueColor,
+    color: blackColor,
     alignItems: 'center'
   },
   iconContainer: {
@@ -400,7 +400,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'flex-end',
-    backgroundColor: blueColor,
+    backgroundColor: blackColor,
     paddingVertical: 12,
     width: Dimensions.get('window').width * 0.3,
     borderRadius: 8,
@@ -424,7 +424,7 @@ const styles = StyleSheet.create({
     color: blackColor,
   },
   scanButton: {
-    backgroundColor: blueColor,
+    backgroundColor: blackColor,
     paddingVertical: spacings.xLarge,
     borderRadius: 10,
     marginTop: spacings.Large1x
@@ -437,14 +437,14 @@ const styles = StyleSheet.create({
   vinInput: {
     backgroundColor: whiteColor,
     borderWidth: 1,
-    borderColor: blueColor,
+    borderColor: blackColor,
     borderRadius: 10,
     padding: spacings.large,
     color: blackColor,
     fontSize: style.fontSizeNormal1x.fontSize,
   },
   fetchButton: {
-    backgroundColor: blueColor,
+    backgroundColor: blackColor,
     borderRadius: 10,
     height: hp(5),
   },

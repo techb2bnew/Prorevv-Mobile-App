@@ -177,13 +177,15 @@ import { Modal, StyleSheet, ImageBackground, Alert, Platform, BackHandler, Text,
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from '../../utils';
 import { spacings, style } from '../../constans/Fonts';
 import { whiteColor } from '../../constans/Color';
-import { SPLASH_IMAGE } from "../../assests/images";
+import { SPLASH_IMAGE, SPLASH_IMAGE_LANDSCAPE } from "../../assests/images";
 import ReactNativeBiometrics from 'react-native-biometrics';
 import * as Keychain from 'react-native-keychain';
+import { useOrientation } from "../../OrientationContext";
 
 const BiometricModal = ({ isBiometricModalVisible, setIsBiometricModalVisible }) => {
     const [biometryType, setBiometryType] = useState(null);
     const rnBiometrics = new ReactNativeBiometrics();
+    const { orientation } = useOrientation();
 
     useEffect(() => {
         const initBiometrics = async () => {
@@ -310,7 +312,7 @@ const BiometricModal = ({ isBiometricModalVisible, setIsBiometricModalVisible })
             presentationStyle="overFullScreen"
         >
             {/* <ImageBackground source={SPLASH_IMAGE} style={styles.backgroundImage} /> */}
-            <ImageBackground source={SPLASH_IMAGE} style={styles.backgroundImage}>
+            <ImageBackground source={orientation === 'LANDSCAPE' ? SPLASH_IMAGE_LANDSCAPE : SPLASH_IMAGE} style={styles.backgroundImage}>
                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                     <Text style={styles.biometricText}>
                         {/* Please authenticate with {biometryType || 'Biometrics'} */}

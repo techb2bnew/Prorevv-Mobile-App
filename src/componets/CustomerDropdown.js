@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { View, Text, FlatList, Pressable, Modal, StyleSheet, ScrollView, Dimensions, ActivityIndicator } from "react-native";
 import { heightPercentageToDP, widthPercentageToDP } from "../utils";
-import { blackColor, blueColor, grayColor, lightBlueColor, mediumGray } from "../constans/Color";
+import { blackColor, blueColor, grayColor, lightBlueColor, mediumGray, whiteColor } from "../constans/Color";
 import MaterialCommunityIcons from 'react-native-vector-icons/dist/MaterialCommunityIcons';
 const { width, height } = Dimensions.get('window');
 import Feather from 'react-native-vector-icons/Feather';
@@ -59,7 +59,7 @@ const CustomerDropdown = ({ data, selectedValue, onSelect, showIcon, rightIcon, 
 
             <Modal transparent visible={visible} animationType="slide" presentationStyle="overFullScreen" supportedOrientations={["portrait", "landscape-left", "landscape-right"]}>
                 <Pressable style={styles.overlay} onPress={handleCloseDropdown} />
-                {dropdownHeight > 0 && (
+                {/* {dropdownHeight > 0 && (
                     <View style={{
                         position: "absolute",
                         bottom: dropdownHeight,
@@ -68,7 +68,7 @@ const CustomerDropdown = ({ data, selectedValue, onSelect, showIcon, rightIcon, 
                     }}>
                         <Feather name="chevron-down" size={55} color={blackColor} />
                     </View>
-                )}
+                )} */}
                 <View
                     ref={dropdownRef}
                     style={styles.fullScreenDropdown}
@@ -88,7 +88,7 @@ const CustomerDropdown = ({ data, selectedValue, onSelect, showIcon, rightIcon, 
                                 <Pressable
                                     style={[
                                         styles.item,
-                                        isSelected && { backgroundColor: lightBlueColor }  // light blue background
+                                        isSelected && { backgroundColor: blackColor }  // light blue background
                                     ]}
                                     onPress={() => {
                                         onSelect(item);
@@ -96,11 +96,11 @@ const CustomerDropdown = ({ data, selectedValue, onSelect, showIcon, rightIcon, 
                                     }}
                                 >
                                     <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-                                        <Text style={[styles.itemText, item.isAllOption && { fontWeight: 'bold' }]}>
+                                        <Text style={[styles.itemText, item.isAllOption && { fontWeight: 'bold' }, isSelected && { color: whiteColor }]}>
                                             {item.isAllOption ? 'All Customers' : getCustomerName(item)}
                                         </Text>
                                         {isSelected && (
-                                            <MaterialCommunityIcons name="check-circle" size={20} color={blueColor} />
+                                            <MaterialCommunityIcons name="check-circle" size={20} color={whiteColor} />
                                         )}
                                     </View>
                                 </Pressable>
@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
     },
     dropdownButton: {
         borderWidth: 1,
-        borderColor: blueColor,
+        borderColor: blackColor,
         borderRadius: 10,
         backgroundColor: "#fff",
         flexDirection: "row",

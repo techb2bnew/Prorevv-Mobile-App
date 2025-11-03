@@ -745,20 +745,20 @@ const Reports = ({ navigation }) => {
                     <TouchableOpacity
                         onPress={() => setViewType('list')}
                         style={[styles.tabButton, {
-                            backgroundColor: viewType === 'list' ? blueColor : whiteColor, margin: 0, marginRight: 10, width: isTablet ? wp(8) : wp(12), height: orientation === "LANDSCAPE" ? hp(6.5) : hp(4.5),
+                            backgroundColor: viewType === 'list' ? lightGrayColor : whiteColor, margin: 0, marginRight: 10, width: isTablet ? wp(8) : wp(12), height: orientation === "LANDSCAPE" ? hp(6.5) : hp(4.5),
                         }]}>
-                        <Ionicons name="list" size={isTablet ? 35 : orientation === "LANDSCAPE" ? 35 : 20} color={viewType === 'list' ? whiteColor : blackColor} />
+                        <Ionicons name="list" size={isTablet ? 35 : orientation === "LANDSCAPE" ? 35 : 20} color={viewType === 'list' ? blackColor : blackColor} />
                     </TouchableOpacity>
                     <TouchableOpacity
                         onPress={() => setViewType('grid')}
-                        style={[styles.tabButton, { backgroundColor: viewType === 'grid' ? blueColor : whiteColor, width: isTablet ? wp(8) : wp(12), height: orientation === "LANDSCAPE" ? hp(6.5) : hp(4.5), marginRight: 10 }]}>
-                        <Ionicons name="grid-sharp" size={isTablet ? 35 : orientation === "LANDSCAPE" ? 35 : 20} color={viewType === 'grid' ? whiteColor : blackColor} />
+                        style={[styles.tabButton, { backgroundColor: viewType === 'grid' ? lightGrayColor : whiteColor, width: isTablet ? wp(8) : wp(12), height: orientation === "LANDSCAPE" ? hp(6.5) : hp(4.5), marginRight: 10 }]}>
+                        <Ionicons name="grid-sharp" size={isTablet ? 35 : orientation === "LANDSCAPE" ? 35 : 20} color={viewType === 'grid' ? blackColor : blackColor} />
                     </TouchableOpacity>
                     <TouchableOpacity
                         onPress={handleExport}
-                        style={[{ backgroundColor: blueColor, width: isTablet ? wp(8) : wp(12), height: orientation === "LANDSCAPE" ? hp(6.5) : hp(4.5), marginRight: 20, borderRadius: 5, borderWidth: 1, alignItems: "center", justifyContent: "center" }]}>
+                        style={[{ backgroundColor: whiteColor, width: isTablet ? wp(8) : wp(12), height: orientation === "LANDSCAPE" ? hp(6.5) : hp(4.5), marginRight: 20, borderRadius: 5, borderWidth: 1, alignItems: "center", justifyContent: "center" }]}>
                         {/* <Ionicons name="print-outline" size={isTablet ? 35 : 20} color={whiteColor} /> */}
-                        <Text style={{ color: whiteColor, fontSize: isTablet ? style.fontSizeMedium.fontSize : orientation === "LANDSCAPE" ? style.fontSizeLarge1x.fontSize : style.fontSizeSmall1x.fontSize }}>Print</Text>
+                        <Text style={{ color: blackColor, fontSize: isTablet ? style.fontSizeMedium.fontSize : orientation === "LANDSCAPE" ? style.fontSizeLarge1x.fontSize : style.fontSizeSmall1x.fontSize }}>Print</Text>
                     </TouchableOpacity>
                 </View>
             }
@@ -903,7 +903,7 @@ const Reports = ({ navigation }) => {
                         <TouchableOpacity
                             onPress={handleSelectAllWorkOrders}
                             style={{
-                                backgroundColor: blueColor,
+                                backgroundColor: blackColor,
                                 paddingVertical: isTablet ? spacings.large : 2,
                                 paddingHorizontal: isTablet ? spacings.xxLarge : spacings.large,
                                 borderRadius: 5,
@@ -947,7 +947,7 @@ const Reports = ({ navigation }) => {
                             onEndReachedThreshold={0.5}
                             renderItem={({ item, index }) => {
                                 const rowStyle = {
-                                    backgroundColor: index % 2 === 0 ? lightBlueColor : whiteColor,
+                                    backgroundColor: index % 2 === 0 ? lightGrayColor : whiteColor,
                                 };
                                 const isSelected = selectedJobs.includes(item?.id);
 
@@ -986,7 +986,7 @@ const Reports = ({ navigation }) => {
                             ListFooterComponent={() => {
                                 return loadingMore ? (
                                     <View style={{ paddingVertical: 20 }}>
-                                        <ActivityIndicator size="large" color="#0000ff" />
+                                        <ActivityIndicator size="large" color={blackColor} />
                                     </View>
                                 ) : null;
                             }}
@@ -1013,13 +1013,13 @@ const Reports = ({ navigation }) => {
                             const isSelected = selectedWorkOrders.includes(item?.id);
                             return (
                                 <Pressable style={{
-                                    backgroundColor: index % 2 === 0 ? lightBlueColor : whiteColor,
+                                    backgroundColor: index % 2 === 0 ? lightGrayColor : whiteColor,
                                     borderRadius: 10,
                                     padding: 10,
                                     marginBottom: 10,
                                     marginHorizontal: 10,
                                     borderWidth: 1,
-                                    borderColor: blueColor
+                                    borderColor: blackColor
                                 }}
                                     onPress={() => navigation.navigate("VehicleDetailsScreen", { vehicleId: item?.id, from: "report" })}>
                                     <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
@@ -1037,7 +1037,7 @@ const Reports = ({ navigation }) => {
                                             onPress={() => navigation.navigate("WorkOrderScreenTwo", {
                                                 vehicleId: item.id,
                                             })}
-                                            style={{ position: "absolute", right: 25, top: -6, zIndex: 999 }}>
+                                            style={{ position: "absolute", right: activeStatus === 'InProgress' ? 25 : 2, top: -6, zIndex: 999 }}>
                                             {/* <Text style={styles.viewText}>Edit</Text> */}
                                             <AntDesign name="edit" size={20} color={blackColor} />
 
@@ -1113,7 +1113,7 @@ const Reports = ({ navigation }) => {
                         ListFooterComponent={() =>
                             loading ? (
                                 <View style={{ paddingVertical: 10, alignItems: "center", width: "100%", height: hp(50), justifyContent: "center" }}>
-                                    <ActivityIndicator size="small" color="#0000ff" />
+                                    <ActivityIndicator size="small" color={blackColor} />
                                 </View>
                             ) : null
                         }
@@ -1130,13 +1130,13 @@ const Reports = ({ navigation }) => {
                 </View>
             ) : activeTab === 'WorkOrders' && viewType === 'list' ? (
                 <View style={{
-                    width: "100%", height: Platform.OS === "android" ? isTablet ? selectedWorkOrders.length > 0 ? hp(56) : hp(62) : selectedWorkOrders.length > 0 ? orientation === "LANDSCAPE" ? hp(42) : hp(40) : hp(54)
+                    width: "100%", height: Platform.OS === "android" ? isTablet ? selectedWorkOrders.length > 0 ? hp(56) : hp(62) : selectedWorkOrders.length > 0 ? orientation === "LANDSCAPE" ? hp(42) : hp(47) : hp(54)
                         : isIOSAndTablet ? selectedWorkOrders.length > 0 ? hp(55) : hp(62) : selectedWorkOrders.length > 0 ? hp(42) : hp(49)
                 }}>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                         <View>
                             {/* Header Row */}
-                            <View style={[styles.tableHeaderRow, { backgroundColor: blueColor }]}>
+                            <View style={[styles.tableHeaderRow, { backgroundColor: blackColor }]}>
                                 {/* Checkbox column - only show for InProgress */}
                                 {activeStatus === 'InProgress' && (
                                     <Text style={[styles.tableHeader, { width: isTablet ? wp(13) : orientation === "LANDSCAPE" ? wp(8) : wp(15), alignItems: 'center' }]}>Select</Text>
@@ -1163,7 +1163,7 @@ const Reports = ({ navigation }) => {
                                     refreshing={refreshing}
                                     onRefresh={handleRefreshVehicle}
                                     renderItem={({ item, index }) => {
-                                        const rowStyle = { backgroundColor: index % 2 === 0 ? lightBlueColor : whiteColor };
+                                        const rowStyle = { backgroundColor: index % 2 === 0 ? lightGrayColor : whiteColor };
                                         const isSelected = selectedWorkOrders.includes(item?.id);
                                         return (
                                             <Pressable key={index.toString()} style={[styles.listItem, rowStyle, { flexDirection: 'row', alignItems: "center" }]} onPress={() => navigation.navigate("VehicleDetailsScreen", { vehicleId: item?.id, from: "report" })}>
@@ -1236,7 +1236,7 @@ const Reports = ({ navigation }) => {
                                     ListFooterComponent={() =>
                                         loading ? (
                                             <View style={{ paddingVertical: 10, alignItems: "center", width: wp(100), height: hp(50), justifyContent: "center" }}>
-                                                <ActivityIndicator size="small" color="#0000ff" />
+                                                <ActivityIndicator size="small" color={blackColor} />
                                             </View>
                                         ) : null
                                     }
@@ -1310,7 +1310,7 @@ const Reports = ({ navigation }) => {
                             onEndReachedThreshold={0.3}
                             renderItem={({ item, index }) => {
                                 const rowStyle = {
-                                    backgroundColor: index % 2 === 0 ? lightBlueColor : whiteColor,
+                                    backgroundColor: index % 2 === 0 ? lightGrayColor : whiteColor,
                                 };
                                 return (
                                     <Pressable style={[styles.listItem, rowStyle]}
@@ -1345,7 +1345,7 @@ const Reports = ({ navigation }) => {
                             }}
                             ListFooterComponent={
                                 customerLoadingMore ? (
-                                    <ActivityIndicator size="small" color={blueColor} style={{ marginTop: 10 }} />
+                                    <ActivityIndicator size="small" color={blackColor} style={{ marginTop: 10 }} />
                                 ) : null
                             }
                         />
@@ -1576,7 +1576,7 @@ const styles = StyleSheet.create({
         // marginBottom: 15
     },
     filterButton: {
-        backgroundColor: blueColor,
+        backgroundColor: blackColor,
         padding: 6,
         borderRadius: 5,
         alignItems: "center",
@@ -1638,7 +1638,7 @@ const styles = StyleSheet.create({
         borderRadius: 5
     },
     activeTab: {
-        backgroundColor: blueColor,
+        backgroundColor: blackColor,
         paddingHorizontal: spacings.large,
         borderRadius: 5
     },
@@ -1666,7 +1666,7 @@ const styles = StyleSheet.create({
         borderBottomColor: blackColor
     },
     statusText: {
-        fontSize: style.fontSizeNormal.fontSize,
+        fontSize: style.fontSizeSmall2x.fontSize,
         color: blackColor
     },
     activeStatusText: {
@@ -1679,7 +1679,7 @@ const styles = StyleSheet.create({
         padding: spacings.medium,
         borderBottomWidth: 1,
         borderColor: '#E6E6E6',
-        backgroundColor: blueColor
+        backgroundColor: blackColor
     },
     tableHeader: {
         fontSize: style.fontSizeNormal.fontSize,
@@ -1736,7 +1736,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingHorizontal: spacings.large,
-        backgroundColor: lightBlueColor,
+        backgroundColor: lightGrayColor,
         marginHorizontal: spacings.medium,
         borderRadius: 8,
         marginVertical: spacings.small,
@@ -1744,7 +1744,7 @@ const styles = StyleSheet.create({
         width: wp(98),
     },
     completeButton: {
-        backgroundColor: blueColor,
+        backgroundColor: blackColor,
         paddingHorizontal: spacings.medium,
         paddingVertical: spacings.small,
         borderRadius: 8,
@@ -1789,12 +1789,12 @@ const styles = StyleSheet.create({
         marginRight: spacings.small,
     },
     checkboxSelected: {
-        backgroundColor: blueColor,
-        borderColor: blueColor,
+        backgroundColor: blackColor,
+        borderColor: blackColor,
     },
     selectedRow: {
-        backgroundColor: lightBlueColor,
+        backgroundColor: lightGrayColor,
         borderLeftWidth: 4,
-        borderLeftColor: blueColor,
+        borderLeftColor: blackColor,
     },
 });

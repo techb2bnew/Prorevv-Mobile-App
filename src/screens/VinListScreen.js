@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Image, Platform, Dimensions, Modal, ScrollView, ActivityIndicator, TouchableWithoutFeedback, Pressable, Keyboard, useWindowDimensions } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Image, Platform, Dimensions, Modal, ScrollView, ActivityIndicator, TouchableWithoutFeedback, Pressable, Keyboard, useWindowDimensions, InteractionManager } from 'react-native';
+import { StackActions } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { whiteColor, lightGrayColor, blueColor, redColor, goldColor, greenColor, verylightGrayColor, grayColor, blackColor, orangeColor, mediumGray, lightBlueColor } from '../constans/Color'
 import Header from '../componets/Header';
@@ -554,7 +555,15 @@ const VinListScreen = ({ navigation, route }) => {
     return (
         <View style={{ width: wp(100), height: hp(100), backgroundColor: whiteColor }}>
             {/* Header */}
-            <Header title={"Vin List"} onBack={() => navigation.getParent()?.navigate("Home")} />
+            <Header title={"Vin List"} onBack={() => {
+                // Switch to Home tab after interactions settle
+                InteractionManager.runAfterInteractions(() => {
+                    const parent = navigation.getParent?.();
+                    if (parent?.navigate) {
+                        parent.navigate("Home", { screen: "Home" });
+                    }
+                });
+            }} />
             <View style={{
                 flexDirection: 'row',
                 position: "absolute",
@@ -863,7 +872,7 @@ const VinListScreen = ({ navigation, route }) => {
                             marginBottom: 10,
                             marginHorizontal: 10,
                             borderWidth: 1,
-                            borderColor: blueColor
+                            borderColor: blackColor
                         }}
                             onPress={() => navigation.navigate("VehicleDetailsScreen", {
                                 vehicleId: item.id,
@@ -983,7 +992,7 @@ const VinListScreen = ({ navigation, route }) => {
             </View>}
 
 
-            {isModalVisible && <Modal animationType="slide" transparent={true} visible={isModalVisible} onRequestClose={toggleModal}>
+            {isModalVisible && <Modal animationType="slide" transparent={true} visible={isModalVisible} onRequestClose={toggleModal} presentationStyle="overFullScreen" supportedOrientations={["portrait", "landscape-left", "landscape-right"]}>
                 <TouchableWithoutFeedback onPress={toggleModal}>
                     <View style={styles.modalOverlay}>
                         <Feather name="chevron-down" size={55} color={blackColor} />
@@ -1061,7 +1070,7 @@ const VinListScreen = ({ navigation, route }) => {
             </Modal>}
 
 
-            {showVinModal && <Modal visible={showVinModal} transparent animationType="fade" presentationStyle="overFullScreen" supportedOrientations={["portrait", "landscape-left", "landscape-right"]}>
+            {showVinModal && <Modal visible={showVinModal} transparent animationType="slide" presentationStyle="overFullScreen" supportedOrientations={["portrait", "landscape-left", "landscape-right"]}>
                 <View style={styles.vinModalOverlay}>
                     <View style={styles.vinModalContainer}>
                         <TouchableOpacity style={styles.vinModalClose} onPress={() => {
@@ -1128,7 +1137,7 @@ const styles = StyleSheet.create({
         alignItems: 'center'
     },
     activeTab: {
-        backgroundColor: blueColor
+        backgroundColor: blackColor
     },
     tabText: {
         fontSize: style.fontSizeNormal.fontSize,
@@ -1196,6 +1205,7 @@ const styles = StyleSheet.create({
         alignSelf: 'flex-start',
     },
     modalOverlay: {
+        flex: 1,
         height: hp(100),
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
         justifyContent: 'flex-end',
@@ -1314,7 +1324,7 @@ const styles = StyleSheet.create({
     },
     vinButtonYes: {
         flex: 1,
-        backgroundColor: blueColor,
+        backgroundColor: blackColor,
         paddingVertical: 10,
         borderRadius: 6,
         alignItems: 'center',

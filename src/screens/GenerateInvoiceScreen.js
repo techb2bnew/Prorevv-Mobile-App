@@ -1023,7 +1023,7 @@ const GenerateInvoiceScreen = ({ navigation,
                         flexDirection: 'row',
                         alignItems: 'center',
                         borderWidth: 1,
-                        borderColor: blueColor,
+                        borderColor: blackColor,
                         borderRadius: 8,
                         backgroundColor: whiteColor,
                         paddingHorizontal: spacings.large,
@@ -1040,7 +1040,7 @@ const GenerateInvoiceScreen = ({ navigation,
                             }}
                             placeholderTextColor={grayColor}
                         />
-                        <Feather name="search" size={20} color={blueColor} />
+                        <Feather name="search" size={20} color={blackColor} />
                     </View>
                 </View>
                 {/* {technicianType === 'single-technician' && <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%", paddingHorizontal: spacings.large, height: hp(4)}}>
@@ -1066,7 +1066,7 @@ const GenerateInvoiceScreen = ({ navigation,
                     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                         <View>
                             {/* Header Row */}
-                            <View style={[styles.tableHeaderRow, { backgroundColor: blueColor }]}>
+                            <View style={[styles.tableHeaderRow, { backgroundColor: blackColor }]}>
                                 <TouchableOpacity
                                     onPress={() => {
                                         if (selectAll) {
@@ -1106,7 +1106,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                     showsVerticalScrollIndicator={false}
                                     renderItem={({ item, index }) => {
                                         console.log(item);
-                                        const rowStyle = { backgroundColor: index % 2 === 0 ? lightBlueColor : whiteColor };
+                                        const rowStyle = { backgroundColor: index % 2 === 0 ? lightGrayColor : whiteColor };
                                         const isSelected = selectAll || selectedVehicles.some(v => v.id === item.id);
                                         return (
                                             <Pressable key={index.toString()} style={[styles.listItem, rowStyle, { flexDirection: 'row', alignItems: "center" }]} onPress={() => navigation.navigate("VehicleDetailsScreen", { vehicleId: item?.id, from: "report" })}>
@@ -1114,7 +1114,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                                     <MaterialIcons
                                                         name={isSelected ? 'check-box' : 'check-box-outline-blank'}
                                                         size={25}
-                                                        color={isSelected ? blueColor : 'gray'}
+                                                        color={isSelected ? blackColor : 'gray'}
                                                     />
                                                 </TouchableOpacity>
                                                 <Text style={[styles.text, { width: isTablet ? wp(25) : orientation === "LANDSCAPE" ? wp(20) : wp(55) }]}>{item?.vin || '-'}</Text>
@@ -1167,7 +1167,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                                     <TouchableOpacity
                                                         onPress={() => handleSaveInvoice(item)}
                                                         style={{
-                                                            backgroundColor: blueColor,
+                                                            backgroundColor: blackColor,
                                                             paddingHorizontal: 12,
                                                             paddingVertical: 10,
                                                             borderRadius: 5
@@ -1238,7 +1238,7 @@ const GenerateInvoiceScreen = ({ navigation,
                             <TouchableOpacity
                                 onPress={handleSelectAll}
                                 style={{
-                                    backgroundColor: blueColor,
+                                    backgroundColor: blackColor,
                                     paddingVertical: 4,
                                     paddingHorizontal: 4,
                                     borderRadius: 10,
@@ -1259,13 +1259,13 @@ const GenerateInvoiceScreen = ({ navigation,
                                 const isSelected = selectAll || selectedVehicles.some(v => v.id === item.id);
                                 return (
                                     <Pressable style={{
-                                        backgroundColor: index % 2 === 0 ? lightBlueColor : whiteColor,
+                                        backgroundColor: index % 2 === 0 ? lightGrayColor : whiteColor,
                                         borderRadius: 10,
                                         padding: 10,
                                         marginBottom: 10,
                                         marginHorizontal: 10,
                                         borderWidth: 1,
-                                        borderColor: blueColor
+                                        borderColor: blackColor
                                     }}
                                         onPress={() => navigation.navigate("VehicleDetailsScreen", { vehicleId: item?.id, from: "report" })}>
                                         <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
@@ -1273,7 +1273,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                                 <MaterialIcons
                                                     name={isSelected ? 'check-box' : 'check-box-outline-blank'}
                                                     size={25}
-                                                    color={isSelected ? blueColor : 'gray'}
+                                                    color={isSelected ? blackColor : 'gray'}
                                                 />
                                             </TouchableOpacity>
 
@@ -1297,7 +1297,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                             <View style={{ width: '48%', marginBottom: 9 }}>
                                                 <Text style={{ color: '#555', fontSize: 10 }}>Estimated Cost($)</Text>
                                                 <Text >
-                                                  {!item?.labourCost ?  (item?.jobEstimatedCost ? `$${item.jobEstimatedCost}` : selectedJobEstimated ? `$${selectedJobEstimated}` : '-') : '-'}
+                                                    {!item?.labourCost ? (item?.jobEstimatedCost ? `$${item.jobEstimatedCost}` : selectedJobEstimated ? `$${selectedJobEstimated}` : '-') : '-'}
                                                 </Text>
                                             </View>
                                             <View style={{ width: '48%', marginBottom: 9 }}>
@@ -1349,7 +1349,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                                     <TouchableOpacity
                                                         onPress={() => handleSaveInvoice(item)}
                                                         style={{
-                                                            backgroundColor: blueColor,
+                                                            backgroundColor: blackColor,
                                                             paddingHorizontal: 12,
                                                             paddingVertical: 10,
                                                             borderRadius: 5
@@ -1418,14 +1418,14 @@ const GenerateInvoiceScreen = ({ navigation,
                         loading={isExportLoading}
                         disabled={isExportLoading}
                         onPress={handleExportCSV}
-                        style={{ width: "24%", marginBottom: 0 }}
+                        style={{ width: "24%", marginBottom: 0, backgroundColor: blackColor }}
                     />
                     <CustomButton
                         title={"Print"}
                         loading={isLoading}
                         disabled={isLoading}
                         onPress={handleExport}
-                        style={{ width: "24%", marginBottom: 0 }}
+                        style={{ width: "24%", marginBottom: 0, backgroundColor: blackColor }}
                     />
 
                     <CustomButton
@@ -1449,7 +1449,7 @@ const GenerateInvoiceScreen = ({ navigation,
                             setSelectedDate(null);
                             setShowDateModal(true);
                         }}
-                        style={{ width: "48%", marginBottom: 0 }}
+                        style={{ width: "48%", marginBottom: 0, backgroundColor: blackColor }}
                     />
                 </View>}
 
@@ -1548,7 +1548,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                     onPress={handleSubmitDate}
                                     style={{
                                         width: "48%",
-                                        backgroundColor: blueColor,
+                                        backgroundColor: blackColor,
                                         borderRadius: 10,
                                         marginBottom: 0
                                     }}
@@ -1598,7 +1598,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                         style={{
                                             paddingVertical: 8,
                                             paddingHorizontal: 20,
-                                            backgroundColor: statusFilter === status ? blueColor : lightGrayColor,
+                                            backgroundColor: statusFilter === status ? blackColor : lightGrayColor,
                                             borderRadius: 10,
                                             marginRight: 10
                                         }}>
@@ -1665,7 +1665,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                     setIsFilterModalVisible(false);
                                 }}
                                 style={{
-                                    backgroundColor: blueColor,
+                                    backgroundColor: blackColor,
                                     paddingVertical: 12,
                                     borderRadius: 10,
                                     alignItems: 'center'
@@ -1757,7 +1757,7 @@ const styles = StyleSheet.create({
         padding: spacings.medium,
         borderBottomWidth: 1,
         borderColor: '#E6E6E6',
-        backgroundColor: blueColor,
+        backgroundColor: blackColor,
         alignItems: "center"
     },
     tableHeader: {

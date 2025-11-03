@@ -1,14 +1,15 @@
 import React, { useRef, useState } from 'react';
-import { View, Text, FlatList, Image, TouchableOpacity, Dimensions, StyleSheet, ImageBackground, Animated, Easing, useWindowDimensions } from 'react-native';
-import { blueColor, lightBlueColor } from '../constans/Color';
+import { View, Text, FlatList, Image, TouchableOpacity, Dimensions, StyleSheet, ImageBackground, Animated, Easing, useWindowDimensions, Platform } from 'react-native';
+import { blackColor, blueColor, lightBlueColor, lightGrayColor, redColor, whiteColor } from '../constans/Color';
+import LinearGradient from 'react-native-linear-gradient';
 import Ionicons from 'react-native-vector-icons/dist/Ionicons';
-import { WELCOME_ON_BOARDING_IMAGE } from '../assests/images'
+import { WELCOME_ON_BOARDING_IMAGE, WELCOME_ON_BOARDING_LANSCAPE_IMAGE } from '../assests/images'
 import { BaseStyle } from '../constans/Style';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from '../utils';
 import { style, spacings } from '../constans/Fonts';
 import CustomButton from '../componets/CustomButton';
 import { useOrientation } from '../OrientationContext';
-const { width, height } = Dimensions.get('window');
+// const { width, height } = Dimensions.get('window');
 const onboardingData = [
   {
     id: '1',
@@ -80,8 +81,12 @@ const OnboardingScreen = ({ navigation }) => {
 
   if (showWelcomeScreen) {
     return (
-      <ImageBackground source={WELCOME_ON_BOARDING_IMAGE} style={styles.welcomeContainer}>
-        <View style={[styles.welcomeTextContainer, { alignItems: isIOSAndTablet ? "flex-start" : orientation === "LANDSCAPE" ? "flex-start" : 'center' }]}>
+      <ImageBackground source={orientation === "LANDSCAPE" ? WELCOME_ON_BOARDING_LANSCAPE_IMAGE : WELCOME_ON_BOARDING_IMAGE} style={styles.welcomeContainer}>
+        <View style={[styles.welcomeTextContainer, {
+          alignItems: isIOSAndTablet ? "flex-start" : orientation === "LANDSCAPE" ? "flex-start" : 'center',
+          bottom: height * 0.3,
+          width: width * 0.85,
+        }]}>
           <Text style={[styles.welcomeTitle]}>Welcome to Prorevv!</Text>
           <Text style={styles.welcomeDescription}>
             Manage car servicing like a pro.Scan VINs, assign tasks, and track job progress — all in one smart app.
@@ -89,8 +94,9 @@ const OnboardingScreen = ({ navigation }) => {
         </View>
         <View style={[styles.welcomeButtonContainer, {
           width: width * (isTablet ? 0.95 : orientation === "LANDSCAPE" ? 0.95 : 0.90),
+          bottom: height * 0.03,
         }]}>
-          <CustomButton title={"Let's get you started!"} onPress={startOnboarding} />
+          <CustomButton title={"Let's get you started!"} onPress={startOnboarding} style={{backgroundColor:lightGrayColor}} textStyle={{color:blackColor}} />
         </View>
       </ImageBackground>
     );
@@ -103,60 +109,61 @@ const OnboardingScreen = ({ navigation }) => {
         { transform: [{ translateY: slideAnim }] }
       ]}
     >
-      <TouchableOpacity style={styles.skipButton} onPress={() => navigation.navigate('Login')}>
-        <Text style={{ fontWeight: style.fontWeightMedium.fontWeight }}>Skip</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-        <Ionicons name="arrow-back" size={24} color="#252837" />
-      </TouchableOpacity>
-      <FlatList
-        ref={flatListRef}
-        data={onboardingData}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.slide}>
-            {/* <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-              <Ionicons name="arrow-back" size={24} color="#252837" />
-            </TouchableOpacity> */}
-            <Image source={item.image} style={styles.image} />
-            <Text style={styles.title}>{item.title}</Text>
-            <Text style={styles.description}>{item.description}</Text>
-            {/* <View style={styles.dotContainer}>
-              {onboardingData.map((_, index) => (
-                <View key={index} style={[styles.dot, currentIndex === index && styles.activeDot]} />
-              ))}
-            </View> */}
+      <LinearGradient
+        colors={['#400000', '#000000', '#000000']}
+        start={{ x: 1, y: 0 }}
+        end={{ x: 0.4, y: 1 }}
+        style={{ alignItems: 'center', justifyContent: 'center', flex: 1, width: '100%', height: '100%' }}
+      >
+        <TouchableOpacity style={styles.skipButton} onPress={() => navigation.navigate('Login')}>
+          <Text style={{ fontWeight: style.fontWeightMedium.fontWeight, color: whiteColor }}>Skip</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+          <Ionicons name="arrow-back" size={24} color={whiteColor} />
+        </TouchableOpacity>
+        <FlatList
+          ref={flatListRef}
+          data={onboardingData}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <View style={[styles.slide, { width }]}>
+              <Image source={item.image} style={[styles.image, { width: width * 0.8, height: height * 0.4 }]} />
+              <Text style={styles.title}>{item.title}</Text>
+              <Text style={styles.description}>{item.description}</Text>
+            </View>
+          )}
+          onScroll={handleScroll}
+        />
+        <View style={styles.dotContainer}>
+          {onboardingData.map((_, index) => (
+            <View key={index} style={[styles.dot, currentIndex === index && styles.activeDot]} />
+          ))}
+        </View>
+
+        {currentIndex === onboardingData.length - 1 ? (
+          // Show this when on the last onboarding step
+          <View style={[styles.buttonContainer, {
+            flexDirection: 'row', justifyContent: 'space-between', width: wp(90), width: width * 0.8,
+          }]}>
+            <TouchableOpacity style={styles.button} onPress={() => { navigation.navigate("HowToPlay") }}>
+              <Text style={styles.buttonText}>Start Tutorial</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.button} onPress={handleNext}>
+              <Text style={styles.buttonText}>Let's Go</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          // Show this on other steps
+          <View style={[styles.buttonContainer, { left: isTablet ? wp(47) : orientation === "LANDSCAPE" ? wp(48) : wp(43), width: width * 0.8 }]}>
+            <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
+              <Ionicons name="chevron-forward" size={24} color="#fff" />
+            </TouchableOpacity>
           </View>
         )}
-        onScroll={handleScroll}
-      />
-      <View style={styles.dotContainer}>
-        {onboardingData.map((_, index) => (
-          <View key={index} style={[styles.dot, currentIndex === index && styles.activeDot]} />
-        ))}
-      </View>
-
-      {currentIndex === onboardingData.length - 1 ? (
-        // Show this when on the last onboarding step
-        <View style={[styles.buttonContainer, { flexDirection: 'row', justifyContent: 'space-between', width: wp(90) }]}>
-          <TouchableOpacity style={styles.button} onPress={() => { navigation.navigate("HowToPlay") }}>
-            <Text style={styles.buttonText}>Start Tutorial</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={handleNext}>
-            <Text style={styles.buttonText}>Let's Go</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        // Show this on other steps
-        <View style={[styles.buttonContainer, { left: isTablet ? wp(47) : orientation === "LANDSCAPE" ? wp(48) : wp(43) }]}>
-          <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-            <Ionicons name="chevron-forward" size={24} color="#fff" />
-          </TouchableOpacity>
-        </View>
-      )}
+      </LinearGradient>
     </Animated.View>
   );
 };
@@ -164,7 +171,6 @@ const OnboardingScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: lightBlueColor,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'absolute',
@@ -178,49 +184,48 @@ const styles = StyleSheet.create({
   },
   welcomeTextContainer: {
     position: "absolute",
-    bottom: height * 0.3,
-    width: width * 0.85,
+
     left: 25,
   },
   welcomeTitle: {
     fontSize: 40,
     fontWeight: "bold",
     marginTop: 20,
-    alignSelf: "flex-start"
+    alignSelf: "flex-start",
+    color: whiteColor,
   },
   welcomeDescription: {
     marginTop: 10,
     fontSize: 17,
-    lineHeight: 20
+    lineHeight: 20,
+    color: whiteColor,
   },
   welcomeButtonContainer: {
     position: "absolute",
-    bottom: height * 0.03,
-    width: width * 0.95,
+
     left: 20,
   },
   slide: {
-    width,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 20,
+
   },
   image: {
-    width: width * 0.8,
-    height: height * 0.4,
+
     resizeMode: 'contain',
   },
   title: {
     fontSize: 22,
     fontWeight: 'bold',
     marginTop: 20,
-    color: '#333',
+    color: whiteColor,
   },
   description: {
     fontSize: 16,
     textAlign: 'center',
     marginTop: 10,
-    color: '#666',
+    color: whiteColor,
     paddingHorizontal: 20,
   },
   buttonContainer: {
@@ -229,7 +234,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    width: width * 0.8,
     // left: wp(42)
   },
   backButton: {
@@ -248,7 +252,7 @@ const styles = StyleSheet.create({
   nextButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: blueColor,
+    backgroundColor: redColor,
     padding: 12,
     borderRadius: 25,
   },
@@ -264,16 +268,16 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#D1D4D6',
+    backgroundColor: whiteColor,
     marginHorizontal: 5,
   },
   activeDot: {
-    backgroundColor: blueColor,
+    backgroundColor: whiteColor,
     width: 22,
     height: 12,
   },
   button: {
-    backgroundColor: blueColor,
+    backgroundColor: redColor,
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 8,

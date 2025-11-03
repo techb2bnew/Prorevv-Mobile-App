@@ -53,7 +53,7 @@ const CustomDropdown = ({ data, country,selectedValue, onSelect, showIcon, right
                 {/* <View style={{ position: "absolute", bottom: heightPercentageToDP(49), left: widthPercentageToDP(45) }}>
                     <Feather name="chevron-down" size={55} color={blackColor} />
                 </View> */}
-                {dropdownHeight > 0 && (
+                {/* {dropdownHeight > 0 && (
                     <View style={{
                         position: "absolute",
                         bottom: dropdownHeight,
@@ -62,7 +62,7 @@ const CustomDropdown = ({ data, country,selectedValue, onSelect, showIcon, right
                     }}>
                         <Feather name="chevron-down" size={55} color={blackColor} />
                     </View>
-                )}
+                )} */}
                 <View
                     ref={dropdownRef}
                     style={styles.fullScreenDropdown}
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
     },
     dropdownButton: {
         borderWidth: 1,
-        borderColor: blueColor,
+        borderColor: blackColor,
         padding: 8,
         borderRadius: 50,
         backgroundColor: "#fff",

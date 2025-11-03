@@ -208,7 +208,7 @@ const HowToPlayScreen = () => {
                                 <View style={{ width: "85%" }}>
                                     <Text style={styles.stepTitle}>{step.title}</Text>
                                 </View>
-                                <Ionicons name={expandedStep === index ? 'chevron-up' : 'chevron-down'} size={24} color={blueColor} />
+                                <Ionicons name={expandedStep === index ? 'chevron-up' : 'chevron-down'} size={24} color={blackColor} />
                             </TouchableOpacity>
 
                             {expandedStep === index && (
@@ -244,7 +244,7 @@ const HowToPlayScreen = () => {
                         </View>
                     ))}
 
-                    <Text style={[styles.stepTitle, { textAlign: 'center', marginTop: 20, color: blueColor }]}>
+                    <Text style={[styles.stepTitle, { textAlign: 'center', marginTop: 20, color: blackColor }]}>
                         Thanks for Being a Valued Technician!
                     </Text>
                 </View>
@@ -266,12 +266,12 @@ const styles = StyleSheet.create({
     welcomeTitle: {
         fontSize: style.fontSizeNormal2x.fontSize,
         fontWeight: 'bold',
-        color: blueColor,
+        color: blackColor,
         marginBottom: spacings.small,
     },
     welcomeMessage: {
         fontSize: style.fontSizeNormal.fontSize,
-        color: grayColor,
+        color: blackColor,
         marginBottom: spacings.large,
     },
     accordionContainer: {
@@ -296,15 +296,15 @@ const styles = StyleSheet.create({
     stepTitle: {
         fontSize: style.fontSizeNormal1x.fontSize,
         fontWeight: 'bold',
-        color: blueColor,
+        color: blackColor,
     },
     stepDescription: {
         fontSize: style.fontSizeNormal.fontSize,
-        color: grayColor,
+        color: blackColor,
         marginBottom: spacings.small,
     },
     link: {
-        color: blueColor,
+        color: blackColor,
         textDecorationLine: 'underline',
     },
     image: {

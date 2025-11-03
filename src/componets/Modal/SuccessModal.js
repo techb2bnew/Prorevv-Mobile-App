@@ -3,7 +3,7 @@ import { Modal, View, Text, Image, StyleSheet, TouchableOpacity } from 'react-na
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from '.././../utils';
 import { BaseStyle } from '../../constans/Style';
 import { spacings, style } from '../../constans/Fonts';
-import { blackColor, blackOpacity5, blueColor, grayColor, orangeColor, whiteColor } from '../../constans/Color';
+import { blackColor, blackOpacity5, blueColor, grayColor, orangeColor, redColor, whiteColor } from '../../constans/Color';
 import { SUCCESS_IMAGE } from '../../assests/images';
 
 const { textAlign, alignJustifyCenter, flex, borderRadius10, positionAbsolute } = BaseStyle;
@@ -24,10 +24,10 @@ const SuccessModal = ({ visible, onClose, onPressContinue, headingText, text, bu
           <Text style={[styles.message, textAlign, { color: blackColor }]}>{headingText ? headingText : "Successfully"}</Text>
           {text && <Text style={[styles.text, textAlign, { color: grayColor }]}>{text}</Text>}
           <View style={[styles.buttonContainer, button2Text ? styles.rowButtons : {}, alignJustifyCenter]}>
-            <TouchableOpacity onPress={handleContinue} style={[styles.continueButton, alignJustifyCenter, borderRadius10, { backgroundColor: color ? color : blueColor, width: button2Text ? "46%" : "80%", }]}>
+            <TouchableOpacity onPress={handleContinue} style={[styles.continueButton, alignJustifyCenter, borderRadius10, { backgroundColor: color ? color : blackColor, width: button2Text ? "46%" : "80%", }]}>
               <Text style={[styles.buttonText, textAlign]}>{buttonText ? buttonText : "Continue"}</Text>
             </TouchableOpacity>
-            {button2Text && <TouchableOpacity onPress={handlePressButton2} style={[styles.continueButton, alignJustifyCenter, borderRadius10, { backgroundColor: color ? color : blueColor, width: "46%", marginLeft: spacings.large }]}>
+            {button2Text && <TouchableOpacity onPress={handlePressButton2} style={[styles.continueButton, alignJustifyCenter, borderRadius10, { backgroundColor: color ? color : blackColor, width: "46%", marginLeft: spacings.large }]}>
               <Text style={[styles.buttonText, textAlign]}>{button2Text}</Text>
             </TouchableOpacity>}
           </View>

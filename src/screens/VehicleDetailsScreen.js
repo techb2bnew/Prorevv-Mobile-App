@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, TextInput, FlatList, Pressable, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView, Image, Linking, Modal, Dimensions } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from '../utils';
-import { blackColor, whiteColor, grayColor, mediumGray, orangeColor, redColor, greenColor, blueColor, lightBlueColor } from '../constans/Color';
+import { blackColor, whiteColor, grayColor, mediumGray, orangeColor, redColor, greenColor, blueColor, lightBlueColor, lightGrayColor } from '../constans/Color';
 import { BaseStyle } from '../constans/Style';
 import { spacings, style } from '../constans/Fonts';
 import SuccessModal from '../componets/Modal/SuccessModal';
@@ -378,12 +378,12 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
                                                 <Text style={styles.label}>{item.label}</Text>
                                                 {item.isPhoneNumber ? (
                                                     <TouchableOpacity onPress={() => Linking.openURL(`tel:${item.value}`)} style={[flexDirectionRow, { alignItems: "center" }]}>
-                                                        <Feather name="phone-outgoing" size={15} color={blueColor} />
-                                                        <Text style={[styles.value, { color: blueColor, textDecorationLine: "underline", marginLeft: 5 }]}>{item.value}</Text>
+                                                        <Feather name="phone-outgoing" size={15} color={blackColor} />
+                                                        <Text style={[styles.value, { color: blackColor, textDecorationLine: "underline", marginLeft: 5 }]}>{item.value}</Text>
                                                     </TouchableOpacity>
                                                 ) : item.label === "Email" || item.label === "Partner Technician Email" ? (
                                                     <TouchableOpacity onPress={() => Linking.openURL(`mailto:${item.value}`)} style={[flexDirectionRow, { alignItems: "center" }]}>
-                                                        <Text style={[styles.value, { color: blueColor, textDecorationLine: "underline" }]}>{item.value}</Text>
+                                                        <Text style={[styles.value, { color: blackColor, textDecorationLine: "underline" }]}>{item.value}</Text>
                                                     </TouchableOpacity>
                                                 ) : item.images ? (
                                                     <ScrollView horizontal style={{ marginRight: 10, width: wp(90) }}>
@@ -475,7 +475,7 @@ const styles = StyleSheet.create({
     },
 
     detailContainer: {
-        backgroundColor: lightBlueColor,
+        backgroundColor: lightGrayColor,
         paddingHorizontal: spacings.xxxLarge,
         paddingVertical: spacings.large,
         borderRadius: 10,
@@ -508,7 +508,7 @@ const styles = StyleSheet.create({
         color: greenColor,
     },
     completeButton: {
-        backgroundColor: blueColor,
+        backgroundColor: blackColor,
         paddingVertical: spacings.xLarge,
         borderRadius: 15,
         marginTop: 20,

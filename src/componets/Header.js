@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/dist/Ionicons';
-import { blackColor, lightBlueColor } from '../constans/Color';
+import { blackColor, lightBlueColor, lightGrayColor } from '../constans/Color';
 import { heightPercentageToDP } from '../utils';
 import { spacings, style } from '../constans/Fonts';
 
@@ -31,7 +31,9 @@ const styles = {
         alignItems: 'center',
         paddingHorizontal: 4,
         height: heightPercentageToDP(7),
-        backgroundColor: blackColor
+        backgroundColor: blackColor,
+        borderBottomWidth: 0.7,
+        borderBottomColor: "#807f7fff",
     },
     backButton: {
         padding: 8,
