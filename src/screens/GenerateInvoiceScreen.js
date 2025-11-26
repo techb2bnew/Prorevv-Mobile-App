@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { View, Text, TextInput, FlatList, Pressable, StyleSheet, TouchableOpacity, ActivityIndicator, Image, Platform, Modal, Dimensions, TouchableWithoutFeedback, ScrollView, Alert, Linking, Keyboard, KeyboardAvoidingView, useWindowDimensions } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
@@ -66,6 +66,7 @@ const GenerateInvoiceScreen = ({ navigation,
     const [submitLoading, setSubmitLoading] = useState(false);
     const [cancelLoading, setCancelLoading] = useState(false);
     const [invoiceRates, setInvoiceRates] = useState({});
+    const [savedInvoiceRates, setSavedInvoiceRates] = useState({}); // Track saved values to detect changes
     const inputRefs = useRef({});
     const [selectAll, setSelectAll] = useState(false);
     const [autoSavingVehicles, setAutoSavingVehicles] = useState(new Set()); // Track which vehicles are being auto-saved
@@ -130,6 +131,22 @@ const GenerateInvoiceScreen = ({ navigation,
 
         getTechnicianDetail();
     }, []);
+
+    // Calculate total cost for selected vehicles - sum of PDR values
+    const totalCost = useMemo(() => {
+        if (selectedVehicles.length === 0) return 0;
+
+        return selectedVehicles.reduce((sum, vehicle) => {
+            // Priority: invoiceRates (unsaved/typed value) > vehicle.pdr (saved from backend) > 0
+            const vehiclePdr = invoiceRates[vehicle.id] !== undefined && invoiceRates[vehicle.id] !== ''
+                ? parseFloat(invoiceRates[vehicle.id]) || 0
+                : vehicle?.pdr
+                    ? parseFloat(vehicle.pdr) || 0
+                    : 0;
+
+            return sum + vehiclePdr;
+        }, 0);
+    }, [selectedVehicles, invoiceRates]);
 
     useFocusEffect(
         useCallback(() => {
@@ -516,6 +533,15 @@ const GenerateInvoiceScreen = ({ navigation,
                 setWorkOrdersRawData(allVehicles);
                 setSelectedJobEstimated(totalEstimatedCost);
 
+                // Initialize saved invoice rates from backend pdr values
+                const initialSavedRates = {};
+                allVehicles.forEach(vehicle => {
+                    if (vehicle?.pdr) {
+                        initialSavedRates[vehicle.id] = vehicle.pdr.toString();
+                    }
+                });
+                setSavedInvoiceRates(initialSavedRates);
+
                 // Auto-save existing invoice rates for all vehicles
                 autoSaveExistingRates(allVehicles);
             } else {
@@ -530,6 +556,15 @@ const GenerateInvoiceScreen = ({ navigation,
                     console.log("API Response Data:", data?.jobs);
                     setWorkOrdersRawData(data?.jobs?.vehicles);
                     setSelectedJobEstimated(data?.jobs?.estimatedCost);
+
+                    // Initialize saved invoice rates from backend pdr values
+                    const initialSavedRates = {};
+                    (data?.jobs?.vehicles || []).forEach(vehicle => {
+                        if (vehicle?.pdr) {
+                            initialSavedRates[vehicle.id] = vehicle.pdr.toString();
+                        }
+                    });
+                    setSavedInvoiceRates(initialSavedRates);
 
                     // Auto-save existing invoice rates for vehicles
                     autoSaveExistingRates(data?.jobs?.vehicles);
@@ -804,6 +839,21 @@ const GenerateInvoiceScreen = ({ navigation,
         };
     }, []);
 
+    // Check if vehicle has unsaved changes
+    const hasUnsavedChanges = (vehicle) => {
+        const vehicleId = vehicle.id;
+        // Get current value from input (invoiceRates) or fallback to vehicle data
+        const currentValue = invoiceRates[vehicleId] !== undefined && invoiceRates[vehicleId] !== ''
+            ? invoiceRates[vehicleId].toString().trim()
+            : vehicle?.pdr?.toString() || '';
+        
+        // Get saved value
+        const savedValue = savedInvoiceRates[vehicleId]?.toString().trim() || vehicle?.pdr?.toString() || '';
+
+        // Show save button if current value is different from saved value
+        return currentValue !== savedValue;
+    };
+
     const handleInvoiceChange = (vehicleId, value) => {
         setInvoiceRates(prev => ({
             ...prev,
@@ -881,6 +931,12 @@ const GenerateInvoiceScreen = ({ navigation,
             try {
                 const data = await response.json();
                 console.log("✅ Auto-saved PDR:", data);
+                
+                // Update saved invoice rates after successful auto-save
+                setSavedInvoiceRates(prev => ({
+                    ...prev,
+                    [vehicleId]: parsedRate.toString()
+                }));
             } catch (parseError) {
                 console.error('JSON Parse Error:', parseError);
                 // Continue without throwing - auto-save should be silent
@@ -956,6 +1012,12 @@ const GenerateInvoiceScreen = ({ navigation,
                 [vehicleId]: parsedRate.toString()
             }));
 
+            // Update saved invoice rates after successful manual save
+            setSavedInvoiceRates(prev => ({
+                ...prev,
+                [vehicleId]: parsedRate.toString()
+            }));
+
             Toast.show("Invoice rate saved successfully.");
         } catch (error) {
             console.error('❌ Error saving invoice:', error);
@@ -1013,6 +1075,43 @@ const GenerateInvoiceScreen = ({ navigation,
                         />
                     </View>
                 </View>
+                {technicianType === 'single-technician' && selectedVehicles.length > 0 && (
+                    <>
+                        <View style={{
+                            flexDirection: "row",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            width: "100%",
+                            paddingHorizontal: spacings.large,
+                            // height: hp(4)
+                        }}>
+                            <Text style={[styles.label, { fontSize: style.fontSizeNormal1x.fontSize }]}>
+                                Total Cost ($)
+                            </Text>
+                            <Text style={[styles.label, { fontSize: style.fontSizeNormal.fontSize }]}>
+                                {totalCost.toFixed(2)}
+                            </Text>
+                        </View>
+
+                        {/* New Row => Selected Vehicles */}
+                        <View style={{
+                            flexDirection: "row",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            width: "100%",
+                            paddingHorizontal: spacings.large,
+                            height: hp(4)
+                        }}>
+                            <Text style={[styles.label, { fontSize: style.fontSizeNormal1x.fontSize }]}>
+                                Vehicles Selected
+                            </Text>
+                            <Text style={[styles.label, { fontSize: style.fontSizeNormal.fontSize }]}>
+                                {selectedVehicles.length}
+                            </Text>
+                        </View>
+                    </>
+                )}
+
 
                 <View style={{
                     paddingHorizontal: spacings.large,
@@ -1043,10 +1142,7 @@ const GenerateInvoiceScreen = ({ navigation,
                         <Feather name="search" size={20} color={blackColor} />
                     </View>
                 </View>
-                {/* {technicianType === 'single-technician' && <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%", paddingHorizontal: spacings.large, height: hp(4)}}>
-                    <Text style={[styles.label, { fontSize: style.fontSizeNormal1x.fontSize }]}>Total Job Cost($)</Text>
-                    <Text style={[styles.label, { fontSize: style.fontSizeNormal.fontSize }]}>5000</Text>
-                </View>} */}
+
 
 
                 {/* <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacings.large }}>
@@ -1062,7 +1158,7 @@ const GenerateInvoiceScreen = ({ navigation,
                     <Text style={{ color: whiteColor }}>{selectAll ? "Deselect All" : "Select All"}</Text>
                 </TouchableOpacity>
             </View> */}
-                {viewType === 'list' && <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(75) : orientation === "LANDSCAPE" ? selectedVehicles?.length > 0 ? hp(58) : hp(60) : hp(62) : isIOSAndTablet ? hp(75) : hp(62), marginTop: spacings.large, paddingBottom: selectedVehicles?.length > 0 ? hp(8) : 0 }}>
+                {viewType === 'list' && <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(75) : orientation === "LANDSCAPE" ? selectedVehicles?.length > 0 ? hp(58) : hp(60) : hp(62) : isIOSAndTablet ? hp(75) : selectedVehicles.length > 0 ? hp(54) : hp(62), marginTop: spacings.large, paddingBottom: selectedVehicles?.length > 0 ? hp(8) : 0 }}>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                         <View>
                             {/* Header Row */}
@@ -1089,8 +1185,8 @@ const GenerateInvoiceScreen = ({ navigation,
                                 <Text style={[styles.tableHeader, { width: isTablet ? wp(25) : orientation === "LANDSCAPE" ? wp(20) : wp(55) }]}>VIN</Text>
                                 <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(30) }]}>Make</Text>
                                 <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(30) }]}>Model</Text>
-                                <Text style={[styles.tableHeader, { width: isTablet ? wp(20) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>Est Cost($)</Text>
-                                <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>Vehicle price ($)</Text>
+                                <Text style={[styles.tableHeader, { width: isTablet ? wp(20) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>Vehicle Price($)</Text>
+                                <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>Override cost ($)</Text>
                                 <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>Start Date</Text>
                                 <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>End Date</Text>
                                 <Text style={[styles.tableHeader, { width: isIOSAndTablet ? wp(35) : isTablet ? wp(42) : orientation === "LANDSCAPE" ? wp(35) : wp(55) }]}>Invoice Rate($)</Text>
@@ -1121,7 +1217,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                                 <Text style={[styles.text, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(30), paddingRight: spacings.normal }]}>{item?.make || '-'}</Text>
                                                 <Text style={[styles.text, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(28), paddingRight: spacings.large }]}>{item?.model || '-'}</Text>
                                                 <Text style={[styles.text, { width: isTablet ? wp(20) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>
-                                                    {!item?.labourCost ? `(${item?.jobEstimatedCost ? `$${item.jobEstimatedCost}` : selectedJobEstimated ? `$${selectedJobEstimated}` : '-'})` : '-'}
+                                                    {!item?.labourCost ? `${item?.jobEstimatedCost ? `$${item.jobEstimatedCost}` : selectedJobEstimated ? `$${selectedJobEstimated}` : '-'}` : '-'}
                                                 </Text>
                                                 <Text style={[styles.text, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>
                                                     {item?.labourCost ? `$${item.labourCost}` : '-'}
@@ -1164,19 +1260,21 @@ const GenerateInvoiceScreen = ({ navigation,
                                                         }
                                                         onChangeText={(value) => handleInvoiceChange(item.id, value)}
                                                     />
-                                                    <TouchableOpacity
-                                                        onPress={() => handleSaveInvoice(item)}
-                                                        style={{
-                                                            backgroundColor: blackColor,
-                                                            paddingHorizontal: 12,
-                                                            paddingVertical: 10,
-                                                            borderRadius: 5
-                                                        }}
-                                                    >
-                                                        <Text style={{ color: 'white' }}>
-                                                            Save
-                                                        </Text>
-                                                    </TouchableOpacity>
+                                                    {hasUnsavedChanges(item) && (
+                                                        <TouchableOpacity
+                                                            onPress={() => handleSaveInvoice(item)}
+                                                            style={{
+                                                                // backgroundColor: blackColor,
+                                                                paddingHorizontal: 12,
+                                                                paddingVertical: 10,
+                                                                borderRadius: 5
+                                                            }}
+                                                        >
+                                                            <Text style={{ color: greenColor }}>
+                                                                Save
+                                                            </Text>
+                                                        </TouchableOpacity>
+                                                    )}
 
                                                 </View>
 
@@ -1229,7 +1327,7 @@ const GenerateInvoiceScreen = ({ navigation,
 
                 {viewType === 'grid' && (
                     <ScrollView
-                        style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(75) : hp(65) : isIOSAndTablet ? hp(75) : hp(60), paddingTop: hp(4), paddingBottom: selectedVehicles?.length > 0 ? hp(8) : 0 }}
+                        style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(75) : hp(65) : isIOSAndTablet ? hp(75) : selectedVehicles?.length > 0 ? hp(50) : hp(60), paddingTop: hp(4), paddingBottom: selectedVehicles?.length > 0 ? hp(10) : 0 }}
                         showsVerticalScrollIndicator={false}
                         keyboardShouldPersistTaps="handled"
                         nestedScrollEnabled={true}
@@ -1290,12 +1388,12 @@ const GenerateInvoiceScreen = ({ navigation,
                                                 <Text >{item?.model}</Text>
                                             </View>
                                             <View style={{ width: '48%', marginBottom: 9 }}>
-                                                <Text style={{ color: '#555', fontSize: 10 }}>Vehicle price($)</Text>
+                                                <Text style={{ color: '#555', fontSize: 10 }}>Override Cost($)</Text>
                                                 <Text >{item?.labourCost ? `$${item.labourCost}` : '-'} </Text>
                                             </View>
 
                                             <View style={{ width: '48%', marginBottom: 9 }}>
-                                                <Text style={{ color: '#555', fontSize: 10 }}>Estimated Cost($)</Text>
+                                                <Text style={{ color: '#555', fontSize: 10 }}>Vehicle price($)</Text>
                                                 <Text >
                                                     {!item?.labourCost ? (item?.jobEstimatedCost ? `$${item.jobEstimatedCost}` : selectedJobEstimated ? `$${selectedJobEstimated}` : '-') : '-'}
                                                 </Text>
@@ -1345,20 +1443,21 @@ const GenerateInvoiceScreen = ({ navigation,
                                                         onChangeText={(value) => handleInvoiceChange(item.id, value)}
                                                     />
 
-
-                                                    <TouchableOpacity
-                                                        onPress={() => handleSaveInvoice(item)}
-                                                        style={{
-                                                            backgroundColor: blackColor,
-                                                            paddingHorizontal: 12,
-                                                            paddingVertical: 10,
-                                                            borderRadius: 5
-                                                        }}
-                                                    >
-                                                        <Text style={{ color: 'white' }}>
-                                                            Save
-                                                        </Text>
-                                                    </TouchableOpacity>
+                                                    {hasUnsavedChanges(item) && (
+                                                        <TouchableOpacity
+                                                            onPress={() => handleSaveInvoice(item)}
+                                                            style={{
+                                                                // backgroundColor: blackColor,
+                                                                paddingHorizontal: 12,
+                                                                paddingVertical: 10,
+                                                                borderRadius: 5
+                                                            }}
+                                                        >
+                                                            <Text style={{ color: greenColor }}>
+                                                                Save
+                                                            </Text>
+                                                        </TouchableOpacity>
+                                                    )}
 
                                                 </View>
                                             </View>

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, TextInput, FlatList, Pressable, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView, Image, Linking, Modal, Dimensions, useWindowDimensions } from 'react-native';
+import { View, Text, TextInput, FlatList, Pressable, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView, Image, Linking, Modal, Dimensions, Platform, useWindowDimensions } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from '../utils';
 import { blackColor, whiteColor, grayColor, mediumGray, orangeColor, redColor, greenColor, blueColor, lightBlueColor, lightGrayColor } from '../constans/Color';
@@ -154,22 +154,51 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
     return text.charAt(0).toUpperCase() + text.slice(1);
   };
 
-  const renderItem = ({ item, index }) => (
-    <Pressable
-      onPress={() => navigation.navigate('VehicleDetailsScreen', { vehicleId: item.id })}
-      style={[styles.row, { backgroundColor: index % 2 === 0 ? lightGrayColor : whiteColor },]}
-    >
-      <Text style={[styles.cell, { width: isIOsAndTablet ? "40%" : "44%", paddingLeft: spacings.small2x }]}>{item.vin || 'N/A'}</Text>
-      <Text style={[styles.cell, { color: item.vehicleStatus ? 'green' : blackColor, width: isIOsAndTablet ? "43%" : "38%", }]}>
-        {item.vehicleStatus ? 'Complete' : 'In Progress'}
-      </Text>
-      <Pressable onPress={() => navigation.navigate("VehicleDetailsScreen", {
-        vehicleId: item.id,
-      })}>
-        <Text style={styles.viewText}>View</Text>
+  const renderItem = ({ item, index }) => {
+
+    // Console when row renders
+    console.log("Rendering Vehicle Row:", {
+      item
+    });
+
+    return (
+      <Pressable
+        onPress={() => {
+          console.log("Pressed Vehicle:", { id: item.id, vin: item.vin });
+          navigation.navigate('VehicleDetailsScreen', { vehicleId: item.id });
+        }}
+        style={[
+          styles.row,
+          { backgroundColor: index % 2 === 0 ? lightGrayColor : whiteColor }
+        ]}
+      >
+        <Text style={[styles.cell, { width: wp(40) }]}>{item.vin || 'N/A'}</Text>
+        <Text style={[styles.cell, { width: wp(25), paddingLeft: spacings.small2x }]}>{item.make || '-'}</Text>
+        <Text style={[styles.cell, { width: wp(22) }]}>{item.model || '-'}</Text>
+        <Text style={[styles.cell, { width: wp(25) }]}>{item.modelYear || '-'}</Text>
+        <Text style={[styles.cell, { width: wp(25) }]}>{item.labourCost ? "-" : jobDetails?.estimatedCost ? `$${jobDetails.estimatedCost}` : '—'}</Text>
+        <Text style={[styles.cell, { width: wp(25) }]}>{item.labourCost ? `$${item.labourCost}` : '-'}</Text>
+
+        <Text style={[
+          styles.cell,
+          { color: item.vehicleStatus ? 'green' : blackColor, width: wp(35) }
+        ]}>
+          {item.vehicleStatus ? 'Complete' : 'In Progress'}
+        </Text>
+
+        <Pressable
+          onPress={() => {
+            console.log("View Button Clicked:", { id: item.id, vin: item.vin });
+            navigation.navigate("VehicleDetailsScreen", { vehicleId: item.id });
+          }}
+          style={{ width: wp(20), alignItems: 'center' }}
+        >
+          <Text style={styles.viewText}>View</Text>
+        </Pressable>
       </Pressable>
-    </Pressable>
-  );
+    );
+  };
+
 
   return (
     <View style={{ flex: 1 }}>
@@ -287,12 +316,12 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
                     {jobDetails?.jobStatus ? "Complete" : "In Progress"}
                   </Text>
                 </View>
-                {technicianType != 'ifs' && <View style={styles.rightCol}>
+                {/* {technicianType != 'ifs' && <View style={styles.rightCol}>
                   <Text style={styles.label}>Job Estimated Cost</Text>
                   <Text style={styles.value}>
                     {jobDetails?.estimatedCost ? `$${jobDetails.estimatedCost}` : '—'}
                   </Text>
-                </View>}
+                </View>} */}
 
               </View>
               <View style={styles.rowItem}>
@@ -369,20 +398,30 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
 
           {jobDetails?.vehicles?.length > 0 ? (
             <>
-              {/* Header Row */}
-              <View style={[styles.row, styles.headerRow]}>
-                <Text style={[styles.cell, styles.headerText, { width: "40%" }]}>VIN</Text>
-                <Text style={[styles.cell, styles.headerText, { width: "40%" }]}>Status</Text>
-                <Text style={[styles.cell, styles.headerText, { width: "20%", textAlign: orientation === "LANDSCAPE" ? 'left' : 'center',marginLeft: orientation === "LANDSCAPE" ? wp(3) : 0 }]}>Action</Text>
-              </View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <View>
+                  {/* Header Row */}
+                  <View style={[styles.row, styles.headerRow]}>
+                    <Text style={[styles.cell, styles.headerText, { width: wp(40), textAlign: "left", paddingLeft: spacings.large }]}>VIN</Text>
+                    <Text style={[styles.cell, styles.headerText, { width: wp(25) }]}>Make</Text>
+                    <Text style={[styles.cell, styles.headerText, { width: wp(22) }]}>Model</Text>
+                    <Text style={[styles.cell, styles.headerText, { width: wp(25) }]}>Year</Text>
+                    <Text style={[styles.cell, styles.headerText, { width: wp(27) }]}>Vehicle Price</Text>
+                    <Text style={[styles.cell, styles.headerText, { width: wp(25) }]}>Override Cost</Text>
+                    <Text style={[styles.cell, styles.headerText, { width: wp(35) }]}>Status</Text>
+                    <Text style={[styles.cell, styles.headerText, { width: wp(20), textAlign: orientation === "LANDSCAPE" ? 'left' : 'center', marginLeft: orientation === "LANDSCAPE" ? wp(3) : 0 }]}>Action</Text>
+                  </View>
 
-              {/* List */}
-              <FlatList
-                data={jobDetails?.vehicles || []}
-                keyExtractor={(item) => item.id.toString()}
-                renderItem={renderItem}
-                ItemSeparatorComponent={() => <View style={styles.separator} />}
-              />
+                  {/* List */}
+                  <FlatList
+                    data={jobDetails?.vehicles.reverse() || []}
+                    keyExtractor={(item) => item.id.toString()}
+                    renderItem={renderItem}
+                    ItemSeparatorComponent={() => <View style={styles.separator} />}
+                    scrollEnabled={false}
+                  />
+                </View>
+              </ScrollView>
             </>
           ) : (
             // 👉 Show this when vehicle list is empty

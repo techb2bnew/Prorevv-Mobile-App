@@ -137,7 +137,7 @@ export default function MainNavigator() {
                         // paddingBottom: 10,
                         // marginHorizontal: 20,
                         // zIndex: 9999
-                        backgroundColor: "#1D1D1D" 
+                        backgroundColor: "#131313ff" 
                         // backgroundColor: blackColor
                     },
                 tabBarLabelStyle: {

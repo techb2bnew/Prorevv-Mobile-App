@@ -1248,10 +1248,10 @@ const WorkOrderScreenTwo = ({ route }) => {
                                     </View>
 
                                     {technicianType === "single-technician" && <View style={{ marginTop: spacings.xxLarge }}>
-                                        <Text style={styles.label}>Job Override Cost</Text>
+                                        <Text style={styles.label}>Vehicle Override Price</Text>
                                         <TextInput
                                             style={[styles.input, { height: isTablet ? hp(3.5) : hp(5.5), marginTop: 5 }]}
-                                            placeholder="Job Override Cost"
+                                            placeholder="Vehicle Override Price"
                                             value={labourCost}
                                             onChangeText={setLabourCost}
                                             keyboardType="numeric"

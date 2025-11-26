@@ -27,6 +27,8 @@ import DatePicker from "react-native-date-picker";
 import CustomerDropdown from '../componets/CustomerDropdown';
 import Feather from 'react-native-vector-icons/Feather';
 import AntDesign from 'react-native-vector-icons/AntDesign';
+import SimpleLineIcons
+    from 'react-native-vector-icons/SimpleLineIcons';
 import { useOrientation } from '../OrientationContext';
 
 
@@ -35,7 +37,7 @@ const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirec
 const CreateJobScreen = ({ route }) => {
     //   const { jobId } = route?.params;
     const { width, height } = useWindowDimensions();
-    const { orientation } = useOrientation(); 
+    const { orientation } = useOrientation();
     const isTablet = width >= 668 && height >= 1024;
     const navigation = useNavigation();
     const [customers, setCustomers] = useState([]);
@@ -80,6 +82,7 @@ const CreateJobScreen = ({ route }) => {
     const isIOsAndTablet = Platform.OS === "ios" && isTablet;
     const [notes, setNotes] = useState("");
     const [editableJobId, setEditableJobId] = useState(null);
+    const [showPriceTooltip, setShowPriceTooltip] = useState(false);
 
 
     useFocusEffect(
@@ -700,7 +703,7 @@ const CreateJobScreen = ({ route }) => {
                                             <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(25) }]}>Job Title</Text>
                                             <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(33) }]}>Number of W.O</Text>
                                             <Text style={[styles.tableHeaderText, { width: isTablet ? wp(20) : orientation === "LANDSCAPE" ? wp(20) : wp(33) }]}>Customer Name</Text>
-                                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(33) }]}>Est Cost</Text>
+                                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(33) }]}>Vehicle Price</Text>
                                             <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(33) }]}>Start Date</Text>
                                             <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(33) }]}>End Date</Text>
                                             <Text style={[styles.tableHeaderText, { width: isTablet ? wp(25) : orientation === "LANDSCAPE" ? wp(15) : wp(25) }]}>Action</Text>
@@ -874,7 +877,7 @@ const CreateJobScreen = ({ route }) => {
                                                     <Text >{capitalize(item.customer?.fullName) || '—'}</Text>
                                                 </View>
                                                 <View style={{ width: '48%', marginBottom: 10 }}>
-                                                    <Text style={{ color: '#555', fontSize: 11 }}>Estimated Cost</Text>
+                                                    <Text style={{ color: '#555', fontSize: 11 }}>Vehicle Price</Text>
                                                     <Text >{item.estimatedCost ? `$${item.estimatedCost}` : '—'}</Text>
                                                 </View>
                                                 <View style={{ width: '48%', marginBottom: 10 }}>
@@ -1201,14 +1204,53 @@ const CreateJobScreen = ({ route }) => {
                                     </>
                                 }
 
-                                <CustomTextInput
-                                    label="Job Estimated Cost($)"
-                                    placeholder="Enter Estimated Cost"
-                                    value={estimatedCost}
-                                    onChangeText={(text) => setEstimatedCost(text)}
-                                    keyboardType="numeric"
-                                    maxLength={8}
-                                />
+                                <View style={{ marginTop: spacings.xxxLarge }}>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5 }}>
+                                        <Text style={styles.label}>Price per vehicle($)</Text>
+                                        <TouchableOpacity
+                                            onPress={() => setShowPriceTooltip(true)}
+                                            style={{ marginLeft: spacings.large, marginBottom: spacings.large }}
+                                        >
+                                            <SimpleLineIcons name="question" size={16} color={blueColor} />
+                                        </TouchableOpacity>
+                                    </View>
+                                    <View style={[styles.inputContainer]}>
+                                        <TextInput
+                                            placeholder="Price per vehicle"
+                                            value={estimatedCost}
+                                            onChangeText={(text) => setEstimatedCost(text)}
+                                            keyboardType="numeric"
+                                            maxLength={8}
+                                            style={styles.textInput}
+                                            placeholderTextColor={mediumGray}
+                                        />
+                                    </View>
+                                </View>
+
+                                <Modal
+                                    visible={showPriceTooltip}
+                                    transparent={true}
+                                    animationType="fade"
+                                    onRequestClose={() => setShowPriceTooltip(false)}
+                                >
+                                    <TouchableWithoutFeedback onPress={() => setShowPriceTooltip(false)}>
+                                        <View style={styles.modalOverlay}>
+                                            <TouchableWithoutFeedback onPress={() => { }}>
+                                                <View style={styles.tooltipContainer}>
+                                                    <View style={styles.tooltipHeader}>
+                                                        <Text style={styles.tooltipTitle}>Price per vehicle</Text>
+                                                        <TouchableOpacity onPress={() => setShowPriceTooltip(false)}>
+                                                            <Ionicons name="close" size={24} color={blackColor} />
+                                                        </TouchableOpacity>
+                                                    </View>
+                                                    <Text style={styles.tooltipText}>
+                                                        This is the price of the majority of vehicles that will be paid to you. If there are exceptions you will have the opportunity to override this after you scan the vehicle
+                                                    </Text>
+                                                </View>
+                                            </TouchableWithoutFeedback>
+                                        </View>
+                                    </TouchableWithoutFeedback>
+                                </Modal>
 
                                 <View style={styles.sectionContainer}>
                                     <Text style={styles.label}>Notes</Text>
@@ -1228,13 +1270,13 @@ const CreateJobScreen = ({ route }) => {
                                 <Text style={{ color: 'red', marginTop: 4, fontSize: 12 }}>{error}</Text>
                             ) : null}
                         </ScrollView>
-                        <View style={{ padding: hp(2), backgroundColor: whiteColor }}>
+                        <View style={{ paddingHorizontal: hp(2), paddingVertical: hp(3.5), backgroundColor: whiteColor }}>
                             <CustomButton
                                 title={route?.params?.jobId || editableJobId ? "Update Job" : "Create Job"}
                                 onPress={handleSubmitJob}
                                 loading={loading}
                                 disabled={loading}
-                                style={{backgroundColor:blackColor}}
+                                style={{ backgroundColor: blackColor }}
                             />
                         </View>
                         {/* </TouchableWithoutFeedback> */}
@@ -1408,6 +1450,51 @@ const styles = StyleSheet.create({
         fontSize: 14,
         minHeight: 80,
         textAlignVertical: "top",
+    },
+    inputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: blackColor,
+        borderRadius: 50,
+        paddingHorizontal: 15,
+        paddingVertical: 2,
+        backgroundColor: whiteColor,
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+    },
+    tooltipContainer: {
+        backgroundColor: whiteColor,
+        borderRadius: 12,
+        padding: 20,
+        width: '90%',
+        maxWidth: 400,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+    },
+    tooltipHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 15,
+    },
+    tooltipTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: blackColor,
+    },
+    tooltipText: {
+        fontSize: 14,
+        color: blackColor,
+        lineHeight: 20,
     },
 
 });
