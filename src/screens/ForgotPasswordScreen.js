@@ -284,7 +284,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
                     <View style={[styles.container,]}>
                         {currentStep === 'email' && (
                             <View style={styles.box}>
-                                <Image source={FORGOT_PASSWORD_IMAGE} style={{ width: "90%", height: isTablet ? hp(50) : hp(40), resizeMode: 'contain', zIndex: 999, alignSelf: "center" }} />
+                                <Image source={FORGOT_PASSWORD_IMAGE} style={{ width: "90%", height: isTablet ? hp(45) : hp(40), resizeMode: 'contain', zIndex: 999, alignSelf: "center" }} />
                                 <CustomTextInput
                                     label={"Email"}
                                     placeholder={"Enter your email"}

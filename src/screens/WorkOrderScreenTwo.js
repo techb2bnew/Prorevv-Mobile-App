@@ -75,6 +75,7 @@ const WorkOrderScreenTwo = ({ route }) => {
     const [endDate, setEndDate] = useState(null);
     const [isStartPickerOpen, setIsStartPickerOpen] = useState(false);
     const [isEndPickerOpen, setIsEndPickerOpen] = useState(false);
+    const [isEndDateManuallyChanged, setIsEndDateManuallyChanged] = useState(false);
     const [duplicatePopupSource, setDunplicatePopupSource] = useState("");
 
     const [modalData, setModalData] = useState({
@@ -199,7 +200,19 @@ const WorkOrderScreenTwo = ({ route }) => {
         }, [])
     );
 
-
+    // Auto-fill start date with today's date and end date with tomorrow's date on initial load
+    useEffect(() => {
+        if (!startDate) {
+            const today = new Date();
+            setStartDate(today);
+            // Auto-fill end date with tomorrow if not manually changed
+            if (!isEndDateManuallyChanged && !endDate) {
+                const tomorrow = new Date(today);
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                setEndDate(tomorrow);
+            }
+        }
+    }, []);
 
     //Vin
     useEffect(() => {
@@ -740,16 +753,40 @@ const WorkOrderScreenTwo = ({ route }) => {
                     setSelectedJobId(data?.vehicle?.vehicle?.jobId)
                     setLabourCost(data?.vehicle?.vehicle?.labourCost)
                     setSelectedColor(data?.vehicle?.vehicle?.color)
-                    setStartDate(
-                        data?.vehicle?.vehicle?.startDate && data?.vehicle?.vehicle?.startDate !== "null"
-                            ? new Date(data.vehicle.vehicle.startDate)
-                            : null
-                    );
-                    setEndDate(
-                        data?.vehicle?.vehicle?.endDate && data?.vehicle?.vehicle?.endDate !== "null"
-                            ? new Date(data.vehicle.vehicle.endDate)
-                            : null
-                    );
+                    const loadedStartDate = data?.vehicle?.vehicle?.startDate && data?.vehicle?.vehicle?.startDate !== "null"
+                        ? new Date(data.vehicle.vehicle.startDate)
+                        : null;
+                    const loadedEndDate = data?.vehicle?.vehicle?.endDate && data?.vehicle?.vehicle?.endDate !== "null"
+                        ? new Date(data.vehicle.vehicle.endDate)
+                        : null;
+                    
+                    // Auto-fill start date with today if not loaded
+                    if (!loadedStartDate) {
+                        const today = new Date();
+                        setStartDate(today);
+                        // Auto-fill end date with tomorrow if not loaded
+                        if (!loadedEndDate) {
+                            const tomorrow = new Date(today);
+                            tomorrow.setDate(tomorrow.getDate() + 1);
+                            setEndDate(tomorrow);
+                            setIsEndDateManuallyChanged(false);
+                        } else {
+                            setEndDate(loadedEndDate);
+                            setIsEndDateManuallyChanged(true); // Preserve loaded end date
+                        }
+                    } else {
+                        setStartDate(loadedStartDate);
+                        if (loadedEndDate) {
+                            setEndDate(loadedEndDate);
+                            setIsEndDateManuallyChanged(true); // Preserve loaded end date
+                        } else {
+                            // Auto-fill end date with start date + 1 day
+                            const nextDay = new Date(loadedStartDate);
+                            nextDay.setDate(nextDay.getDate() + 1);
+                            setEndDate(nextDay);
+                            setIsEndDateManuallyChanged(false);
+                        }
+                    }
                     setTechnicians(data?.vehicle?.vehicle?.assignedTechnicians);
                     setSelectedTechnicians(data?.vehicle?.vehicle?.assignedTechnicians);
                     setSelectedCustomer(data?.vehicle?.vehicle.customerId)
@@ -1200,28 +1237,51 @@ const WorkOrderScreenTwo = ({ route }) => {
                                             keyExtractor={(_, index) => index.toString()}
                                             renderItem={({ item, index }) => {
                                                 return (
-                                                    <View style={[flexDirectionRow, justifyContentSpaceBetween, alignItemsCenter, { marginTop: spacings.xLarge }]}>
-                                                        <TextInput
-                                                            style={[styles.input, {
-                                                                width: "100%",
-                                                                height: textInputHeights[index] || (isTablet ? hp(3.5) : hp(5)),
-                                                                textAlignVertical: "top",
-                                                                paddingHorizontal: 20,
-                                                                paddingBottom: 0,
-                                                            }]}
-                                                            placeholder="Enter work description"
-                                                            value={item.jobDescription}
-                                                            placeholderTextColor={mediumGray}
-                                                            multiline={true}
-                                                            onChangeText={(text) => handleInputChange(text, index, "jobDescription")}
-                                                            onContentSizeChange={(e) => handleContentSizeChange(index, e)}
+                                                    <View style={{ marginTop: spacings.xLarge }}>
+                                                        <View style={[flexDirectionRow, justifyContentSpaceBetween, alignItemsCenter]}>
+                                                            <TextInput
+                                                                style={[styles.input, {
+                                                                    width: "100%",
+                                                                    height: textInputHeights[index] || (isTablet ? hp(8) : hp(10)),
+                                                                    minHeight: hp(8),
+                                                                    textAlignVertical: "top",
+                                                                    paddingHorizontal: 20,
+                                                                    paddingTop: 12,
+                                                                    paddingBottom: 12,
+                                                                }]}
+                                                                placeholder="Enter work description"
+                                                                value={item.jobDescription}
+                                                                placeholderTextColor={mediumGray}
+                                                                multiline={true}
+                                                                numberOfLines={4}
+                                                                maxLength={1000}
+                                                                onChangeText={(text) => handleInputChange(text, index, "jobDescription")}
+                                                                onContentSizeChange={(e) => handleContentSizeChange(index, e)}
 
-                                                        />
-                                                        {jobDescription.length > 1 && (
-                                                            <TouchableOpacity onPress={() => handleDelete(index)}>
-                                                                <Ionicons name="trash-outline" size={18} color="red" />
-                                                            </TouchableOpacity>
-                                                        )}
+                                                            />
+                                                            {jobDescription.length > 1 && (
+                                                                <TouchableOpacity onPress={() => handleDelete(index)}>
+                                                                    <Ionicons name="trash-outline" size={18} color="red" />
+                                                                </TouchableOpacity>
+                                                            )}
+                                                        </View>
+
+                                                        {/* Character count & limit message */}
+                                                        <View style={{ marginTop: 4, flexDirection: 'row', justifyContent: 'space-between' }}>
+                                                            <Text
+                                                                style={{
+                                                                    fontSize: 11,
+                                                                    color: (item?.jobDescription?.length || 0) >= 1000 ? redColor : mediumGray
+                                                                }}
+                                                            >
+                                                                {(item?.jobDescription?.length || 0)}/1000
+                                                            </Text>
+                                                            {(item?.jobDescription?.length || 0) >= 1000 && (
+                                                                <Text style={{ fontSize: 11, color: redColor }}>
+                                                                    You have reached the 1000 character limit.
+                                                                </Text>
+                                                            )}
+                                                        </View>
                                                     </View>
                                                 );
                                             }}
@@ -1314,6 +1374,12 @@ const WorkOrderScreenTwo = ({ route }) => {
                                             // maximumDate={new Date()}
                                             onConfirm={(date) => {
                                                 setStartDate(date);
+                                                // Auto-set end date to start date + 1 day if not manually changed
+                                                if (!isEndDateManuallyChanged) {
+                                                    const nextDay = new Date(date);
+                                                    nextDay.setDate(nextDay.getDate() + 1);
+                                                    setEndDate(nextDay);
+                                                }
                                                 setIsStartPickerOpen(false);
                                             }}
                                             onCancel={() => setIsStartPickerOpen(false)}
@@ -1325,11 +1391,12 @@ const WorkOrderScreenTwo = ({ route }) => {
                                             // date={endDate}
                                             date={endDate ? new Date(endDate) : new Date()}
                                             mode="date"
-                                            minimumDate={startDate}
+                                            minimumDate={startDate ? new Date(startDate) : new Date()}
                                             // maximumDate={new Date()}
                                             onConfirm={(date) => {
                                                 const newEndDate = date;
                                                 setEndDate(newEndDate);
+                                                setIsEndDateManuallyChanged(true); // Mark as manually changed
                                                 setIsEndPickerOpen(false);
                                             }}
                                             onCancel={() => setIsEndPickerOpen(false)}

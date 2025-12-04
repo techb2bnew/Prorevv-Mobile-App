@@ -1007,7 +1007,7 @@ const VinListScreen = ({ navigation, route }) => {
                                 <Text style={styles.modalTitle}>Sort By</Text>
                                 <Feather name="sliders" size={20} color={grayColor} />
                             </View>
-                            <TouchableOpacity
+                            {/* <TouchableOpacity
                                 onPress={() => handleSort(
                                     sortType === "date" && sortOrder === "newest" ? "oldest" : "newest",
                                     "date"
@@ -1020,7 +1020,7 @@ const VinListScreen = ({ navigation, route }) => {
                                 <Text style={[styles.sortText, { color: sortType === "date" ? blackColor : 'gray' }]}>
                                     {sortType === "date" ? (sortOrder === "newest" ? "New to Old" : "Old to New") : "New to Old"}
                                 </Text>
-                            </TouchableOpacity>
+                            </TouchableOpacity> */}
 
                             <TouchableOpacity
                                 onPress={() => handleSort(

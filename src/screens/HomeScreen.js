@@ -212,6 +212,12 @@ const HomeScreen = ({ navigation }) => {
 
   useFocusEffect(
     useCallback(() => {
+      // Clear search states when screen comes into focus
+      setIsSearching(false);
+      setSearchVinText('');
+      setVinSearchResults(null);
+      setIsSearchingVin(false);
+
       fetchDashboardCount()
       if (technicianType === "ifs") {
         fetchIFSCustomers();
@@ -544,7 +550,7 @@ const HomeScreen = ({ navigation }) => {
               try {
                 setSelectedCard(item.name);
                 await AsyncStorage.setItem('home_selected_card', item.name);
-              } catch (e) {}
+              } catch (e) { }
               item?.onPress && item.onPress();
             }}
             style={[styles.innerCard]}
@@ -616,12 +622,12 @@ const HomeScreen = ({ navigation }) => {
         </LinearGradient>
       ) : (
         <Pressable
-          style={[styles.innerCard, { backgroundColor: "#5f5d5d28" }]}
+          style={[styles.innerCard, { backgroundColor: "#1b1b1bff" }]}
           onPress={async () => {
             try {
               setSelectedCard(item.name);
               await AsyncStorage.setItem('home_selected_card', item.name);
-            } catch (e) {}
+            } catch (e) { }
             item?.onPress && item.onPress();
           }}
         >
@@ -869,7 +875,11 @@ const HomeScreen = ({ navigation }) => {
 
           {/* VIN Search Results - Show above search input */}
           {isSearching && vinSearchResults && (
-            <Pressable style={[styles.vinResultsContainer, { top: isTablet ? Platform.OS === 'ios' ? hp(25) : hp(24) : Platform.OS === 'ios' ? hp(28.5) : hp(31.5) }]} onPress={() => navigation.navigate("VehicleDetailsScreen", {
+            <Pressable style={[styles.vinResultsContainer,
+            {
+              top: isTablet ?
+                Platform.OS === 'ios' ? hp(25) : hp(24) : Platform.OS === 'ios' ? hp(25.5) : hp(31.5)
+            }]} onPress={() => navigation.navigate("VehicleDetailsScreen", {
               vehicleId: vinSearchResults.id,
             })}>
               {vinSearchResults.noResult ? (
@@ -1028,7 +1038,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 16,
-    color:blackColor,
+    color: blackColor,
   },
   scanButton: {
     padding: spacings.small,

@@ -73,31 +73,31 @@ function App(): React.JSX.Element {
         if (Platform.OS === 'ios') {
           // iOS specific: unlock all orientations
           Orientation.unlockAllOrientations();
-          console.log('iOS - Width > 500: All orientations allowed');
+          // console.log('iOS - Width > 500: All orientations allowed');
         } else {
           Orientation.unlockAllOrientations();
-          console.log('Android - Width > 500: All orientations allowed');
+          // console.log('Android - Width > 500: All orientations allowed');
         }
       } else {
         // If width is less than threshold, lock to portrait only
         if (Platform.OS === 'ios') {
           // iOS specific: multiple attempts to lock portrait
           Orientation.lockToPortrait();
-          console.log('iOS - Width <= 500: Locked to portrait only');
+          // console.log('iOS - Width <= 500: Locked to portrait only');
           
           // Additional iOS portrait enforcement
           setTimeout(() => {
             Orientation.lockToPortrait();
-            console.log('iOS - Additional portrait lock attempt');
+            // console.log('iOS - Additional portrait lock attempt');
           }, 200);
           
           setTimeout(() => {
             Orientation.lockToPortrait();
-            console.log('iOS - Final portrait lock attempt');
+            // console.log('iOS - Final portrait lock attempt');
           }, 500);
         } else {
           Orientation.lockToPortrait();
-          console.log('Android - Width <= 500: Locked to portrait only');
+          // console.log('Android - Width <= 500: Locked to portrait only');
         }
       }
     };
@@ -113,7 +113,7 @@ function App(): React.JSX.Element {
           const currentWidth = Dimensions.get('window').width;
           if (currentWidth <= 500) {
             Orientation.lockToPortrait();
-            console.log('iOS - Enforcing portrait lock');
+            // console.log('iOS - Enforcing portrait lock');
           }
         };
         
@@ -143,16 +143,16 @@ function App(): React.JSX.Element {
         if (Platform.OS === 'ios') {
           // iOS specific: multiple immediate locks
           Orientation.lockToPortrait();
-          console.log('iOS - Immediate portrait lock');
+          // console.log('iOS - Immediate portrait lock');
           
           setTimeout(() => {
             Orientation.lockToPortrait();
-            console.log('iOS - Delayed portrait lock');
+            // console.log('iOS - Delayed portrait lock');
           }, 50);
           
           setTimeout(() => {
             Orientation.lockToPortrait();
-            console.log('iOS - Final delayed portrait lock');
+            // console.log('iOS - Final delayed portrait lock');
           }, 150);
         } else {
           Orientation.lockToPortrait();
@@ -171,29 +171,29 @@ function App(): React.JSX.Element {
       if (newWidth > widthThreshold) {
         if (Platform.OS === 'ios') {
           Orientation.unlockAllOrientations();
-          console.log('iOS - Width increased: All orientations allowed');
+          // console.log('iOS - Width increased: All orientations allowed');
         } else {
           Orientation.unlockAllOrientations();
-          console.log('Android - Width increased: All orientations allowed');
+          // console.log('Android - Width increased: All orientations allowed');
         }
       } else {
         if (Platform.OS === 'ios') {
           // iOS multiple portrait lock attempts
           Orientation.lockToPortrait();
-          console.log('iOS - Width decreased: Locked to portrait');
+          // console.log('iOS - Width decreased: Locked to portrait');
           
           setTimeout(() => {
             Orientation.lockToPortrait();
-            console.log('iOS - Dimension change portrait lock');
+            // console.log('iOS - Dimension change portrait lock');
           }, 100);
           
           setTimeout(() => {
             Orientation.lockToPortrait();
-            console.log('iOS - Final dimension change portrait lock');
+            // console.log('iOS - Final dimension change portrait lock');
           }, 300);
         } else {
           Orientation.lockToPortrait();
-          console.log('Android - Width decreased: Locked to portrait');
+          // console.log('Android - Width decreased: Locked to portrait');
         }
       }
     });
@@ -214,7 +214,7 @@ function App(): React.JSX.Element {
     if (Platform.OS === 'ios') {
       const iosOrientationEnforcer = () => {
         const screenWidth = Dimensions.get('window').width;
-        console.log('iOS - Checking width:', screenWidth);
+        // console.log('iOS - Checking width:', screenWidth);
         
         if (screenWidth <= 600) {
           // Multiple iOS orientation lock methods
@@ -223,13 +223,13 @@ function App(): React.JSX.Element {
           // Additional iOS-specific lock
           setTimeout(() => {
             Orientation.lockToPortrait();
-            console.log('iOS - Portrait lock enforced');
+            // console.log('iOS - Portrait lock enforced');
           }, 100);
           
           // Force orientation change
           setTimeout(() => {
             Orientation.lockToPortrait();
-            console.log('iOS - Final portrait lock');
+            // console.log('iOS - Final portrait lock');
           }, 300);
         }
       };
@@ -253,7 +253,7 @@ function App(): React.JSX.Element {
     const getCurrentOrientation = () => {
       Orientation.getOrientation((orientation) => {
         setCurrentOrientation(orientation);
-        console.log('Current orientation detected:', orientation);
+        // console.log('Current orientation detected:', orientation);
       });
     };
 
@@ -263,7 +263,7 @@ function App(): React.JSX.Element {
     // Listen for orientation changes
     const orientationListener = Orientation.addOrientationListener((orientation) => {
       setCurrentOrientation(orientation);
-      console.log('Orientation changed to:', orientation);
+      // console.log('Orientation changed to:', orientation);
     });
 
     return () => {
@@ -278,10 +278,10 @@ function App(): React.JSX.Element {
     console.log('Orientation changed, current orientation:', currentOrientation);
     
     if (currentOrientation === 'PORTRAIT') {
-      console.log('App is in PORTRAIT mode');
+      // console.log('App is in PORTRAIT mode');
       // Portrait mode specific logic here
     } else if (currentOrientation === 'LANDSCAPE-LEFT' || currentOrientation === 'LANDSCAPE-RIGHT') {
-      console.log('App is in LANDSCAPE mode');
+      // console.log('App is in LANDSCAPE mode');
       // Landscape mode specific logic here
     }
   }, [currentOrientation]); // This will run whenever currentOrientation changes
@@ -293,7 +293,7 @@ function App(): React.JSX.Element {
         const screenWidth = Dimensions.get('window').width;
         if (screenWidth <= 600) {
           Orientation.lockToPortrait();
-          console.log('iOS - Force portrait on small screen');
+          // console.log('iOS - Force portrait on small screen');
         }
       };
 
@@ -670,7 +670,7 @@ function App(): React.JSX.Element {
               </NavigationContainer>
             </TabBarProvider>
           )}
-          {isBiometricModalVisible && <BiometricModal isBiometricModalVisible={isBiometricModalVisible} setIsBiometricModalVisible={setIsBiometricModalVisible} />}
+          {/* {isBiometricModalVisible && <BiometricModal isBiometricModalVisible={isBiometricModalVisible} setIsBiometricModalVisible={setIsBiometricModalVisible} />} */}
           <InternetToast message={toastMessage} visible={toastVisible} />
         </KeyboardAvoidingView>
       </SafeAreaView>

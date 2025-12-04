@@ -172,52 +172,23 @@ const CustomerInfoScreen = ({ navigation }) => {
             newErrors.fullName = "Full name should contain only letters";
         }
 
-        // Last Name validation
-        // if (!formData.lastName.trim()) {
-        //     newErrors.lastName = "Last name is required";
-        // }
+        // Email validation - only if value is entered
+        if (formData.email.trim()) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(formData.email.trim())) {
+                newErrors.email = "Please enter a valid email address";
+            }
+        }
 
-        // Email validation
-        // if (!formData.email.trim()) {
-        //     newErrors.email = "Email is required";
-        // }
-
-        // // Phone number validation
-        // if (!formData.phoneNumber.trim()) {
-        //     newErrors.phoneNumber = "Phone number is required";
-        // } else if (!/^[0-9\s\-().+]{7,20}$/.test(formData.phoneNumber)) {
-        //     newErrors.phoneNumber = "Please enter a valid phone number";
-        // }
-
-
-        // else if (!/^\+[0-9]{1,3}-[0-9]{3,14}$/.test(formData.phoneNumber)) {
-        //     newErrors.phoneNumber = "Please enter a valid phone number";
-        // }
-
-        // Address validation
-        // if (!formData.address.trim()) {
-        //     newErrors.address = "Address is required";
-        // }
-
-        // Country validation
-        // if (!formData.country.trim()) {
-        //     newErrors.country = "Country is required";
-        // }
-
-        // State validation
-        // if (!formData.state.trim()) {
-        //     newErrors.state = "State is required";
-        // }
-
-        // City validation
-        // if (!formData.city.trim()) {
-        //     newErrors.city = "City is required";
-        // }
-
-        // // Zip Code validation
-        // if (!formData.zipCode.trim()) {
-        //     newErrors.zipCode = "Zip code is required";
-        // }
+        // Phone number validation - only if value is entered
+        if (formData.phoneNumber.trim()) {
+            // Extract only digits from the phone number
+            const digitsOnly = formData.phoneNumber.replace(/\D/g, '');
+            // Check if it has at least 7 digits (minimum valid phone number length)
+            if (digitsOnly.length < 7 || digitsOnly.length > 15) {
+                newErrors.phoneNumber = "Please enter a valid phone number";
+            }
+        }
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -266,6 +237,7 @@ const CustomerInfoScreen = ({ navigation }) => {
                 success = await syncCustomerEditToAPI(customerEditData);
                 setIsAddMode(false);
                 setIsEditMode(false);
+                setErrors({});
                 setFormData({
                     fullName: "",
                     email: "",
@@ -288,6 +260,7 @@ const CustomerInfoScreen = ({ navigation }) => {
             } else {
                 setIsAddMode(false);
                 setIsEditMode(false);
+                setErrors({});
             }
         }
     };
@@ -422,7 +395,15 @@ const CustomerInfoScreen = ({ navigation }) => {
                 style={[flex]}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             >
-                <Header title={CUSTOMER_INFORMATION} />
+                <Header title={isEditMode ? "Edit Customer info" : CUSTOMER_INFORMATION} onBack={() => {
+                    if (isEditMode) {
+                        setIsEditMode(false);
+                        setIsAddMode(false);
+                        setErrors({});
+                    } else {
+                        navigation.goBack();
+                    }
+                }} />
                 {!isAddMode && <View style={{
                     flexDirection: 'row',
                     position: "absolute",
@@ -474,18 +455,38 @@ const CustomerInfoScreen = ({ navigation }) => {
                                             <Text style={[styles.tableHeaderText, { width: isTablet ? wp(20) : orientation === "LANDSCAPE" ? wp(20) : wp(40) }]}>Phone</Text>
                                             <Text style={[styles.tableHeaderText, { width: isTablet ? wp(25) : orientation === "LANDSCAPE" ? wp(20) : wp(60) }]}>Email</Text>
                                             <Text style={[styles.tableHeaderText, { width: isTablet ? orientation === "LANDSCAPE" ? wp(28) : wp(45) : orientation === "LANDSCAPE" ? wp(32) : wp(80) }]}>Address</Text>
-                                            <Text style={[styles.tableHeaderText, { width: isTablet ? orientation === "LANDSCAPE" ? wp(8) :wp(20) : orientation === "LANDSCAPE" ? wp(20) : wp(20) }]}>Action</Text>
+                                            <Text style={[styles.tableHeaderText, { width: isTablet ? orientation === "LANDSCAPE" ? wp(8) : wp(20) : orientation === "LANDSCAPE" ? wp(20) : wp(20) }]}>Action</Text>
 
                                         </View>
                                         <FlatList
                                             data={customers}
                                             keyExtractor={(item, index) => index.toString()}
                                             renderItem={({ item, index }) => (
-                                                <View style={[
+                                                <Pressable style={[
                                                     styles.tableRow,
                                                     flexDirectionRow,
                                                     { backgroundColor: index % 2 === 0 ? lightGrayColor : whiteColor }
-                                                ]}>
+
+                                                ]}
+                                                    onPress={() => {
+                                                        setIsEditMode(true);
+                                                        setIsAddMode(true);
+                                                        setErrors({});
+                                                        setCustomerId(item?.id)
+                                                        const rawNumber = item.phoneNumber || '';
+                                                        const cleanedNumber = rawNumber.replace(/^\+\d{1}-?/, '');
+                                                        setFormData({
+                                                            fullName: item.fullName || '',
+                                                            email: item.email || '',
+                                                            phoneNumber: cleanedNumber || '',
+                                                            address: item.address || '',
+                                                        });
+                                                        setTimeout(() => {
+                                                            if (googleRef?.current?.setAddressText) {
+                                                                googleRef.current.setAddressText(item.address || '');
+                                                            }
+                                                        }, 100);
+                                                    }}>
                                                     <Text style={[styles.tableText, { width: isTablet ? wp(20) : orientation === "LANDSCAPE" ? wp(20) : wp(40) }]}>{capitalize(item.fullName) || '—'}</Text>
                                                     <Text style={[styles.tableText, { width: isTablet ? wp(20) : orientation === "LANDSCAPE" ? wp(20) : wp(40) }]}>{item.phoneNumber || '—'}</Text>
                                                     <Text style={[styles.tableText, { width: isTablet ? wp(25) : orientation === "LANDSCAPE" ? wp(20) : wp(60) }]}>{item.email || '—'}</Text>
@@ -494,6 +495,7 @@ const CustomerInfoScreen = ({ navigation }) => {
                                                         onPress={() => {
                                                             setIsEditMode(true);
                                                             setIsAddMode(true);
+                                                            setErrors({});
                                                             setCustomerId(item?.id)
                                                             const rawNumber = item.phoneNumber || '';
                                                             const cleanedNumber = rawNumber.replace(/^\+\d{1}-?/, '');
@@ -511,9 +513,9 @@ const CustomerInfoScreen = ({ navigation }) => {
                                                         }}
 
                                                     >
-                                                        <AntDesign name="edit" style={[styles.tableText, { width: isTablet ? orientation === "LANDSCAPE" ? wp(8) : wp(20) : orientation === "LANDSCAPE" ? wp(20) : wp(20), marginLeft: 40 }]} size={28} color={blackColor} />
+                                                        <Text style={[styles.tableText, { width: isTablet ? orientation === "LANDSCAPE" ? wp(8) : wp(20) : orientation === "LANDSCAPE" ? wp(20) : wp(20), marginLeft: 50 }]}>Edit</Text>
                                                     </TouchableOpacity>
-                                                </View>
+                                                </Pressable>
                                             )}
                                             onEndReached={() => {
                                                 if (!isLoading && hasMore) {
@@ -542,7 +544,10 @@ const CustomerInfoScreen = ({ navigation }) => {
                                 </ScrollView>
                                 <TouchableOpacity
                                     onPress={() => {
-                                        setIsAddMode(true); setFormData({
+                                        setIsAddMode(true);
+                                        setIsEditMode(false);
+                                        setErrors({});
+                                        setFormData({
                                             fullName: '',
                                             email: '',
                                             phoneNumber: '',
@@ -582,7 +587,7 @@ const CustomerInfoScreen = ({ navigation }) => {
                                         const initials = item.fullName?.charAt(0)?.toUpperCase();
 
                                         return (
-                                            <View style={{
+                                            <Pressable style={{
                                                 backgroundColor: whiteColor,
                                                 marginVertical: spacings.xLarge,
                                                 borderRadius: 15,
@@ -597,7 +602,26 @@ const CustomerInfoScreen = ({ navigation }) => {
                                                         elevation: 3,
                                                     }
                                                 })
-                                            }}>
+                                            }}
+                                                onPress={() => {
+                                                    setIsEditMode(true);
+                                                    setIsAddMode(true);
+                                                    setErrors({});
+                                                    setCustomerId(item?.id)
+                                                    const rawNumber = item.phoneNumber || '';
+                                                    const cleanedNumber = rawNumber.replace(/^\+\d{1}-?/, '');
+                                                    setFormData({
+                                                        fullName: item.fullName || '',
+                                                        email: item.email || '',
+                                                        phoneNumber: cleanedNumber || '',
+                                                        address: item.address || '',
+                                                    });
+                                                    setTimeout(() => {
+                                                        if (googleRef?.current?.setAddressText) {
+                                                            googleRef.current.setAddressText(item.address || '');
+                                                        }
+                                                    }, 100);
+                                                }}>
                                                 {/* Header */}
                                                 <View style={{
                                                     backgroundColor: blackColor,
@@ -627,6 +651,7 @@ const CustomerInfoScreen = ({ navigation }) => {
                                                         onPress={() => {
                                                             setIsEditMode(true);
                                                             setIsAddMode(true);
+                                                            setErrors({});
                                                             setCustomerId(item?.id)
                                                             const rawNumber = item.phoneNumber || '';
                                                             const cleanedNumber = rawNumber.replace(/^\+\d{1}-?/, '');
@@ -645,6 +670,7 @@ const CustomerInfoScreen = ({ navigation }) => {
 
                                                     >
                                                         <AntDesign name="edit" style={[styles.tableText, { width: wp(20), marginLeft: 40 }]} size={25} color={whiteColor} />
+                                                        {/* <Text style={[styles.tableText, { width: wp(20), marginLeft: 40, color: whiteColor }]}>Edit</Text> */}
                                                     </TouchableOpacity>
                                                 </View>
 
@@ -664,7 +690,7 @@ const CustomerInfoScreen = ({ navigation }) => {
                                                     </View>
 
                                                 </View>
-                                            </View>
+                                            </Pressable>
                                         );
                                     }}
 
@@ -692,7 +718,17 @@ const CustomerInfoScreen = ({ navigation }) => {
                                     }}
                                 />
                                 <TouchableOpacity
-                                    onPress={() => setIsAddMode(true)}
+                                    onPress={() => {
+                                        setIsAddMode(true);
+                                        setIsEditMode(false);
+                                        setErrors({});
+                                        setFormData({
+                                            fullName: '',
+                                            email: '',
+                                            phoneNumber: '',
+                                            address: '',
+                                        });
+                                    }}
                                     style={{
                                         position: 'absolute',
                                         bottom: hp(8),
@@ -793,6 +829,10 @@ const CustomerInfoScreen = ({ navigation }) => {
                                             key: GOOGLE_MAP_API_KEY,
                                             language: 'en',
                                         }}
+                                        textInputProps={{
+                                            multiline: true,
+                                            numberOfLines: 3,
+                                        }}
                                         styles={{
                                             container: {
                                                 flex: 1,
@@ -808,12 +848,14 @@ const CustomerInfoScreen = ({ navigation }) => {
                                                 zIndex: 999,
                                             },
                                             textInput: {
-                                                height: 44,
+                                                height: 90,
                                                 borderWidth: 1,
                                                 borderColor: blackColor,
-                                                borderRadius: 50,
+                                                borderRadius: 10,
                                                 paddingHorizontal: 16,
+                                                paddingVertical: 12,
                                                 backgroundColor: '#fff',
+                                                textAlignVertical: 'top',
                                             },
                                         }}
                                     />

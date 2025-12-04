@@ -45,6 +45,8 @@ const ProfileScreen = ({ navigation }) => {
   const [businessLogoUri, setBusinessLogoUri] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [secondaryPhoneError, setSecondaryPhoneError] = useState("");
+  const [secondaryEmailError, setSecondaryEmailError] = useState("");
   const [isEditingLoading, setIsEditingLoading] = useState(false);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -588,6 +590,8 @@ const ProfileScreen = ({ navigation }) => {
   // 📌 Handle Save Profile
   const handleSave = async () => {
     setError("");
+    setSecondaryPhoneError("");
+    setSecondaryEmailError("");
     setIsEditingLoading(true);
 
     // ✅ Validate Required Fields
@@ -596,6 +600,29 @@ const ProfileScreen = ({ navigation }) => {
       setIsEditingLoading(false);
       return;
     }
+
+    // ✅ Validate Secondary Email - only if value is entered
+    if (secondryEmail.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(secondryEmail.trim())) {
+        setSecondaryEmailError("Please enter a valid secondary email address");
+        setIsEditingLoading(false);
+        return;
+      }
+    }
+
+    // ✅ Validate Secondary Phone Number - only if value is entered
+    if (secondryPhoneNumber.trim()) {
+      // Extract only digits from the phone number
+      const digitsOnly = secondryPhoneNumber.replace(/\D/g, '');
+      // Check if it has at least 7 digits (minimum valid phone number length)
+      if (digitsOnly.length < 7 || digitsOnly.length > 15) {
+        setSecondaryPhoneError("Please enter a valid secondary phone number");
+        setIsEditingLoading(false);
+        return;
+      }
+    }
+
     const countryCode = phoneInput.current?.getCallingCode();
 
     // ✅ Format phone number
@@ -638,7 +665,6 @@ const ProfileScreen = ({ navigation }) => {
     formData.append("businessName", businessName);
     formData.append("secondaryContactName", formattedSecondaryPhone);
     formData.append("secondaryEmail", secondryEmail);
-
     // ✅ Add Image (New or Existing)
     if (imageUri) {
       if (!imageUri.startsWith("http")) {
@@ -865,11 +891,11 @@ const ProfileScreen = ({ navigation }) => {
                       ]}
                     >
                       {[
-                        address,
-                        cityValue,
-                        stateValue,
-                        country,
-                        postalCode
+                        address?.trim(),
+                        cityValue?.trim(),
+                        stateValue?.trim(),
+                        country?.trim(),
+                        postalCode?.trim(),
                       ]
                         .filter(Boolean) // removes undefined, null, ""
                         .join(", ")}
@@ -1029,7 +1055,7 @@ const ProfileScreen = ({ navigation }) => {
                       {businessLogoUri ? (
                         <Image source={{ uri: businessLogoUri }} style={[styles.image, { width: wp(25), height: wp(25), borderRadius: isTablet ? isIOsAndTablet ? 1000 : 100 : 50 }]} />
                       ) : (
-                        <View style={[styles.fallbackContainer, { backgroundColor:blackColor, borderRadius: isTablet ? isIOsAndTablet ? 1000 : 100 : 50 }]}>
+                        <View style={[styles.fallbackContainer, { backgroundColor: blackColor, borderRadius: isTablet ? isIOsAndTablet ? 1000 : 100 : 50 }]}>
                           <Ionicons name="business-outline" size={30} color={whiteColor} />
                         </View>
                       )}
@@ -1110,6 +1136,7 @@ const ProfileScreen = ({ navigation }) => {
                       layout="second"
                       onChangeFormattedText={(text) => {
                         setSecondryPhoneNumber(text);
+                        setSecondaryPhoneError("");
                       }}
                       containerStyle={styles.phoneInput}
                       textContainerStyle={styles.phoneText}
@@ -1121,10 +1148,15 @@ const ProfileScreen = ({ navigation }) => {
                       }}
                       flagButtonStyle={styles.flagButton}
                     />
+                    {secondaryPhoneError ? <Text style={{ color: 'red', fontSize: 12, marginTop: 4 }}>{secondaryPhoneError}</Text> : null}
                   </View>
                   <View style={styles.inputGroup}>
                     <Text style={styles.label}>Secondary Email (Optional)</Text>
-                    <TextInput style={styles.input} value={secondryEmail} onChangeText={setSecondryEmail} placeholder="Enter Secondary Email" />
+                    <TextInput style={styles.input} value={secondryEmail} onChangeText={(text) => {
+                      setSecondryEmail(text);
+                      setSecondaryEmailError("");
+                    }} placeholder="Enter Secondary Email" />
+                    {secondaryEmailError ? <Text style={{ color: 'red', fontSize: 12, marginTop: 4 }}>{secondaryEmailError}</Text> : null}
                   </View>
                   {error ? <Text style={{ color: 'red' }}>{error}</Text> : null}
                 </View>

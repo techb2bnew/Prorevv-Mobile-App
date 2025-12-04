@@ -234,7 +234,7 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
                     },
                     ...(technicianType === "single-technician"
                         ? [{
-                            label: "Labour Cost",
+                            label: "Override Cost",
                             value: `$${vehicleDetails?.labourCost}`,
                         }]
                         : []),

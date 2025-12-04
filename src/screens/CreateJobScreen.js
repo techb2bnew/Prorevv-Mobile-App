@@ -83,6 +83,8 @@ const CreateJobScreen = ({ route }) => {
     const [notes, setNotes] = useState("");
     const [editableJobId, setEditableJobId] = useState(null);
     const [showPriceTooltip, setShowPriceTooltip] = useState(false);
+    const scrollViewRef = useRef(null);
+    const notesInputRef = useRef(null);
 
 
     useFocusEffect(
@@ -622,7 +624,9 @@ const CreateJobScreen = ({ route }) => {
             if (response.ok) {
                 if (route?.params?.jobId || editableJobId) {
                     Toast.show("Job updated successfully");
-                    navigation.goBack();
+                    // navigation.goBack();
+                    setIsAddMode(false)
+                    setEditableJobId(null)
                 } else {
                     Toast.show("Job created successfully");
                     setIsAddMode(false)
@@ -651,11 +655,13 @@ const CreateJobScreen = ({ route }) => {
         <KeyboardAvoidingView
             style={[flex]}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
         >
             {/* <TouchableWithoutFeedback onPress={Keyboard.dismiss}> */}
 
             <View style={{ flex: 1 }}>
-                <Header title={route?.params?.jobId ? "Update Job" : !isAddMode ? "Jobs" : "Create Job"} onBack={() => navigation.navigate("Home")} />
+                <Header title={route?.params?.jobId || editableJobId ? "Update Job" : !isAddMode ? "Jobs" : "Create Job"}
+                    onBack={() => route?.params?.jobId || editableJobId ? (setIsAddMode(false), setEditableJobId(null)) : navigation.navigate("Home")} />
                 {!isAddMode && <View style={{
                     flexDirection: 'row',
                     position: "absolute",
@@ -971,14 +977,16 @@ const CreateJobScreen = ({ route }) => {
                     <>
                         {/* <TouchableWithoutFeedback onPress={Keyboard.dismiss}> */}
                         <ScrollView
+                            ref={scrollViewRef}
                             contentContainerStyle={{
                                 flexGrow: 1,
                                 backgroundColor: whiteColor,
-                                paddingBottom: hp(18),
+                                paddingBottom: hp(25),
                                 paddingHorizontal: spacings.xxLarge,
                             }}
                             keyboardShouldPersistTaps="handled"
                             showsVerticalScrollIndicator={false}
+                            keyboardDismissMode="interactive"
                         >
                             <View style={styles.sectionContainer}>
                                 <Text style={styles.label}>
@@ -1076,7 +1084,7 @@ const CreateJobScreen = ({ route }) => {
                                         date={endDate ? new Date(endDate) : new Date()}
                                         // date={endDate || new Date()}  // Avoid showing today's date if no endDate selected
                                         mode="date"
-                                        minimumDate={startDate}
+                                        minimumDate={startDate ? new Date(startDate) : new Date()}
                                         onConfirm={(date) => {
                                             const newEndDate = date;
                                             setEndDate(newEndDate);
@@ -1255,6 +1263,7 @@ const CreateJobScreen = ({ route }) => {
                                 <View style={styles.sectionContainer}>
                                     <Text style={styles.label}>Notes</Text>
                                     <TextInput
+                                        ref={notesInputRef}
                                         placeholder="Write your notes here..."
                                         style={styles.notesInput}
                                         multiline={true}
@@ -1262,6 +1271,14 @@ const CreateJobScreen = ({ route }) => {
                                         textAlignVertical="top"
                                         onChangeText={(text) => setNotes(text)}
                                         value={notes}
+                                        onFocus={() => {
+                                            // Scroll to end to ensure input is visible when keyboard appears
+                                            setTimeout(() => {
+                                                if (scrollViewRef.current) {
+                                                    scrollViewRef.current.scrollToEnd({ animated: true });
+                                                }
+                                            }, 100);
+                                        }}
                                     />
                                 </View>
 

@@ -204,7 +204,7 @@ const LoginScreen = ({ navigation }) => {
                     <View style={[styles.logoContainer, alignJustifyCenter, { height: isTablet ? hp(35) : hp(27) }]}>
                         <Image
                             source={APP_NAME_IMAGE}
-                            style={[styles.logo, resizeModeContain, { height: isTablet ? hp(15) : hp(9) }]}
+                            style={[styles.logo, resizeModeContain, { height: isTablet ? hp(12) : hp(9) }]}
                         />
 
                         {/* {isRegistered ?

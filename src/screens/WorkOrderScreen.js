@@ -80,7 +80,14 @@ const WorkOrderScreen = ({ navigation, route }) => {
           pageRef.current = 1;
           setHasMore(true);
           fetchSingleCustomerDetails(parsedCustomer?.id);
-          const customerJobs = allJobList.filter(job => job?.customer?.fullName === parsedCustomer?.fullName);
+          // Filter out null/undefined jobs and match customer
+          const customerJobs = allJobList.filter(job => 
+            job?.id !== null && 
+            job?.id !== undefined && 
+            job?.jobName !== null && 
+            job?.jobName !== undefined &&
+            job?.customer?.fullName === parsedCustomer?.fullName
+          );
           setJobList(customerJobs)
         }
       } catch (err) {
@@ -246,7 +253,14 @@ const WorkOrderScreen = ({ navigation, route }) => {
     setSelectedJobName("");
     await AsyncStorage.removeItem("current_Job");
     fetchSingleCustomerDetails(item.id);
-    const customerJobs = allJobList.filter(job => job.customer?.fullName === item.fullName);
+    // Filter out null/undefined jobs and match customer
+    const customerJobs = allJobList.filter(job => 
+      job?.id !== null && 
+      job?.id !== undefined && 
+      job?.jobName !== null && 
+      job?.jobName !== undefined &&
+      job.customer?.fullName === item.fullName
+    );
     setJobList(customerJobs)
   };
 
@@ -274,87 +288,104 @@ const WorkOrderScreen = ({ navigation, route }) => {
           isLoading={isCustomerLoading}
         />
 
-        {selectedCustomer != null && jobList?.length > 0 && <View style={{ marginTop: spacings.xxxxLarge }}>
-          <Text style={styles.label}>Assigned Jobs</Text>
-          <View style={{
-            maxHeight: hp(40),
-            borderColor: blackColor,
-            borderWidth: 1,
-            borderRadius: 10,
-            overflow: "hidden"
-          }}>
-            <FlatList
-              data={jobList}
-              keyExtractor={item => item?.id}
-              showsVerticalScrollIndicator={false}
-              renderItem={({ item, index }) => {
-                const isSelected = selectedJob === item?.id;
-                const backgroundColor = isSelected
-                  ? blackColor
-                  : index % 2 === 0
-                    ? whiteColor
-                    : lightGrayColor;
+        {selectedCustomer != null && (
+          <View style={{ marginTop: spacings.xxxxLarge }}>
+            <Text style={styles.label}>Assigned Jobs</Text>
+            {jobList?.length > 0 ? (
+              <View style={{
+                maxHeight: hp(40),
+                borderColor: blackColor,
+                borderWidth: 1,
+                borderRadius: 10,
+                overflow: "hidden"
+              }}>
+                <FlatList
+                  data={jobList}
+                  keyExtractor={item => item?.id}
+                  showsVerticalScrollIndicator={false}
+                  renderItem={({ item, index }) => {
+                    const isSelected = selectedJob === item?.id;
+                    const backgroundColor = isSelected
+                      ? blackColor
+                      : index % 2 === 0
+                        ? whiteColor
+                        : lightGrayColor;
 
-                return (
-                  <Pressable
-                    style={[styles.jobItem, { backgroundColor }]}
-                    onPress={async () => {
-                      setSelectedJob(item?.id);
-                      setSelectedJobName(item?.jobName);
-                      await AsyncStorage.setItem("current_Job", JSON.stringify(item));
-                    }}
-                  >
-                    <Fontisto
-                      name={isSelected ? "radio-btn-active" : "radio-btn-passive"}
-                      size={16}
-                      color={isSelected ? whiteColor : blackColor}
-                      style={styles.radioIcon}
-                    />
-                    <Text style={[{ color: isSelected ? whiteColor : blackColor, marginLeft: spacings.xLarge }]}>
-                      {item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}
-                    </Text>
-                  </Pressable>
-                );
-              }}
-              ListEmptyComponent={
-                !loading && (
-                  <View style={{ paddingVertical: 24, alignItems: 'center' }}>
-                    <Text style={{ color: grayColor, fontSize: 16 }}>
-                      No jobs found for this customer.
-                    </Text>
-                  </View>
-                )
-              }
-              // onEndReached={fetchCustomerJobs(selectedCustomer.id,selectedCustomer.jobId,true)}
-              onEndReachedThreshold={0.5}
-              ListFooterComponent={
-                loading ? (
-                  <View style={{ paddingVertical: 16, alignItems: 'center', justifyContent: 'center' }}>
-                    <ActivityIndicator size="small" color={blackColor} />
-                  </View>
-                ) : null
-              } />
+                    return (
+                      <Pressable
+                        style={[styles.jobItem, { backgroundColor }]}
+                        onPress={async () => {
+                          setSelectedJob(item?.id);
+                          setSelectedJobName(item?.jobName);
+                          await AsyncStorage.setItem("current_Job", JSON.stringify(item));
+                        }}
+                      >
+                        <Fontisto
+                          name={isSelected ? "radio-btn-active" : "radio-btn-passive"}
+                          size={16}
+                          color={isSelected ? whiteColor : blackColor}
+                          style={styles.radioIcon}
+                        />
+                        <Text style={[{ color: isSelected ? whiteColor : blackColor, marginLeft: spacings.xLarge }]}>
+                          {item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}
+                        </Text>
+                      </Pressable>
+                    );
+                  }}
+                  ListEmptyComponent={
+                    !loading && (
+                      <View style={{ paddingVertical: 24, alignItems: 'center' }}>
+                        <Text style={{ color: grayColor, fontSize: 16 }}>
+                          No jobs found for this customer.
+                        </Text>
+                      </View>
+                    )
+                  }
+                  // onEndReached={fetchCustomerJobs(selectedCustomer.id,selectedCustomer.jobId,true)}
+                  onEndReachedThreshold={0.5}
+                  ListFooterComponent={
+                    loading ? (
+                      <View style={{ paddingVertical: 16, alignItems: 'center', justifyContent: 'center' }}>
+                        <ActivityIndicator size="small" color={blackColor} />
+                      </View>
+                    ) : null
+                  } />
+              </View>
+            ) : (
+              <View style={{
+                borderColor: blackColor,
+                borderWidth: 1,
+                borderRadius: 10,
+                paddingVertical: 24,
+                alignItems: 'center',
+                backgroundColor: lightGrayColor
+              }}>
+                <Text style={{ color: grayColor, fontSize: 16 }}>
+                  No jobs found for this customer.
+                </Text>
+              </View>
+            )}
+
+            {jobList?.length > 0 && (
+              <Pressable
+                style={styles.nextButton}
+                onPress={() => {
+                  if (!selectedJob) {
+                    Toast.show("Please select a job");
+                    return;
+                  }
+
+                  navigation.navigate("WorkOrderScreenTwo", {
+                    jobName: selectedJobName,
+                  });
+                }}
+              >
+                <Text style={styles.nextButtonText}>Next</Text>
+                <Ionicons name="arrow-forward" size={18} color="#fff" style={{ marginLeft: 6 }} />
+              </Pressable>
+            )}
           </View>
-
-          {jobList?.length > 0 && (
-            <Pressable
-              style={styles.nextButton}
-              onPress={() => {
-                if (!selectedJob) {
-                  Toast.show("Please select a job");
-                  return;
-                }
-
-                navigation.navigate("WorkOrderScreenTwo", {
-                  jobName: selectedJobName,
-                });
-              }}
-            >
-              <Text style={styles.nextButtonText}>Next</Text>
-              <Ionicons name="arrow-forward" size={18} color="#fff" style={{ marginLeft: 6 }} />
-            </Pressable>
-          )}
-        </View>}
+        )}
       </View>
     </View>
   )

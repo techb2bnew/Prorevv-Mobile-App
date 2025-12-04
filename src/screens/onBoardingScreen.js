@@ -59,56 +59,65 @@ const OnboardingScreen = ({ navigation }) => {
     if (currentIndex > 0) {
       flatListRef.current.scrollToIndex({ index: currentIndex - 1 });
     } else {
+      // Show welcome screen immediately so it's visible behind onboarding
+      setShowWelcomeScreen(true);
+      // Slide down animation - onboarding goes down, welcome screen stays visible behind
       Animated.timing(slideAnim, {
         toValue: height,
         duration: 500,
         easing: Easing.ease,
         useNativeDriver: true,
-      }).start(() => setShowWelcomeScreen(true));
+      }).start();
     }
   };
 
   const startOnboarding = () => {
-    setShowWelcomeScreen(false);
-    // Slide up animation
+    // Slide up animation - onboarding will come on top of welcome screen
     Animated.timing(slideAnim, {
       toValue: 0,
       duration: 500,
       easing: Easing.ease,
       useNativeDriver: true,
-    }).start();
+    }).start(() => {
+      // Hide welcome screen after animation completes
+      setShowWelcomeScreen(false);
+    });
   };
 
-  if (showWelcomeScreen) {
-    return (
-      <ImageBackground source={orientation === "LANDSCAPE" ? WELCOME_ON_BOARDING_LANSCAPE_IMAGE : WELCOME_ON_BOARDING_IMAGE} style={styles.welcomeContainer}>
-        <View style={[styles.welcomeTextContainer, {
-          alignItems: isIOSAndTablet ? "flex-start" : orientation === "LANDSCAPE" ? "flex-start" : 'center',
-          bottom: height * 0.3,
-          width: width * 0.85,
-        }]}>
-          <Text style={[styles.welcomeTitle]}>Welcome to Prorevv!</Text>
-          <Text style={styles.welcomeDescription}>
-            Manage car servicing like a pro.Scan VINs, assign tasks, and track job progress — all in one smart app.
-          </Text>
-        </View>
-        <View style={[styles.welcomeButtonContainer, {
-          width: width * (isTablet ? 0.95 : orientation === "LANDSCAPE" ? 0.95 : 0.90),
-          bottom: height * 0.03,
-        }]}>
-          <CustomButton title={"Let's get you started!"} onPress={startOnboarding} style={{backgroundColor:lightGrayColor}} textStyle={{color:blackColor}} />
-        </View>
-      </ImageBackground>
-    );
-  }
-
   return (
-    <Animated.View
-      style={[
-        styles.container,
-        { transform: [{ translateY: slideAnim }] }
-      ]}
-    >
+    <View style={{ flex: 1 }}>
+      {/* Welcome screen - always rendered, stays visible underneath */}
+      {showWelcomeScreen && (
+        <ImageBackground 
+          source={orientation === "LANDSCAPE" ? WELCOME_ON_BOARDING_LANSCAPE_IMAGE : WELCOME_ON_BOARDING_IMAGE} 
+          style={[styles.welcomeContainer, { zIndex: 1 }]}
+        >
+          <View style={[styles.welcomeTextContainer, {
+            alignItems: isIOSAndTablet ? "flex-start" : orientation === "LANDSCAPE" ? "flex-start" : 'center',
+            bottom: height * 0.3,
+            width: width * 0.85,
+          }]}>
+            <Text style={[styles.welcomeTitle]}>Welcome to Prorevv!</Text>
+            <Text style={styles.welcomeDescription}>
+              Manage car servicing like a pro.Scan VINs, assign tasks, and track job progress — all in one smart app.
+            </Text>
+          </View>
+          <View style={[styles.welcomeButtonContainer, {
+            width: width * (isTablet ? 0.95 : orientation === "LANDSCAPE" ? 0.95 : 0.90),
+            bottom: height * 0.03,
+          }]}>
+            <CustomButton title={"Let's get you started!"} onPress={startOnboarding} style={{backgroundColor:lightGrayColor}} textStyle={{color:blackColor}} />
+          </View>
+        </ImageBackground>
+      )}
+
+      {/* Onboarding content - slides up on top of welcome screen */}
+      <Animated.View
+        style={[
+          styles.container,
+          { transform: [{ translateY: slideAnim }], zIndex: 2 }
+        ]}
+      >
       <LinearGradient
         colors={['#400000', '#000000', '#000000']}
         start={{ x: 1, y: 0 }}
@@ -164,7 +173,8 @@ const OnboardingScreen = ({ navigation }) => {
           </View>
         )}
       </LinearGradient>
-    </Animated.View>
+      </Animated.View>
+    </View>
   );
 };
 
@@ -184,7 +194,6 @@ const styles = StyleSheet.create({
   },
   welcomeTextContainer: {
     position: "absolute",
-
     left: 25,
   },
   welcomeTitle: {

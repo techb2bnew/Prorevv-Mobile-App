@@ -80,7 +80,7 @@ const GenerateInvoiceScreen = ({ navigation,
                     const savedCustomer = await AsyncStorage.getItem("current_customer");
                     if (savedCustomer) {
                         const parsedCustomer = JSON.parse(savedCustomer);
-                        console.log("Loading saved customer:", parsedCustomer);
+                        // console.log("Loading saved customer:", parsedCustomer);
                         setCustomerDetails(parsedCustomer);
                     }
 
@@ -88,7 +88,7 @@ const GenerateInvoiceScreen = ({ navigation,
                     const savedJob = await AsyncStorage.getItem("current_Job");
                     if (savedJob) {
                         const parsedJob = JSON.parse(savedJob);
-                        console.log("Loading saved job:", parsedJob);
+                        // console.log("Loading saved job:", parsedJob);
 
                         // Set the job details
                         setSelectedJobId(parsedJob.id);
@@ -156,13 +156,13 @@ const GenerateInvoiceScreen = ({ navigation,
 
     useFocusEffect(
         useCallback(() => {
-            console.log("🔄 GenerateInvoiceScreen Focused, refreshing data...")
+            // console.log("🔄 GenerateInvoiceScreen Focused, refreshing data...")
             fetchCustomers();
             if (selectedJobId) {
                 fetchJobData(selectedJobId);
             }
             return () => {
-                console.log("🔙 Screen unfocused");
+                // console.log("🔙 Screen unfocused");
             };
         }, [selectedJobId])
     );
@@ -170,7 +170,7 @@ const GenerateInvoiceScreen = ({ navigation,
 
     useFocusEffect(
         useCallback(() => {
-            console.log("Focus effect ran on screen focus - resetting dates");
+            // console.log("Focus effect ran on screen focus - resetting dates");
 
             // Reset dates when screen renders
             setStartDate(null);
@@ -225,7 +225,7 @@ const GenerateInvoiceScreen = ({ navigation,
             print: "print",
             generatedInvoiceStatus: false
         }));
-        console.log("mappedVehicles", mappedVehicles);
+        // console.log("mappedVehicles", mappedVehicles);
 
         setisLoading(true);
 
@@ -259,7 +259,7 @@ const GenerateInvoiceScreen = ({ navigation,
                 }).promise;
 
                 if (downloadResult.statusCode === 200) {
-                    console.log("✅ PDF downloaded at:", filePath);
+                    // console.log("✅ PDF downloaded at:", filePath);
 
                     // 3. Share the file
                     await Share.open({
@@ -299,7 +299,7 @@ const GenerateInvoiceScreen = ({ navigation,
             Alert.alert("No Selection", "Please select at least one vehicle to export.");
             return;
         }
-        console.log("selectedVehicles", selectedJobEstimated);
+        // console.log("selectedVehicles", selectedJobEstimated);
 
         const mappedVehicles = selectedVehicles.map((vehicle) => ({
             jobName: vehicle?.jobName,
@@ -307,7 +307,7 @@ const GenerateInvoiceScreen = ({ navigation,
             make: vehicle?.make,
             model: vehicle?.model,
             estimatedBy: vehicle?.estimatedBy || "-",
-            estimatedCost: selectedJobEstimated,
+            VehicleCost: vehicle?.labourCost ? vehicle?.labourCost : selectedJobEstimated,
             status: getStatusText(vehicle?.vehicleStatus),
             assignedTechnicians:
                 vehicle?.assignedTechnicians?.length > 0
@@ -340,7 +340,7 @@ const GenerateInvoiceScreen = ({ navigation,
         if (filePath && Platform.OS === "ios") {
             shareCSVFile(filePath); // ✅ Only iOS will share
         } else if (filePath && Platform.OS === "android") {
-            console.log("✅ File exported to:", filePath);
+            // console.log("✅ File exported to:", filePath);
             Alert.alert("Export Successful", `CSV saved to:\n${filePath}`);
         }
         setIsExportLoading(false);
@@ -364,7 +364,7 @@ const GenerateInvoiceScreen = ({ navigation,
                 ? `${API_BASE_URL}/fetchAllTechnicianCustomer?roleType=${technicianType}&page=${page}`
                 : `${API_BASE_URL}/fetchAllTechnicianCustomer?userId=${technicianId}&page=${page}`;
 
-            console.log("technicianId", technicianId, token);
+            // console.log("technicianId", technicianId, token);
 
             const response = await fetch(apiUrl, {
                 method: 'GET',
@@ -375,12 +375,14 @@ const GenerateInvoiceScreen = ({ navigation,
             });
 
             const data = await response.json();
-            console.log("data.jobs", data.jobs);
+            // console.log("data.jobs", data.jobs);
 
             let uniqueCustomers = [];
 
             if (data.status && data.jobs?.jobs?.length > 0) {
                 setAllJobList(data.jobs?.jobs);
+
+                console.log("data.jobs.jobs", data.jobs.jobs);
 
                 const newCustomers = data.jobs.jobs
                     .map(job => {
@@ -398,6 +400,7 @@ const GenerateInvoiceScreen = ({ navigation,
                 uniqueCustomers = [...customers, ...newCustomers].filter(
                     (cust, index, self) => index === self.findIndex(c => c.id === cust.id)
                 );
+                console.log("uniqueCustomers", uniqueCustomers);
 
                 setCustomers(uniqueCustomers);
 
@@ -421,7 +424,7 @@ const GenerateInvoiceScreen = ({ navigation,
 
     const fetchSingleCustomerDetails = async (customerId) => {
         try {
-            console.log("customerId", customerId);
+            // console.log("customerId", customerId);
 
             setCustomerDetails(null);
 
@@ -481,7 +484,15 @@ const GenerateInvoiceScreen = ({ navigation,
             fetchSingleCustomerDetails(item.id);
             setJobList([]);
             pageRef.current = 1;
-            const customerJobs = allJobList.filter(job => job.customer?.fullName === item.fullName);
+            // Filter out null/undefined jobs and match customer
+            const customerJobs = allJobList.filter(job =>
+                job?.id !== null &&
+                job?.id !== undefined &&
+                job?.jobName !== null &&
+                job?.jobName !== undefined &&
+                job.customer?.fullName === item.fullName
+            );
+            console.log("Customer selected:", item.fullName, "Jobs found:", customerJobs.length);
             setJobList(customerJobs);
         }
     };
@@ -542,8 +553,8 @@ const GenerateInvoiceScreen = ({ navigation,
                 });
                 setSavedInvoiceRates(initialSavedRates);
 
-                // Auto-save existing invoice rates for all vehicles
-                autoSaveExistingRates(allVehicles);
+                // Auto-save existing invoice rates for all vehicles - pass totalEstimatedCost directly
+                autoSaveExistingRates(allVehicles, totalEstimatedCost);
             } else {
                 // Handle specific job selection - keep original logic
                 const response = await fetch(`${apiUrl}/fetchSingleJobs?jobid=${jobId}`, {
@@ -553,21 +564,31 @@ const GenerateInvoiceScreen = ({ navigation,
 
                 const data = await response.json();
                 if (response.ok && data.jobs) {
-                    console.log("API Response Data:", data?.jobs);
-                    setWorkOrdersRawData(data?.jobs?.vehicles);
-                    setSelectedJobEstimated(data?.jobs?.estimatedCost);
+                    // console.log("API Response Data:", data?.jobs);
+                    const jobEstimatedCost = data?.jobs?.estimatedCost || 0;
+
+                    // Add job estimated cost to each vehicle (similar to "All Jobs" case)
+                    const vehiclesWithJobCost = (data?.jobs?.vehicles || []).map(vehicle => ({
+                        ...vehicle,
+                        jobEstimatedCost: jobEstimatedCost,
+                        jobName: data.jobs?.jobName || '',
+                        jobId: jobId
+                    }));
+
+                    setWorkOrdersRawData(vehiclesWithJobCost);
+                    setSelectedJobEstimated(jobEstimatedCost);
 
                     // Initialize saved invoice rates from backend pdr values
                     const initialSavedRates = {};
-                    (data?.jobs?.vehicles || []).forEach(vehicle => {
+                    vehiclesWithJobCost.forEach(vehicle => {
                         if (vehicle?.pdr) {
                             initialSavedRates[vehicle.id] = vehicle.pdr.toString();
                         }
                     });
                     setSavedInvoiceRates(initialSavedRates);
 
-                    // Auto-save existing invoice rates for vehicles
-                    autoSaveExistingRates(data?.jobs?.vehicles);
+                    // Auto-save existing invoice rates for vehicles - pass jobEstimatedCost directly
+                    autoSaveExistingRates(vehiclesWithJobCost, jobEstimatedCost);
                 } else {
                     console.error("Error fetching job data:", data.error || "Unknown error");
                 }
@@ -577,26 +598,31 @@ const GenerateInvoiceScreen = ({ navigation,
         }
     };
 
-    const autoSaveExistingRates = async (vehicles) => {
+    const autoSaveExistingRates = async (vehicles, jobEstimatedCost = null) => {
         if (!vehicles || vehicles.length === 0) return;
 
-        console.log("🚀 Starting auto-save for vehicles:", vehicles.length);
+        // Use passed jobEstimatedCost or fallback to state
+        const estimatedCostToUse = jobEstimatedCost !== null ? jobEstimatedCost : selectedJobEstimated;
+
+        // console.log("🚀 Starting auto-save for vehicles:", vehicles.length);
 
         // Auto-save each vehicle's existing rate one by one with faster processing
         for (const vehicle of vehicles) {
-            // Check for existing rate in priority order: labourCost -> pdr -> selectedJobEstimated
-            const existingRate = vehicle?.labourCost || vehicle?.pdr || selectedJobEstimated;
+            // Check for existing rate in priority order: labourCost -> pdr -> jobEstimatedCost (from parameter or state)
+            // Also check vehicle.jobEstimatedCost if available
+            const existingRate = vehicle?.labourCost || vehicle?.pdr || vehicle?.jobEstimatedCost || estimatedCostToUse;
 
-            console.log(`🔍 Vehicle ${vehicle.id}: labourCost=${vehicle?.labourCost}, pdr=${vehicle?.pdr}, selectedJobEstimated=${selectedJobEstimated}`);
+            // console.log(`🔍 Vehicle ${vehicle.id}: labourCost=${vehicle?.labourCost}, pdr=${vehicle?.pdr}, jobEstimatedCost=${estimatedCostToUse}`);
 
             if (existingRate && existingRate > 0) {
-                console.log(`💾 Auto-saving vehicle ${vehicle.id} with rate: ${existingRate}`);
+                // console.log(`💾 Auto-saving vehicle ${vehicle.id} with rate: ${existingRate}`);
 
                 // Add to auto-saving set
                 setAutoSavingVehicles(prev => new Set([...prev, vehicle.id]));
 
                 try {
                     // Use await to ensure proper execution
+                    // handleAutoSaveInvoice will update both savedInvoiceRates and invoiceRates
                     await handleAutoSaveInvoice(vehicle.id, existingRate.toString());
                 } catch (error) {
                     console.error(`Error auto-saving for vehicle ${vehicle.id}:`, error);
@@ -605,11 +631,11 @@ const GenerateInvoiceScreen = ({ navigation,
                 // Minimal delay for faster processing
                 await new Promise(resolve => setTimeout(resolve, 100));
             } else {
-                console.log(`⏭️ Skipping vehicle ${vehicle.id} - no valid rate found`);
+                // console.log(`⏭️ Skipping vehicle ${vehicle.id} - no valid rate found`);
             }
         }
 
-        console.log("✅ Auto-save process completed");
+        // console.log("✅ Auto-save process completed");
     };
 
     const getStatusStyle = (status, type = "") => {
@@ -676,7 +702,7 @@ const GenerateInvoiceScreen = ({ navigation,
     });
 
     const handleGenerateInvoice = async (date) => {
-        console.log("📅 Selected Invoice Date:", date?.toString());
+        // console.log("📅 Selected Invoice Date:", date?.toString());
         const mappedVehicles = selectedVehicles.map((vehicle) => ({
             vehicleId: vehicle?.id,
             jobId: vehicle?.jobId,
@@ -687,7 +713,7 @@ const GenerateInvoiceScreen = ({ navigation,
             generatedInvoiceStatus: true
         }));
 
-        console.log("🚗 Mapped Vehicles for API:", mappedVehicles);
+        // console.log("🚗 Mapped Vehicles for API:", mappedVehicles);
 
         setLoading(true);
 
@@ -709,7 +735,7 @@ const GenerateInvoiceScreen = ({ navigation,
 
             if (response.status === 200 || response.status === 201) {
                 const invoiceUrl = response?.data?.invoice?.invoiceUrl;
-                console.log("✅ Invoice Generated:", response?.data);
+                // console.log("✅ Invoice Generated:", response?.data);
                 const email = "";
                 const subject = "Invoice for Your Work Order";
 
@@ -786,8 +812,16 @@ const GenerateInvoiceScreen = ({ navigation,
     // Load job list after customer data is fetched and customer is selected
     useEffect(() => {
         const loadJobListForSelectedCustomer = async () => {
-            if (customerDetails && allJobList.length > 0) {
-                const customerJobs = allJobList.filter(job => job.customer?.fullName === customerDetails.fullName);
+            if (customerDetails && !customerDetails.isAllOption) {
+                // Filter out null/undefined jobs and match customer
+                const customerJobs = allJobList.filter(job =>
+                    job?.id !== null &&
+                    job?.id !== undefined &&
+                    job?.jobName !== null &&
+                    job?.jobName !== undefined &&
+                    job.customer?.fullName === customerDetails.fullName
+                );
+                console.log("useEffect - Customer:", customerDetails.fullName, "Jobs found:", customerJobs.length);
                 setJobList(customerJobs);
 
                 // If we have a selected job ID, make sure it's in the job list
@@ -798,6 +832,15 @@ const GenerateInvoiceScreen = ({ navigation,
                         fetchJobData(selectedJobId);
                     }
                 }
+            } else if (customerDetails && customerDetails.isAllOption) {
+                // For "All Customers", show all jobs
+                const validJobs = allJobList.filter(job =>
+                    job?.id !== null &&
+                    job?.id !== undefined &&
+                    job?.jobName !== null &&
+                    job?.jobName !== undefined
+                );
+                setJobList(validJobs);
             }
         };
 
@@ -806,28 +849,29 @@ const GenerateInvoiceScreen = ({ navigation,
 
     // Auto-save when workOrdersRawData changes
     useEffect(() => {
-        if (workOrdersRawData && workOrdersRawData.length > 0) {
-            console.log("📋 Vehicles loaded, triggering auto-save...");
-            autoSaveExistingRates(workOrdersRawData);
+        if (workOrdersRawData && workOrdersRawData.length > 0 && selectedJobEstimated) {
+            // console.log("📋 Vehicles loaded, triggering auto-save...");
+            // Pass selectedJobEstimated to ensure we have the latest value
+            autoSaveExistingRates(workOrdersRawData, selectedJobEstimated);
         }
-    }, [workOrdersRawData]);
+    }, [workOrdersRawData, selectedJobEstimated]);
 
     // Keyboard event listeners
     useEffect(() => {
         const keyboardWillShowListener = Keyboard.addListener('keyboardWillShow', () => {
-            console.log("⌨️ Keyboard will show");
+            // console.log("⌨️ Keyboard will show");
             setIsKeyboardOpen(true);
         });
         const keyboardWillHideListener = Keyboard.addListener('keyboardWillHide', () => {
-            console.log("⌨️ Keyboard will hide");
+            // console.log("⌨️ Keyboard will hide");
             setIsKeyboardOpen(false);
         });
         const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
-            console.log("⌨️ Keyboard did show");
+            // console.log("⌨️ Keyboard did show");
             setIsKeyboardOpen(true);
         });
         const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
-            console.log("⌨️ Keyboard did hide");
+            // console.log("⌨️ Keyboard did hide");
             setIsKeyboardOpen(false);
         });
 
@@ -842,13 +886,19 @@ const GenerateInvoiceScreen = ({ navigation,
     // Check if vehicle has unsaved changes
     const hasUnsavedChanges = (vehicle) => {
         const vehicleId = vehicle.id;
+
         // Get current value from input (invoiceRates) or fallback to vehicle data
         const currentValue = invoiceRates[vehicleId] !== undefined && invoiceRates[vehicleId] !== ''
             ? invoiceRates[vehicleId].toString().trim()
-            : vehicle?.pdr?.toString() || '';
-        
-        // Get saved value
-        const savedValue = savedInvoiceRates[vehicleId]?.toString().trim() || vehicle?.pdr?.toString() || '';
+            : (vehicle?.pdr?.toString() || vehicle?.labourCost?.toString() || vehicle?.jobEstimatedCost?.toString() || selectedJobEstimated?.toString() || '').trim();
+
+        // Get saved value - priority: savedInvoiceRates > vehicle.pdr
+        const savedValue = (savedInvoiceRates[vehicleId]?.toString() || vehicle?.pdr?.toString() || '').trim();
+
+        // If both are empty, no unsaved changes
+        if (!currentValue && !savedValue) {
+            return false;
+        }
 
         // Show save button if current value is different from saved value
         return currentValue !== savedValue;
@@ -867,29 +917,38 @@ const GenerateInvoiceScreen = ({ navigation,
     };
 
     const handleAutoSaveInvoice = async (vehicleId, value) => {
-        console.log(`🔄 Auto-saving vehicle ${vehicleId} with value: ${value}`);
+        // console.log(`🔄 Auto-saving vehicle ${vehicleId} with value: ${value}`);
 
         // Find the vehicle data
         const vehicle = workOrdersRawData.find(v => v.id === vehicleId);
         if (!vehicle) {
-            console.log(`❌ Vehicle ${vehicleId} not found`);
+            // console.log(`❌ Vehicle ${vehicleId} not found`);
             return;
         }
 
         // Empty check
         if (!value || value.toString().trim().length === 0) {
-            console.log(`❌ Empty value for vehicle ${vehicleId}`);
+            // console.log(`❌ Empty value for vehicle ${vehicleId}`);
             return;
         }
 
         const parsedRate = Number(value);
         const existingPdr = Number(vehicle?.pdr);
 
-        console.log(`📊 Vehicle ${vehicleId}: parsedRate=${parsedRate}, existingPdr=${existingPdr}`);
+        // console.log(`📊 Vehicle ${vehicleId}: parsedRate=${parsedRate}, existingPdr=${existingPdr}`);
 
-        // If same as existing, skip save
+        // If same as existing, skip save but still update invoiceRates state to sync
         if (!isNaN(existingPdr) && parsedRate === existingPdr) {
-            console.log(`⏭️ Skipping save for vehicle ${vehicleId} - same as existing PDR`);
+            // console.log(`⏭️ Skipping save for vehicle ${vehicleId} - same as existing PDR`);
+            // Still update invoiceRates and savedInvoiceRates to ensure sync
+            setInvoiceRates(prev => ({
+                ...prev,
+                [vehicleId]: parsedRate.toString()
+            }));
+            setSavedInvoiceRates(prev => ({
+                ...prev,
+                [vehicleId]: parsedRate.toString()
+            }));
             return;
         }
 
@@ -930,10 +989,17 @@ const GenerateInvoiceScreen = ({ navigation,
             // Quick JSON parse with error handling
             try {
                 const data = await response.json();
-                console.log("✅ Auto-saved PDR:", data);
-                
+                // console.log("✅ Auto-saved PDR:", data);
+
                 // Update saved invoice rates after successful auto-save
                 setSavedInvoiceRates(prev => ({
+                    ...prev,
+                    [vehicleId]: parsedRate.toString()
+                }));
+
+                // Also update invoiceRates state to sync with saved value
+                // This ensures hasUnsavedChanges returns false after auto-save
+                setInvoiceRates(prev => ({
                     ...prev,
                     [vehicleId]: parsedRate.toString()
                 }));
@@ -1000,7 +1066,7 @@ const GenerateInvoiceScreen = ({ navigation,
             if (!response.ok) throw new Error('Failed to update PDR');
 
             const data = await response.json();
-            console.log("✅ PDR updated:", data);
+            // console.log("✅ PDR updated:", data);
 
             if (inputRefs.current[vehicleId]) {
                 inputRefs.current[vehicleId].blur();
@@ -1072,6 +1138,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                 setSelectAll(false);
                             }}
                             getJobName={(item) => item?.jobName}
+                            disabled={customerDetails && customerDetails.id && !customerDetails.isAllOption && jobList.length === 0}
                         />
                     </View>
                 </View>
@@ -1201,7 +1268,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                     keyExtractor={(item, index) => index.toString()}
                                     showsVerticalScrollIndicator={false}
                                     renderItem={({ item, index }) => {
-                                        console.log(item);
+                                        // console.log(item);
                                         const rowStyle = { backgroundColor: index % 2 === 0 ? lightGrayColor : whiteColor };
                                         const isSelected = selectAll || selectedVehicles.some(v => v.id === item.id);
                                         return (
@@ -1306,6 +1373,8 @@ const GenerateInvoiceScreen = ({ navigation,
                                         let message = '';
                                         if (!customerDetails?.id && !selectedJobId) {
                                             message = "Please select customer and job";
+                                        } else if (customerDetails?.id && !customerDetails?.isAllOption && jobList.length === 0) {
+                                            message = "No jobs have been created for this customer yet.";
                                         } else if (customerDetails?.id && !selectedJobId) {
                                             message = "Please select a job";
                                         } else {
@@ -1495,6 +1564,8 @@ const GenerateInvoiceScreen = ({ navigation,
                                 let message = '';
                                 if (!customerDetails?.id && !selectedJobId) {
                                     message = "Please select customer and job";
+                                } else if (customerDetails?.id && !customerDetails?.isAllOption && jobList.length === 0) {
+                                    message = "No jobs have been created for this customer yet.";
                                 } else if (customerDetails?.id && !selectedJobId) {
                                     message = "Please select a job";
                                 } else {
@@ -1532,7 +1603,7 @@ const GenerateInvoiceScreen = ({ navigation,
                         loading={loading}
                         disabled={loading}
                         onPress={() => {
-                            console.log("selectedVehicles", selectedVehicles);
+                            // console.log("selectedVehicles", selectedVehicles);
 
                             const missingPdrVehicles = selectedVehicles.filter(vehicle => {
                                 const rate = invoiceRates[vehicle.id] ?? vehicle?.pdr; // ✅ fallback to vehicle.pdr

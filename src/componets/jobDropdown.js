@@ -8,10 +8,11 @@ import {
     ScrollView,
     Dimensions,
     ActivityIndicator,
+    Platform,
 } from "react-native";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { Feather } from "@expo/vector-icons";
-import { blackColor, blueColor, grayColor, mediumGray, lightBlueColor, whiteColor } from "../constans/Color";
+import { blackColor, blueColor, grayColor, mediumGray, lightBlueColor, whiteColor, lightGrayColor } from "../constans/Color";
 import { spacings, style } from "../constans/Fonts";
 import { heightPercentageToDP } from "../utils";
 
@@ -27,6 +28,7 @@ const JobDropdown = ({
     onEndReached = () => { },
     hasMore = false,
     loadingMore = false,
+    disabled = false,
 }) => {
     const [visible, setVisible] = useState(false);
     const selectedJob = jobs.find((j) => j.id === selectedJobId);
@@ -38,33 +40,43 @@ const JobDropdown = ({
         setVisible(false);
     };
 
+    // Filter out "All Jobs" option to get actual jobs count
+    const actualJobs = jobs.filter(job => job?.id !== 'all' && !job?.isAllOption);
+
     return (
         <View style={{ paddingHorizontal: spacings.large, height: isTablet ? heightPercentageToDP(4) : heightPercentageToDP(6) }}>
             <Pressable
                 style={{
-                    borderColor: blackColor,
+                    borderColor: disabled ? grayColor : blackColor,
                     borderWidth: 1,
                     borderRadius: 10,
                     padding: isTablet ? spacings.large : 8,
                     flexDirection: "row",
                     alignItems: "center",
                     justifyContent: "space-between",
+                    backgroundColor: disabled ? lightGrayColor : whiteColor,
+                    opacity: disabled ? 0.6 : 1,
                 }}
-                onPress={() => setVisible(true)}
+                onPress={() => !disabled && setVisible(true)}
+                disabled={disabled}
             >
                 <View style={{ width: "80%" }}>
                     <Text
                         style={{
-                            color: selectedJob ? blackColor : grayColor,
+                            color: disabled ? grayColor : (selectedJob ? blackColor : grayColor),
                             fontSize: 16,
                             flexWrap: "wrap",
                         }}
                     >
-                        {selectedJob ? getJobName(selectedJob) : "Select a Job"}
+                        {disabled ? "No jobs available" : (selectedJob ? getJobName(selectedJob) : "Select a Job")}
                     </Text>
                 </View>
 
-                <MaterialCommunityIcons name="chevron-down" size={22} color={blackColor} style={{ marginLeft: 8 }}
+                <MaterialCommunityIcons 
+                    name="chevron-down" 
+                    size={22} 
+                    color={disabled ? grayColor : blackColor} 
+                    style={{ marginLeft: 8 }}
                 />
             </Pressable>
 

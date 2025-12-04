@@ -94,12 +94,21 @@ const SignUpScreen = ({ navigation }) => {
         // if (!formData.city.trim()) newErrors.city = "City is required";
         // if (!formData.zipCode.trim()) newErrors.zipCode = "Zip code is required";
         // Validation for secondary email and phone number if provided
-        // if (formData.secondaryEmail.trim() && !/^\S+@\S+\.\S+$/.test(formData.secondaryEmail)) {
-        //     newErrors.secondaryEmail = "Valid secondary email is required";
-        // }
-        // if (formData.secondaryPhoneNumber.trim() && formData.secondaryPhoneNumber.length < 10) {
-        //     newErrors.secondaryPhoneNumber = "Valid secondary phone number is required";
-        // }
+        if (formData.secondaryEmail.trim() && !/^\S+@\S+\.\S+$/.test(formData.secondaryEmail)) {
+            newErrors.secondaryEmail = "Valid secondary email is required";
+        }
+        if (formData.secondaryPhoneNumber.trim()) {
+            // Extract only digits from the phone number (remove +, -, spaces, etc.)
+            const digitsOnly = formData.secondaryPhoneNumber.replace(/\D/g, '');
+            // Check if there are any non-digit characters (alphabets) in the original string
+            const hasAlphabets = /[a-zA-Z]/.test(formData.secondaryPhoneNumber);
+
+            if (hasAlphabets) {
+                newErrors.secondaryPhoneNumber = "Phone number cannot contain alphabets";
+            } else if (digitsOnly.length < 10) {
+                newErrors.secondaryPhoneNumber = "Valid secondary phone number is required";
+            }
+        }
         // Validation for the second step
         // if (isSecondStep) {
         if (!formData.password.trim()) newErrors.password = "Password is required";
@@ -249,12 +258,19 @@ const SignUpScreen = ({ navigation }) => {
 
 
         if (capturedImage) {
-            const newUri = Platform.OS === 'ios' ? capturedImage.replace('file://', '') : capturedImage;
-            console.log(newUri);
+            // iOS mein file:// prefix chahiye
+            let imageUri = capturedImage;
+            if (Platform.OS === 'ios' && !imageUri.startsWith('file://')) {
+                imageUri = `file://${imageUri}`;
+            }
+            if (Platform.OS === 'android' && imageUri.startsWith('file://')) {
+                imageUri = imageUri.replace('file://', '');
+            }
+            console.log("Image URI:", imageUri);
 
             // Convert the image URI into a file object
             formDataToSend.append("image", {
-                uri: newUri,
+                uri: imageUri,
                 name: "image.jpg", // Give a default name
                 type: "image/jpeg"  // Ensure correct MIME type
             });
@@ -263,12 +279,19 @@ const SignUpScreen = ({ navigation }) => {
         }
 
         if (businessLogo) {
-            const newUri = Platform.OS === 'ios' ? businessLogo.replace('file://', '') : businessLogo;
-            console.log(newUri);
+            // iOS mein file:// prefix chahiye
+            let logoUri = businessLogo;
+            if (Platform.OS === 'ios' && !logoUri.startsWith('file://')) {
+                logoUri = `file://${logoUri}`;
+            }
+            if (Platform.OS === 'android' && logoUri.startsWith('file://')) {
+                logoUri = logoUri.replace('file://', '');
+            }
+            console.log("Logo URI:", logoUri);
 
             // Convert the image URI into a file object
             formDataToSend.append("businessLogo", {
-                uri: newUri,
+                uri: logoUri,
                 name: "image.jpg", // Give a default name
                 type: "image/jpeg"  // Ensure correct MIME type
             });
@@ -291,25 +314,45 @@ const SignUpScreen = ({ navigation }) => {
         //     formDataToSend.append('taxForms', ''); // Avoid empty array issue
         // }
         if (files.length > 0) {
+            // ✅ iOS mein file:// prefix chahiye, Android mein direct URI
             for (const file of files) {
-                const newUri = Platform.OS === 'ios' ? file.uri.replace('file://', '') : file.uri;
+                let fileUri = file.uri;
 
                 try {
-                    const blob = await getBlobFromUri(newUri);
-
-                    formDataToSend.append('taxForms', {
-                        uri: newUri,
-                        name: file.name || `file_${Date.now()}.${file.type?.includes("image") ? "jpg" : "pdf"}`,
-                        type: file.type || 'application/pdf',
-                    });
-
-                    // PATCH — replace actual content with blob
-                    const lastIndex = formDataToSend._parts.length - 1;
-                    formDataToSend._parts[lastIndex] = ['taxForms', blob];
-
+                    // Agar image hai to pehle compress karo
+                    if (file.type?.includes("image")) {
+                        console.log("Compressing taxForm image:", fileUri);
+                        const compressedUri = await ImageCompressor.compress(fileUri, {
+                            compressionMethod: "auto",
+                            quality: 0.5,      // 50% quality
+                            maxWidth: 1200,    // reasonable max size
+                            maxHeight: 1200,
+                        });
+                        fileUri = compressedUri;
+                        console.log("Compressed taxForm image URI:", fileUri);
+                    }
                 } catch (e) {
-                    console.warn('Error loading taxForm file:', e);
+                    console.warn("Error compressing taxForm image:", e);
+                    // Fallback: use original URI
+                    fileUri = file.uri;
                 }
+
+                // iOS mein file:// prefix add karo agar nahi hai
+                if (Platform.OS === 'ios' && !fileUri.startsWith('file://')) {
+                    fileUri = `file://${fileUri}`;
+                }
+                // Android mein file:// remove karo agar hai
+                if (Platform.OS === 'android' && fileUri.startsWith('file://')) {
+                    fileUri = fileUri.replace('file://', '');
+                }
+                
+                console.log("Final File URI:", fileUri);
+
+                formDataToSend.append('taxForms', {
+                    uri: fileUri,
+                    name: file.name || `file_${Date.now()}.${file.type?.includes("image") ? "jpg" : "pdf"}`,
+                    type: file.type || (file.type?.includes("image") ? "image/jpeg" : "application/pdf"),
+                });
             }
         } else {
             formDataToSend.append('taxForms', '');
@@ -324,15 +367,24 @@ const SignUpScreen = ({ navigation }) => {
             });
 
             console.log("Response received");
+            console.log("Response status:", response.status);
+            console.log("Response headers:", response.headers);
 
-            const data = await response.json();
+            // Check if response is JSON
+            const contentType = response.headers.get("content-type");
+            let data;
+            
+            if (contentType && contentType.includes("application/json")) {
+                data = await response.json();
+            } else {
+                // If not JSON, get text response (might be HTML error page)
+                const textResponse = await response.text();
+                console.error("Non-JSON response received:", textResponse.substring(0, 200));
+                throw new Error("Server returned an error. Please try again.");
+            }
 
             if (!response.ok) {
-                // console.error("Error:", data.error);
-                // setErrors({ apiError: data.error || "An error occurred. Please try again." });
-                // setIsLoading(false);
-
-                console.error("Error:", data.error);
+                console.error("Error:", data.error || data.message || "Unknown error");
 
                 const errorMsg = data.error?.toLowerCase();
 
@@ -822,25 +874,46 @@ const SignUpScreen = ({ navigation }) => {
                                                 </TouchableOpacity>
                                             )
                                         ) : (
-                                            <View style={{ margin: 5, alignItems: "center", position: "relative" }}>
+                                            <View style={{ margin: 5, alignItems: "center", position: "relative", width: 68.5 }}>
                                                 {item.type.startsWith("image/") ? (
-                                                    <Image
-                                                        source={{ uri: item.uri }}
-                                                        style={{ width: 68.5, height: 68.5, borderRadius: 5 }}
-                                                    />
+                                                    <>
+                                                        <Image
+                                                            source={{ uri: item.uri }}
+                                                            style={{ width: 68.5, height: 68.5, borderRadius: 5 }}
+                                                        />
+                                                        {/* File name below image to verify selected file */}
+                                                        <Text
+                                                            style={{
+                                                                marginTop: 4,
+                                                                fontSize: 8,
+                                                                color: whiteColor,
+                                                                textAlign: "center",
+                                                            }}
+                                                            numberOfLines={2}
+                                                        >
+                                                            {item.name || "Image"}
+                                                        </Text>
+                                                    </>
                                                 ) : (
-                                                    <View
-                                                        style={{
-                                                            width: 68.5,
-                                                            height: 68.5,
-                                                            borderRadius: 5,
-                                                            backgroundColor: "#ccc",
-                                                            justifyContent: "center",
-                                                            alignItems: "center",
-                                                        }}
-                                                    >
-                                                        <Text style={{ fontSize: 8, textAlign: "center" }}>{item.name}</Text>
-                                                    </View>
+                                                    <>
+                                                        <View
+                                                            style={{
+                                                                width: 68.5,
+                                                                height: 68.5,
+                                                                borderRadius: 5,
+                                                                backgroundColor: "#ccc",
+                                                                justifyContent: "center",
+                                                                alignItems: "center",
+                                                            }}
+                                                        >
+                                                            <Text
+                                                                style={{ fontSize: 8, textAlign: "center" }}
+                                                                numberOfLines={3}
+                                                            >
+                                                                {item.name}
+                                                            </Text>
+                                                        </View>
+                                                    </>
                                                 )}
 
                                                 <TouchableOpacity

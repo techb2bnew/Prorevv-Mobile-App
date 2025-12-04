@@ -802,7 +802,7 @@ const Reports = ({ navigation }) => {
                     open={isStartPickerOpen}
                     date={tempStartDate}
                     mode="date"
-                    maximumDate={new Date()} // ⛔ prevents selecting future dates
+                    // maximumDate={new Date()} // ⛔ prevents selecting future dates
                     onConfirm={(date) => {
                         setStartDate(date);
                         setTempStartDate(date);
@@ -817,7 +817,7 @@ const Reports = ({ navigation }) => {
                     open={isEndPickerOpen}
                     date={tempEndDate}
                     mode="date"
-                    minimumDate={startDate}       // ✅ StartDate se pehle ki date disable
+                    // minimumDate={startDate}       // ✅ StartDate se pehle ki date disable
                     // maximumDate={new Date()} // ⛔ prevents selecting future dates
                     onConfirm={(date) => {
                         const newEndDate = date;
@@ -1059,6 +1059,14 @@ const Reports = ({ navigation }) => {
                                             <Text >{item?.model}</Text>
                                         </View>
                                         <View style={{ width: '48%', marginBottom: 9 }}>
+                                            <Text style={{ color: '#555', fontSize: 10 }}>Vehicle Price</Text>
+                                            <Text >{item.labourCost ? "-" : item?.job?.estimatedCost ? `$${item.job.estimatedCost}` : '—'}</Text>
+                                        </View>
+                                        <View style={{ width: '48%', marginBottom: 9 }}>
+                                            <Text style={{ color: '#555', fontSize: 10 }}>Override Cost</Text>
+                                            <Text >{item.labourCost ? `$${item.labourCost}` : '-'}</Text>
+                                        </View>
+                                        <View style={{ width: '48%', marginBottom: 9 }}>
                                             <Text style={{ color: '#555', fontSize: 10 }}>Start Date</Text>
                                             <Text >
                                                 {item?.startDate
@@ -1145,10 +1153,11 @@ const Reports = ({ navigation }) => {
                                 <Text style={[styles.tableHeader, { width: isTablet ? wp(25) : orientation === "LANDSCAPE" ? wp(25) : wp(55) }]}>VIN</Text>
                                 <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>Make</Text>
                                 <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(30) }]}>Model</Text>
+                                <Text style={[styles.tableHeader, styles.headerText, { width: wp(27) }]}>Vehicle Price</Text>
+                                <Text style={[styles.tableHeader, styles.headerText, { width: wp(25) }]}>Override Cost</Text>
                                 {technicianType === "manager" && <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>Assigned Tech</Text>}
                                 <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>Start Date</Text>
                                 <Text style={[styles.tableHeader, { width: isTablet ? wp(18) : orientation === "LANDSCAPE" ? wp(18) : wp(35) }]}>End Date</Text>
-
                                 {/* <Text style={[styles.tableHeader, { width: wp(30) }]}>Cost Estimate</Text> */}
                                 <Text style={[styles.tableHeader, { paddingRight: isTablet ? 30 : 0, width: isIOSAndTablet ? wp(10) : isTablet ? wp(20) : orientation === "LANDSCAPE" ? wp(20) : wp(35) }]}>Status</Text>
                                 <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35), }]}>Action</Text>
@@ -1163,6 +1172,8 @@ const Reports = ({ navigation }) => {
                                     refreshing={refreshing}
                                     onRefresh={handleRefreshVehicle}
                                     renderItem={({ item, index }) => {
+                                        console.log("item::::", item);
+
                                         const rowStyle = { backgroundColor: index % 2 === 0 ? lightGrayColor : whiteColor };
                                         const isSelected = selectedWorkOrders.includes(item?.id);
                                         return (
@@ -1180,6 +1191,8 @@ const Reports = ({ navigation }) => {
                                                 <Text style={[styles.text, { width: isTablet ? wp(25) : orientation === "LANDSCAPE" ? wp(25) : wp(57) }]}>{item?.vin || '-'}</Text>
                                                 <Text style={[styles.text, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>{item?.make || '-'}</Text>
                                                 <Text style={[styles.text, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(30) }]}>{item?.model || '-'}</Text>
+                                                <Text style={[styles.cell, { width: wp(25) }]}>{item.labourCost ? "-" : item?.job?.estimatedCost ? `$${item.job.estimatedCost}` : '—'}</Text>
+                                                <Text style={[styles.cell, { width: wp(25) }]}>{item.labourCost ? `$${item.labourCost}` : '-'}</Text>
                                                 {technicianType === "manager" && <Text style={[styles.text, { width: isTablet ? wp(14) : orientation === "LANDSCAPE" ? wp(14) : wp(30) }]}>
                                                     {item?.assignedTechnicians?.length > 0
                                                         ? item?.assignedTechnicians
@@ -1201,7 +1214,6 @@ const Reports = ({ navigation }) => {
                                                         year: "numeric",
                                                     })
                                                     : "-"}</Text>
-
                                                 <View style={[getStatusStyle(item?.vehicleStatus), alignJustifyCenter, { height: isTablet ? hp(2) : hp(4) }]}>
                                                     <Text
                                                         style={{
@@ -1481,7 +1493,7 @@ const Reports = ({ navigation }) => {
                                 </TouchableOpacity>
 
                                 {/* Common Sort: Date Created */}
-                                {activeTab != "Customers" && <TouchableOpacity
+                                {/* {activeTab != "Customers" && <TouchableOpacity
                                     onPress={() => handleSort(
                                         sortType === "date" && sortOrder === "newest" ? "oldest" : "newest",
                                         "date"
@@ -1494,7 +1506,7 @@ const Reports = ({ navigation }) => {
                                     <Text style={[styles.sortText, { color: sortType === "date" ? blackColor : 'gray' }]}>
                                         {sortType === "date" ? (sortOrder === "newest" ? "New to Old" : "Old to New") : "New to Old"}
                                     </Text>
-                                </TouchableOpacity>}
+                                </TouchableOpacity>} */}
 
                                 {/* Common Sort: Last Modified */}
                                 {activeTab != "Customers" && <TouchableOpacity
