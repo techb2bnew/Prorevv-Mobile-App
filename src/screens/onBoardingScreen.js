@@ -124,9 +124,12 @@ const OnboardingScreen = ({ navigation }) => {
         end={{ x: 0.4, y: 1 }}
         style={{ alignItems: 'center', justifyContent: 'center', flex: 1, width: '100%', height: '100%' }}
       >
-        <TouchableOpacity style={styles.skipButton} onPress={() => navigation.navigate('Login')}>
-          <Text style={{ fontWeight: style.fontWeightMedium.fontWeight, color: whiteColor }}>Skip</Text>
-        </TouchableOpacity>
+        {/* Show Skip button on first and second screen, hide on last (third) screen */}
+        {currentIndex < onboardingData.length - 1 && (
+          <TouchableOpacity style={styles.skipButton} onPress={() => navigation.navigate('Login')}>
+            <Text style={{ fontWeight: style.fontWeightMedium.fontWeight, color: whiteColor }}>Skip</Text>
+          </TouchableOpacity>
+        )}
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
           <Ionicons name="arrow-back" size={24} color={whiteColor} />
         </TouchableOpacity>

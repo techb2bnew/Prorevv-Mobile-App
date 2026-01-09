@@ -45,7 +45,7 @@ export default function AuthStack() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       {isFirstLaunch && (
         <Stack.Screen name="OnBoard" component={OnboardingScreen} />
-      )}
+      )} 
       <Stack.Screen name="Login" component={LoginScreen} options={{ gestureEnabled: false }} />
       {/* <Stack.Screen name="JoinAs" component={JoinAsScreen} /> */}
       <Stack.Screen name="Register" component={SignUpScreen} options={{ gestureEnabled: false }} />

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Image, Platform, Dimensions, Modal, ScrollView, ActivityIndicator, TouchableWithoutFeedback, Pressable, Keyboard, useWindowDimensions, InteractionManager } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Image, Platform, Dimensions, Modal, ScrollView, ActivityIndicator, TouchableWithoutFeedback, Pressable, Keyboard, useWindowDimensions, InteractionManager, KeyboardAvoidingView } from 'react-native';
 import { StackActions } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { whiteColor, lightGrayColor, blueColor, redColor, goldColor, greenColor, verylightGrayColor, grayColor, blackColor, orangeColor, mediumGray, lightBlueColor } from '../constans/Color'
@@ -53,6 +53,7 @@ const VinListScreen = ({ navigation, route }) => {
     const [hasMoreJob, setHasMoreJob] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
     const [jobsRawData, setJobsRawData] = useState([])
+    const scrollViewRef = useRef(null);
 
     const sortedData = React.useMemo(() => {
         let data = [...vehicleData];
@@ -93,6 +94,23 @@ const VinListScreen = ({ navigation, route }) => {
             return () => { };
         }, [])
     );
+
+    // Keyboard listeners for adjusting scroll when keyboard opens
+    useEffect(() => {
+        const keyboardDidShowListener = Keyboard.addListener(
+            Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+            (e) => {
+                // Scroll to end when keyboard opens
+                setTimeout(() => {
+                    scrollViewRef.current?.scrollToEnd({ animated: true });
+                }, 100);
+            }
+        );
+
+        return () => {
+            keyboardDidShowListener.remove();
+        };
+    }, []);
 
     // Load selected job after job data is fetched
     useEffect(() => {
@@ -226,10 +244,10 @@ const VinListScreen = ({ navigation, route }) => {
             console.log(technicianId);
 
             const apiUrl = technicianType === "manager"
-                ? `${API_BASE_URL}/fetchVehicalInfo?page=${pageNumber}&roleType=${technicianType}`
+                ? `${API_BASE_URL}/fetchVehicalInfo?page=${pageNumber}&roleType=${technicianType}&limit=50`
                 : technicianType === "ifs"
-                    ? `${API_BASE_URL}/fetchtechVehicleInfo?page=${pageNumber}&userId=${technicianId}`
-                    : `${API_BASE_URL}/fetchVehicalInfo?page=${pageNumber}&roleType=${technicianType}&userId=${technicianId}`;
+                    ? `${API_BASE_URL}/fetchtechVehicleInfo?page=${pageNumber}&userId=${technicianId}&limit=50`
+                    : `${API_BASE_URL}/fetchVehicalInfo?page=${pageNumber}&roleType=${technicianType}&userId=${technicianId}&limit=50`;
 
             const response = await axios.get(apiUrl, {
                 headers: {
@@ -436,10 +454,10 @@ const VinListScreen = ({ navigation, route }) => {
             }
             // console.log("token", technicianId);
             const apiUrl = technicianType === "manager"
-                ? `${API_BASE_URL}/fetchAllJobs?roleType=${technicianType}&page=${newPage}&limit=10`
+                ? `${API_BASE_URL}/fetchAllJobs?roleType=${technicianType}&page=${newPage}&limit=50`
                 : technicianType === "single-technician"
-                    ? `${API_BASE_URL}/fetchAllJobs?userId=${technicianId}&roleType=${technicianType}&page=${newPage}&limit=10`
-                    : `${API_BASE_URL}/fetchAllJobs?userId=${technicianId}&page=${newPage}&limit=10`;
+                    ? `${API_BASE_URL}/fetchAllJobs?userId=${technicianId}&roleType=${technicianType}&page=${newPage}&limit=50`
+                    : `${API_BASE_URL}/fetchAllJobs?userId=${technicianId}&page=${newPage}&limit=50`;
             const response = await axios.get(
                 apiUrl,
                 { headers: { Authorization: `Bearer ${token}` } }
@@ -553,7 +571,11 @@ const VinListScreen = ({ navigation, route }) => {
 
 
     return (
-        <View style={{ width: wp(100), height: hp(100), backgroundColor: whiteColor }}>
+        <KeyboardAvoidingView 
+            style={{ width: wp(100), height: hp(100), backgroundColor: whiteColor }}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+        >
             {/* Header */}
             <Header title={"Vin List"} onBack={() => {
                 // Switch to Home tab after interactions settle
@@ -599,90 +621,98 @@ const VinListScreen = ({ navigation, route }) => {
                 </TouchableOpacity>
 
             </View>
-            <Text style={[styles.label]}> Filter Vehicles by Job </Text>
+            <ScrollView
+                // ref={scrollViewRef}
+                style={{ flex: 1 }}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: hp(17) }}
+                keyboardShouldPersistTaps="handled"
+                keyboardDismissMode="on-drag"
+            >
+                <Text style={[styles.label]}> Filter Vehicles by Job </Text>
 
-            <JobDropdown
-                jobs={jobsRawData}
-                selectedJobId={selectedJobId}
-                setSelectedJobId={(id) => {
-                    setSelectedJobId(id);
-                }}
-                isLoading={loading}
-                loadingMore={loadingMore}
-                hasMore={hasMoreJob}
-                onEndReached={() => fetchJobHistory(jobPage + 1, true)}
-                getJobName={(item) => item?.jobName}
-            />
-
-            <View style={{ paddingHorizontal: spacings.large, paddingTop: spacings.large }}>
-                {/* Filter & Date Picker */}
-                <View style={styles.datePickerContainer}>
-                    <View style={{ width: isTablet ? wp(45) : wp(38) }}>
-                        <Text style={styles.dateText}>From</Text>
-                    </View>
-                    <View style={{ width: isTablet ? wp(45) : wp(38) }}>
-                        <Text style={styles.dateText}>To</Text>
-                    </View>
-                </View>
-                <View style={[styles.datePickerContainer]}>
-                    <TouchableOpacity onPress={() => setIsStartPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter, { width: isTablet ? wp(45) : wp(38) }]}>
-                        <Text style={styles.dateText}>
-                            {startDate ? startDate.toLocaleDateString("en-US", {
-                                month: "long",
-                                day: "numeric",
-                                year: "numeric",
-                            }) : "Select Date"}
-                        </Text>
-                        <Feather name="calendar" size={20} color={blackColor} />
-
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => setIsEndPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter, { width: isTablet ? wp(45) : wp(38) }]}>
-                        <Text style={styles.dateText}>
-                            {endDate ? endDate.toLocaleDateString("en-US", {
-                                month: "long",
-                                day: "numeric",
-                                year: "numeric",
-                            }) : "Select Date"}
-                        </Text>
-                        <Feather name="calendar" size={20} color={blackColor} />
-                    </TouchableOpacity>
-                </View>
-
-                <DatePicker
-                    modal
-                    open={isStartPickerOpen}
-                    date={tempStartDate}
-                    mode="date"
-                    // maximumDate={new Date()} // ⛔ prevents selecting future dates
-                    onConfirm={(date) => {
-                        setStartDate(date);
-                        setTempStartDate(date);
-                        setIsStartPickerOpen(false);
-                        fetchFilteredData(date, endDate, activeTab);
+                <JobDropdown
+                    jobs={jobsRawData}
+                    selectedJobId={selectedJobId}
+                    setSelectedJobId={(id) => {
+                        setSelectedJobId(id);
                     }}
-                    onCancel={() => setIsStartPickerOpen(false)}
+                    isLoading={loading}
+                    loadingMore={loadingMore}
+                    hasMore={hasMoreJob}
+                    onEndReached={() => fetchJobHistory(jobPage + 1, true)}
+                    getJobName={(item) => item?.jobName}
                 />
 
-                <DatePicker
-                    modal
-                    open={isEndPickerOpen}
-                    date={tempEndDate}
-                    mode="date"
-                    // minimumDate={startDate}       // ✅ StartDate se pehle ki date disable
-                    // maximumDate={new Date()} // ⛔ prevents selecting future dates
-                    onConfirm={(date) => {
-                        const newEndDate = date;
-                        setEndDate(newEndDate);
-                        setTempEndDate(newEndDate);
-                        setIsEndPickerOpen(false);
-                        fetchFilteredData(startDate, newEndDate, activeTab); // Use new end date
-                    }}
-                    onCancel={() => setIsEndPickerOpen(false)}
-                />
+                <View style={{ paddingHorizontal: spacings.large, paddingTop: spacings.large }}>
+                    {/* Filter & Date Picker */}
+                    <View style={styles.datePickerContainer}>
+                        <View style={{ width: isTablet ? wp(45) : wp(38) }}>
+                            <Text style={styles.dateText}>From</Text>
+                        </View>
+                        <View style={{ width: isTablet ? wp(45) : wp(38) }}>
+                            <Text style={styles.dateText}>To</Text>
+                        </View>
+                    </View>
+                    <View style={[styles.datePickerContainer]}>
+                        <TouchableOpacity onPress={() => setIsStartPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter, { width: isTablet ? wp(45) : wp(38) }]}>
+                            <Text style={styles.dateText}>
+                                {startDate ? startDate.toLocaleDateString("en-US", {
+                                    month: "long",
+                                    day: "numeric",
+                                    year: "numeric",
+                                }) : "Select Date"}
+                            </Text>
+                            <Feather name="calendar" size={20} color={blackColor} />
 
-            </View>
-            {/* Tabs */}
-            {/* <View style={[styles.tabContainer, flexDirectionRow]}>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => setIsEndPickerOpen(true)} style={[styles.datePicker, flexDirectionRow, alignItemsCenter, { width: isTablet ? wp(45) : wp(38) }]}>
+                            <Text style={styles.dateText}>
+                                {endDate ? endDate.toLocaleDateString("en-US", {
+                                    month: "long",
+                                    day: "numeric",
+                                    year: "numeric",
+                                }) : "Select Date"}
+                            </Text>
+                            <Feather name="calendar" size={20} color={blackColor} />
+                        </TouchableOpacity>
+                    </View>
+
+                    <DatePicker
+                        modal
+                        open={isStartPickerOpen}
+                        date={tempStartDate}
+                        mode="date"
+                        // maximumDate={new Date()} // ⛔ prevents selecting future dates
+                        onConfirm={(date) => {
+                            setStartDate(date);
+                            setTempStartDate(date);
+                            setIsStartPickerOpen(false);
+                            fetchFilteredData(date, endDate, activeTab);
+                        }}
+                        onCancel={() => setIsStartPickerOpen(false)}
+                    />
+
+                    <DatePicker
+                        modal
+                        open={isEndPickerOpen}
+                        date={tempEndDate}
+                        mode="date"
+                        // minimumDate={startDate}       // ✅ StartDate se pehle ki date disable
+                        // maximumDate={new Date()} // ⛔ prevents selecting future dates
+                        onConfirm={(date) => {
+                            const newEndDate = date;
+                            setEndDate(newEndDate);
+                            setTempEndDate(newEndDate);
+                            setIsEndPickerOpen(false);
+                            fetchFilteredData(startDate, newEndDate, activeTab); // Use new end date
+                        }}
+                        onCancel={() => setIsEndPickerOpen(false)}
+                    />
+
+                </View>
+                {/* Tabs */}
+                {/* <View style={[styles.tabContainer, flexDirectionRow]}>
                 <TouchableOpacity style={[styles.tab, activeTab === 'workOrder' && styles.activeTab, alignJustifyCenter]} onPress={() => setActiveTab('workOrder')}>
                     <Text style={[styles.tabText, { color: activeTab === 'workOrder' ? whiteColor : blackColor, textAlign: "center" }]}>Work Order</Text>
                 </TouchableOpacity>
@@ -693,304 +723,297 @@ const VinListScreen = ({ navigation, route }) => {
                 </TouchableOpacity>
             </View> */}
 
-            {/* Search */}
-            <View style={[flexDirectionRow]}>
-                <View style={[styles.searchTextInput, flexDirectionRow, { height: isTablet ? hp(4) : hp(5.5), width: isTablet ? wp(87) : orientation === "LANDSCAPE" ? wp(87) : wp(75) }]}>
-                    <TextInput
-                        placeholder="Search Vin Make Model/Scan"
-                        placeholderTextColor={grayColor}
-                        style={[styles.input]}
-                        value={searchVin}
-                        onChangeText={text => setSearchVin(text)}
-                    />
-                    <TouchableOpacity style={styles.iconContainer} onPress={() => {
-                        navigation.navigate("ScannerScreen", {
-                            from: "VinList"
-                        })
-                    }}>
-                        <AntDesign name="scan1" size={24} color="#252837" />
+                {/* Search */}
+                <View style={[flexDirectionRow]}>
+                    <View style={[styles.searchTextInput, flexDirectionRow, { height: isTablet ? hp(4) : hp(5.5), width: isTablet ? wp(87) : orientation === "LANDSCAPE" ? wp(87) : wp(75) }]}>
+                        <TextInput
+                            placeholder="Search Vin Make Model/Scan"
+                            placeholderTextColor={grayColor}
+                            style={[styles.input]}
+                            value={searchVin}
+                            onChangeText={text => setSearchVin(text)}
+                        />
+                        <TouchableOpacity style={styles.iconContainer} onPress={() => {
+                            navigation.navigate("ScannerScreen", {
+                                from: "VinList"
+                            })
+                        }}>
+                            <AntDesign name="scan1" size={24} color="#252837" />
+                        </TouchableOpacity>
+                    </View>
+                    <TouchableOpacity style={[styles.filterButton, { top: Platform.OS === "android" ? isTablet ? hp(1.2) : hp(2.8) : isIOSAndTablet ? hp(1.5) : hp(2.7), right: Platform.OS === "android" ? isTablet ? 10 : 10 : isIOSAndTablet ? 10 : 10 }]}
+                        onPress={toggleModal}
+                    >
+                        <Image source={SORT_IMAGE} resizeMode='contain' style={{ width: isTablet ? wp(7) : wp(10), height: hp(3) }} />
                     </TouchableOpacity>
                 </View>
-                <TouchableOpacity style={[styles.filterButton, { top: Platform.OS === "android" ? isTablet ? hp(1.2) : hp(2.8) : isIOSAndTablet ? hp(1.5) : hp(2.7), right: Platform.OS === "android" ? isTablet ? 10 : 10 : isIOSAndTablet ? 10 : 10 }]}
-                    onPress={toggleModal}
-                >
-                    <Image source={SORT_IMAGE} resizeMode='contain' style={{ width: isTablet ? wp(7) : wp(10), height: hp(3) }} />
-                </TouchableOpacity>
-            </View>
 
-            {viewType === "list" && <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <View>
-                    <View style={[styles.tableHeader, flexDirectionRow]}>
-                        {/* <Text style={[styles.tableHeaderText, { width: wp(30) }]}>JobName</Text> */}
-                        <Text style={[styles.tableHeaderText, { width: isTablet ? wp(25) : orientation === "LANDSCAPE" ? wp(25) : wp(52) }]}>VIN No.</Text>
-                        <Text style={[styles.tableHeaderText, { width: isTablet ? wp(13) : orientation === "LANDSCAPE" ? wp(13) : wp(25) }]}>Make</Text>
-                        <Text style={[styles.tableHeaderText, { width: isTablet ? wp(13) : orientation === "LANDSCAPE" ? wp(13) : wp(35) }]}>Model</Text>
-                        <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>Job Name</Text>
-                        <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>Start Date</Text>
-                        <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>End Date</Text>
+                {viewType === "list" && <ScrollView horizontal showsHorizontalScrollIndicator={false} nestedScrollEnabled={true}>
+                    <View>
+                        <View style={[styles.tableHeader, flexDirectionRow]}>
+                            {/* <Text style={[styles.tableHeaderText, { width: wp(30) }]}>JobName</Text> */}
+                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(25) : orientation === "LANDSCAPE" ? wp(25) : wp(52) }]}>VIN No.</Text>
+                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(13) : orientation === "LANDSCAPE" ? wp(13) : wp(25) }]}>Make</Text>
+                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(13) : orientation === "LANDSCAPE" ? wp(13) : wp(35) }]}>Model</Text>
+                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>Job Name</Text>
+                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>Start Date</Text>
+                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>End Date</Text>
 
-                        {technicianType === "manager" && (
-                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(25) : orientation === "LANDSCAPE" ? wp(25) : wp(40) }]}>Assigned Tech</Text>
-                        )}
-                        {/* <Text style={[styles.tableHeaderText, { width: wp(35) }]}>Status</Text> */}
+                            {technicianType === "manager" && (
+                                <Text style={[styles.tableHeaderText, { width: isTablet ? wp(25) : orientation === "LANDSCAPE" ? wp(25) : wp(40) }]}>Assigned Tech</Text>
+                            )}
+                            {/* <Text style={[styles.tableHeaderText, { width: wp(35) }]}>Status</Text> */}
 
-                        {/* <Text style={[styles.tableHeaderText, { width: wp(45) }]}>Cost Estimate</Text> */}
-                        <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35), }]}>Action</Text>
+                            {/* <Text style={[styles.tableHeaderText, { width: wp(45) }]}>Cost Estimate</Text> */}
+                            <Text style={[styles.tableHeaderText, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35), }]}>Action</Text>
 
-                    </View>
+                        </View>
 
-                    <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(67) : orientation === "LANDSCAPE" ? hp(47) : hp(45) : isIOSAndTablet ? hp(62) : hp(43) }}>
-                        <FlatList
-                            // data={selectedJobId ? selectedJobVehicles : filteredData}
-                            data={finalVehicleList?.reverse()}
-                            keyExtractor={(item, index) => index.toString()}
-                            showsVerticalScrollIndicator={false}
-                            refreshing={refreshing}
-                            onRefresh={handleRefresh}
-                            renderItem={({ item, index }) => {
-                                return (
-                                    <Pressable
-                                        style={[
-                                            styles.tableRow,
-                                            flexDirectionRow,
-                                            { backgroundColor: index % 2 === 0 ? lightGrayColor : whiteColor },
-                                        ]}
-                                        onPress={() => navigation.navigate("VehicleDetailsScreen", {
-                                            vehicleId: item.id,
-                                            from: activeTab === "partnerOrder" ? "partner" : "workOrder"
-                                        })}
-                                    >
-                                        {/* <Text style={[styles.tableText, { width: wp(30), paddingLeft: spacings.small }]}>{item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}</Text> */}
-                                        <Text style={[styles.tableText, { width: isTablet ? wp(25) : orientation === "LANDSCAPE" ? wp(25) : wp(55) }]}>{item?.vin}</Text>
-                                        <Text style={[styles.tableText, { width: isTablet ? wp(13) : orientation === "LANDSCAPE" ? wp(13) : wp(25), paddingRight: spacings.large }]}>{item?.make}</Text>
-                                        <Text style={[styles.tableText, { width: isTablet ? wp(13) : orientation === "LANDSCAPE" ? wp(13) : wp(35) }]}>{item?.model}</Text>
-                                        <Text style={[styles.tableText, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35), paddingRight: spacings.large }]}>{item?.jobName}</Text>
-                                        <Text style={[styles.tableText, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>
-                                            {item?.startDate
-                                                ? new Date(item.startDate).toLocaleDateString("en-US", {
-                                                    month: "short",
-                                                    day: "numeric",
-                                                    year: "numeric",
-                                                })
-                                                : "-"}
-                                        </Text>
-
-                                        <Text style={[styles.tableText, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>
-                                            {item?.endDate
-                                                ? new Date(item.endDate).toLocaleDateString("en-US", {
-                                                    month: "short",
-                                                    day: "numeric",
-                                                    year: "numeric",
-                                                })
-                                                : "-"}
-                                        </Text>
-                                        {technicianType === "manager" && (
-                                            <Text style={[styles.tableText, { width: isTablet ? wp(23) : wp(40), paddingRight: 10 }]}>
-                                                {item?.assignedTechnicians
-                                                    // ?.filter(tech => tech?.id !== technicianId)
-                                                    ?.map(tech => {
-                                                        const firstName = tech?.firstName || '';
-                                                        const lastName = tech?.lastName || '';
-
-                                                        const capitalize = str => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-
-                                                        return `${capitalize(firstName)} ${capitalize(lastName)}`.trim();
-                                                    })
-                                                    .join(', ') || '—'}
-                                            </Text>
-                                        )}
-                                        <View style={{ flexDirection: "row", alignItems: "center", width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }} >
-                                            <Pressable onPress={() => navigation.navigate("VehicleDetailsScreen", {
+                        <View style={{ width: "100%" }}>
+                            <FlatList
+                                data={finalVehicleList?.reverse()}
+                                keyExtractor={(item, index) => index.toString()}
+                                showsVerticalScrollIndicator={false}
+                                refreshing={refreshing}
+                                onRefresh={handleRefresh}
+                                onScrollBeginDrag={() => Keyboard.dismiss()}
+                                scrollEnabled={false}
+                                renderItem={({ item, index }) => {
+                                    return (
+                                        <Pressable
+                                            style={[
+                                                styles.tableRow,
+                                                flexDirectionRow,
+                                                { backgroundColor: index % 2 === 0 ? lightGrayColor : whiteColor },
+                                            ]}
+                                            onPress={() => navigation.navigate("VehicleDetailsScreen", {
                                                 vehicleId: item.id,
                                                 from: activeTab === "partnerOrder" ? "partner" : "workOrder"
-                                            })}>
-                                                <Text style={styles.viewText}>View</Text>
-                                            </Pressable>
-                                            {/* {item.vehicleStatus !== true && ( */}
-                                            <Pressable
-                                                onPress={() =>
-                                                    navigation.navigate("WorkOrderScreenTwo", {
-                                                        vehicleId: item.id,
+                                            })}
+                                        >
+                                            {/* <Text style={[styles.tableText, { width: wp(30), paddingLeft: spacings.small }]}>{item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}</Text> */}
+                                            <Text style={[styles.tableText, { width: isTablet ? wp(25) : orientation === "LANDSCAPE" ? wp(25) : wp(55) }]}>{item?.vin}</Text>
+                                            <Text style={[styles.tableText, { width: isTablet ? wp(13) : orientation === "LANDSCAPE" ? wp(13) : wp(25), paddingRight: spacings.large }]}>{item?.make}</Text>
+                                            <Text style={[styles.tableText, { width: isTablet ? wp(13) : orientation === "LANDSCAPE" ? wp(13) : wp(35) }]}>{item?.model}</Text>
+                                            <Text style={[styles.tableText, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35), paddingRight: spacings.large }]}>{item?.jobName}</Text>
+                                            <Text style={[styles.tableText, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>
+                                                {item?.startDate
+                                                    ? new Date(item.startDate).toLocaleDateString("en-US", {
+                                                        month: "short",
+                                                        day: "numeric",
+                                                        year: "numeric",
                                                     })
-                                                }>
-                                                <Text style={styles.viewText}>Edit</Text>
-                                            </Pressable>
-                                            {/* )} */}
+                                                    : "-"}
+                                            </Text>
+
+                                            <Text style={[styles.tableText, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>
+                                                {item?.endDate
+                                                    ? new Date(item.endDate).toLocaleDateString("en-US", {
+                                                        month: "short",
+                                                        day: "numeric",
+                                                        year: "numeric",
+                                                    })
+                                                    : "-"}
+                                            </Text>
+                                            {technicianType === "manager" && (
+                                                <Text style={[styles.tableText, { width: isTablet ? wp(23) : wp(40), paddingRight: 10 }]}>
+                                                    {item?.assignedTechnicians
+                                                        // ?.filter(tech => tech?.id !== technicianId)
+                                                        ?.map(tech => {
+                                                            const firstName = tech?.firstName || '';
+                                                            const lastName = tech?.lastName || '';
+
+                                                            const capitalize = str => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+
+                                                            return `${capitalize(firstName)} ${capitalize(lastName)}`.trim();
+                                                        })
+                                                        .join(', ') || '—'}
+                                                </Text>
+                                            )}
+                                            <View style={{ flexDirection: "row", alignItems: "center", width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }} >
+                                                <Pressable onPress={() => navigation.navigate("VehicleDetailsScreen", {
+                                                    vehicleId: item.id,
+                                                    from: activeTab === "partnerOrder" ? "partner" : "workOrder"
+                                                })}>
+                                                    <Text style={styles.viewText}>View</Text>
+                                                </Pressable>
+                                                {/* {item.vehicleStatus !== true && ( */}
+                                                <Pressable
+                                                    onPress={() =>
+                                                        navigation.navigate("WorkOrderScreenTwo", {
+                                                            vehicleId: item.id,
+                                                        })
+                                                    }>
+                                                    <Text style={styles.viewText}>Edit</Text>
+                                                </Pressable>
+                                                {/* )} */}
+                                            </View>
+                                        </Pressable>
+                                    );
+                                }}
+                                ListFooterComponent={() =>
+                                    loading ? (
+                                        <View style={{ paddingVertical: 10, alignItems: "center", width: wp(130), height: hp(50), justifyContent: "center" }}>
+                                            <ActivityIndicator size="small" color="#0000ff" />
                                         </View>
-                                    </Pressable>
-                                );
-                            }}
-                            ListFooterComponent={() =>
-                                loading ? (
-                                    <View style={{ paddingVertical: 10, alignItems: "center", width: wp(130), height: hp(50), justifyContent: "center" }}>
-                                        <ActivityIndicator size="small" color="#0000ff" />
-                                    </View>
-                                ) : null
-                            }
-                            ListEmptyComponent={() => {
-                                if (loading) return null;
-                                let message = '';
-                                if (!selectedJobId) {
-                                    message = "Please select a job to view vehicles";
-                                } else {
-                                    message = "No Vehicle List found";
+                                    ) : null
                                 }
-                                return (
-                                    <View style={styles.emptyContainer}>
-                                        <Text style={styles.emptyText}>{message}</Text>
-                                    </View>
-                                );
-                            }}
-                            onEndReached={() => {
-                                if (!loading && hasMore) {
-                                    console.log("Fetching page:", page + 1);  // Log the page number being fetched
-                                    fetchVehicalInfo(page + 1);  // Fetch the next page
-                                } else {
-                                    console.log("No more pages to fetch.");
-                                }
-                            }}
-                            onEndReachedThreshold={0.5}
-                        />
+                                ListEmptyComponent={() => {
+                                    if (loading) return null;
+                                    let message = '';
+                                    if (!selectedJobId) {
+                                        message = "Please select a job to view vehicles";
+                                    } else {
+                                        message = "No Vehicle List found";
+                                    }
+                                    return (
+                                        <View style={styles.emptyContainer}>
+                                            <Text style={styles.emptyText}>{message}</Text>
+                                        </View>
+                                    );
+                                }}
+                            />
+                        </View>
                     </View>
-                </View>
-            </ScrollView>}
+                </ScrollView>}
 
-            {viewType === "grid" && <View style={{ width: "100%", height: Platform.OS === "android" ? isTablet ? hp(65) : orientation === "LANDSCAPE" ? hp(47) : hp(52) : isIOSAndTablet ? orientation === "LANDSCAPE" ? hp(59) : hp(65) : hp(48), }}>
-                <FlatList
-                    // data={selectedJobId ? selectedJobVehicles : filteredData}
-                    data={finalVehicleList?.reverse()}
-                    keyExtractor={(item, index) => index.toString()}
-                    showsVerticalScrollIndicator={false}
-                    contentContainerStyle={{ paddingVertical: 10 }}
-                    refreshing={refreshing}
-                    onRefresh={handleRefresh}
-                    renderItem={({ item, index }) => (
-                        <Pressable style={{
-                            backgroundColor: index % 2 === 0 ? lightGrayColor : whiteColor,
-                            borderRadius: 10,
-                            padding: 10,
-                            marginBottom: 10,
-                            marginHorizontal: 10,
-                            borderWidth: 1,
-                            borderColor: blackColor
-                        }}
-                            onPress={() => navigation.navigate("VehicleDetailsScreen", {
-                                vehicleId: item.id,
-                                from: activeTab === "partnerOrder" ? "partner" : "workOrder"
-                            })}
-                        >
-                            <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-                                {/* {item.vehicleStatus !== true && ( */}
-                                <Pressable
-                                    onPress={() => navigation.navigate("WorkOrderScreenTwo", {
-                                        vehicleId: item.id,
-                                    })}
-                                    style={{ position: "absolute", right: -5, top: -10, zIndex: 999 }}>
-                                    {/* <Text style={styles.viewText}>Edit</Text> */}
-                                    <AntDesign name="edit" size={20} color={blackColor} />
+                {viewType === "grid" && <View style={{ width: "100%" }}>
+                    <FlatList
+                        data={finalVehicleList?.reverse()}
+                        keyExtractor={(item, index) => index.toString()}
+                        showsVerticalScrollIndicator={false}
+                        contentContainerStyle={{ paddingVertical: 10 }}
+                        refreshing={refreshing}
+                        onRefresh={handleRefresh}
+                        onScrollBeginDrag={() => Keyboard.dismiss()}
+                        scrollEnabled={false}
+                        renderItem={({ item, index }) => (
+                            <Pressable style={{
+                                backgroundColor: index % 2 === 0 ? lightGrayColor : whiteColor,
+                                borderRadius: 10,
+                                padding: 10,
+                                marginBottom: 10,
+                                marginHorizontal: 10,
+                                borderWidth: 1,
+                                borderColor: blackColor
+                            }}
+                                onPress={() => navigation.navigate("VehicleDetailsScreen", {
+                                    vehicleId: item.id,
+                                    from: activeTab === "partnerOrder" ? "partner" : "workOrder"
+                                })}
+                            >
+                                <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+                                    {/* {item.vehicleStatus !== true && ( */}
+                                    <Pressable
+                                        onPress={() => navigation.navigate("WorkOrderScreenTwo", {
+                                            vehicleId: item.id,
+                                        })}
+                                        style={{ position: "absolute", right: -5, top: -10, zIndex: 999 }}>
+                                        {/* <Text style={styles.viewText}>Edit</Text> */}
+                                        <AntDesign name="edit" size={20} color={blackColor} />
 
-                                </Pressable>
-                                {/* )} */}
-                                <View style={{ width: '48%', marginBottom: 10 }}>
-                                    <Text style={{ color: '#555', fontSize: 11 }}>JobName</Text>
-                                    <Text>{item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}</Text>
-                                </View>
-                                <View style={{ width: '48%', marginBottom: 10 }}>
-                                    <Text style={{ color: '#555', fontSize: 11 }}>VIN</Text>
-                                    <Text >{item?.vin}</Text>
-                                </View>
-                                <View style={{ width: '48%', marginBottom: 10 }}>
-                                    <Text style={{ color: '#555', fontSize: 11 }}>Make</Text>
-                                    <Text >{item?.make}</Text>
-                                </View>
-                                <View style={{ width: '48%', marginBottom: 10 }}>
-                                    <Text style={{ color: '#555', fontSize: 11 }}>Model</Text>
-                                    <Text >{item?.model}</Text>
-                                </View>
-                                <View style={{ width: '48%', marginBottom: 10 }}>
-                                    <Text style={{ color: '#555', fontSize: 11 }}>Start Date</Text>
-                                    <Text style={[styles.tableText, { width: wp(35) }]}>
-                                        {item?.startDate
-                                            ? new Date(item.startDate).toLocaleDateString("en-US", {
-                                                month: "long",
-                                                day: "numeric",
-                                                year: "numeric",
+                                    </Pressable>
+                                    {/* )} */}
+                                    <View style={{ width: '48%', marginBottom: 10 }}>
+                                        <Text style={{ color: '#555', fontSize: 11 }}>JobName</Text>
+                                        <Text>{item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}</Text>
+                                    </View>
+                                    <View style={{ width: '48%', marginBottom: 10 }}>
+                                        <Text style={{ color: '#555', fontSize: 11 }}>VIN</Text>
+                                        <Text >{item?.vin}</Text>
+                                    </View>
+                                    <View style={{ width: '48%', marginBottom: 10 }}>
+                                        <Text style={{ color: '#555', fontSize: 11 }}>Make</Text>
+                                        <Text >{item?.make}</Text>
+                                    </View>
+                                    <View style={{ width: '48%', marginBottom: 10 }}>
+                                        <Text style={{ color: '#555', fontSize: 11 }}>Model</Text>
+                                        <Text >{item?.model}</Text>
+                                    </View>
+                                    <View style={{ width: '48%', marginBottom: 10 }}>
+                                        <Text style={{ color: '#555', fontSize: 11 }}>Start Date</Text>
+                                        <Text style={[styles.tableText, { width: wp(35) }]}>
+                                            {item?.startDate
+                                                ? new Date(item.startDate).toLocaleDateString("en-US", {
+                                                    month: "long",
+                                                    day: "numeric",
+                                                    year: "numeric",
+                                                })
+                                                : "-"}
+                                        </Text>
+                                    </View>
+                                    <View style={{ width: '48%', marginBottom: 10 }}>
+                                        <Text style={{ color: '#555', fontSize: 11 }}>End Date</Text>
+                                        <Text style={[styles.tableText, { width: wp(35) }]}>
+                                            {item?.endDate
+                                                ? new Date(item.endDate).toLocaleDateString("en-US", {
+                                                    month: "long",
+                                                    day: "numeric",
+                                                    year: "numeric",
+                                                })
+                                                : "-"}
+                                        </Text>
+                                    </View>
+                                    {activeTab === 'partnerOrder' && (<View style={{ width: '48%', marginBottom: 10 }}>
+                                        <Text style={{ color: '#555', fontSize: 11 }}>Partner</Text>
+                                        <Text >{item?.assignedTechnicians
+                                            ?.filter(tech => tech?.id !== technicianId)
+                                            ?.map(tech => {
+                                                const firstName = tech?.firstName || '';
+                                                const lastName = tech?.lastName || '';
+
+                                                const capitalize = str => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+
+                                                return `${capitalize(firstName)} ${capitalize(lastName)}`.trim();
                                             })
-                                            : "-"}
-                                    </Text>
-                                </View>
-                                <View style={{ width: '48%', marginBottom: 10 }}>
-                                    <Text style={{ color: '#555', fontSize: 11 }}>End Date</Text>
-                                    <Text style={[styles.tableText, { width: wp(35) }]}>
-                                        {item?.endDate
-                                            ? new Date(item.endDate).toLocaleDateString("en-US", {
-                                                month: "long",
-                                                day: "numeric",
-                                                year: "numeric",
-                                            })
-                                            : "-"}
-                                    </Text>
-                                </View>
-                                {activeTab === 'partnerOrder' && (<View style={{ width: '48%', marginBottom: 10 }}>
-                                    <Text style={{ color: '#555', fontSize: 11 }}>Partner</Text>
-                                    <Text >{item?.assignedTechnicians
-                                        ?.filter(tech => tech?.id !== technicianId)
-                                        ?.map(tech => {
-                                            const firstName = tech?.firstName || '';
-                                            const lastName = tech?.lastName || '';
-
-                                            const capitalize = str => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-
-                                            return `${capitalize(firstName)} ${capitalize(lastName)}`.trim();
-                                        })
-                                        .join(', ') || '—'}
-                                    </Text>
-                                </View>)}
-                                {/* <View style={{ width: '48%', marginBottom: 10 }}>
+                                            .join(', ') || '—'}
+                                        </Text>
+                                    </View>)}
+                                    {/* <View style={{ width: '48%', marginBottom: 10 }}>
                                     <Text style={{ color: '#555', fontSize: 11 }}>Cost Estimate</Text>
                                     <Text >${Array.isArray(item?.jobDescription) && item?.jobDescription?.length > 0
                                         ? item?.jobDescription?.reduce((total, job) => total + Number(job?.cost || 0), 0)
                                         : '0'}
                                     </Text>
                                 </View> */}
-                            </View>
+                                </View>
 
-                        </Pressable>
-                    )}
-                    onEndReached={() => {
-                        if (!loading && hasMore) {
-                            console.log("Fetching page:", page + 1);  // Log the page number being fetched
-                            fetchVehicalInfo(page + 1);  // Fetch the next page
-                        } else {
-                            console.log("No more pages to fetch.");
+                            </Pressable>
+                        )}
+                        onEndReached={() => {
+                            if (!loading && hasMore) {
+                                console.log("Fetching page:", page + 1);  // Log the page number being fetched
+                                fetchVehicalInfo(page + 1);  // Fetch the next page
+                            } else {
+                                console.log("No more pages to fetch.");
+                            }
+                        }}
+                        onEndReachedThreshold={0.5}
+                        ListFooterComponent={() =>
+                            loading ? (
+                                <View style={{ paddingVertical: 10, alignItems: "center", width: "100%", height: hp(50), justifyContent: "center" }}>
+                                    <ActivityIndicator size="small" color="#0000ff" />
+                                </View>
+                            ) : null
                         }
-                    }}
-                    onEndReachedThreshold={0.5}
-                    ListFooterComponent={() =>
-                        loading ? (
-                            <View style={{ paddingVertical: 10, alignItems: "center", width: "100%", height: hp(50), justifyContent: "center" }}>
-                                <ActivityIndicator size="small" color="#0000ff" />
-                            </View>
-                        ) : null
-                    }
-                    ListEmptyComponent={() => {
-                        if (loading) return null; // 👈 Loading ke time kuch mat dikhao
-                        let message = '';
-                        if (!selectedJobId) {
-                            message = "Please select a job to view vehicles";
-                        } else {
-                            message = "No Vehicle List found";
-                        }
-                        return (
-                            <View style={styles.emptyContainer}>
-                                <Text style={styles.emptyText}>{message}</Text>
-                            </View>
-                        );
-                    }}
-                />
+                        ListEmptyComponent={() => {
+                            if (loading) return null; // 👈 Loading ke time kuch mat dikhao
+                            let message = '';
+                            if (!selectedJobId) {
+                                message = "Please select a job to view vehicles";
+                            } else {
+                                message = "No Vehicle List found";
+                            }
+                            return (
+                                <View style={styles.emptyContainer}>
+                                    <Text style={styles.emptyText}>{message}</Text>
+                                </View>
+                            );
+                        }}
+                    />
 
-            </View>}
-
+                </View>}
+            </ScrollView>
 
             {isModalVisible && <Modal animationType="slide" transparent={true} visible={isModalVisible} onRequestClose={toggleModal} presentationStyle="overFullScreen" supportedOrientations={["portrait", "landscape-left", "landscape-right"]}>
                 <TouchableWithoutFeedback onPress={toggleModal}>
@@ -1118,8 +1141,7 @@ const VinListScreen = ({ navigation, route }) => {
                     </View>
                 </View>
             </Modal>}
-
-        </View>
+        </KeyboardAvoidingView>
     );
 };
 

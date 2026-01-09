@@ -1018,7 +1018,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                     <View style={[flexDirectionRow, alignItemsCenter, justifyContentSpaceBetween]}>
                                         <TextInput
                                             placeholder="Enter VIN Manually"
-                                            style={[styles.vinInput, { width: isTablet ? wp(60) : orientation === "LANDSCAPE" ? wp(60) : wp(50), height: isTablet ? hp(3.5) : hp(5.5) }]}
+                                            style={[styles.vinInput, { width: isTablet ? wp(60) : orientation === "LANDSCAPE" ? wp(60) : wp(55), height: isTablet ? hp(3.5) : hp(5.5) }]}
                                             value={vin}
                                             onChangeText={(text) => {
                                                 setVin(text || route?.params?.vehicleInfo?.vin);
@@ -1767,6 +1767,7 @@ const styles = StyleSheet.create({
     },
     dividerContainer: {
         marginVertical: spacings.xLarge,
+        marginTop: spacings.xxxLarge,
     },
     divider: {
         flex: 1,

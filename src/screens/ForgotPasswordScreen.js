@@ -56,6 +56,14 @@ const ForgotPasswordScreen = ({ navigation }) => {
         return () => clearInterval(timer); // Cleanup interval
     }, [countdown]);
 
+    // Clear OTP and errors when step changes to email
+    useEffect(() => {
+        if (currentStep === 'email') {
+            setOtpError('');
+            setOtp('');
+        }
+    }, [currentStep]);
+
 
     const handleOTPChange = (otp) => {
         setOtp(otp);
@@ -86,6 +94,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
     // Handle ResendOTP 
     const handleResendOTP = async () => {
         setOtpError('');
+        setOtp(''); // Clear previous OTP input when resending
 
         if (!email) {
             setOtpError('Email is required to resend OTP');
@@ -104,6 +113,8 @@ const ForgotPasswordScreen = ({ navigation }) => {
             const data = await response.json();
 
             if (response.ok) {
+                setOtpError(''); // Clear any previous errors
+                setOtp(''); // Clear OTP input
                 setCountdown(30); // Start countdown after OTP is resent
                 setIsResendEnabled(false); // Disable resend button during countdown
             } else {
@@ -117,6 +128,8 @@ const ForgotPasswordScreen = ({ navigation }) => {
     // Handle Email Submit
     const handleEmailSubmit = async () => {
         setEmailError('');
+        setOtpError(''); // Clear any previous OTP errors
+        setOtp(''); // Clear previous OTP input
         setLoadingEmail(true);
 
         if (!email) {
@@ -144,6 +157,8 @@ const ForgotPasswordScreen = ({ navigation }) => {
             const data = await response.json();
 
             if (response.ok) {
+                setOtpError(''); // Clear OTP error before moving to OTP step
+                setOtp(''); // Clear OTP input
                 setCurrentStep("otp");
             } else {
                 setEmailError(data.error || 'Failed to send OTP');
@@ -264,9 +279,17 @@ const ForgotPasswordScreen = ({ navigation }) => {
             <Header title={currentStep === 'email' ? "Forget Password" : currentStep === 'otp' ? "Verification" : "Reset Password"}
                 onBack={
                     currentStep === 'otp'
-                        ? () => setCurrentStep("email")
+                        ? () => {
+                            setCurrentStep("email");
+                            setOtpError(''); // Clear OTP error when going back
+                            setOtp(''); // Clear OTP input when going back
+                        }
                         : currentStep === 'password'
-                            ? () => setCurrentStep("otp")
+                            ? () => {
+                                setCurrentStep("otp");
+                                setPasswordError(''); // Clear password errors when going back
+                                setConfirmPasswordError('');
+                            }
                             : () => navigation.goBack()
                 } />
             <LinearGradient
@@ -276,7 +299,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
                 style={{ width: '100%', height: '100%' }}
             >
                 <ScrollView
-                    contentContainerStyle={{ height: hp(70) }}
+                    contentContainerStyle={{ height: hp(50) }}
                     keyboardShouldPersistTaps="handled"
                     bounces={false}
                 >
@@ -284,7 +307,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
                     <View style={[styles.container,]}>
                         {currentStep === 'email' && (
                             <View style={styles.box}>
-                                <Image source={FORGOT_PASSWORD_IMAGE} style={{ width: "90%", height: isTablet ? hp(45) : hp(40), resizeMode: 'contain', zIndex: 999, alignSelf: "center" }} />
+                                <Image source={FORGOT_PASSWORD_IMAGE} style={{ width: "90%", height: isTablet ? hp(45) : hp(30), resizeMode: 'contain', zIndex: 999, alignSelf: "center" }} />
                                 <CustomTextInput
                                     label={"Email"}
                                     placeholder={"Enter your email"}
@@ -322,7 +345,13 @@ const ForgotPasswordScreen = ({ navigation }) => {
 
                         {currentStep === 'otp' && (
                             <View style={styles.box}>
-                                <Image source={OTP_VERIFICATION_IMAGE} style={{ width: "100%", height: isTablet ? hp(50) : hp(40), resizeMode: 'contain', zIndex: 999, alignSelf: "center" }} />
+                                <Image source={OTP_VERIFICATION_IMAGE} style={{ width: "100%", height: isTablet ? hp(50) : hp(30), resizeMode: 'contain', zIndex: 999, alignSelf: "center" }} />
+                                {/* Display email address */}
+                                <View style={[styles.emailDisplayContainer, alignJustifyCenter]}>
+                                    <Text style={styles.emailDisplayText}>
+                                        OTP sent to: <Text style={styles.emailDisplayEmail}>{email}</Text>
+                                    </Text>
+                                </View>
                                 <View style={[{ width: '100%', height: hp(10), marginTop: orientation === "LANDSCAPE" ? hp(5) : 0 }, alignJustifyCenter]}>
                                     <OTPTextInput
                                         handleTextChange={handleOTPChange}
@@ -503,6 +532,21 @@ const styles = StyleSheet.create({
         backgroundColor: lightBlueColor,
         position: "absolute",
         top: hp(7), right: -70
+    },
+    emailDisplayContainer: {
+        marginTop: hp(2),
+        marginBottom: hp(1),
+        paddingHorizontal: spacings.large,
+    },
+    emailDisplayText: {
+        fontSize: style.fontSizeNormal.fontSize,
+        color: whiteColor,
+        textAlign: 'center',
+    },
+    emailDisplayEmail: {
+        fontSize: style.fontSizeNormal.fontSize,
+        color: redColor,
+        fontWeight: style.fontWeightThin1x.fontWeight,
     }
 });
 

@@ -299,7 +299,7 @@ const LoginScreen = ({ navigation }) => {
                             <View style={[flexDirectionRow]}>
                                 <Text style={styles.noAccountText}>{DONT_HAVE_ACCOUNT} </Text>
                                 <TouchableOpacity onPress={handelSignUpCliked}>
-                                    <Text style={styles.signUpText}>{SIGN_UP}</Text>
+                                    <Text style={styles.signUpText}>Register</Text>
                                 </TouchableOpacity>
                             </View>
                             <Text style={[styles.noAccountText, { marginVertical: 10 }]}>Or</Text>

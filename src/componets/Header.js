@@ -20,7 +20,7 @@ const Header = ({ title, onBack, hideBack = false }) => {
             <TouchableOpacity onPress={handleBack} style={styles.backButton}>
                 <Ionicons name="arrow-back" size={28} color="white" />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>{title}</Text>
+            <Text style={styles.headerTitle} onPress={handleBack}>{title}</Text>
         </View>
     );
 };
@@ -36,7 +36,7 @@ const styles = {
         borderBottomColor: "#807f7fff",
     },
     backButton: {
-        padding: 8,
+        padding: 10,
     },
     headerTitle: {
         fontSize: 18,

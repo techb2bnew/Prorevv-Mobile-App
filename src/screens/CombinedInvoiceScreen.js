@@ -18,7 +18,7 @@ import { heightPercentageToDP as hp, widthPercentageToDP as wp } from '../utils'
 const CombinedInvoiceScreen = () => {
     const navigation = useNavigation();
     const [activeTab, setActiveTab] = useState('generate');
-    const [viewType, setViewType] = useState('grid');
+    const [viewType, setViewType] = useState('list');
     const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
     const { width, height } = Dimensions.get("window");
     const isTablet = width >= 668 && height >= 1024;

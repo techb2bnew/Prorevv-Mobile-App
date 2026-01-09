@@ -592,11 +592,47 @@ const ProfileScreen = ({ navigation }) => {
     setError("");
     setSecondaryPhoneError("");
     setSecondaryEmailError("");
+    setErrors({});
     setIsEditingLoading(true);
 
-    // ✅ Validate Required Fields
-    if (!firstName || !lastName || !phoneNumber) {
-      setError("Please fill all details");
+    // ✅ Validate First Name
+    const trimmedFirstName = firstName?.trim();
+    if (!trimmedFirstName) {
+      setErrors(prev => ({ ...prev, firstName: "First name is required" }));
+      setIsEditingLoading(false);
+      return;
+    }
+    if (!/^[a-zA-Z\s]+$/.test(trimmedFirstName)) {
+      setErrors(prev => ({ ...prev, firstName: "First name should contain only letters" }));
+      setIsEditingLoading(false);
+      return;
+    }
+
+    // ✅ Validate Last Name
+    const trimmedLastName = lastName?.trim();
+    if (!trimmedLastName) {
+      setErrors(prev => ({ ...prev, lastName: "Last name is required" }));
+      setIsEditingLoading(false);
+      return;
+    }
+    if (!/^[a-zA-Z\s]+$/.test(trimmedLastName)) {
+      setErrors(prev => ({ ...prev, lastName: "Last name should contain only letters" }));
+      setIsEditingLoading(false);
+      return;
+    }
+
+    // ✅ Validate Phone Number
+    const trimmedPhoneNumber = phoneNumber?.trim();
+    if (!trimmedPhoneNumber) {
+      setErrors(prev => ({ ...prev, phoneNumber: "Phone number is required" }));
+      setIsEditingLoading(false);
+      return;
+    }
+    
+    // Check if phone number has valid format - extract only digits and check length
+    const digitsOnly = trimmedPhoneNumber.replace(/\D/g, '');
+    if (digitsOnly.length < 7 || digitsOnly.length > 15) {
+      setErrors(prev => ({ ...prev, phoneNumber: "Please enter a valid phone number (7-15 digits)" }));
       setIsEditingLoading(false);
       return;
     }
@@ -623,11 +659,10 @@ const ProfileScreen = ({ navigation }) => {
       }
     }
 
-    const countryCode = phoneInput.current?.getCallingCode();
-
     // ✅ Format phone number
-    let formattedPhoneNumber = phoneNumber;
-    if (!phoneNumber.startsWith(`+${countryCode}-`)) {
+    const countryCode = phoneInput.current?.getCallingCode();
+    let formattedPhoneNumber = trimmedPhoneNumber;
+    if (countryCode && !trimmedPhoneNumber.startsWith(`+${countryCode}-`)) {
       const phoneWithoutCode = phoneNumber
         .replace(`+${countryCode}`, "")
         .replace(/^-+/, "")
@@ -651,8 +686,8 @@ const ProfileScreen = ({ navigation }) => {
     // ✅ Create FormData
     const formData = new FormData();
     formData.append("technicianId", technicianId);
-    formData.append("firstName", firstName);
-    formData.append("lastName", lastName);
+    formData.append("firstName", trimmedFirstName);
+    formData.append("lastName", trimmedLastName);
     formData.append("email", email);
     formData.append("phoneNumber", formattedPhoneNumber);
     formData.append("address", address);
@@ -1009,7 +1044,7 @@ const ProfileScreen = ({ navigation }) => {
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
 
             <ScrollView
-              contentContainerStyle={{ flexGrow: 1, marginBottom: 100, paddingBottom: orientation === "LANDSCAPE" ? hp(15) : hp(12), backgroundColor: whiteColor }}
+              contentContainerStyle={{ flexGrow: 1, marginBottom: 100, paddingBottom: orientation === "LANDSCAPE" ? hp(15) : hp(1), backgroundColor: whiteColor }}
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
             >
@@ -1078,19 +1113,31 @@ const ProfileScreen = ({ navigation }) => {
                   <View style={[flexDirectionRow, justifyContentSpaceBetween, { width: "100%" }]}>
                     <View style={styles.inputGroup}>
                       <Text style={styles.label}>First Name<Text style={styles.asterisk}> *</Text></Text>
-                      <TextInput style={[styles.input, { width: isTablet ? wp(46) : wp(43.5) }]} value={firstName}
-                        onChangeText={setFirstName}
+                      <TextInput style={[styles.input, { width: isTablet ? wp(46) : wp(43.5), borderColor: errors.firstName ? redColor : blackColor }]} value={firstName}
+                        onChangeText={(text) => {
+                          setFirstName(text);
+                          if (errors.firstName) {
+                            setErrors(prev => ({ ...prev, firstName: "" }));
+                          }
+                        }}
                         placeholder="Enter First Name"
                         maxLength={20} />
+                      {errors.firstName && <Text style={{ color: 'red', fontSize: 12, marginTop: 4 }}>{errors.firstName}</Text>}
                     </View>
 
                     <View style={styles.inputGroup}>
                       <Text style={styles.label}>Last Name<Text style={styles.asterisk}> *</Text></Text>
-                      <TextInput style={[styles.input, { width: isTablet ? wp(46) : wp(43.5) }]}
+                      <TextInput style={[styles.input, { width: isTablet ? wp(46) : wp(43.5), borderColor: errors.lastName ? redColor : blackColor }]}
                         value={lastName}
-                        onChangeText={setLastName}
+                        onChangeText={(text) => {
+                          setLastName(text);
+                          if (errors.lastName) {
+                            setErrors(prev => ({ ...prev, lastName: "" }));
+                          }
+                        }}
                         placeholder="Enter Last Name"
                         maxLength={20} />
+                      {errors.lastName && <Text style={{ color: 'red', fontSize: 12, marginTop: 4 }}>{errors.lastName}</Text>}
                     </View>
                   </View>
                   {roleType === "single-technician" && <View style={styles.inputGroup}>
@@ -1112,8 +1159,11 @@ const ProfileScreen = ({ navigation }) => {
                       layout="second"
                       onChangeFormattedText={(text) => {
                         setPhoneNumber(text);
+                        if (errors.phoneNumber) {
+                          setErrors(prev => ({ ...prev, phoneNumber: "" }));
+                        }
                       }}
-                      containerStyle={styles.phoneInput}
+                      containerStyle={[styles.phoneInput, { borderColor: errors.phoneNumber ? redColor : blackColor }]}
                       textContainerStyle={styles.phoneText}
                       textInputStyle={[styles.phoneTextInput, { marginBottom: isTablet ? 12 : 0 }]}
                       textInputProps={{
@@ -1123,6 +1173,7 @@ const ProfileScreen = ({ navigation }) => {
                       }}
                       flagButtonStyle={styles.flagButton}
                     />
+                    {errors.phoneNumber && <Text style={{ color: 'red', fontSize: 12, marginTop: 4 }}>{errors.phoneNumber}</Text>}
                   </View>
                   <View style={[styles.inputGroup, { height: isTablet ? orientation === "LANDSCAPE" ? hp(8) : hp(5) : hp(10) }]}>
                     <Text style={styles.label}>Address</Text>
@@ -1184,7 +1235,7 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: whiteColor,
     paddingHorizontal: spacings.xLarge,
-    height: hp(100)
+    paddingBottom: spacings.large
   },
   title: {
     fontSize: style.fontSizeLargeX.fontSize,
@@ -1355,7 +1406,6 @@ const styles = StyleSheet.create({
   },
   phoneInput: {
     borderWidth: 1,
-    borderColor: blackColor,
     borderRadius: 50,
     height: 42,
     width: "100%",

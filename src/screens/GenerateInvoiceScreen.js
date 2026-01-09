@@ -1257,7 +1257,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                 <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>Start Date</Text>
                                 <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>End Date</Text>
                                 <Text style={[styles.tableHeader, { width: isIOSAndTablet ? wp(35) : isTablet ? wp(42) : orientation === "LANDSCAPE" ? wp(35) : wp(55) }]}>Invoice Rate($)</Text>
-                                <Text style={[styles.tableHeader, { width: isIOSAndTablet ? wp(20) : isTablet ? wp(20) : orientation === "LANDSCAPE" ? wp(15) : wp(35), }]}>W O Status</Text>
+                                {/* <Text style={[styles.tableHeader, { width: isIOSAndTablet ? wp(20) : isTablet ? wp(20) : orientation === "LANDSCAPE" ? wp(15) : wp(35), }]}>W O Status</Text> */}
                                 <Text style={[styles.tableHeader, { width: isIOSAndTablet ? wp(20) : isTablet ? wp(20) : orientation === "LANDSCAPE" ? wp(20) : wp(35) }]}>Invoice Status</Text>
                             </View>
 
@@ -1346,14 +1346,14 @@ const GenerateInvoiceScreen = ({ navigation,
                                                 </View>
 
 
-                                                <View style={[getStatusStyle(item?.vehicleStatus), alignJustifyCenter, { height: isTablet ? hp(2) : hp(4) }]}>
+                                                {/* <View style={[getStatusStyle(item?.vehicleStatus), alignJustifyCenter, { height: isTablet ? hp(2) : hp(4) }]}>
                                                     <Text
                                                         style={{
                                                             color: getStatusText(item?.vehicleStatus) === "Complete" ? greenColor : blackColor
                                                         }}>
                                                         {getStatusText(item?.vehicleStatus)}
                                                     </Text>
-                                                </View>
+                                                </View> */}
 
                                                 {/* Invoice Status */}
                                                 <View style={[getStatusStyle(item?.generatedInvoiceStatus, "invoice"), alignJustifyCenter, { height: isTablet ? hp(2) : hp(4), marginLeft: isTablet ? wp(10) : wp(10) }]}>
@@ -1530,7 +1530,7 @@ const GenerateInvoiceScreen = ({ navigation,
 
                                                 </View>
                                             </View>
-                                            <View style={[{ width: '48%', marginBottom: 9 }]}>
+                                            {/* <View style={[{ width: '48%', marginBottom: 9 }]}>
                                                 <Text style={{ color: '#555', fontSize: 10 }}>W O Status</Text>
                                                 <Text
                                                     style={{
@@ -1541,7 +1541,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                                     }}>
                                                     {getStatusText(item?.vehicleStatus)}
                                                 </Text>
-                                            </View>
+                                            </View> */}
 
                                             <View style={[{ width: '48%', marginBottom: 9 }]}>
                                                 <Text style={{ color: '#555', fontSize: 10 }}>Incoice Status</Text>

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { View, StyleSheet, Text, ScrollView, Image, Pressable, TouchableOpacity, Platform, KeyboardAvoidingView, ActivityIndicator, Modal, TextInput, Dimensions, PermissionsAndroid, Alert, FlatList, useWindowDimensions } from "react-native";
+import { View, StyleSheet, Text, ScrollView, Image, Pressable, TouchableOpacity, Platform, KeyboardAvoidingView, ActivityIndicator, Modal, TextInput, Dimensions, PermissionsAndroid, Alert, FlatList, useWindowDimensions, Keyboard } from "react-native";
 import CustomButton from '../componets/CustomButton';
 import CustomTextInput from '../componets/CustomTextInput';
 import { blackColor, blueColor, grayColor, lightBlueColor, lightGrayColor, lightOrangeColor, lightShadeBlue, mediumGray, orangeColor, redColor, whiteColor } from "../constans/Color";
@@ -45,6 +45,7 @@ const CustomerInfoScreen = ({ navigation }) => {
     const [isAddMode, setIsAddMode] = useState(false); // false = show list, true = show form
     const [isEditMode, setIsEditMode] = useState(false); // false = show list, true = show form
     const [customerId, setCustomerId] = useState()
+    const [keyboardHeight, setKeyboardHeight] = useState(0);
 
 
 
@@ -109,6 +110,23 @@ const CustomerInfoScreen = ({ navigation }) => {
         });
 
         return () => unsubscribe();
+    }, []);
+
+    // Keyboard listeners for Android
+    useEffect(() => {
+        if (Platform.OS === 'android') {
+            const keyboardWillShow = Keyboard.addListener('keyboardDidShow', (e) => {
+                setKeyboardHeight(e.endCoordinates.height);
+            });
+            const keyboardWillHide = Keyboard.addListener('keyboardDidHide', () => {
+                setKeyboardHeight(0);
+            });
+
+            return () => {
+                keyboardWillShow.remove();
+                keyboardWillHide.remove();
+            };
+        }
     }, []);
 
 
@@ -393,7 +411,9 @@ const CustomerInfoScreen = ({ navigation }) => {
             )} */}
             <KeyboardAvoidingView
                 style={[flex]}
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+                enabled={Platform.OS === 'ios'}
             >
                 <Header title={isEditMode ? "Edit Customer info" : CUSTOMER_INFORMATION} onBack={() => {
                     if (isEditMode) {
@@ -685,7 +705,7 @@ const CustomerInfoScreen = ({ navigation }) => {
                                                         <Text style={{ color: blackColor, fontWeight: style.fontWeightThin1x.fontWeight }}>{item?.phoneNumber || '—'}</Text>
                                                     </View>
                                                     <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                                                        <Text style={{ fontSize: style.fontSizeNormal.fontSize, color: grayColor, width: "50%" }}>Addresssss:</Text>
+                                                        <Text style={{ fontSize: style.fontSizeNormal.fontSize, color: grayColor, width: "50%" }}>Address:</Text>
                                                         <Text style={{ color: blackColor, fontWeight: style.fontWeightThin1x.fontWeight, flexShrink: 1, textAlign: 'right' }}>{item?.address || '—'}</Text>
                                                     </View>
 
@@ -754,135 +774,173 @@ const CustomerInfoScreen = ({ navigation }) => {
                     </>
                 ) : (
                     // 👇 Add Customer Form
-                    <ScrollView style={[styles.container, flex]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="always">
-                        <View style={styles.content}>
-                            <CustomTextInput
-                                label="Full Name"
-                                placeholder="Enter your full name"
-                                value={formData.firstName || formData.fullName}
-                                onChangeText={(text) => handleInputChange("fullName", text)}
-                                required={true}
-                                maxLength={20}
-                            />
-                            {errors.fullName && <Text style={styles.error}>{errors.fullName}</Text>}
-                            <CustomTextInput
-                                label="Email"
-                                placeholder="Enter your email"
-                                value={formData.email}
-                                onChangeText={(text) => {
-                                    const updatedText = text?.charAt(0).toLowerCase() + text.slice(1);
-                                    handleInputChange("email", updatedText);
-                                }}
-                            // required={true}
-
-                            />
-                            {errors.email && <Text style={styles.error}>{errors.email}</Text>}
-
-                            <View style={styles.phoneContainer}>
-                                <Text style={styles.label}>
-                                    Phone Number
-                                </Text>
-                                <PhoneInput
-                                    ref={phoneInput}
-                                    // defaultValue={formData.phoneNumber}
-                                    value={formData.phoneNumber}
-                                    defaultCode="US"
-                                    layout="second"
-                                    onChangeFormattedText={(text) => handleInputChange("phoneNumber", text)}
-                                    textInputProps={{
-                                        maxLength: 15,
-                                        keyboardType: "default",
-                                    }}
-                                    containerStyle={styles.phoneInput}
-                                    textContainerStyle={styles.phoneText}
-                                    textInputStyle={[styles.phoneTextInput, { marginBottom: isTablet ? 12 : 0 }]}
-                                    flagButtonStyle={styles.flagButton}
-                                    placeholder="Enter your phone number"
+                    <View style={{ flex: 1, position: 'relative' }}>
+                        <ScrollView 
+                            style={[styles.container, { flex: 1 }]} 
+                            showsVerticalScrollIndicator={false} 
+                            keyboardShouldPersistTaps="always"
+                            contentContainerStyle={{ 
+                                paddingBottom: Platform.OS === 'android' && keyboardHeight > 0 
+                                    ? keyboardHeight + 100 
+                                    : 100 
+                            }}
+                        >
+                            <View style={styles.content}>
+                                <CustomTextInput
+                                    label="Full Name"
+                                    placeholder="Enter your full name"
+                                    value={formData.firstName || formData.fullName}
+                                    onChangeText={(text) => handleInputChange("fullName", text)}
+                                    required={true}
+                                    maxLength={20}
                                 />
-                            </View>
-                            {errors.phoneNumber && <Text style={styles.error}>{errors.phoneNumber}</Text>}
+                                {errors.fullName && <Text style={styles.error}>{errors.fullName}</Text>}
+                                <CustomTextInput
+                                    label="Email"
+                                    placeholder="Enter your email"
+                                    value={formData.email}
+                                    onChangeText={(text) => {
+                                        const updatedText = text?.charAt(0).toLowerCase() + text.slice(1);
+                                        handleInputChange("email", updatedText);
+                                    }}
+                                // required={true}
 
-                            <View style={styles.phoneContainer}>
-                                <Text style={styles.label}>
-                                    Address
-                                </Text>
-                                <View style={{ flex: 1, position: 'relative', zIndex: 999 }}>
-                                    <GooglePlacesAutocomplete
-                                        ref={googleRef}
-                                        placeholder="Enter Your Address"
-                                        fetchDetails={true}
-                                        onPress={(data, details = null) => {
-                                            console.log('Selected:', data?.description);
-                                            handleInputChange("address", data?.description);
-                                            // googleRef.current?.setAddressText(data?.description);
+                                />
+                                {errors.email && <Text style={styles.error}>{errors.email}</Text>}
 
-                                        }}
-                                        // textInputProps={{
-                                        //     onChangeText: (text) => {
-                                        //         handleInputChange("address", text);
-                                        //     },
-                                        //     placeholder: "Enter your address",
-                                        // }}
-                                        enablePoweredByContainer={false}
-                                        // keepResultsAfterBlur={Platform.OS === "android" ? false : true}
-                                        query={{
-                                            key: GOOGLE_MAP_API_KEY,
-                                            language: 'en',
-                                        }}
+                                <View style={styles.phoneContainer}>
+                                    <Text style={styles.label}>
+                                        Phone Number
+                                    </Text>
+                                    <PhoneInput
+                                        ref={phoneInput}
+                                        // defaultValue={formData.phoneNumber}
+                                        value={formData.phoneNumber}
+                                        defaultCode="US"
+                                        layout="second"
+                                        onChangeFormattedText={(text) => handleInputChange("phoneNumber", text)}
                                         textInputProps={{
-                                            multiline: true,
-                                            numberOfLines: 3,
+                                            maxLength: 15,
+                                            keyboardType: "default",
                                         }}
-                                        styles={{
-                                            container: {
-                                                flex: 1,
-                                                zIndex: 999,
-                                            },
-                                            listView: {
-                                                zIndex: 999,
-                                                elevation: 5,
-                                                backgroundColor: "#fff",
-                                                marginTop: 5,
-                                            },
-                                            textInputContainer: {
-                                                zIndex: 999,
-                                            },
-                                            textInput: {
-                                                height: 90,
-                                                borderWidth: 1,
-                                                borderColor: blackColor,
-                                                borderRadius: 10,
-                                                paddingHorizontal: 16,
-                                                paddingVertical: 12,
-                                                backgroundColor: '#fff',
-                                                textAlignVertical: 'top',
-                                            },
-                                        }}
+                                        containerStyle={styles.phoneInput}
+                                        textContainerStyle={styles.phoneText}
+                                        textInputStyle={[styles.phoneTextInput, { marginBottom: isTablet ? 12 : 0 }]}
+                                        flagButtonStyle={styles.flagButton}
+                                        placeholder="Enter your phone number"
                                     />
                                 </View>
-                            </View>
-                            {errors.address && <Text style={styles.error}>{errors.address}</Text>}
+                                {errors.phoneNumber && <Text style={styles.error}>{errors.phoneNumber}</Text>}
 
-                            {errors?.apiError?.message ? (
-                                <Text style={styles.error}>{errors.apiError.message}</Text>
-                            ) : (
-                                <Text style={styles.error}>{JSON.stringify(errors.apiError)}</Text>
-                            )}
-                        </View>
-                    </ScrollView >
+                                <View style={styles.phoneContainer}>
+                                    <Text style={styles.label}>
+                                        Address
+                                    </Text>
+                                    <View style={{ flex: 1, position: 'relative', zIndex: 999 }}>
+                                        <GooglePlacesAutocomplete
+                                            ref={googleRef}
+                                            placeholder="Enter Your Address"
+                                            fetchDetails={true}
+                                            onPress={(data, details = null) => {
+                                                console.log('Selected:', data?.description);
+                                                handleInputChange("address", data?.description);
+                                                // googleRef.current?.setAddressText(data?.description);
+
+                                            }}
+                                            // textInputProps={{
+                                            //     onChangeText: (text) => {
+                                            //         handleInputChange("address", text);
+                                            //     },
+                                            //     placeholder: "Enter your address",
+                                            // }}
+                                            enablePoweredByContainer={false}
+                                            // keepResultsAfterBlur={Platform.OS === "android" ? false : true}
+                                            query={{
+                                                key: GOOGLE_MAP_API_KEY,
+                                                language: 'en',
+                                            }}
+                                            textInputProps={{
+                                                multiline: true,
+                                                numberOfLines: 3,
+                                            }}
+                                            styles={{
+                                                container: {
+                                                    flex: 1,
+                                                    zIndex: 999,
+                                                },
+                                                listView: {
+                                                    zIndex: 999,
+                                                    elevation: 5,
+                                                    backgroundColor: "#fff",
+                                                    marginTop: 5,
+                                                },
+                                                textInputContainer: {
+                                                    zIndex: 999,
+                                                },
+                                                textInput: {
+                                                    height: 90,
+                                                    borderWidth: 1,
+                                                    borderColor: blackColor,
+                                                    borderRadius: 10,
+                                                    paddingHorizontal: 16,
+                                                    paddingVertical: 12,
+                                                    backgroundColor: '#fff',
+                                                    textAlignVertical: 'top',
+                                                },
+                                            }}
+                                        />
+                                    </View>
+                                </View>
+                                {errors.address && <Text style={styles.error}>{errors.address}</Text>}
+
+                                {errors?.apiError?.message ? (
+                                    <Text style={styles.error}>{errors.apiError.message}</Text>
+                                ) : (
+                                    <Text style={styles.error}>{JSON.stringify(errors.apiError)}</Text>
+                                )}
+                            </View>
+                        </ScrollView>
+                        {isAddMode && (
+                            <View style={[
+                                { 
+                                    backgroundColor: whiteColor, 
+                                    paddingTop: spacings.xLarge, 
+                                    paddingHorizontal: spacings.xxxLarge, 
+                                    paddingBottom: spacings.xLarge,
+                                    borderTopWidth: 1,
+                                    borderTopColor: lightGrayColor,
+                                    ...(Platform.OS === 'android' && keyboardHeight > 0 ? {
+                                        position: 'absolute',
+                                        bottom: keyboardHeight,
+                                        left: 0,
+                                        right: 0,
+                                        width: '100%',
+                                    } : {bottom: hp(4.4)}),
+                                    // elevation: 5,
+                                    // shadowColor: "#000",
+                                    // shadowOffset: { width: 0, height: -2 },
+                                    // shadowOpacity: 0.1,
+                                    // shadowRadius: 3,
+                                }, 
+                                alignJustifyCenter
+                            ]}>
+                                <CustomButton
+                                    title={isEditMode ? "Update" : "Submit"}
+                                    onPress={() => {
+                                        Keyboard.dismiss();
+                                        handleSubmit(null, setSubmitLoading);
+                                    }}
+                                    style={[styles.button, { backgroundColor: blackColor, borderWidth: 1, borderColor: blackColor }]}
+                                    textStyle={{ color: whiteColor }}
+                                    loading={submitLoading}
+                                    disabled={submitLoading}
+                                />
+                            </View>
+                        )}
+                    </View>
                 )}
 
             </KeyboardAvoidingView>
-            {isAddMode && <View style={[{ backgroundColor: whiteColor, paddingTop: spacings.xLarge, paddingHorizontal: spacings.xxxLarge, marginBottom: orientation === "LANDSCAPE" ? spacings.xxxxLarge : 0 }, alignJustifyCenter]}>
-                <CustomButton
-                    title={isEditMode ? "Update" : "Submit"}
-                    onPress={() => handleSubmit(null, setSubmitLoading)}
-                    style={[styles.button, { backgroundColor: blackColor, borderWidth: 1, borderColor: blackColor }]}
-                    textStyle={{ color: whiteColor }}
-                    loading={submitLoading}
-                    disabled={submitLoading}
-                />
-            </View>}
         </View>
     );
 };
