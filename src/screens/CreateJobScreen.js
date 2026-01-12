@@ -981,7 +981,7 @@ const CreateJobScreen = ({ route }) => {
                             contentContainerStyle={{
                                 flexGrow: 1,
                                 backgroundColor: whiteColor,
-                                paddingBottom: hp(25),
+                                paddingBottom: Platform.OS === 'ios' ? hp(10) : hp(2),
                                 paddingHorizontal: spacings.xxLarge,
                             }}
                             keyboardShouldPersistTaps="handled"

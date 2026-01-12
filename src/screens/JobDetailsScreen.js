@@ -484,7 +484,7 @@ const JobDetailsScreen = ({ navigation, route }) => {
           {successModalVisible && <SuccessModal
             visible={successModalVisible}
             onClose={() => setSuccessModalVisible(false)}
-            headingText={"Congratulations"}
+            headingText={"Successfully Completed"}
             buttonText={"Ok"}
             text={"You've successfully completed this job."}
             onPressContinue={() => {

@@ -51,7 +51,7 @@ const GenerateInvoiceScreen = ({ navigation,
     const [pageNumber, setPageNumber] = useState(1);
     const [hasMoreCustomer, setHasMoreCustomer] = useState(true);
     const [customerDetails, setCustomerDetails] = useState(null);
-    const [isCustomerLoading, setIsCustomerLoading] = useState(true);
+    const [isCustomerLoading, setIsCustomerLoading] = useState(false);
     const [allJobList, setAllJobList] = useState([]);
     const [jobList, setJobList] = useState([]);
     const pageRef = useRef(1);
@@ -111,8 +111,7 @@ const GenerateInvoiceScreen = ({ navigation,
             // Load saved selections
             loadSelectedCustomerAndJob();
 
-            // Fetch fresh data
-            fetchCustomers(1);
+            // Fetch fresh data - will be called after technicianId is loaded
         }, [])
     );
     useEffect(() => {
@@ -132,6 +131,20 @@ const GenerateInvoiceScreen = ({ navigation,
         getTechnicianDetail();
     }, []);
 
+    // Fetch customers when technicianId or technicianType is first available
+    const hasFetchedInitial = useRef(false);
+    const isFetchingCustomers = useRef(false);
+    
+    useEffect(() => {
+        if ((technicianType === "manager" || technicianId) && !hasFetchedInitial.current && !isFetchingCustomers.current) {
+            hasFetchedInitial.current = true;
+            isFetchingCustomers.current = true;
+            fetchCustomers(1, true).finally(() => {
+                isFetchingCustomers.current = false;
+            }); // Reset and fetch from page 1
+        }
+    }, [technicianId, technicianType]);
+
     // Calculate total cost for selected vehicles - sum of PDR values
     const totalCost = useMemo(() => {
         if (selectedVehicles.length === 0) return 0;
@@ -150,21 +163,21 @@ const GenerateInvoiceScreen = ({ navigation,
 
     useFocusEffect(
         useCallback(() => {
-            fetchCustomers();   // ✅ jab bhi screen focus hogi tab chalega
-        }, [technicianId])
-    );
-
-    useFocusEffect(
-        useCallback(() => {
             // console.log("🔄 GenerateInvoiceScreen Focused, refreshing data...")
-            fetchCustomers();
+            // Only fetch if technicianId is available (for non-manager) or if manager, and not already fetching
+            if ((technicianType === "manager" || technicianId) && !isFetchingCustomers.current) {
+                isFetchingCustomers.current = true;
+                fetchCustomers(1, true).finally(() => {
+                    isFetchingCustomers.current = false;
+                }); // Reset and fetch from page 1
+            }
             if (selectedJobId) {
                 fetchJobData(selectedJobId);
             }
             return () => {
                 // console.log("🔙 Screen unfocused");
             };
-        }, [selectedJobId])
+        }, [selectedJobId, technicianId, technicianType])
     );
 
 
@@ -347,8 +360,30 @@ const GenerateInvoiceScreen = ({ navigation,
         setSelectedVehicles([]);
     };
 
-    const fetchCustomers = async (page) => {
-        if (!hasMoreCustomer) return;
+    const fetchCustomers = async (page = 1, reset = false) => {
+        // Prevent multiple simultaneous calls
+        if (isFetchingCustomers.current && !reset) {
+            console.log("Already fetching customers, skipping...");
+            return;
+        }
+
+        // If reset is true, reset pagination and customers
+        if (reset) {
+            setPageNumber(1);
+            setHasMoreCustomer(true);
+            setCustomers([]);
+        }
+
+        // Check if we should continue pagination
+        if (!hasMoreCustomer && !reset) return;
+
+        // For non-manager types, ensure technicianId is available
+        if (technicianType !== "manager" && !technicianId) {
+            console.log("Waiting for technicianId...");
+            setIsCustomerLoading(false);
+            isFetchingCustomers.current = false;
+            return;
+        }
 
         setIsCustomerLoading(true);
         try {
@@ -356,15 +391,29 @@ const GenerateInvoiceScreen = ({ navigation,
 
             if (!token) {
                 console.error("Token not found!");
+                setIsCustomerLoading(false);
+                isFetchingCustomers.current = false;
                 return;
             }
 
-            // const apiUrl = `${API_BASE_URL}/fetchAllTechnicianCustomer?userId=${technicianId}&page=${page}`;
-            const apiUrl = technicianType === "manager"
-                ? `${API_BASE_URL}/fetchAllTechnicianCustomer?roleType=${technicianType}&page=${page}`
-                : `${API_BASE_URL}/fetchAllTechnicianCustomer?userId=${technicianId}&page=${page}`;
+            // Ensure page is a valid number
+            const pageNum = page && !isNaN(page) ? parseInt(page) : 1;
 
-            // console.log("technicianId", technicianId, token);
+            // Build API URL with proper parameters
+            let apiUrl;
+            if (technicianType === "manager") {
+                apiUrl = `${API_BASE_URL}/fetchAllTechnicianCustomer?roleType=${technicianType}&page=${pageNum}`;
+            } else {
+                if (!technicianId) {
+                    console.error("TechnicianId not available!");
+                    setIsCustomerLoading(false);
+                    isFetchingCustomers.current = false;
+                    return;
+                }
+                apiUrl = `${API_BASE_URL}/fetchAllTechnicianCustomer?userId=${technicianId}&page=${pageNum}`;
+            }
+
+            console.log("Fetching customers with URL:", apiUrl);
 
             const response = await fetch(apiUrl, {
                 method: 'GET',
@@ -375,14 +424,12 @@ const GenerateInvoiceScreen = ({ navigation,
             });
 
             const data = await response.json();
-            // console.log("data.jobs", data.jobs);
+            console.log("Customer fetch response:", data);
 
             let uniqueCustomers = [];
 
             if (data.status && data.jobs?.jobs?.length > 0) {
                 setAllJobList(data.jobs?.jobs);
-
-                console.log("data.jobs.jobs", data.jobs.jobs);
 
                 const newCustomers = data.jobs.jobs
                     .map(job => {
@@ -397,28 +444,43 @@ const GenerateInvoiceScreen = ({ navigation,
                     })
                     .filter(cust => cust);
 
-                uniqueCustomers = [...customers, ...newCustomers].filter(
+                // Deduplicate newCustomers first (same customer can appear in multiple jobs)
+                const deduplicatedNewCustomers = newCustomers.filter(
                     (cust, index, self) => index === self.findIndex(c => c.id === cust.id)
                 );
-                console.log("uniqueCustomers", uniqueCustomers);
+
+                // If reset, replace customers; otherwise append and deduplicate
+                if (reset) {
+                    uniqueCustomers = deduplicatedNewCustomers;
+                } else {
+                    uniqueCustomers = [...customers, ...deduplicatedNewCustomers].filter(
+                        (cust, index, self) => index === self.findIndex(c => c.id === cust.id)
+                    );
+                }
 
                 setCustomers(uniqueCustomers);
 
+                // Check if there are more pages
                 if (data.jobs.jobs.length >= 10) {
-                    setPageNumber(prevPage => prevPage + 1);
+                    setPageNumber(pageNum + 1);
+                    setHasMoreCustomer(true);
                 } else {
                     setHasMoreCustomer(false);
                 }
             } else {
                 setHasMoreCustomer(false);
-                setAllJobList([]);
-                setCustomers([]);
+                if (reset) {
+                    setAllJobList([]);
+                    setCustomers([]);
+                }
             }
 
         } catch (error) {
             console.error('Network error:', error);
+            setHasMoreCustomer(false);
         } finally {
             setIsCustomerLoading(false);
+            isFetchingCustomers.current = false;
         }
     };
 
@@ -498,8 +560,8 @@ const GenerateInvoiceScreen = ({ navigation,
     };
 
     const handleLoadMore = () => {
-        if (!isCustomerLoading && hasMoreCustomer && customers.length >= 10) {
-            fetchCustomers(pageNumber);
+        if (!isCustomerLoading && hasMoreCustomer && customers.length >= 10 && pageNumber) {
+            fetchCustomers(pageNumber, false); // Load more without resetting
         }
     };
 
@@ -1167,7 +1229,7 @@ const GenerateInvoiceScreen = ({ navigation,
                             alignItems: "center",
                             width: "100%",
                             paddingHorizontal: spacings.large,
-                            height: hp(4)
+                            // height: hp(4)
                         }}>
                             <Text style={[styles.label, { fontSize: style.fontSizeNormal1x.fontSize }]}>
                                 Vehicles Selected

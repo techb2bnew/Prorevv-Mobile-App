@@ -18,9 +18,10 @@ import { ScrollView } from 'react-native-gesture-handler';
 import PhoneInput from 'react-native-phone-number-input';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import { Image as ImageCompressor } from 'react-native-compressor';
-import { API_BASE_URL, SUPPORT_EMAIL, SUPPORT_MOBILE } from '../constans/Constants';
+import { API_BASE_URL } from '../constans/Constants';
 import NetInfo from "@react-native-community/netinfo";
 import ConfirmationModal from '../componets/Modal/ConfirmationModal';
+import ContactSupportModal from '../componets/Modal/ContactSupportModal';
 import { DELETE_ACCOUNT_IMAGE, LOGOUT_IMAGE } from '../assests/images';
 import Header from '../componets/Header';
 import { useEditing, useTabBar } from '../TabBarContext';
@@ -67,7 +68,9 @@ const ProfileScreen = ({ navigation }) => {
   const [isLoadingState, setIsLoadingState] = useState(false);
   const [errors, setErrors] = useState({});
   const phoneInput = useRef(null);
+  const secondryPhoneInput = useRef(null);
   const [defaultIsoCode, setDefaultIsoCode] = useState('US');
+  const [defaultSecondryIsoCode, setDefaultSecondryIsoCode] = useState('US');
   const [rawNumber, setRawNumber] = useState('');
   const [rawSecondryNumber, setRawSecondryNumber] = useState('');
   const isTablet = width >= 668 && height >= 1024;
@@ -86,55 +89,38 @@ const ProfileScreen = ({ navigation }) => {
     useCallback(() => {
       const fetchTechnicianProfile = async () => {
         try {
+          console.log("🔄 Starting to fetch technician profile...");
+          setLoading(true);
+          
           const netState = await NetInfo.fetch();
-
-          // if (!netState.isConnected) {
-          //   console.log("No Internet Connection. Loading from local storage...");
-
-          //   const storedProfile = await AsyncStorage.getItem('technicianProfile');
-          //   if (storedProfile) {
-          //     const parsedProfile = JSON.parse(storedProfile);
-          //     setProfile(parsedProfile);
-          //     setPhoneNumber(parsedProfile.phoneNumber);
-          //     setEmail(parsedProfile.email);
-          //     setFirstName(parsedProfile.firstName || '');
-          //     setLastName(parsedProfile.lastName || '');
-          //     setAddress(parsedProfile.address || '');
-          //     setCityValue(parsedProfile.city || '');
-          //     setCity(parsedProfile.city || '');
-          //     setState(parsedProfile.state || '');
-          //     setStateValue(parsedProfile.state || '');
-          //     setCountry(parsedProfile.country || '');
-          //     setCountryValue(parsedProfile.country || '');
-          //     setPostalCode(parsedProfile.zipCode || '');
-          //     setBusinessName(parsedProfile.businessName || "");
-          //     setRoleType(parsedProfile.types || "");
-          //     setSecondryPhoneNumber(parsedData.secondaryContactName || "")
-          //     setSecondryEmail(parsedData.secondaryEmail || "")
-          //     if (parsedProfile.image) {
-          //       setImageUri(parsedProfile.image);
-          //     }
-          //     if (parsedProfile.businessLogo) {
-          //       setBusinessLogoUri(parsedProfile.businessLogo);
-          //     }
-
-          //   }
-          //   return; // Stop execution if no internet
-          // }
+          console.log("🌐 Network state:", netState.isConnected);
 
           // If internet is available, fetch from API
           const storedData = await AsyncStorage.getItem('userDeatils');
-          if (!storedData) throw new Error('User details not found');
+          if (!storedData) {
+            console.error("❌ User details not found in AsyncStorage");
+            throw new Error('User details not found');
+          }
 
           const parsedData = JSON.parse(storedData);
           const technicianId = parsedData.id;
+          console.log("👤 Technician ID:", technicianId);
+
+          if (!technicianId) {
+            console.error("❌ Technician ID is missing");
+            throw new Error('Technician ID not found');
+          }
 
           setTechnicianId(technicianId);
           setTechnicianType(parsedData.types);
 
           const token = await AsyncStorage.getItem('auth_token');
-          if (!token) throw new Error('No token found');
+          if (!token) {
+            console.error("❌ Auth token not found");
+            throw new Error('No token found');
+          }
 
+          console.log("📡 Making API call to fetchTechnicianProfile...");
           const response = await axios.get(
             `${API_BASE_URL}/fetchTechnicianProfile?technicianId=${technicianId}`,
             {
@@ -142,10 +128,12 @@ const ProfileScreen = ({ navigation }) => {
                 Authorization: `Bearer ${token}`,
                 'Content-Type': 'application/json',
               },
+              timeout: 30000, // 30 second timeout
             }
           );
 
-          console.log("data", response?.data?.technician);
+          console.log("✅ API Response received:", response?.status);
+          console.log("📦 Response data:", response?.data?.technician);
           const profileData = response?.data?.technician;
 
           // Set profile data from API
@@ -175,16 +163,25 @@ const ProfileScreen = ({ navigation }) => {
 
           // Update AsyncStorage with latest profile data
           await AsyncStorage.setItem('technicianProfile', JSON.stringify(profileData));
+          console.log("✅ Profile data loaded successfully");
 
         } catch (err) {
-          console.log("API Error:", err.message);
+          console.error("❌ API Error:", err.message);
+          console.error("❌ Full error:", err);
+          if (err.response) {
+            console.error("❌ Response error:", err.response.status, err.response.data);
+          }
+          if (err.request) {
+            console.error("❌ Request error:", err.request);
+          }
+          // Set loading to false even on error
+          setLoading(false);
         } finally {
           setLoading(false);
         }
       };
 
       fetchTechnicianProfile();
-      console.log("roleType", roleType);
 
     }, [isEditing])
   );
@@ -217,45 +214,140 @@ const ProfileScreen = ({ navigation }) => {
 
   // 👇 useEffect to handle phoneNumber and update ISO code
   useEffect(() => {
-    const handlePhone = async () => {
-      if (phoneNumber?.startsWith('+')) {
-        const matchedCode = phoneNumber.match(/^\+(\d{1})/);
-        const callingCode = matchedCode ? `+${matchedCode[1]}` : null;
-        console.log("callingCode", callingCode);
+    if (!phoneNumber) {
+      setRawNumber('');
+      return;
+    }
 
-        if (callingCode) {
-          const iso = await getCountryByCallingCode(callingCode);
-          if (iso) {
-            setDefaultIsoCode(iso);
+    const handlePhone = async () => {
+      try {
+        if (phoneNumber?.startsWith('+')) {
+          // Extract country code and number from format: +244-8645564321 or +244 8645564321
+          const match = phoneNumber.match(/^\+(\d{1,4})[- ]?(.+)$/);
+          if (match) {
+            const callingCode = `+${match[1]}`;
+            const numberOnly = match[2].replace(/[^0-9]/g, '').trim();
+            
+            console.log("Primary Phone - Calling Code:", callingCode, "Number:", numberOnly);
+
+            // Get ISO code for the country
+            try {
+              const iso = await getCountryByCallingCode(callingCode);
+              if (iso) {
+                setDefaultIsoCode(iso);
+              } else {
+                // Fallback to US if country not found
+                setDefaultIsoCode('US');
+              }
+            } catch (error) {
+              console.log("Error getting country code:", error);
+              setDefaultIsoCode('US');
+            }
+            
+            // Set the raw number (without country code)
+            setRawNumber(numberOnly);
+          } else {
+            // Fallback: try to extract just the country code
+            const matchedCode = phoneNumber.match(/^\+(\d{1,4})/);
+            const callingCode = matchedCode ? `+${matchedCode[1]}` : null;
+            
+            if (callingCode) {
+              try {
+                const iso = await getCountryByCallingCode(callingCode);
+                if (iso) {
+                  setDefaultIsoCode(iso);
+                } else {
+                  setDefaultIsoCode('US');
+                }
+              } catch (error) {
+                console.log("Error getting country code:", error);
+                setDefaultIsoCode('US');
+              }
+              // Remove the calling code from phone number
+              const numberOnly = phoneNumber.replace(callingCode, '').replace(/[^0-9]/g, '').trim();
+              setRawNumber(numberOnly);
+            } else {
+              setRawNumber(phoneNumber.replace(/[^0-9]/g, ''));
+            }
           }
-          // Remove the calling code from phone number
-          const numberOnly = phoneNumber.replace(callingCode, '').replace(/[^0-9]/g, '').trim();
-          setRawNumber(numberOnly);
+        } else {
+          // If no + prefix, set as raw number
+          setRawNumber(phoneNumber?.replace(/[^0-9]/g, '') || '');
         }
+      } catch (error) {
+        console.log("Error parsing phone number:", error);
+        setRawNumber(phoneNumber?.replace(/[^0-9]/g, '') || '');
       }
     };
 
     handlePhone();
-  }, [phoneNumber, isEditing]);
+  }, [phoneNumber]);
 
   useEffect(() => {
-    const handleSecondryPhone = () => {
-      if (secondryPhoneNumber?.startsWith('+')) {
-        const matchedCode = secondryPhoneNumber.match(/^\+(\d{1,4})/);
-        const callingCode = matchedCode ? `+${matchedCode[1]}` : null;
+    if (!secondryPhoneNumber) {
+      setRawSecondryNumber('');
+      return;
+    }
 
-        if (callingCode) {
-          const numberOnly = secondryPhoneNumber.replace(callingCode, '').replace(/[^0-9]/g, '').trim();
-          setRawSecondryNumber(numberOnly);
+    const handleSecondryPhone = async () => {
+      try {
+        if (secondryPhoneNumber?.startsWith('+')) {
+          // Extract country code and number from format: +244-8645564321 or +244 8645564321
+          const match = secondryPhoneNumber.match(/^\+(\d{1,4})[- ]?(.+)$/);
+          if (match) {
+            const callingCode = `+${match[1]}`;
+            const numberOnly = match[2].replace(/[^0-9]/g, '').trim();
+            
+            console.log("Secondary Phone - Calling Code:", callingCode, "Number:", numberOnly);
+
+            // Get ISO code for the country
+            try {
+              const iso = await getCountryByCallingCode(callingCode);
+              if (iso) {
+                setDefaultSecondryIsoCode(iso);
+              } else {
+                setDefaultSecondryIsoCode('US');
+              }
+            } catch (error) {
+              console.log("Error getting country code:", error);
+              setDefaultSecondryIsoCode('US');
+            }
+            
+            // Set the raw number (without country code)
+            setRawSecondryNumber(numberOnly);
+          } else {
+            // Fallback: try to extract just the country code
+            const matchedCode = secondryPhoneNumber.match(/^\+(\d{1,4})/);
+            const callingCode = matchedCode ? `+${matchedCode[1]}` : null;
+
+            if (callingCode) {
+              try {
+                const iso = await getCountryByCallingCode(callingCode);
+                if (iso) {
+                  setDefaultSecondryIsoCode(iso);
+                } else {
+                  setDefaultSecondryIsoCode('US');
+                }
+              } catch (error) {
+                console.log("Error getting country code:", error);
+                setDefaultSecondryIsoCode('US');
+              }
+              const numberOnly = secondryPhoneNumber.replace(callingCode, '').replace(/[^0-9]/g, '').trim();
+              setRawSecondryNumber(numberOnly);
+            } else {
+              setRawSecondryNumber(secondryPhoneNumber.replace(/[^0-9]/g, ''));
+            }
+          }
+        } else {
+          setRawSecondryNumber(secondryPhoneNumber?.replace(/[^0-9]/g, '') || '');
         }
-      } else {
-        setRawSecondryNumber(secondryPhoneNumber);
+      } catch (error) {
+        console.log("Error parsing secondary phone number:", error);
+        setRawSecondryNumber(secondryPhoneNumber?.replace(/[^0-9]/g, '') || '');
       }
     };
 
-    if (secondryPhoneNumber) {
-      handleSecondryPhone();
-    }
+    handleSecondryPhone();
   }, [secondryPhoneNumber]);
 
 
@@ -662,25 +754,31 @@ const ProfileScreen = ({ navigation }) => {
     // ✅ Format phone number
     const countryCode = phoneInput.current?.getCallingCode();
     let formattedPhoneNumber = trimmedPhoneNumber;
-    if (countryCode && !trimmedPhoneNumber.startsWith(`+${countryCode}-`)) {
-      const phoneWithoutCode = phoneNumber
+    if (countryCode) {
+      // Remove country code if present
+      const phoneWithoutCode = trimmedPhoneNumber
         .replace(`+${countryCode}`, "")
-        .replace(/^-+/, "")
+        .replace(/[- ]/g, "")
         .trim();
-      formattedPhoneNumber = `+${countryCode}-${phoneWithoutCode}`;
+      
+      if (phoneWithoutCode) {
+        formattedPhoneNumber = `+${countryCode}-${phoneWithoutCode}`;
+      }
     }
 
     // ✅ Format secondary phone number
+    const secondryCountryCode = secondryPhoneInput.current?.getCallingCode();
     let formattedSecondaryPhone = secondryPhoneNumber;
-    if (
-      secondryPhoneNumber &&
-      !secondryPhoneNumber.startsWith(`+${countryCode}-`)
-    ) {
+    if (secondryPhoneNumber && secondryCountryCode) {
+      // Remove country code if present
       const secondaryWithoutCode = secondryPhoneNumber
-        .replace(`+${countryCode}`, "")
-        .replace(/^-+/, "")
+        .replace(`+${secondryCountryCode}`, "")
+        .replace(/[- ]/g, "")
         .trim();
-      formattedSecondaryPhone = `+${countryCode}-${secondaryWithoutCode}`;
+      
+      if (secondaryWithoutCode) {
+        formattedSecondaryPhone = `+${secondryCountryCode}-${secondaryWithoutCode}`;
+      }
     }
 
     // ✅ Create FormData
@@ -1001,41 +1099,10 @@ const ProfileScreen = ({ navigation }) => {
               />
 
               {/* Support Modal */}
-              {modalVisible && <Modal
+              <ContactSupportModal
                 visible={modalVisible}
-                transparent={true}
-                animationType="fade"
-                onRequestClose={() => setModalVisible(false)}
-                presentationStyle="overFullScreen"
-                supportedOrientations={["portrait", "landscape-left", "landscape-right"]}
-              >
-                <Pressable style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
-                  <View style={styles.modalBox}>
-                    {/* Modal Header */}
-                    <View style={styles.modalHeader}>
-                      <Text style={styles.modalTitle}>Contact Support</Text>
-                      <TouchableOpacity onPress={() => setModalVisible(false)}>
-                        <Ionicons name="close-circle" size={28} color={blackColor} />
-                      </TouchableOpacity>
-                    </View>
-
-                    {/* Contact Details */}
-                    <View style={styles.modalContent}>
-                      {/* Email Open */}
-                      <TouchableOpacity onPress={() => Linking.openURL(`mailto:${SUPPORT_EMAIL}`)} style={styles.contactItem}>
-                        <Fontisto name="email" size={25} color={blackColor} />
-                        <Text style={styles.contactText}>{SUPPORT_EMAIL}</Text>
-                      </TouchableOpacity>
-
-                      {/* Phone Dial */}
-                      <TouchableOpacity onPress={() => Linking.openURL(`tel:${SUPPORT_MOBILE}`)} style={styles.contactItem}>
-                        <Feather name="phone" size={24} color={blackColor} />
-                        <Text style={styles.contactText}>{SUPPORT_MOBILE}</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </Pressable>
-              </Modal>}
+                onClose={() => setModalVisible(false)}
+              />
             </ScrollView>
           </View>
         </View>
@@ -1182,8 +1249,9 @@ const ProfileScreen = ({ navigation }) => {
                   <View style={styles.inputGroup}>
                     <Text style={styles.label}>Secondary Phone Number (Optional)</Text>
                     <PhoneInput
+                      ref={secondryPhoneInput}
                       defaultValue={rawSecondryNumber}
-                      defaultCode={defaultIsoCode}
+                      defaultCode={defaultSecondryIsoCode}
                       layout="second"
                       onChangeFormattedText={(text) => {
                         setSecondryPhoneNumber(text);
@@ -1327,52 +1395,6 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-  },
-  modalBox: {
-    width: 320,
-    padding: 20,
-    backgroundColor: "white",
-    borderRadius: 15,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  modalHeader: {
-    width: "100%",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#333",
-  },
-  modalContent: {
-    width: "100%",
-    // alignItems: "center",
-    marginVertical: 10,
-  },
-  contactItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 8,
-  },
-  contactText: {
-    marginLeft: 10,
-    fontSize: 16,
-    color: blackColor,
-    textDecorationLine: "underline",
   },
   modalBox: {
     width: "80%",

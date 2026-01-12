@@ -167,6 +167,13 @@ const InvoiceHistoryScreen = ({ navigation,
     }, [technicianId, technicianType]);
 
     const fetchInvoices = async (page = 1, isRefresh = false) => {
+        // Return early if technicianId or technicianType are not available
+        if (!technicianId || technicianId === '' || technicianId === 'undefined' || 
+            !technicianType || technicianType === '' || technicianType === 'undefined') {
+            console.log("Waiting for technicianId and technicianType...", { technicianId, technicianType });
+            return;
+        }
+
         if (isRefresh) {
             setRefreshing(true);
         } else {
@@ -175,14 +182,38 @@ const InvoiceHistoryScreen = ({ navigation,
 
         try {
             const token = await AsyncStorage.getItem("auth_token");
-            const url = `${API_BASE_URL}/fetchInvoice?page=${page}&roleType=${technicianType}&userId=${technicianId}&limit=15`;
+            if (!token) {
+                console.error("Token not found!");
+                if (isRefresh) {
+                    setRefreshing(false);
+                } else {
+                    setLoadingMore(false);
+                }
+                return;
+            }
+            
+            console.log("token",token,technicianId, technicianType);
+            
+            // Ensure technicianId is a valid number string
+            const validTechnicianId = String(technicianId).trim();
+            if (!validTechnicianId || isNaN(validTechnicianId)) {
+                console.error("Invalid technicianId:", technicianId);
+                if (isRefresh) {
+                    setRefreshing(false);
+                } else {
+                    setLoadingMore(false);
+                }
+                return;
+            }
+            
+            const url = `${API_BASE_URL}/fetchInvoice?page=${page}&roleType=${technicianType}&userId=${validTechnicianId}&limit=15`;
             const response = await axios.get(url, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
             if (response?.data?.response) {
                 const newInvoices = response.data?.response?.invoice;
-                // console.log("newww::::::::::", newInvoices);
+                console.log("newww::::::::::", newInvoices);
                 const filteredInvoices = newInvoices.filter(item => item.print !== "print");
 
                 console.log("filteredInvoices", filteredInvoices);

@@ -218,13 +218,17 @@ const HomeScreen = ({ navigation }) => {
       setVinSearchResults(null);
       setIsSearchingVin(false);
 
-      fetchDashboardCount()
+      // Only fetch dashboard count if technicianId and technicianType are available
+      if ((technicianType === "manager" || (technicianId && technicianId !== '' && !isNaN(technicianId))) && technicianType) {
+        fetchDashboardCount();
+      }
+      
       if (technicianType === "ifs") {
         fetchIFSCustomers();
-      } else {
+      } else if (technicianId && technicianId !== '' && !isNaN(technicianId)) {
         fetchCustomers();
       }
-    }, [technicianId])
+    }, [technicianId, technicianType])
   );
 
   const fetchDashboardCount = async (page = 1) => {
@@ -235,13 +239,27 @@ const HomeScreen = ({ navigation }) => {
         return;
       }
 
+      // Validate technicianId for non-manager types
+      if (technicianType !== "manager") {
+        // Check if technicianId is valid (not empty, not undefined, and is a valid number)
+        if (!technicianId || technicianId === '' || technicianId === 'undefined' || isNaN(technicianId)) {
+          console.log("Waiting for valid technicianId...", technicianId);
+          return;
+        }
+      }
+
+      // Validate technicianType is set
+      if (!technicianType || technicianType === '') {
+        console.log("Waiting for technicianType...");
+        return;
+      }
+
       let apiUrl = "";
       let fetchOptions = {};
-      console.log("technicianType", technicianType);
+      console.log("technicianType", technicianType, "technicianId", technicianId);
 
       if (technicianType === "manager") {
-        apiUrl = `https://techrepairtracker.base2brand.com/api/deshboradCount?page=1&roleType=${technicianType}&limit=10
- `;
+        apiUrl = `https://techrepairtracker.base2brand.com/api/deshboradCount?page=1&roleType=${technicianType}&limit=10`;
         fetchOptions = {
           method: "POST",
           headers: {
@@ -250,7 +268,13 @@ const HomeScreen = ({ navigation }) => {
           }
         };
       } else {
-        apiUrl = `${API_BASE_URL}/appDeshboardCount?userId=${technicianId}`;
+        // Ensure technicianId is a valid number string
+        const validTechnicianId = String(technicianId).trim();
+        if (!validTechnicianId || isNaN(validTechnicianId)) {
+          console.error("Invalid technicianId:", technicianId);
+          return;
+        }
+        apiUrl = `${API_BASE_URL}/appDeshboardCount?userId=${validTechnicianId}`;
         fetchOptions = {
           method: "GET",
           headers: {
@@ -451,8 +475,8 @@ const HomeScreen = ({ navigation }) => {
   const handleVinTextChange = (text) => {
     setSearchVinText(text);
 
-    // Clear results when text is cleared
-    if (!text.trim()) {
+    // Clear results immediately when text is cleared or empty
+    if (!text || !text.trim()) {
       setVinSearchResults(null);
       setIsSearchingVin(false);
       return;
@@ -874,14 +898,18 @@ const HomeScreen = ({ navigation }) => {
           )}
 
           {/* VIN Search Results - Show above search input */}
-          {isSearching && vinSearchResults && (
+          {isSearching && vinSearchResults && searchVinText.trim() && (
             <Pressable style={[styles.vinResultsContainer,
             {
               top: isTablet ?
                 Platform.OS === 'ios' ? hp(25) : hp(24) : Platform.OS === 'ios' ? hp(25.5) : hp(31.5)
-            }]} onPress={() => navigation.navigate("VehicleDetailsScreen", {
-              vehicleId: vinSearchResults.id,
-            })}>
+            }]} onPress={() => {
+              if (vinSearchResults && !vinSearchResults.noResult) {
+                navigation.navigate("VehicleDetailsScreen", {
+                  vehicleId: vinSearchResults.id,
+                });
+              }
+            }}>
               {vinSearchResults.noResult ? (
                 <View style={styles.noResultContainer}>
                   <Text style={styles.noResultText}>No result found</Text>

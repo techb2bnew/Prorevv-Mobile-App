@@ -60,12 +60,13 @@ const JobDropdown = ({
                 onPress={() => !disabled && setVisible(true)}
                 disabled={disabled}
             >
-                <View style={{ width: "80%" }}>
+                <View style={{ width: "80%", flexShrink: 1 }}>
                     <Text
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
                         style={{
                             color: disabled ? grayColor : (selectedJob ? blackColor : grayColor),
                             fontSize: 16,
-                            flexWrap: "wrap",
                         }}
                     >
                         {disabled ? "No jobs available" : (selectedJob ? getJobName(selectedJob) : "Select a Job")}
@@ -127,7 +128,13 @@ const JobDropdown = ({
                                         }}
                                         onPress={() => handleSelect(item)}
                                     >
-                                        <Text style={{ color: isSelected ? whiteColor : blackColor }}>{getJobName(item)}</Text>
+                                        <Text 
+                                            numberOfLines={1}
+                                            ellipsizeMode="tail"
+                                            style={{ color: isSelected ? whiteColor : blackColor, flex: 1, marginRight: 10 }}
+                                        >
+                                            {getJobName(item)}
+                                        </Text>
                                         {isSelected && (
                                             <MaterialCommunityIcons
                                                 name="check-circle"

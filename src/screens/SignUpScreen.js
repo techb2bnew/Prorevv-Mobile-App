@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { View, StyleSheet, Text, ScrollView, Image, Pressable, TouchableOpacity, Platform, Keyboard, KeyboardAvoidingView, TouchableWithoutFeedback, Modal, ActivityIndicator, FlatList, PermissionsAndroid, Dimensions, TextInput } from "react-native";
+import { View, StyleSheet, Text, ScrollView, Image, Pressable, TouchableOpacity, Platform, Keyboard, KeyboardAvoidingView, TouchableWithoutFeedback, Modal, ActivityIndicator, FlatList, PermissionsAndroid, Dimensions, TextInput, Alert, Linking } from "react-native";
 import CustomButton from '../componets/CustomButton';
 import CustomTextInput from '../componets/CustomTextInput';
 import { blackColor, blueColor, grayColor, lightBlueColor, lightOrangeColor, mediumGray, orangeColor, redColor, whiteColor } from "../constans/Color";
@@ -127,10 +127,25 @@ const SignUpScreen = ({ navigation }) => {
         console.log("fieldfield", field);
 
         if (field === "phoneNumber" || field === "secondaryPhoneNumber") {
-            const countryCode = phoneInput.current?.getCallingCode(); // Get selected country code
+            // Use correct ref based on field
+            const phoneInputRef = field === "phoneNumber" ? phoneInput : secondyPhoneInput;
+            const countryCode = phoneInputRef.current?.getCallingCode(); // Get selected country code
             if (countryCode) {
-                // Remove the country code from value
-                let phoneWithoutCode = value.replace(`+${countryCode}`, "").trim();
+                // Remove all non-digit characters except keep digits for phone number
+                // First, extract the full number (remove +, spaces, dashes)
+                const digitsOnly = value.replace(/\D/g, '');
+                
+                // Remove country code digits from the beginning
+                const countryCodeDigits = countryCode.replace(/\D/g, '');
+                let phoneWithoutCode = digitsOnly;
+                
+                // If the number starts with country code, remove it
+                if (digitsOnly.startsWith(countryCodeDigits)) {
+                    phoneWithoutCode = digitsOnly.substring(countryCodeDigits.length);
+                }
+                
+                // Remove any leading zeros or spaces
+                phoneWithoutCode = phoneWithoutCode.trim();
 
                 // ✅ If no number entered after country code, treat it as empty
                 if (!phoneWithoutCode) {
@@ -148,6 +163,26 @@ const SignUpScreen = ({ navigation }) => {
         }
 
         setErrors((prev) => ({ ...prev, [field]: "" }));
+    };
+
+    // Handle country code change for phone numbers
+    const handleCountryChange = (field, country) => {
+        const phoneInputRef = field === "phoneNumber" ? phoneInput : secondyPhoneInput;
+        const currentValue = field === "phoneNumber" ? formData.phoneNumber : formData.secondaryPhoneNumber;
+        
+        // Get the phone number without country code
+        const phoneWithoutCode = currentValue.replace(/^\+\d+\s?-?\s?/, '').replace(/\D/g, '');
+        
+        // Get new country code
+        const newCountryCode = phoneInputRef.current?.getCallingCode();
+        
+        if (newCountryCode && phoneWithoutCode) {
+            const formattedPhone = `+${newCountryCode}-${phoneWithoutCode}`;
+            setFormData((prev) => ({ ...prev, [field]: formattedPhone }));
+        } else if (newCountryCode) {
+            // If no phone number, just clear it
+            setFormData((prev) => ({ ...prev, [field]: "" }));
+        }
     };
 
     const handleNext = () => {
@@ -175,6 +210,110 @@ const SignUpScreen = ({ navigation }) => {
             }
         }
         return true;
+    };
+
+    // Request storage/media permission for Android
+    const requestStoragePermission = async () => {
+        if (Platform.OS === 'android') {
+            try {
+                // Check Android version - API 33+ (Android 13+) uses READ_MEDIA_IMAGES
+                const androidVersion = Platform.Version;
+                let permission;
+                
+                if (androidVersion >= 33) {
+                    // Android 13+ (API 33+) - Try READ_MEDIA_IMAGES first
+                    try {
+                        permission = PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES;
+                    } catch (e) {
+                        // Fallback to READ_EXTERNAL_STORAGE if READ_MEDIA_IMAGES not available
+                        console.log("READ_MEDIA_IMAGES not available, using READ_EXTERNAL_STORAGE");
+                        permission = PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE;
+                    }
+                } else {
+                    // Android 12 and below
+                    permission = PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE;
+                }
+
+                // Check if permission is already granted
+                try {
+                    const checkResult = await PermissionsAndroid.check(permission);
+                    if (checkResult) {
+                        console.log("Storage permission already granted");
+                        return true;
+                    }
+                } catch (checkError) {
+                    console.log("Error checking permission:", checkError);
+                    // Continue to request permission
+                }
+
+                // Request permission
+                console.log("Requesting storage permission:", permission);
+                const granted = await PermissionsAndroid.request(
+                    permission,
+                    {
+                        title: "Storage Permission",
+                        message: "App needs access to your photos to select business logo",
+                        buttonPositive: "Allow",
+                        buttonNegative: "Deny",
+                    }
+                );
+                
+                console.log("Permission result:", granted);
+                
+                if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+                    return true;
+                } else if (granted === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
+                    Alert.alert(
+                        "Permission Required",
+                        "Storage permission is required to select business logo. Please enable it from app settings.",
+                        [
+                            { text: "Cancel", style: "cancel" },
+                            { 
+                                text: "Open Settings", 
+                                onPress: async () => {
+                                    try {
+                                        await Linking.openSettings();
+                                    } catch (error) {
+                                        console.log("Error opening settings:", error);
+                                        Alert.alert("Error", "Unable to open settings. Please go to Settings > Apps > [App Name] > Permissions manually.");
+                                    }
+                                }
+                            }
+                        ]
+                    );
+                    return false;
+                } else {
+                    Alert.alert(
+                        "Permission Denied",
+                        "Storage permission is required to select business logo. You can enable it from app settings.",
+                        [
+                            { text: "Cancel", style: "cancel" },
+                            { 
+                                text: "Open Settings", 
+                                onPress: async () => {
+                                    try {
+                                        await Linking.openSettings();
+                                    } catch (error) {
+                                        console.log("Error opening settings:", error);
+                                        Alert.alert("Error", "Unable to open settings. Please go to Settings > Apps > [App Name] > Permissions manually.");
+                                    }
+                                }
+                            }
+                        ]
+                    );
+                    return false;
+                }
+            } catch (err) {
+                console.warn("Permission error:", err);
+                Alert.alert(
+                    "Error", 
+                    "Failed to request permission. Please try again or check app settings.",
+                    [{ text: "OK" }]
+                );
+                return false;
+            }
+        }
+        return true; // iOS doesn't need this permission
     };
 
     const openFrontCamera = async () => {
@@ -247,6 +386,10 @@ const SignUpScreen = ({ navigation }) => {
         // formDataToSend.append('zipCode', formData.zipCode);
         formDataToSend.append('password', formData.password);
         formDataToSend.append('secondaryContactName', formData.secondaryPhoneNumber);
+        
+        // Log phone numbers to verify format
+        console.log("📱 Primary Phone Number:", formData.phoneNumber);
+        console.log("📱 Secondary Phone Number:", formData.secondaryPhoneNumber);
         formDataToSend.append('secondaryEmail', formData.secondaryEmail || "");
         formDataToSend.append('agreeTerms', "true");
         formDataToSend.append('businessName', formData.businessName);
@@ -258,13 +401,10 @@ const SignUpScreen = ({ navigation }) => {
 
 
         if (capturedImage) {
-            // iOS mein file:// prefix chahiye
+            // Both iOS and Android need file:// prefix for FormData
             let imageUri = capturedImage;
-            if (Platform.OS === 'ios' && !imageUri.startsWith('file://')) {
+            if (!imageUri.startsWith('file://') && !imageUri.startsWith('http')) {
                 imageUri = `file://${imageUri}`;
-            }
-            if (Platform.OS === 'android' && imageUri.startsWith('file://')) {
-                imageUri = imageUri.replace('file://', '');
             }
             console.log("Image URI:", imageUri);
 
@@ -279,13 +419,10 @@ const SignUpScreen = ({ navigation }) => {
         }
 
         if (businessLogo) {
-            // iOS mein file:// prefix chahiye
+            // Both iOS and Android need file:// prefix for FormData
             let logoUri = businessLogo;
-            if (Platform.OS === 'ios' && !logoUri.startsWith('file://')) {
+            if (!logoUri.startsWith('file://') && !logoUri.startsWith('http')) {
                 logoUri = `file://${logoUri}`;
-            }
-            if (Platform.OS === 'android' && logoUri.startsWith('file://')) {
-                logoUri = logoUri.replace('file://', '');
             }
             console.log("Logo URI:", logoUri);
 
@@ -337,13 +474,9 @@ const SignUpScreen = ({ navigation }) => {
                     fileUri = file.uri;
                 }
 
-                // iOS mein file:// prefix add karo agar nahi hai
-                if (Platform.OS === 'ios' && !fileUri.startsWith('file://')) {
+                // Both iOS and Android need file:// prefix for FormData
+                if (!fileUri.startsWith('file://') && !fileUri.startsWith('http') && !fileUri.startsWith('content://')) {
                     fileUri = `file://${fileUri}`;
-                }
-                // Android mein file:// remove karo agar hai
-                if (Platform.OS === 'android' && fileUri.startsWith('file://')) {
-                    fileUri = fileUri.replace('file://', '');
                 }
                 
                 console.log("Final File URI:", fileUri);
@@ -418,15 +551,6 @@ const SignUpScreen = ({ navigation }) => {
         navigation.navigate("Login");
     };
 
-    useEffect(() => {
-        fetchCountries();
-    }, []);
-
-
-
-    useEffect(() => {
-        fetchCountries();
-    }, []);
 
 
     const fetchCountries = async () => {
@@ -516,11 +640,6 @@ const SignUpScreen = ({ navigation }) => {
             <Header title={"Register"} onBack={() => {
                 navigation.goBack();
             }} />
-            {isLoadingState && (
-                <View style={styles.loadingOverlay}>
-                    <ActivityIndicator size="large" color={blackColor} />
-                </View>
-            )}
 
             <ScrollView style={[styles.container, flex]} showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled"
@@ -579,22 +698,8 @@ const SignUpScreen = ({ navigation }) => {
                                         <TouchableOpacity
                                             onPress={async () => {
                                                 try {
-                                                    if (Platform.OS === 'android') {
-                                                        const granted = await PermissionsAndroid.request(
-                                                            PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-                                                            {
-                                                                title: "Storage Permission",
-                                                                message: "App needs access to your storage to select images",
-                                                                buttonPositive: "OK",
-                                                            }
-                                                        );
-                                                        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-                                                            Alert.alert("Permission Denied", "You need to allow storage access to select images.");
-                                                            return;
-                                                        }
-                                                    }
-
-                                                    // Launch image picker
+                                                    // react-native-image-picker handles permissions automatically
+                                                    // Launch image picker directly
                                                     const result = await launchImageLibrary({
                                                         mediaType: 'photo',
                                                         quality: 0.8,
@@ -603,21 +708,56 @@ const SignUpScreen = ({ navigation }) => {
 
                                                     if (!result.didCancel && result.assets && result.assets.length > 0) {
                                                         const selectedImage = result.assets[0];
-                                                        console.log(selectedImage);
+                                                        console.log("Selected business logo:", selectedImage);
 
-                                                        // Compress the image
-                                                        const compressedImage = await ImageCompressor.compress(selectedImage.uri, {
-                                                            maxWidth: 1024,
-                                                            maxHeight: 1024,
-                                                            quality: 0.8,
-                                                            compressionMethod: 'auto'
-                                                        });
+                                                        try {
+                                                            // Compress the image
+                                                            const compressedImage = await ImageCompressor.compress(selectedImage.uri, {
+                                                                maxWidth: 1024,
+                                                                maxHeight: 1024,
+                                                                quality: 0.8,
+                                                                compressionMethod: 'auto'
+                                                            });
 
-                                                        // Set the compressed image URI in state
-                                                        setBusinessLogo(compressedImage);
+                                                            // Set the compressed image URI in state
+                                                            setBusinessLogo(compressedImage);
+                                                            console.log("Business logo compressed and set successfully");
+                                                        } catch (compressError) {
+                                                            console.log("Compression error:", compressError);
+                                                            // If compression fails, use original image
+                                                            setBusinessLogo(selectedImage.uri);
+                                                        }
+                                                    } else if (result.didCancel) {
+                                                        console.log("User cancelled business logo selection");
                                                     }
                                                 } catch (err) {
                                                     console.log("Error picking business logo:", err);
+                                                    // Check if it's a permission error
+                                                    if (err.message && err.message.includes('permission')) {
+                                                        Alert.alert(
+                                                            "Permission Required",
+                                                            "Storage permission is required to select business logo. Please enable it from app settings.",
+                                                            [
+                                                                { text: "Cancel", style: "cancel" },
+                                                                { 
+                                                                    text: "Open Settings", 
+                                                                    onPress: async () => {
+                                                                        try {
+                                                                            await Linking.openSettings();
+                                                                        } catch (error) {
+                                                                            console.log("Error opening settings:", error);
+                                                                        }
+                                                                    }
+                                                                }
+                                                            ]
+                                                        );
+                                                    } else {
+                                                        Alert.alert(
+                                                            "Error",
+                                                            "Failed to select business logo. Please try again.",
+                                                            [{ text: "OK" }]
+                                                        );
+                                                    }
                                                 }
                                             }}
                                             style={[{
@@ -724,6 +864,7 @@ const SignUpScreen = ({ navigation }) => {
                                 defaultCode="US"
                                 layout="second"
                                 onChangeFormattedText={(text) => handleInputChange("phoneNumber", text)}
+                                onChangeCountry={(country) => handleCountryChange("phoneNumber", country)}
                                 containerStyle={styles.phoneInput}
                                 textContainerStyle={styles.phoneText}
                                 textInputStyle={[styles.phoneTextInput, { marginBottom: isTablet ? 12 : 0 }]}
@@ -811,11 +952,12 @@ const SignUpScreen = ({ navigation }) => {
                                 Secondary Phone Number (Optional)
                             </Text>
                             <PhoneInput
-                                ref={phoneInput}
-                                defaultValue={formData.secondaryPhoneNumber}
+                                ref={secondyPhoneInput}
+                                defaultValue={formData.secondaryPhoneNumber.replace(/^\+\d+\s?-?\s?/, '')}
                                 defaultCode="US"
                                 layout="second"
                                 onChangeFormattedText={(text) => handleInputChange("secondaryPhoneNumber", text)}
+                                onChangeCountry={(country) => handleCountryChange("secondaryPhoneNumber", country)}
                                 textInputProps={{
                                     maxLength: 13,
                                     keyboardType: "default",

@@ -184,24 +184,35 @@ const Reports = ({ navigation }) => {
 
     useFocusEffect(
         useCallback(() => {
-            console.log("Focus effect ran on screen focus - resetting dates");
+            console.log("Focus effect ran on screen focus - resetting dates and filters");
 
             // Reset dates when screen renders
             setStartDate(null);
             setEndDate(null);
             setTempStartDate(new Date());
             setTempEndDate(new Date());
+            
+            // Reset filtered data to empty arrays so fresh data will be fetched
+            if (activeTab === "Jobs") {
+                setJobsRawData([]);
+            } else if (activeTab === "WorkOrders") {
+                setWorkOrdersRawData([]);
+            }
 
-        }, []) // <-- keep this empty so it only runs on focus
+        }, [activeTab]) // <-- include activeTab so it resets when tab changes too
     );
 
     // Reset dates when tab changes
     useEffect(() => {
-        console.log("Tab changed to:", activeTab, "- resetting dates");
+        console.log("Tab changed to:", activeTab, "- resetting dates and filters");
         setStartDate(null);
         setEndDate(null);
         setTempStartDate(new Date());
         setTempEndDate(new Date());
+        
+        // Reset filtered data when tab changes
+        setJobsRawData([]);
+        setWorkOrdersRawData([]);
     }, [activeTab]);
 
     //fetch tech details
@@ -231,13 +242,14 @@ const Reports = ({ navigation }) => {
         useCallback(() => {
             if (!technicianId) return;
 
+            // Always fetch fresh unfiltered data when screen comes into focus
+            // Dates are reset in the previous useFocusEffect, so this will fetch unfiltered data
             if (activeTab === "Jobs") {
-                fetchJobHistory();
+                fetchJobHistory(1, false);
             } else if (activeTab === "Customers") {
-                // setCustomerJobs([]);
                 fetchCustomerJobHistory(1, false);
             } else {
-                fetchVehicalInfo(page);
+                fetchVehicalInfo(1);
             }
 
             // If you want to do cleanup, return a function here

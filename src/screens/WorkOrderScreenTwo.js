@@ -14,6 +14,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
 import DropDownPicker from 'react-native-dropdown-picker';
 import SuccessModal from '../componets/Modal/SuccessModal';
+import ConfirmationModal from '../componets/Modal/ConfirmationModal';
 import { ALERT_IMAGE, SUCCESS_IMAGE, XCIRCLE_IMAGE } from '../assests/images';
 import { Image as ImageCompressor } from 'react-native-compressor';
 import Header from '../componets/Header';
@@ -77,6 +78,7 @@ const WorkOrderScreenTwo = ({ route }) => {
     const [isEndPickerOpen, setIsEndPickerOpen] = useState(false);
     const [isEndDateManuallyChanged, setIsEndDateManuallyChanged] = useState(false);
     const [duplicatePopupSource, setDunplicatePopupSource] = useState("");
+    const [clearAllConfirmationVisible, setClearAllConfirmationVisible] = useState(false);
 
     const [modalData, setModalData] = useState({
         visible: false,
@@ -1295,12 +1297,13 @@ const WorkOrderScreenTwo = ({ route }) => {
                                             {(jobDescription?.some(item => item?.jobDescription?.trim() !== '')) && (
                                                 <TouchableOpacity
                                                     onPress={() => {
-                                                        setJobDescription([{ jobDescription: '', cost: '' }]);
-                                                        setTextInputHeights({});
+                                                        setClearAllConfirmationVisible(true);
                                                     }}
                                                     style={[flexDirectionRow, alignJustifyCenter, styles.addMore, { backgroundColor: blackColor, borderRadius: 10 }]}
                                                 >
-                                                    <Text style={styles.addMoreText}>Clear</Text>
+                                                    <Text style={styles.addMoreText}>
+                                                        {jobDescription?.filter(item => item?.jobDescription?.trim() !== '').length === 1 ? 'Clear' : 'Clear All'}
+                                                    </Text>
                                                     <Ionicons name="trash-outline" size={18} color="white" />
                                                 </TouchableOpacity>
                                             )}
@@ -1684,6 +1687,20 @@ const WorkOrderScreenTwo = ({ route }) => {
                             </View>
                         </Modal>
                     )}
+                    <ConfirmationModal
+                        visible={clearAllConfirmationVisible}
+                        onClose={() => setClearAllConfirmationVisible(false)}
+                        onConfirm={() => {
+                            setJobDescription([{ jobDescription: '', cost: '' }]);
+                            setTextInputHeights({});
+                            setClearAllConfirmationVisible(false);
+                        }}
+                        title="Clear All Work Descriptions"
+                        message="Are you sure you want to clear all work descriptions? This action cannot be undone and all entered descriptions will be removed."
+                        confirmText="Yes"
+                        cancelText="No"
+                        confirmColor={blackColor}
+                    />
                 </ScrollView>
 
 

@@ -15,12 +15,24 @@ const Header = ({ title, onBack, hideBack = false }) => {
             navigation.goBack();
         }
     };
+    const getLimitedText = (text) => {
+        if (!text) return ""
+        if (text.length <= 30) return text;
+        return text.substring(0, 30) + "...";
+    };
     return (
         <View style={styles.headerContainer}>
             <TouchableOpacity onPress={handleBack} style={styles.backButton}>
                 <Ionicons name="arrow-back" size={28} color="white" />
             </TouchableOpacity>
-            <Text style={styles.headerTitle} onPress={handleBack}>{title}</Text>
+            <Text
+                style={styles.headerTitle}
+                onPress={handleBack}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+            >
+                {getLimitedText(title)}
+            </Text>
         </View>
     );
 };

@@ -6,6 +6,7 @@ import { blackColor, whiteColor, grayColor, mediumGray, orangeColor, redColor, g
 import { BaseStyle } from '../constans/Style';
 import { spacings, style } from '../constans/Fonts';
 import SuccessModal from '../componets/Modal/SuccessModal';
+import ConfirmationModal from '../componets/Modal/ConfirmationModal';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { XCIRCLE_IMAGE } from '../assests/images';
@@ -32,6 +33,7 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
     const { width, height } = Dimensions.get("window");
     const isTablet = width >= 668 && height >= 1024;
     const [successModalVisible, setSuccessModalVisible] = useState(false);
+    const [confirmationModalVisible, setConfirmationModalVisible] = useState(false);
 
     useFocusEffect(
         useCallback(() => {
@@ -132,7 +134,8 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
             console.log("API Response Data:", data);
 
             if (response.ok) {
-                setSuccessModalVisible(true)
+                setConfirmationModalVisible(false); // Close confirmation modal
+                setSuccessModalVisible(true); // Show success modal
                 // ✅ Remove from pending list after successful sync
                 // let pendingJobs = await AsyncStorage.getItem("pendingCompleteJobs");
                 // pendingJobs = pendingJobs ? JSON.parse(pendingJobs) : [];
@@ -140,9 +143,11 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
                 // await AsyncStorage.setItem("pendingCompleteJobs", JSON.stringify(pendingJobs));
             } else {
                 console.error("Error updating job status:", data.error || "Unknown error");
+                setConfirmationModalVisible(false); // Close confirmation modal on error
             }
         } catch (error) {
             console.error("Error updating job status:", error);
+            setConfirmationModalVisible(false); // Close confirmation modal on error
         }
 
     };
@@ -430,15 +435,25 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
                     {!loading && vehicleDetails?.vehicleStatus === false && (
                         <Pressable
                             style={[styles.completeButton, alignItemsCenter]}
-                            onPress={() => handelCompleteWorkOrder(vehicleId, setSuccessModalVisible)}
+                            onPress={() => setConfirmationModalVisible(true)}
                         >
                             <Text style={styles.completeButtonText}>Complete This Work Order</Text>
                         </Pressable>
                     )}
+                    <ConfirmationModal
+                        visible={confirmationModalVisible}
+                        onClose={() => setConfirmationModalVisible(false)}
+                        onConfirm={() => handelCompleteWorkOrder(vehicleId)}
+                        title="Complete Work Order"
+                        message="Are you sure you want to complete this work order?"
+                        confirmText="Yes"
+                        cancelText="No"
+                        confirmColor={blackColor}
+                    />
                     {successModalVisible && <SuccessModal
                         visible={successModalVisible}
                         onClose={() => setSuccessModalVisible(false)}
-                        headingText={"Congratulations"}
+                        headingText={"Successfully Completed"}
                         buttonText={"Ok"}
                         text={"You've successfully completed this work order."}
                         onPressContinue={() => {

@@ -46,8 +46,8 @@ const CustomerInfoScreen = ({ navigation }) => {
     const [isEditMode, setIsEditMode] = useState(false); // false = show list, true = show form
     const [customerId, setCustomerId] = useState()
     const [keyboardHeight, setKeyboardHeight] = useState(0);
-
-
+    const [defaultIsoCode, setDefaultIsoCode] = useState('US');
+    const [rawNumber, setRawNumber] = useState('');
 
     const [formData, setFormData] = useState({
         fullName: "",
@@ -75,6 +75,83 @@ const CustomerInfoScreen = ({ navigation }) => {
 
         getTechnicianDetail();
     }, []);
+
+    // Function to get country ISO code from calling code
+    const getCountryByCallingCode = async (callingCode) => {
+        try {
+            const response = await axios.get('https://restcountries.com/v3.1/all?fields=name,cca2,idd');
+            const countries = response.data;
+            const country = countries.find(c => {
+                const root = c.idd?.root;
+                const suffixes = c.idd?.suffixes || [];
+                return suffixes.some(suffix => `${root}${suffix}` === callingCode);
+            });
+            if (country) {
+                return country.cca2;
+            } else {
+                return null;
+            }
+        } catch (error) {
+            console.error('Error fetching country data:', error);
+            return null;
+        }
+    };
+
+    // Helper function to extract phone number parts synchronously
+    const extractPhoneNumberParts = (phoneNumber) => {
+        if (!phoneNumber || !phoneNumber.startsWith('+')) {
+            return { isoCode: 'US', rawNumber: '' };
+        }
+        
+        // Extract calling code (can be 1-4 digits after +)
+        const matchedCode = phoneNumber.match(/^\+(\d{1,4})/);
+        const callingCode = matchedCode ? `+${matchedCode[1]}` : null;
+        
+        if (callingCode) {
+            // Common country codes mapping (synchronous)
+            const commonCodes = {
+                '+1': 'US', '+44': 'GB', '+91': 'IN', '+86': 'CN',
+                '+81': 'JP', '+49': 'DE', '+33': 'FR', '+39': 'IT',
+                '+34': 'ES', '+7': 'RU', '+61': 'AU', '+55': 'BR',
+                '+82': 'KR', '+52': 'MX', '+31': 'NL', '+46': 'SE',
+                '+41': 'CH', '+32': 'BE', '+47': 'NO', '+45': 'DK',
+                '+358': 'FI', '+351': 'PT', '+353': 'IE', '+48': 'PL',
+                '+420': 'CZ', '+36': 'HU', '+40': 'RO', '+30': 'GR',
+            };
+            
+            const isoCode = commonCodes[callingCode] || 'US';
+            
+            // Extract only the number part (remove country code and any separators)
+            const rawNumber = phoneNumber
+                .replace(callingCode, '')
+                .replace(/[^0-9]/g, '')
+                .trim();
+            
+            return { isoCode, rawNumber };
+        }
+        
+        return { isoCode: 'US', rawNumber: phoneNumber.replace(/[^0-9]/g, '') };
+    };
+
+    // Refine country code asynchronously if not in common codes (optional enhancement)
+    useEffect(() => {
+        const refineCountryCode = async () => {
+            if (formData.phoneNumber?.startsWith('+') && isEditMode && defaultIsoCode === 'US') {
+                const matchedCode = formData.phoneNumber.match(/^\+(\d{1,4})/);
+                const callingCode = matchedCode ? `+${matchedCode[1]}` : null;
+                
+                // Only fetch if it's not +1 (US) and we haven't set a specific country yet
+                if (callingCode && callingCode !== '+1') {
+                    const iso = await getCountryByCallingCode(callingCode);
+                    if (iso && iso !== 'US') {
+                        setDefaultIsoCode(iso);
+                    }
+                }
+            }
+        };
+
+        refineCountryCode();
+    }, [formData.phoneNumber, isEditMode, customerId, defaultIsoCode]);
 
     const handleInputChange = (field, value) => {
         if (field === "phoneNumber") {
@@ -256,6 +333,9 @@ const CustomerInfoScreen = ({ navigation }) => {
                 setIsAddMode(false);
                 setIsEditMode(false);
                 setErrors({});
+                // Reset phone number states after edit
+                setDefaultIsoCode('US');
+                setRawNumber('');
                 setFormData({
                     fullName: "",
                     email: "",
@@ -279,6 +359,9 @@ const CustomerInfoScreen = ({ navigation }) => {
                 setIsAddMode(false);
                 setIsEditMode(false);
                 setErrors({});
+                // Reset phone number states after create
+                setDefaultIsoCode('US');
+                setRawNumber('');
             }
         }
     };
@@ -420,6 +503,16 @@ const CustomerInfoScreen = ({ navigation }) => {
                         setIsEditMode(false);
                         setIsAddMode(false);
                         setErrors({});
+                        // Reset phone number states
+                        setDefaultIsoCode('US');
+                        setRawNumber('');
+                        setCustomerId(null);
+                        setFormData({
+                            fullName: '',
+                            email: '',
+                            phoneNumber: '',
+                            address: '',
+                        });
                     } else {
                         navigation.goBack();
                     }
@@ -492,13 +585,18 @@ const CustomerInfoScreen = ({ navigation }) => {
                                                         setIsEditMode(true);
                                                         setIsAddMode(true);
                                                         setErrors({});
-                                                        setCustomerId(item?.id)
-                                                        const rawNumber = item.phoneNumber || '';
-                                                        const cleanedNumber = rawNumber.replace(/^\+\d{1}-?/, '');
+                                                        setCustomerId(item?.id);
+                                                        
+                                                        // Extract phone number parts synchronously
+                                                        const phoneParts = extractPhoneNumberParts(item.phoneNumber || '');
+                                                        setDefaultIsoCode(phoneParts.isoCode);
+                                                        setRawNumber(phoneParts.rawNumber);
+                                                        
+                                                        // Set form data
                                                         setFormData({
                                                             fullName: item.fullName || '',
                                                             email: item.email || '',
-                                                            phoneNumber: cleanedNumber || '',
+                                                            phoneNumber: item.phoneNumber || '',
                                                             address: item.address || '',
                                                         });
                                                         setTimeout(() => {
@@ -516,13 +614,18 @@ const CustomerInfoScreen = ({ navigation }) => {
                                                             setIsEditMode(true);
                                                             setIsAddMode(true);
                                                             setErrors({});
-                                                            setCustomerId(item?.id)
-                                                            const rawNumber = item.phoneNumber || '';
-                                                            const cleanedNumber = rawNumber.replace(/^\+\d{1}-?/, '');
+                                                            setCustomerId(item?.id);
+                                                            
+                                                            // Extract phone number parts synchronously
+                                                            const phoneParts = extractPhoneNumberParts(item.phoneNumber || '');
+                                                            setDefaultIsoCode(phoneParts.isoCode);
+                                                            setRawNumber(phoneParts.rawNumber);
+                                                            
+                                                            // Set form data
                                                             setFormData({
                                                                 fullName: item.fullName || '',
                                                                 email: item.email || '',
-                                                                phoneNumber: cleanedNumber || '',
+                                                                phoneNumber: item.phoneNumber || '',
                                                                 address: item.address || '',
                                                             });
                                                             setTimeout(() => {
@@ -567,6 +670,9 @@ const CustomerInfoScreen = ({ navigation }) => {
                                         setIsAddMode(true);
                                         setIsEditMode(false);
                                         setErrors({});
+                                        // Reset phone number states for new customer
+                                        setDefaultIsoCode('US');
+                                        setRawNumber('');
                                         setFormData({
                                             fullName: '',
                                             email: '',
@@ -627,13 +733,18 @@ const CustomerInfoScreen = ({ navigation }) => {
                                                     setIsEditMode(true);
                                                     setIsAddMode(true);
                                                     setErrors({});
-                                                    setCustomerId(item?.id)
-                                                    const rawNumber = item.phoneNumber || '';
-                                                    const cleanedNumber = rawNumber.replace(/^\+\d{1}-?/, '');
+                                                    setCustomerId(item?.id);
+                                                    
+                                                    // Extract phone number parts synchronously
+                                                    const phoneParts = extractPhoneNumberParts(item.phoneNumber || '');
+                                                    setDefaultIsoCode(phoneParts.isoCode);
+                                                    setRawNumber(phoneParts.rawNumber);
+                                                    
+                                                    // Set form data
                                                     setFormData({
                                                         fullName: item.fullName || '',
                                                         email: item.email || '',
-                                                        phoneNumber: cleanedNumber || '',
+                                                        phoneNumber: item.phoneNumber || '',
                                                         address: item.address || '',
                                                     });
                                                     setTimeout(() => {
@@ -672,13 +783,18 @@ const CustomerInfoScreen = ({ navigation }) => {
                                                             setIsEditMode(true);
                                                             setIsAddMode(true);
                                                             setErrors({});
-                                                            setCustomerId(item?.id)
-                                                            const rawNumber = item.phoneNumber || '';
-                                                            const cleanedNumber = rawNumber.replace(/^\+\d{1}-?/, '');
+                                                            setCustomerId(item?.id);
+                                                            
+                                                            // Extract phone number parts synchronously
+                                                            const phoneParts = extractPhoneNumberParts(item.phoneNumber || '');
+                                                            setDefaultIsoCode(phoneParts.isoCode);
+                                                            setRawNumber(phoneParts.rawNumber);
+                                                            
+                                                            // Set form data
                                                             setFormData({
                                                                 fullName: item.fullName || '',
                                                                 email: item.email || '',
-                                                                phoneNumber: cleanedNumber || '',
+                                                                phoneNumber: item.phoneNumber || '',
                                                                 address: item.address || '',
                                                             });
                                                             setTimeout(() => {
@@ -742,6 +858,9 @@ const CustomerInfoScreen = ({ navigation }) => {
                                         setIsAddMode(true);
                                         setIsEditMode(false);
                                         setErrors({});
+                                        // Reset phone number states for new customer
+                                        setDefaultIsoCode('US');
+                                        setRawNumber('');
                                         setFormData({
                                             fullName: '',
                                             email: '',
@@ -813,10 +932,10 @@ const CustomerInfoScreen = ({ navigation }) => {
                                         Phone Number
                                     </Text>
                                     <PhoneInput
+                                        key={`phone-input-${customerId || 'new'}-${defaultIsoCode}-${rawNumber}`}
                                         ref={phoneInput}
-                                        // defaultValue={formData.phoneNumber}
-                                        value={formData.phoneNumber}
-                                        defaultCode="US"
+                                        defaultValue={rawNumber}
+                                        defaultCode={defaultIsoCode}
                                         layout="second"
                                         onChangeFormattedText={(text) => handleInputChange("phoneNumber", text)}
                                         textInputProps={{
