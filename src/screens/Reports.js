@@ -191,7 +191,7 @@ const Reports = ({ navigation }) => {
             setEndDate(null);
             setTempStartDate(new Date());
             setTempEndDate(new Date());
-            
+
             // Reset filtered data to empty arrays so fresh data will be fetched
             if (activeTab === "Jobs") {
                 setJobsRawData([]);
@@ -209,7 +209,7 @@ const Reports = ({ navigation }) => {
         setEndDate(null);
         setTempStartDate(new Date());
         setTempEndDate(new Date());
-        
+
         // Reset filtered data when tab changes
         setJobsRawData([]);
         setWorkOrdersRawData([]);
@@ -859,7 +859,16 @@ const Reports = ({ navigation }) => {
                         onChangeText={setSearch}
                         placeholderTextColor={blackColor}
                     />
-                    <Feather name="search" size={20} color={blackColor} />
+                    {search.length > 0 ? (
+                        <TouchableOpacity
+                            onPress={() => setSearch('')}
+                            style={{ marginLeft: spacings.small }}
+                        >
+                            <Feather name="x" size={20} color={blackColor} />
+                        </TouchableOpacity>
+                    ) : (
+                        <Feather name="search" size={20} color={blackColor} />
+                    )}
 
                     <TouchableOpacity style={[styles.filterButton, { top: isTablet ? Platform.OS === "android" ? hp(1) : hp(1) : orientation === "LANDSCAPE" ? hp(0.8) : hp(0.5), right: isTablet ? Platform.OS === "android" ? -80 : orientation === "LANDSCAPE" ? -130 : -100 : orientation === "LANDSCAPE" ? -160 : -60 }]}
                         onPress={toggleModal}
@@ -981,11 +990,13 @@ const Reports = ({ navigation }) => {
                                             })}>
                                                 <Text style={styles.viewText}>View</Text>
                                             </Pressable>
-                                            {activeStatus != 'Completed' && technicianType != 'ifs' && <Pressable onPress={() => navigation.navigate("CreateJobScreen", {
-                                                jobId: item?.id
-                                            })}>
-                                                <Text style={styles.viewText}>Edit</Text>
-                                            </Pressable>}
+                                            {/* {activeStatus != 'Completed' && technicianType != 'ifs' && */}
+                                                <Pressable onPress={() => navigation.navigate("CreateJobScreen", {
+                                                    jobId: item?.id
+                                                })}>
+                                                    <Text style={styles.viewText}>Edit</Text>
+                                                </Pressable>
+                                            {/* } */}
                                         </View>
                                     </Pressable>
                                 );

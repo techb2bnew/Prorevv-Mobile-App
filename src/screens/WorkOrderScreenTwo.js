@@ -761,7 +761,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                     const loadedEndDate = data?.vehicle?.vehicle?.endDate && data?.vehicle?.vehicle?.endDate !== "null"
                         ? new Date(data.vehicle.vehicle.endDate)
                         : null;
-                    
+
                     // Auto-fill start date with today if not loaded
                     if (!loadedStartDate) {
                         const today = new Date();
@@ -1020,7 +1020,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                     <View style={[flexDirectionRow, alignItemsCenter, justifyContentSpaceBetween]}>
                                         <TextInput
                                             placeholder="Enter VIN Manually"
-                                            style={[styles.vinInput, { width: isTablet ? wp(60) : orientation === "LANDSCAPE" ? wp(60) : wp(55), height: isTablet ? hp(3.5) : hp(5.5) }]}
+                                            style={[styles.vinInput, { width: isTablet ? wp(63) : orientation === "LANDSCAPE" ? wp(60) : wp(55), height: isTablet ? hp(3.5) : hp(5.5) }]}
                                             value={vin}
                                             onChangeText={(text) => {
                                                 setVin(text || route?.params?.vehicleInfo?.vin);

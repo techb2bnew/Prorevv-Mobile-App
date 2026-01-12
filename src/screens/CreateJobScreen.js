@@ -767,13 +767,15 @@ const CreateJobScreen = ({ route }) => {
                                                         })}>
                                                             <Text style={styles.viewText}>View</Text>
                                                         </Pressable>
-                                                        {item.jobStatus !== true && (<Pressable onPress={() => {
+                                                        {/* {item.jobStatus !== true && ( */}
+                                                        <Pressable onPress={() => {
                                                             fetchJobData(item?.id);
                                                             setEditableJobId(item?.id)
                                                             setIsAddMode(true);
                                                         }}>
                                                             <Text style={styles.viewText}>Edit</Text>
-                                                        </Pressable>)}
+                                                        </Pressable>
+                                                        {/* )} */}
                                                     </Pressable>
                                                 )}
                                                 onEndReached={() => {

@@ -949,7 +949,7 @@ const ProfileScreen = ({ navigation }) => {
       </TouchableOpacity>}
       {!isEditing ?
         <View style={[styles.container]}>
-          <View style={{ height: Platform.OS === "android" ? roleType === "single-technician" ? orientation === "LANDSCAPE" ? hp(85) : hp(90) : hp(82.5) : roleType === "single-technician" ? hp(90) : hp(75.5), width: "100%" }}>
+          <View style={{ height: Platform.OS === "android" ? roleType === "single-technician" ? orientation === "LANDSCAPE" ? hp(85) : hp(93) : hp(82.5) : roleType === "single-technician" ? hp(90) : hp(75.5), width: "100%" }}>
             <ScrollView
               contentContainerStyle={{ backgroundColor: whiteColor }}
               showsVerticalScrollIndicator={false}

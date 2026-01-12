@@ -39,6 +39,7 @@ const CustomerInfoScreen = ({ navigation }) => {
     const [hasMore, setHasMore] = useState(true);
     const [isLoading, setIsLoading] = useState(false);
     const googleRef = useRef();
+    const addressTextRef = useRef("");
     const isTablet = width >= 668 && height >= 1024;
     const isIOsAndTablet = Platform.OS === "ios" && isTablet;
     const [viewType, setViewType] = useState('list');
@@ -47,6 +48,7 @@ const CustomerInfoScreen = ({ navigation }) => {
     const [customerId, setCustomerId] = useState()
     const [keyboardHeight, setKeyboardHeight] = useState(0);
     const [defaultIsoCode, setDefaultIsoCode] = useState('US');
+    const [address, setAddress] = useState("");
     const [rawNumber, setRawNumber] = useState('');
 
     const [formData, setFormData] = useState({
@@ -102,11 +104,11 @@ const CustomerInfoScreen = ({ navigation }) => {
         if (!phoneNumber || !phoneNumber.startsWith('+')) {
             return { isoCode: 'US', rawNumber: '' };
         }
-        
+
         // Extract calling code (can be 1-4 digits after +)
         const matchedCode = phoneNumber.match(/^\+(\d{1,4})/);
         const callingCode = matchedCode ? `+${matchedCode[1]}` : null;
-        
+
         if (callingCode) {
             // Common country codes mapping (synchronous)
             const commonCodes = {
@@ -118,18 +120,18 @@ const CustomerInfoScreen = ({ navigation }) => {
                 '+358': 'FI', '+351': 'PT', '+353': 'IE', '+48': 'PL',
                 '+420': 'CZ', '+36': 'HU', '+40': 'RO', '+30': 'GR',
             };
-            
+
             const isoCode = commonCodes[callingCode] || 'US';
-            
+
             // Extract only the number part (remove country code and any separators)
             const rawNumber = phoneNumber
                 .replace(callingCode, '')
                 .replace(/[^0-9]/g, '')
                 .trim();
-            
+
             return { isoCode, rawNumber };
         }
-        
+
         return { isoCode: 'US', rawNumber: phoneNumber.replace(/[^0-9]/g, '') };
     };
 
@@ -139,7 +141,7 @@ const CustomerInfoScreen = ({ navigation }) => {
             if (formData.phoneNumber?.startsWith('+') && isEditMode && defaultIsoCode === 'US') {
                 const matchedCode = formData.phoneNumber.match(/^\+(\d{1,4})/);
                 const callingCode = matchedCode ? `+${matchedCode[1]}` : null;
-                
+
                 // Only fetch if it's not +1 (US) and we haven't set a specific country yet
                 if (callingCode && callingCode !== '+1') {
                     const iso = await getCountryByCallingCode(callingCode);
@@ -586,12 +588,12 @@ const CustomerInfoScreen = ({ navigation }) => {
                                                         setIsAddMode(true);
                                                         setErrors({});
                                                         setCustomerId(item?.id);
-                                                        
+
                                                         // Extract phone number parts synchronously
                                                         const phoneParts = extractPhoneNumberParts(item.phoneNumber || '');
                                                         setDefaultIsoCode(phoneParts.isoCode);
                                                         setRawNumber(phoneParts.rawNumber);
-                                                        
+
                                                         // Set form data
                                                         setFormData({
                                                             fullName: item.fullName || '',
@@ -615,12 +617,12 @@ const CustomerInfoScreen = ({ navigation }) => {
                                                             setIsAddMode(true);
                                                             setErrors({});
                                                             setCustomerId(item?.id);
-                                                            
+
                                                             // Extract phone number parts synchronously
                                                             const phoneParts = extractPhoneNumberParts(item.phoneNumber || '');
                                                             setDefaultIsoCode(phoneParts.isoCode);
                                                             setRawNumber(phoneParts.rawNumber);
-                                                            
+
                                                             // Set form data
                                                             setFormData({
                                                                 fullName: item.fullName || '',
@@ -734,12 +736,12 @@ const CustomerInfoScreen = ({ navigation }) => {
                                                     setIsAddMode(true);
                                                     setErrors({});
                                                     setCustomerId(item?.id);
-                                                    
+
                                                     // Extract phone number parts synchronously
                                                     const phoneParts = extractPhoneNumberParts(item.phoneNumber || '');
                                                     setDefaultIsoCode(phoneParts.isoCode);
                                                     setRawNumber(phoneParts.rawNumber);
-                                                    
+
                                                     // Set form data
                                                     setFormData({
                                                         fullName: item.fullName || '',
@@ -784,12 +786,12 @@ const CustomerInfoScreen = ({ navigation }) => {
                                                             setIsAddMode(true);
                                                             setErrors({});
                                                             setCustomerId(item?.id);
-                                                            
+
                                                             // Extract phone number parts synchronously
                                                             const phoneParts = extractPhoneNumberParts(item.phoneNumber || '');
                                                             setDefaultIsoCode(phoneParts.isoCode);
                                                             setRawNumber(phoneParts.rawNumber);
-                                                            
+
                                                             // Set form data
                                                             setFormData({
                                                                 fullName: item.fullName || '',
@@ -894,14 +896,14 @@ const CustomerInfoScreen = ({ navigation }) => {
                 ) : (
                     // 👇 Add Customer Form
                     <View style={{ flex: 1, position: 'relative' }}>
-                        <ScrollView 
-                            style={[styles.container, { flex: 1 }]} 
-                            showsVerticalScrollIndicator={false} 
+                        <ScrollView
+                            style={[styles.container, { flex: 1 }]}
+                            showsVerticalScrollIndicator={false}
                             keyboardShouldPersistTaps="always"
-                            contentContainerStyle={{ 
-                                paddingBottom: Platform.OS === 'android' && keyboardHeight > 0 
-                                    ? keyboardHeight + 100 
-                                    : 100 
+                            contentContainerStyle={{
+                                paddingBottom: Platform.OS === 'android' && keyboardHeight > 0
+                                    ? keyboardHeight + 100
+                                    : 100
                             }}
                         >
                             <View style={styles.content}>
@@ -951,56 +953,68 @@ const CustomerInfoScreen = ({ navigation }) => {
                                 </View>
                                 {errors.phoneNumber && <Text style={styles.error}>{errors.phoneNumber}</Text>}
 
-                                <View style={styles.phoneContainer}>
-                                    <Text style={styles.label}>
-                                        Address
-                                    </Text>
+                                <View style={[styles.inputGroup, {
+                                    height: isTablet
+                                        ? orientation === "LANDSCAPE"
+                                            ? hp(10)
+                                            : hp(8)
+                                        : hp(10)
+                                }]}>
+                                    <Text style={styles.label}>Address</Text>
+
                                     <View style={{ flex: 1, position: 'relative', zIndex: 999 }}>
                                         <GooglePlacesAutocomplete
                                             ref={googleRef}
-                                            placeholder="Enter Your Address"
+                                            placeholder="Enter Address"
                                             fetchDetails={true}
-                                            onPress={(data, details = null) => {
-                                                console.log('Selected:', data?.description);
-                                                handleInputChange("address", data?.description);
-                                                // googleRef.current?.setAddressText(data?.description);
 
+                                            onPress={(data, details = null) => {
+                                                const selected = data?.description || "";
+                                                addressTextRef.current = selected;
+                                                setAddress(selected);
                                             }}
-                                            // textInputProps={{
-                                            //     onChangeText: (text) => {
-                                            //         handleInputChange("address", text);
-                                            //     },
-                                            //     placeholder: "Enter your address",
-                                            // }}
+
                                             enablePoweredByContainer={false}
-                                            // keepResultsAfterBlur={Platform.OS === "android" ? false : true}
+
                                             query={{
                                                 key: GOOGLE_MAP_API_KEY,
                                                 language: 'en',
                                             }}
+
                                             textInputProps={{
+                                                defaultValue: address,   // ⭐ PREFILLED FIX
                                                 multiline: true,
-                                                numberOfLines: 3,
+                                                onChangeText: (text) => {
+                                                    addressTextRef.current = text;
+                                                    setAddress(text);       // ⭐ TYPING FIX
+                                                },
                                             }}
+
                                             styles={{
                                                 container: {
                                                     flex: 1,
                                                     zIndex: 999,
                                                 },
                                                 listView: {
-                                                    zIndex: 999,
-                                                    elevation: 5,
+                                                    position: "absolute",
+                                                    top: isTablet ? hp(4) : hp(7),
+                                                    left: 0,
+                                                    right: 0,
                                                     backgroundColor: "#fff",
-                                                    marginTop: 5,
+                                                    zIndex: 999999,
+                                                    elevation: 10,
+                                                    borderRadius: 12,
+                                                    borderWidth: 1,
+                                                    borderColor: "#eee",
                                                 },
                                                 textInputContainer: {
                                                     zIndex: 999,
                                                 },
                                                 textInput: {
-                                                    height: 90,
+                                                    height: hp(6),
                                                     borderWidth: 1,
                                                     borderColor: blackColor,
-                                                    borderRadius: 10,
+                                                    borderRadius: 50,
                                                     paddingHorizontal: 16,
                                                     paddingVertical: 12,
                                                     backgroundColor: '#fff',
@@ -1010,6 +1024,7 @@ const CustomerInfoScreen = ({ navigation }) => {
                                         />
                                     </View>
                                 </View>
+
                                 {errors.address && <Text style={styles.error}>{errors.address}</Text>}
 
                                 {errors?.apiError?.message ? (
@@ -1021,11 +1036,11 @@ const CustomerInfoScreen = ({ navigation }) => {
                         </ScrollView>
                         {isAddMode && (
                             <View style={[
-                                { 
-                                    backgroundColor: whiteColor, 
-                                    paddingTop: spacings.xLarge, 
-                                    paddingHorizontal: spacings.xxxLarge, 
-                                    paddingBottom: spacings.xLarge,
+                                {
+                                    backgroundColor: whiteColor,
+                                    paddingTop: spacings.xLarge,
+                                    paddingHorizontal: spacings.xxxLarge,
+                                    paddingBottom: spacings.large,
                                     borderTopWidth: 1,
                                     borderTopColor: lightGrayColor,
                                     ...(Platform.OS === 'android' && keyboardHeight > 0 ? {
@@ -1034,13 +1049,13 @@ const CustomerInfoScreen = ({ navigation }) => {
                                         left: 0,
                                         right: 0,
                                         width: '100%',
-                                    } : {bottom: hp(4.4)}),
+                                    } : { bottom: hp(4.4) }),
                                     // elevation: 5,
                                     // shadowColor: "#000",
                                     // shadowOffset: { width: 0, height: -2 },
                                     // shadowOpacity: 0.1,
                                     // shadowRadius: 3,
-                                }, 
+                                },
                                 alignJustifyCenter
                             ]}>
                                 <CustomButton

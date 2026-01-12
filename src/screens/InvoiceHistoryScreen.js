@@ -328,7 +328,16 @@ const InvoiceHistoryScreen = ({ navigation,
                         }}
                         placeholderTextColor={grayColor}
                     />
-                    <Feather name="search" size={20} color={blackColor} />
+                    {searchText.length > 0 ? (
+                        <TouchableOpacity
+                            onPress={() => setSearchText('')}
+                            style={{ marginLeft: spacings.small }}
+                        >
+                            <Feather name="x" size={20} color={blackColor} />
+                        </TouchableOpacity>
+                    ) : (
+                        <Feather name="search" size={20} color={blackColor} />
+                    )}
                 </View>
             </View>
 

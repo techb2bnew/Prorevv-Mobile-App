@@ -879,14 +879,24 @@ const HomeScreen = ({ navigation }) => {
                   onChangeText={handleVinTextChange}
                   autoCapitalize="characters"
                 />
-                {isSearchingVin && (
+                {searchVinText.length > 0 ? (
+                  <TouchableOpacity
+                    onPress={() => {
+                      setSearchVinText('');
+                      setVinSearchResults(null);
+                    }}
+                    style={{ marginRight: spacings.small }}
+                  >
+                    <Feather name="x" size={20} color={blackColor} />
+                  </TouchableOpacity>
+                ) : isSearchingVin ? (
                   <Feather
                     name="loader"
                     size={20}
                     color={blackColor}
                     style={{ marginRight: spacings.small }}
                   />
-                )}
+                ) : null}
                 <TouchableOpacity
                   style={styles.scanButton}
                   onPress={openScanner}
@@ -902,7 +912,7 @@ const HomeScreen = ({ navigation }) => {
             <Pressable style={[styles.vinResultsContainer,
             {
               top: isTablet ?
-                Platform.OS === 'ios' ? hp(25) : hp(24) : Platform.OS === 'ios' ? hp(25.5) : hp(31.5)
+                Platform.OS === 'ios' ? hp(25) : hp(21) : Platform.OS === 'ios' ? hp(25.5) : hp(27.5)
             }]} onPress={() => {
               if (vinSearchResults && !vinSearchResults.noResult) {
                 navigation.navigate("VehicleDetailsScreen", {

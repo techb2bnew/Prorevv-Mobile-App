@@ -72,48 +72,48 @@ const GenerateInvoiceScreen = ({ navigation,
     const [autoSavingVehicles, setAutoSavingVehicles] = useState(new Set()); // Track which vehicles are being auto-saved
     const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
 
-    useFocusEffect(
-        useCallback(() => {
-            const loadSelectedCustomerAndJob = async () => {
-                try {
-                    // Load selected customer from AsyncStorage
-                    const savedCustomer = await AsyncStorage.getItem("current_customer");
-                    if (savedCustomer) {
-                        const parsedCustomer = JSON.parse(savedCustomer);
-                        // console.log("Loading saved customer:", parsedCustomer);
-                        setCustomerDetails(parsedCustomer);
-                    }
+    // useFocusEffect(
+    //     useCallback(() => {
+    //         const loadSelectedCustomerAndJob = async () => {
+    //             try {
+    //                 // Load selected customer from AsyncStorage
+    //                 const savedCustomer = await AsyncStorage.getItem("current_customer");
+    //                 if (savedCustomer) {
+    //                     const parsedCustomer = JSON.parse(savedCustomer);
+    //                     // console.log("Loading saved customer:", parsedCustomer);
+    //                     setCustomerDetails(parsedCustomer);
+    //                 }
 
-                    // Load selected job from AsyncStorage
-                    const savedJob = await AsyncStorage.getItem("current_Job");
-                    if (savedJob) {
-                        const parsedJob = JSON.parse(savedJob);
-                        // console.log("Loading saved job:", parsedJob);
+    //                 // Load selected job from AsyncStorage
+    //                 const savedJob = await AsyncStorage.getItem("current_Job");
+    //                 if (savedJob) {
+    //                     const parsedJob = JSON.parse(savedJob);
+    //                     // console.log("Loading saved job:", parsedJob);
 
-                        // Set the job details
-                        setSelectedJobId(parsedJob.id);
+    //                     // Set the job details
+    //                     setSelectedJobId(parsedJob.id);
 
-                        // If no customer was loaded from current_customer, try to get it from job data
-                        if (!savedCustomer && parsedJob.assignCustomer) {
-                            setCustomerDetails(parsedJob.assignCustomer);
-                        }
-                    }
-                } catch (error) {
-                    console.error("Error loading saved customer and job:", error);
-                }
-            };
+    //                     // If no customer was loaded from current_customer, try to get it from job data
+    //                     if (!savedCustomer && parsedJob.assignCustomer) {
+    //                         setCustomerDetails(parsedJob.assignCustomer);
+    //                     }
+    //                 }
+    //             } catch (error) {
+    //                 console.error("Error loading saved customer and job:", error);
+    //             }
+    //         };
 
-            // Reset other states but keep customer and job if they exist
-            setSelectedVehicles([]);
-            setSelectAll(false);
-            setWorkOrdersRawData([]);
+    //         // Reset other states but keep customer and job if they exist
+    //         setSelectedVehicles([]);
+    //         setSelectAll(false);
+    //         setWorkOrdersRawData([]);
 
-            // Load saved selections
-            loadSelectedCustomerAndJob();
+    //         // Load saved selections
+    //         loadSelectedCustomerAndJob();
 
-            // Fetch fresh data - will be called after technicianId is loaded
-        }, [])
-    );
+    //         // Fetch fresh data - will be called after technicianId is loaded
+    //     }, [])
+    // );
     useEffect(() => {
         const getTechnicianDetail = async () => {
             try {
@@ -134,7 +134,7 @@ const GenerateInvoiceScreen = ({ navigation,
     // Fetch customers when technicianId or technicianType is first available
     const hasFetchedInitial = useRef(false);
     const isFetchingCustomers = useRef(false);
-    
+
     useEffect(() => {
         if ((technicianType === "manager" || technicianId) && !hasFetchedInitial.current && !isFetchingCustomers.current) {
             hasFetchedInitial.current = true;
@@ -1163,13 +1163,12 @@ const GenerateInvoiceScreen = ({ navigation,
                 showsVerticalScrollIndicator={true}
                 keyboardShouldPersistTaps="handled"
                 contentContainerStyle={{
-                    flexGrow: 1,
+                    // flexGrow: 1,
+                    height: Platform.OS === 'ios' ? hp(80.7) : hp(85.7),
                     paddingBottom: isKeyboardOpen ? 100 : 0
                 }}
                 nestedScrollEnabled={true}
             >
-
-
                 <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
                     <View style={{ paddingHorizontal: spacings.large, width: "50%" }} >
                         <Text style={[styles.label, { fontSize: style.fontSizeMedium.fontSize, }]}>Select Customer <Text style={{ color: 'red' }}>*</Text></Text>
@@ -1268,7 +1267,16 @@ const GenerateInvoiceScreen = ({ navigation,
                             }}
                             placeholderTextColor={grayColor}
                         />
-                        <Feather name="search" size={20} color={blackColor} />
+                        {searchText.length > 0 ? (
+                            <TouchableOpacity
+                                onPress={() => setSearchText('')}
+                                style={{ marginLeft: spacings.small }}
+                            >
+                                <Feather name="x" size={20} color={blackColor} />
+                            </TouchableOpacity>
+                        ) : (
+                            <Feather name="search" size={20} color={blackColor} />
+                        )}
                     </View>
                 </View>
 
@@ -1379,6 +1387,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                                             borderRadius: 5,
                                                             width: isIOSAndTablet ? wp(23) : orientation === "LANDSCAPE" ? wp(23) : wp(30),
                                                             marginRight: 10,
+                                                            backgroundColor: whiteColor
                                                         }}
                                                         keyboardType="numeric"
                                                         placeholder="Enter rate"
@@ -1937,7 +1946,6 @@ const GenerateInvoiceScreen = ({ navigation,
                     }}
                     onCancel={() => setIsEndPickerOpen(false)}
                 />
-
 
             </ScrollView>
         </KeyboardAvoidingView>

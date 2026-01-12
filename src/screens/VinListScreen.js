@@ -733,13 +733,22 @@ const VinListScreen = ({ navigation, route }) => {
                             value={searchVin}
                             onChangeText={text => setSearchVin(text)}
                         />
-                        <TouchableOpacity style={styles.iconContainer} onPress={() => {
-                            navigation.navigate("ScannerScreen", {
-                                from: "VinList"
-                            })
-                        }}>
-                            <AntDesign name="scan1" size={24} color="#252837" />
-                        </TouchableOpacity>
+                        {searchVin.length > 0 ? (
+                            <TouchableOpacity
+                                onPress={() => setSearchVin('')}
+                                style={styles.iconContainer}
+                            >
+                                <Feather name="x" size={20} color={blackColor} />
+                            </TouchableOpacity>
+                        ) : (
+                            <TouchableOpacity style={styles.iconContainer} onPress={() => {
+                                navigation.navigate("ScannerScreen", {
+                                    from: "VinList"
+                                })
+                            }}>
+                                <AntDesign name="scan1" size={24} color="#252837" />
+                            </TouchableOpacity>
+                        )}
                     </View>
                     <TouchableOpacity style={[styles.filterButton, { top: Platform.OS === "android" ? isTablet ? hp(1.2) : hp(2.8) : isIOSAndTablet ? hp(1.5) : hp(2.7), right: Platform.OS === "android" ? isTablet ? 10 : 10 : isIOSAndTablet ? 10 : 10 }]}
                         onPress={toggleModal}

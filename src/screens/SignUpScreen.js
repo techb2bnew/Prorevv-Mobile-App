@@ -51,6 +51,7 @@ const SignUpScreen = ({ navigation }) => {
     const [cities, setCities] = useState([]);
     const [cityValue, setCityValue] = useState("");
     const googleRef = useRef();
+    const addressTextRef = useRef("");
 
     const [formData, setFormData] = useState({
         firstName: "",
@@ -888,6 +889,8 @@ const SignUpScreen = ({ navigation }) => {
                                     fetchDetails={true}
                                     onPress={(data, details = null) => {
                                         console.log('Selected:', data?.description);
+                                        // Update ref and state when suggestion is selected
+                                        addressTextRef.current = data?.description;
                                         handleInputChange("address", data?.description);
                                         // Update text manually
                                         googleRef.current?.setAddressText(data?.description);
@@ -897,6 +900,19 @@ const SignUpScreen = ({ navigation }) => {
                                             googleRef.current?.blur();
                                         }, 100);
                                     }}
+                                    textInputProps={{
+                                        onChangeText: (text) => {
+                                            // Track the current text in ref
+                                            addressTextRef.current = text;
+                                        },
+                                        onBlur: () => {
+                                            // Save the tracked text to state when user finishes typing
+                                            if (addressTextRef.current) {
+                                                handleInputChange("address", addressTextRef.current);
+                                            }
+                                        },
+                                    }}
+                                    onFail={(error) => console.log('Google Places Error:', error)}
                                     enablePoweredByContainer={false}
                                     // keepResultsAfterBlur={Platform.OS === "android" ? false : true}
                                     query={{

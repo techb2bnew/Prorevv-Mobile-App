@@ -99,7 +99,7 @@ const OnboardingScreen = ({ navigation }) => {
           }]}>
             <Text style={[styles.welcomeTitle]}>Welcome to Prorevv!</Text>
             <Text style={styles.welcomeDescription}>
-              Manage car servicing like a pro.Scan VINs, assign tasks, and track job progress — all in one smart app.
+              Manage car servicing like a pro. Scan VINs, assign tasks, and track job progress — all in one smart app.
             </Text>
           </View>
           <View style={[styles.welcomeButtonContainer, {
