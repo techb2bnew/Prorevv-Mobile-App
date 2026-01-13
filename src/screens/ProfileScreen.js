@@ -18,7 +18,7 @@ import { ScrollView } from 'react-native-gesture-handler';
 import PhoneInput from 'react-native-phone-number-input';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import { Image as ImageCompressor } from 'react-native-compressor';
-import { API_BASE_URL } from '../constans/Constants';
+import { API_BASE_URL, GOOGLE_MAP_API_KEY } from '../constans/Constants';
 import NetInfo from "@react-native-community/netinfo";
 import ConfirmationModal from '../componets/Modal/ConfirmationModal';
 import ContactSupportModal from '../componets/Modal/ContactSupportModal';
@@ -27,6 +27,7 @@ import Header from '../componets/Header';
 import { useEditing, useTabBar } from '../TabBarContext';
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import { useOrientation } from '../OrientationContext';
+
 
 const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween, textAlign, justifyContentCenter } = BaseStyle;
 
@@ -77,7 +78,9 @@ const ProfileScreen = ({ navigation }) => {
   const isIOsAndTablet = Platform.OS === "ios" && isTablet;
   const [cities, setCities] = useState([]);
   const [cityValue, setCityValue] = useState("");
-  const googleRef = useRef();
+  const ref = useRef();
+  const addressTextRef = useRef("");
+
 
 
   useEffect(() => {
@@ -91,7 +94,7 @@ const ProfileScreen = ({ navigation }) => {
         try {
           console.log("🔄 Starting to fetch technician profile...");
           setLoading(true);
-          
+
           const netState = await NetInfo.fetch();
           console.log("🌐 Network state:", netState.isConnected);
 
@@ -227,7 +230,7 @@ const ProfileScreen = ({ navigation }) => {
           if (match) {
             const callingCode = `+${match[1]}`;
             const numberOnly = match[2].replace(/[^0-9]/g, '').trim();
-            
+
             console.log("Primary Phone - Calling Code:", callingCode, "Number:", numberOnly);
 
             // Get ISO code for the country
@@ -243,14 +246,14 @@ const ProfileScreen = ({ navigation }) => {
               console.log("Error getting country code:", error);
               setDefaultIsoCode('US');
             }
-            
+
             // Set the raw number (without country code)
             setRawNumber(numberOnly);
           } else {
             // Fallback: try to extract just the country code
             const matchedCode = phoneNumber.match(/^\+(\d{1,4})/);
             const callingCode = matchedCode ? `+${matchedCode[1]}` : null;
-            
+
             if (callingCode) {
               try {
                 const iso = await getCountryByCallingCode(callingCode);
@@ -297,7 +300,7 @@ const ProfileScreen = ({ navigation }) => {
           if (match) {
             const callingCode = `+${match[1]}`;
             const numberOnly = match[2].replace(/[^0-9]/g, '').trim();
-            
+
             console.log("Secondary Phone - Calling Code:", callingCode, "Number:", numberOnly);
 
             // Get ISO code for the country
@@ -312,7 +315,7 @@ const ProfileScreen = ({ navigation }) => {
               console.log("Error getting country code:", error);
               setDefaultSecondryIsoCode('US');
             }
-            
+
             // Set the raw number (without country code)
             setRawSecondryNumber(numberOnly);
           } else {
@@ -720,7 +723,7 @@ const ProfileScreen = ({ navigation }) => {
       setIsEditingLoading(false);
       return;
     }
-    
+
     // Check if phone number has valid format - extract only digits and check length
     const digitsOnly = trimmedPhoneNumber.replace(/\D/g, '');
     if (digitsOnly.length < 7 || digitsOnly.length > 15) {
@@ -760,7 +763,7 @@ const ProfileScreen = ({ navigation }) => {
         .replace(`+${countryCode}`, "")
         .replace(/[- ]/g, "")
         .trim();
-      
+
       if (phoneWithoutCode) {
         formattedPhoneNumber = `+${countryCode}-${phoneWithoutCode}`;
       }
@@ -775,7 +778,7 @@ const ProfileScreen = ({ navigation }) => {
         .replace(`+${secondryCountryCode}`, "")
         .replace(/[- ]/g, "")
         .trim();
-      
+
       if (secondaryWithoutCode) {
         formattedSecondaryPhone = `+${secondryCountryCode}-${secondaryWithoutCode}`;
       }
@@ -1107,19 +1110,18 @@ const ProfileScreen = ({ navigation }) => {
           </View>
         </View>
         :
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1, backgroundColor: whiteColor }}>
-          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1, backgroundColor: whiteColor }}>
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
             <ScrollView
               contentContainerStyle={{ flexGrow: 1, marginBottom: 100, paddingBottom: orientation === "LANDSCAPE" ? hp(15) : hp(1), backgroundColor: whiteColor }}
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
             >
-              {isLoadingState && (
+              {/* {isLoadingState && (
                 <View style={styles.loadingOverlay}>
                   <ActivityIndicator size="large" color={blackColor} />
                 </View>
-              )}
+              )} */}
               <View style={[styles.container]}>
                 <View style={{
                   width: "100%",
@@ -1246,6 +1248,90 @@ const ProfileScreen = ({ navigation }) => {
                     <Text style={styles.label}>Address</Text>
                     <TextInput style={styles.input} value={address} onChangeText={setAddress} placeholder="Enter Address" />
                   </View>
+
+                  {/* <View style={[styles.inputGroup, { height: isTablet ? orientation === "LANDSCAPE" ? hp(10) : hp(5.5) :Platform.OS === "ios" ? hp(8) : hp(10) }]}>
+                    <Text style={styles.label}>Address</Text>
+
+                    <View style={styles.placesWrapper}>
+                      <GooglePlacesAutocomplete
+                        ref={ref}
+                        placeholder="Enter Address"
+                        fetchDetails={true}
+
+                        onPress={(data, details = null) => {
+                          const selected = data?.description || "";
+                          addressTextRef.current = selected;
+                          setAddress(selected);
+                        }}
+
+                        enablePoweredByContainer={false}
+
+                        query={{
+                          key: GOOGLE_MAP_API_KEY,
+                          language: 'en',
+                        }}
+
+                        textInputProps={{
+                          value: address,   // ⭐ PREFILLED FIX
+                          multiline: true,
+                          onChangeText: (text) => {
+                            addressTextRef.current = text;
+                            console.log("addressTextRef.current",address.length);
+                            if(addressTextRef.current !== "") {
+                              setAddress(text);
+                            }
+                          },
+                        }}
+
+
+                        styles={{
+                          container: {
+                            flex: 0,
+                            zIndex: 99999,
+                          },
+                          textInputContainer: {
+                            zIndex: 99999,
+                          },
+                          textInput: {
+                            height: isTablet ? hp(3.5) : Platform.OS === "ios" ? hp(4.5) : hp(6),
+                            borderWidth: 1,
+                            borderColor: blackColor,
+                            borderRadius: 50,
+                            paddingHorizontal: 16,
+                            paddingVertical: 12,
+                            backgroundColor: "#fff",
+                            textAlignVertical: "top",
+                            color: blackColor,
+                          },
+
+                          // ✅ dropdown
+                          listView: {
+                            position: "absolute",
+                            top: isTablet ? hp(4) :Platform.OS === "ios" ? hp(5) : hp(7),
+                            left: 0,
+                            right: 0,
+                            backgroundColor: "#fff",
+                            zIndex: 999999,
+                            elevation: 10,
+                            borderRadius: 12,
+                            borderWidth: 1,
+                            borderColor: "#eee",
+                          },
+                          row: {
+                            padding: 14,
+                            height: 50,
+                            flexDirection: "row",
+                            alignItems: "center",
+                          },
+                          description: {
+                            color: blackColor,
+                          },
+                        }}
+                      />
+                    </View>
+                  </View> */}
+
+
                   <View style={styles.inputGroup}>
                     <Text style={styles.label}>Secondary Phone Number (Optional)</Text>
                     <PhoneInput

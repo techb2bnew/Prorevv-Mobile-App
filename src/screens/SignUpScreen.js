@@ -549,7 +549,7 @@ const SignUpScreen = ({ navigation }) => {
     };
 
     const handleLogin = () => {
-        navigation.navigate("Login");
+        navigation.goBack();
     };
 
 
