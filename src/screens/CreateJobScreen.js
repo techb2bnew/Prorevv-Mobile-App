@@ -1274,12 +1274,31 @@ const CreateJobScreen = ({ route }) => {
                                         onChangeText={(text) => setNotes(text)}
                                         value={notes}
                                         onFocus={() => {
-                                            // Scroll to end to ensure input is visible when keyboard appears
+                                            // Scroll to ensure input is visible when keyboard appears
                                             setTimeout(() => {
-                                                if (scrollViewRef.current) {
-                                                    scrollViewRef.current.scrollToEnd({ animated: true });
+                                                if (scrollViewRef.current && notesInputRef.current) {
+                                                    if (Platform.OS === 'ios') {
+                                                        // iOS: Use measureLayout for better scroll position
+                                                        notesInputRef.current.measureLayout(
+                                                            scrollViewRef.current,
+                                                            (x, y, width, height) => {
+                                                                // Scroll to show input above keyboard with extra padding for iOS
+                                                                scrollViewRef.current?.scrollTo({
+                                                                    y: Math.max(0, y - 200), // Extra 200px padding for iOS
+                                                                    animated: true,
+                                                                });
+                                                            },
+                                                            (error) => {
+                                                                // Fallback: scroll to end
+                                                                scrollViewRef.current?.scrollToEnd({ animated: true });
+                                                            }
+                                                        );
+                                                    } else {
+                                                        // Android: Scroll to end
+                                                        scrollViewRef.current.scrollToEnd({ animated: true });
+                                                    }
                                                 }
-                                            }, 100);
+                                            }, Platform.OS === 'ios' ? 300 : 100);
                                         }}
                                     />
                                 </View>

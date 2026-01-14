@@ -172,7 +172,7 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
           { backgroundColor: index % 2 === 0 ? lightGrayColor : whiteColor }
         ]}
       >
-        <Text style={[styles.cell, { width: wp(40) }]}>{item.vin || 'N/A'}</Text>
+        <Text style={[styles.cell, { width: wp(40),textAlign:  'left' ,paddingLeft: spacings.small2x }]}>{item.vin || 'N/A'}</Text>
         <Text style={[styles.cell, { width: wp(25), paddingLeft: spacings.small2x }]}>{item.make || '-'}</Text>
         <Text style={[styles.cell, { width: wp(22) }]}>{item.model || '-'}</Text>
         <Text style={[styles.cell, { width: wp(25) }]}>{item.modelYear || '-'}</Text>

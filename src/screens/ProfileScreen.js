@@ -1,4 +1,4 @@
-import { Alert, Image, Pressable, StyleSheet, Text, TouchableOpacity, View, PermissionsAndroid, Platform, ActivityIndicator, TextInput, TouchableWithoutFeedback, KeyboardAvoidingView, Keyboard, Modal, Linking, Dimensions, useWindowDimensions } from 'react-native'
+import { Alert, Image, Pressable, StyleSheet, Text, TouchableOpacity, View, PermissionsAndroid, Platform, ActivityIndicator, TextInput, TouchableWithoutFeedback, KeyboardAvoidingView, Keyboard, Modal, Linking, Dimensions, useWindowDimensions, BackHandler } from 'react-native'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { blackColor, blueColor, grayColor, greenColor, lightBlueColor, lightGrayColor, mediumGray, orangeColor, redColor, whiteColor } from '../constans/Color';
 import { BaseStyle } from '../constans/Style';
@@ -80,6 +80,9 @@ const ProfileScreen = ({ navigation }) => {
   const [cityValue, setCityValue] = useState("");
   const ref = useRef();
   const addressTextRef = useRef("");
+  const scrollViewRef = useRef(null);
+  const inputRefs = useRef({});
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
 
 
@@ -88,8 +91,26 @@ const ProfileScreen = ({ navigation }) => {
     return () => setIsTabBarHidden(isEditing);
   }, [isEditing]);
 
+  // Android hardware back button handler
   useFocusEffect(
     useCallback(() => {
+      // Android back button handler
+      const backHandler = Platform.OS === 'android' ? BackHandler.addEventListener('hardwareBackPress', () => {
+        if (isEditing) {
+          setIsEditing(false);
+          return true; // Prevent default back behavior
+        }
+        // Navigate back properly to show tab bar
+        // Use parent navigation to ensure tab bar shows
+        const parent = navigation.getParent();
+        if (parent) {
+          parent.navigate('Home', { screen: 'Home' });
+        } else {
+          navigation.goBack();
+        }
+        return true; // Prevent default back behavior
+      }) : null;
+
       const fetchTechnicianProfile = async () => {
         try {
           console.log("🔄 Starting to fetch technician profile...");
@@ -186,7 +207,13 @@ const ProfileScreen = ({ navigation }) => {
 
       fetchTechnicianProfile();
 
-    }, [isEditing])
+      // Cleanup back handler
+      return () => {
+        if (backHandler) {
+          backHandler.remove();
+        }
+      };
+    }, [isEditing, navigation])
   );
 
   const getCountryByCallingCode = async (callingCode) => {
@@ -683,6 +710,64 @@ const ProfileScreen = ({ navigation }) => {
   };
 
   // 📌 Handle Save Profile
+  // Handle input focus - scroll to input when keyboard opens (same for both iOS and Android)
+  const handleInputFocus = (inputName) => {
+    setTimeout(() => {
+      if (scrollViewRef.current && inputRefs.current[inputName]) {
+        inputRefs.current[inputName].measureLayout(
+          scrollViewRef.current,
+          (x, y, width, height) => {
+            // Scroll to show input above keyboard (150px offset) - same for iOS and Android
+            scrollViewRef.current?.scrollTo({
+              y: Math.max(0, y - 150),
+              animated: true,
+            });
+          },
+          (error) => {
+            // Fallback: try measure instead
+            inputRefs.current[inputName].measure((fx, fy, fwidth, fheight, fpageX, fpageY) => {
+              scrollViewRef.current?.scrollTo({
+                y: Math.max(0, fpageY - 200),
+                animated: true,
+              });
+            });
+          }
+        );
+      }
+    }, Platform.OS === 'android' ? 400 : 300); // Slightly longer delay for Android
+  };
+
+  // Keyboard event listeners
+  useEffect(() => {
+    if (!isEditing) return; // Only add listeners when editing
+    
+    const keyboardDidShowListener = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      (e) => {
+        // Track keyboard height for Android only - no scroll here
+        if (Platform.OS === 'android') {
+          const height = e.endCoordinates.height;
+          setKeyboardHeight(height);
+          // Don't scroll here - let handleInputFocus handle it
+        }
+      }
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => {
+        // Keyboard is hidden
+        if (Platform.OS === 'android') {
+          setKeyboardHeight(0);
+        }
+      }
+    );
+
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, [isEditing]);
+
   const handleSave = async () => {
     setError("");
     setSecondaryPhoneError("");
@@ -952,7 +1037,7 @@ const ProfileScreen = ({ navigation }) => {
       </TouchableOpacity>}
       {!isEditing ?
         <View style={[styles.container]}>
-          <View style={{ height: Platform.OS === "android" ? roleType === "single-technician" ? orientation === "LANDSCAPE" ? hp(85) : hp(93) : hp(82.5) : roleType === "single-technician" ? hp(90) : hp(75.5), width: "100%" }}>
+          <View style={{ height: Platform.OS === "android" ? roleType === "single-technician" ? orientation === "LANDSCAPE" ? hp(85) : hp(93) : hp(82.5) : roleType === "single-technician" ? hp(90) : hp(82.5), width: "100%" }}>
             <ScrollView
               contentContainerStyle={{ backgroundColor: whiteColor }}
               showsVerticalScrollIndicator={false}
@@ -1110,12 +1195,25 @@ const ProfileScreen = ({ navigation }) => {
           </View>
         </View>
         :
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1, backgroundColor: whiteColor }}>
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === "ios" ? "padding" : undefined} 
+          style={{ flex: 1, backgroundColor: whiteColor }}
+        >
           <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
             <ScrollView
-              contentContainerStyle={{ flexGrow: 1, marginBottom: 100, paddingBottom: orientation === "LANDSCAPE" ? hp(15) : hp(1), backgroundColor: whiteColor }}
+              ref={scrollViewRef}
+              contentContainerStyle={{ 
+                flexGrow: 1, 
+                marginBottom: 100, 
+                paddingBottom: Platform.OS === "android" 
+                  ? (keyboardHeight > 0 ? keyboardHeight  : orientation === "LANDSCAPE" ? hp(15) : hp(1))
+                  : (orientation === "LANDSCAPE" ? hp(15) : hp(1)), 
+                backgroundColor: whiteColor 
+              }}
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
+              style={{ backgroundColor: whiteColor }}
+              nestedScrollEnabled={true}
             >
               {/* {isLoadingState && (
                 <View style={styles.loadingOverlay}>
@@ -1182,13 +1280,17 @@ const ProfileScreen = ({ navigation }) => {
                   <View style={[flexDirectionRow, justifyContentSpaceBetween, { width: "100%" }]}>
                     <View style={styles.inputGroup}>
                       <Text style={styles.label}>First Name<Text style={styles.asterisk}> *</Text></Text>
-                      <TextInput style={[styles.input, { width: isTablet ? wp(46) : wp(43.5), borderColor: errors.firstName ? redColor : blackColor }]} value={firstName}
+                      <TextInput 
+                        ref={(ref) => (inputRefs.current.firstName = ref)}
+                        style={[styles.input, { width: isTablet ? wp(46) : wp(43.5), borderColor: errors.firstName ? redColor : blackColor }]} 
+                        value={firstName}
                         onChangeText={(text) => {
                           setFirstName(text);
                           if (errors.firstName) {
                             setErrors(prev => ({ ...prev, firstName: "" }));
                           }
                         }}
+                        onFocus={() => handleInputFocus("firstName")}
                         placeholder="Enter First Name"
                         maxLength={20} />
                       {errors.firstName && <Text style={{ color: 'red', fontSize: 12, marginTop: 4 }}>{errors.firstName}</Text>}
@@ -1196,7 +1298,9 @@ const ProfileScreen = ({ navigation }) => {
 
                     <View style={styles.inputGroup}>
                       <Text style={styles.label}>Last Name<Text style={styles.asterisk}> *</Text></Text>
-                      <TextInput style={[styles.input, { width: isTablet ? wp(46) : wp(43.5), borderColor: errors.lastName ? redColor : blackColor }]}
+                      <TextInput 
+                        ref={(ref) => (inputRefs.current.lastName = ref)}
+                        style={[styles.input, { width: isTablet ? wp(46) : wp(43.5), borderColor: errors.lastName ? redColor : blackColor }]}
                         value={lastName}
                         onChangeText={(text) => {
                           setLastName(text);
@@ -1204,6 +1308,7 @@ const ProfileScreen = ({ navigation }) => {
                             setErrors(prev => ({ ...prev, lastName: "" }));
                           }
                         }}
+                        onFocus={() => handleInputFocus("lastName")}
                         placeholder="Enter Last Name"
                         maxLength={20} />
                       {errors.lastName && <Text style={{ color: 'red', fontSize: 12, marginTop: 4 }}>{errors.lastName}</Text>}
@@ -1211,9 +1316,12 @@ const ProfileScreen = ({ navigation }) => {
                   </View>
                   {roleType === "single-technician" && <View style={styles.inputGroup}>
                     <Text style={styles.label}>Business Name</Text>
-                    <TextInput style={styles.input}
+                    <TextInput 
+                      ref={(ref) => (inputRefs.current.businessName = ref)}
+                      style={styles.input}
                       value={businessName}
                       onChangeText={setBusinessName}
+                      onFocus={() => handleInputFocus("businessName")}
                       placeholder="Enter Business Name" />
                   </View>}
 
@@ -1246,7 +1354,13 @@ const ProfileScreen = ({ navigation }) => {
                   </View>
                   <View style={[styles.inputGroup, { height: isTablet ? orientation === "LANDSCAPE" ? hp(8) : hp(5) : hp(10) }]}>
                     <Text style={styles.label}>Address</Text>
-                    <TextInput style={styles.input} value={address} onChangeText={setAddress} placeholder="Enter Address" />
+                    <TextInput 
+                      ref={(ref) => (inputRefs.current.address = ref)}
+                      style={styles.input} 
+                      value={address} 
+                      onChangeText={setAddress} 
+                      onFocus={() => handleInputFocus("address")}
+                      placeholder="Enter Address" />
                   </View>
 
                   {/* <View style={[styles.inputGroup, { height: isTablet ? orientation === "LANDSCAPE" ? hp(10) : hp(5.5) :Platform.OS === "ios" ? hp(8) : hp(10) }]}>
@@ -1357,10 +1471,16 @@ const ProfileScreen = ({ navigation }) => {
                   </View>
                   <View style={styles.inputGroup}>
                     <Text style={styles.label}>Secondary Email (Optional)</Text>
-                    <TextInput style={styles.input} value={secondryEmail} onChangeText={(text) => {
-                      setSecondryEmail(text);
-                      setSecondaryEmailError("");
-                    }} placeholder="Enter Secondary Email" />
+                    <TextInput 
+                      ref={(ref) => (inputRefs.current.secondaryEmail = ref)}
+                      style={styles.input} 
+                      value={secondryEmail} 
+                      onChangeText={(text) => {
+                        setSecondryEmail(text);
+                        setSecondaryEmailError("");
+                      }} 
+                      onFocus={() => handleInputFocus("secondaryEmail")}
+                      placeholder="Enter Secondary Email" />
                     {secondaryEmailError ? <Text style={{ color: 'red', fontSize: 12, marginTop: 4 }}>{secondaryEmailError}</Text> : null}
                   </View>
                   {error ? <Text style={{ color: 'red' }}>{error}</Text> : null}

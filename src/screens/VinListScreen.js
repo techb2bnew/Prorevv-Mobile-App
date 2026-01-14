@@ -17,6 +17,7 @@ import axios from 'axios';
 import DatePicker from "react-native-date-picker";
 import JobDropdown from '../componets/jobDropdown';
 import { useOrientation } from '../OrientationContext';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 
 const { flex, alignItemsCenter, flexDirectionRow } = BaseStyle;
@@ -571,7 +572,7 @@ const VinListScreen = ({ navigation, route }) => {
 
 
     return (
-        <KeyboardAvoidingView 
+        <KeyboardAvoidingView
             style={{ width: wp(100), height: hp(100), backgroundColor: whiteColor }}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
@@ -727,7 +728,7 @@ const VinListScreen = ({ navigation, route }) => {
                 <View style={[flexDirectionRow]}>
                     <View style={[styles.searchTextInput, flexDirectionRow, { height: isTablet ? hp(4) : hp(5.5), width: isTablet ? wp(87) : orientation === "LANDSCAPE" ? wp(87) : wp(75) }]}>
                         <TextInput
-                            placeholder="Search Vin Make Model/Scan"
+                            placeholder="Enter VIN or click the right icon to scan"
                             placeholderTextColor={grayColor}
                             style={[styles.input]}
                             value={searchVin}
@@ -746,7 +747,7 @@ const VinListScreen = ({ navigation, route }) => {
                                     from: "VinList"
                                 })
                             }}>
-                                <AntDesign name="scan1" size={24} color="#252837" />
+                                <MaterialIcons name="qr-code-scanner" size={24} color="#252837" />
                             </TouchableOpacity>
                         )}
                     </View>
@@ -1120,7 +1121,7 @@ const VinListScreen = ({ navigation, route }) => {
                         <Text style={styles.vinModalTitle}>
                             Do you still want to add this in the {selectedJobName}?
                         </Text>
-                        <Text style={styles.vinModalNote}>NOTE : Admin will be notified !</Text>
+                        {/* <Text style={styles.vinModalNote}>NOTE : Admin will be notified !</Text> */}
 
                         <View style={styles.vinModalButtons}>
                             <TouchableOpacity onPress={() => {

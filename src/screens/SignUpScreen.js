@@ -52,6 +52,8 @@ const SignUpScreen = ({ navigation }) => {
     const [cityValue, setCityValue] = useState("");
     const googleRef = useRef();
     const addressTextRef = useRef("");
+    const scrollViewRef = useRef(null);
+    const inputRefs = useRef({});
 
     const [formData, setFormData] = useState({
         firstName: "",
@@ -633,17 +635,69 @@ const SignUpScreen = ({ navigation }) => {
         setFiles(updatedFiles);
     };
 
+    // Handle input focus - scroll to input when keyboard opens
+    const handleInputFocus = (inputName) => {
+        setTimeout(() => {
+            if (scrollViewRef.current && inputRefs.current[inputName]) {
+                inputRefs.current[inputName].measureLayout(
+                    scrollViewRef.current,
+                    (x, y, width, height) => {
+                        // Scroll to show input above keyboard (150px offset)
+                        scrollViewRef.current?.scrollTo({
+                            y: Math.max(0, y - 150),
+                            animated: true,
+                        });
+                    },
+                    (error) => {
+                        // Fallback: try measure instead
+                        inputRefs.current[inputName].measure((fx, fy, fwidth, fheight, fpageX, fpageY) => {
+                            scrollViewRef.current?.scrollTo({
+                                y: Math.max(0, fpageY - 200),
+                                animated: true,
+                            });
+                        });
+                    }
+                );
+            }
+        }, 300); // Delay to ensure keyboard is opening
+    };
+
+    // Keyboard event listeners
+    useEffect(() => {
+        const keyboardDidShowListener = Keyboard.addListener(
+            Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+            () => {
+                // Keyboard is shown, ScrollView will handle scrolling
+            }
+        );
+        const keyboardDidHideListener = Keyboard.addListener(
+            Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+            () => {
+                // Keyboard is hidden
+            }
+        );
+
+        return () => {
+            keyboardDidShowListener.remove();
+            keyboardDidHideListener.remove();
+        };
+    }, []);
+
     return (
         <KeyboardAvoidingView
-            style={[flex]}
+            style={[flex, { backgroundColor: blackColor }]}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
             <Header title={"Register"} onBack={() => {
                 navigation.goBack();
             }} />
 
-            <ScrollView style={[styles.container, flex]} showsVerticalScrollIndicator={false}
+            <ScrollView 
+                ref={scrollViewRef}
+                style={[styles.container, flex, { backgroundColor: blackColor }]} 
+                showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled"
+                contentContainerStyle={{ paddingBottom: 50, backgroundColor: blackColor }}
             >
                 <LinearGradient
                     colors={['#400000', '#000000', '#000000']}
@@ -678,10 +732,12 @@ const SignUpScreen = ({ navigation }) => {
                         {enterpriseValue === "Single-Technician" && (
                             <>
                                 <CustomTextInput
+                                    ref={(ref) => (inputRefs.current.businessName = ref)}
                                     label="Business Name (Optional)"
                                     placeholder="Enter your business name"
                                     value={formData.businessName}
                                     onChangeText={(text) => handleInputChange("businessName", text)}
+                                    onFocus={() => handleInputFocus("businessName")}
                                     required={false}
                                     labelStyle={{
                                         fontSize: 14,
@@ -806,10 +862,12 @@ const SignUpScreen = ({ navigation }) => {
                         )}
                         {/* Input fields */}
                         <CustomTextInput
+                            ref={(ref) => (inputRefs.current.firstName = ref)}
                             label="First Name"
                             placeholder="Enter your first name"
                             value={formData.firstName}
                             onChangeText={(text) => handleInputChange("firstName", text)}
+                            onFocus={() => handleInputFocus("firstName")}
                             required={true}
                             maxLength={20}
                             labelStyle={{
@@ -822,10 +880,12 @@ const SignUpScreen = ({ navigation }) => {
                         {errors.firstName && <Text style={styles.error}>{errors.firstName}</Text>}
 
                         <CustomTextInput
+                            ref={(ref) => (inputRefs.current.lastName = ref)}
                             label="Last Name"
                             placeholder="Enter your last name"
                             value={formData.lastName}
                             onChangeText={(text) => handleInputChange("lastName", text)}
+                            onFocus={() => handleInputFocus("lastName")}
                             required={true}
                             maxLength={20}
                             labelStyle={{
@@ -838,6 +898,7 @@ const SignUpScreen = ({ navigation }) => {
                         {errors.lastName && <Text style={styles.error}>{errors.lastName}</Text>}
 
                         <CustomTextInput
+                            ref={(ref) => (inputRefs.current.email = ref)}
                             label="Email"
                             placeholder="Enter your email"
                             value={formData.email}
@@ -845,6 +906,7 @@ const SignUpScreen = ({ navigation }) => {
                                 const updatedText = text.charAt(0).toLowerCase() + text.slice(1);
                                 handleInputChange("email", updatedText);
                             }}
+                            onFocus={() => handleInputFocus("email")}
                             required={true}
                             labelStyle={{
                                 fontSize: 14,
@@ -947,6 +1009,7 @@ const SignUpScreen = ({ navigation }) => {
                         </View>
                         {errors.address && <Text style={styles.error}>{errors.address}</Text>}
                         <CustomTextInput
+                            ref={(ref) => (inputRefs.current.secondaryEmail = ref)}
                             label="Secondary Email (Optional)"
                             placeholder="Enter your secondary email"
                             value={formData.secondaryEmail}
@@ -955,6 +1018,7 @@ const SignUpScreen = ({ navigation }) => {
                                 const updatedText = text.charAt(0).toLowerCase() + text.slice(1);
                                 handleInputChange("secondaryEmail", updatedText);  // Update the form data with modified email
                             }}
+                            onFocus={() => handleInputFocus("secondaryEmail")}
                             labelStyle={{
                                 fontSize: 14,
                                 fontWeight: '500',
@@ -1098,10 +1162,12 @@ const SignUpScreen = ({ navigation }) => {
                         </View>
 
                         <CustomTextInput
+                            ref={(ref) => (inputRefs.current.password = ref)}
                             label="Password"
                             placeholder="Enter your password"
                             value={formData.password}
                             onChangeText={(text) => handleInputChange("password", text)}
+                            onFocus={() => handleInputFocus("password")}
                             secureTextEntry={!isPasswordVisible}
                             required={true}
                             rightIcon={
@@ -1119,10 +1185,12 @@ const SignUpScreen = ({ navigation }) => {
                         {errors.password && <Text style={styles.error}>{errors.password}</Text>}
 
                         <CustomTextInput
+                            ref={(ref) => (inputRefs.current.confirmPassword = ref)}
                             label="Confirm Password"
                             placeholder="Confirm your password"
                             value={formData.confirmPassword}
                             onChangeText={(text) => handleInputChange("confirmPassword", text)}
+                            onFocus={() => handleInputFocus("confirmPassword")}
                             secureTextEntry={!isConfirmPasswordVisible}
                             required={true}
                             rightIcon={
@@ -1167,7 +1235,7 @@ const SignUpScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
     container: {
-        // backgroundColor: whiteColor,
+        backgroundColor: blackColor,
         // paddingTop: 20
     },
     logoContainer: {

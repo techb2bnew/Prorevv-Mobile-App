@@ -57,6 +57,10 @@ const WorkOrderScreenTwo = ({ route }) => {
     const [textInputHeights, setTextInputHeights] = useState({});
     const [vTypeopen, setVTypeOpen] = useState(false);
     const inputRefs = useRef([]);
+    const scrollViewRef = useRef(null);
+    const notesInputRef = useRef(null);
+    const vehicleOverrideCostRef = useRef(null);
+    const workDescriptionRefs = useRef({});
     const [step, setStep] = useState(route?.params?.vehicleId ? 2 : 1);
     const [selectedJobName, setSelectedJobName] = useState("");
     const [selectedJobId, setSelectedJobId] = useState("");
@@ -964,6 +968,42 @@ const WorkOrderScreenTwo = ({ route }) => {
         }
     };
 
+    // Handle input focus - scroll to input when keyboard opens
+    const handleInputFocus = (inputName, index = null) => {
+        setTimeout(() => {
+            let inputRef = null;
+            
+            if (inputName === 'notes') {
+                inputRef = notesInputRef.current;
+            } else if (inputName === 'vehicleOverrideCost') {
+                inputRef = vehicleOverrideCostRef.current;
+            } else if (inputName === 'workDescription' && index !== null) {
+                inputRef = workDescriptionRefs.current[index];
+            }
+            
+            if (scrollViewRef.current && inputRef) {
+                inputRef.measureLayout(
+                    scrollViewRef.current,
+                    (x, y, width, height) => {
+                        // Scroll to show input above keyboard (150px offset)
+                        scrollViewRef.current?.scrollTo({
+                            y: Math.max(0, y - 150),
+                            animated: true,
+                        });
+                    },
+                    (error) => {
+                        // Fallback: try measure instead
+                        inputRef.measure((fx, fy, fwidth, fheight, fpageX, fpageY) => {
+                            scrollViewRef.current?.scrollTo({
+                                y: Math.max(0, fpageY - 200),
+                                animated: true,
+                            });
+                        });
+                    }
+                );
+            }
+        }, Platform.OS === 'android' ? 400 : 300);
+    };
 
     return (
         <KeyboardAvoidingView
@@ -984,7 +1024,12 @@ const WorkOrderScreenTwo = ({ route }) => {
                 }}
             />
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                <ScrollView contentContainerStyle={{ flexGrow: 1, backgroundColor: whiteColor, paddingBottom: Platform.OS === "ios" ? hp(15) : 0 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+                <ScrollView 
+                    ref={scrollViewRef}
+                    contentContainerStyle={{ flexGrow: 1, backgroundColor: whiteColor, paddingBottom: Platform.OS === "ios" ? hp(15) : 0 }} 
+                    keyboardShouldPersistTaps="handled" 
+                    showsVerticalScrollIndicator={false}
+                >
                     {step === 1 ?
                         (
                             <Text style={[styles.label, { fontSize: style.fontSizeLarge.fontSize, marginTop: 10, marginLeft: 10 }]}>Scan Vehicle <Text style={{ color: 'red' }}>*</Text></Text>
@@ -1242,6 +1287,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                                     <View style={{ marginTop: spacings.xLarge }}>
                                                         <View style={[flexDirectionRow, justifyContentSpaceBetween, alignItemsCenter]}>
                                                             <TextInput
+                                                                ref={(ref) => (workDescriptionRefs.current[index] = ref)}
                                                                 style={[styles.input, {
                                                                     width: "100%",
                                                                     height: textInputHeights[index] || (isTablet ? hp(8) : hp(10)),
@@ -1259,7 +1305,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                                                 maxLength={1000}
                                                                 onChangeText={(text) => handleInputChange(text, index, "jobDescription")}
                                                                 onContentSizeChange={(e) => handleContentSizeChange(index, e)}
-
+                                                                onFocus={() => handleInputFocus('workDescription', index)}
                                                             />
                                                             {jobDescription.length > 1 && (
                                                                 <TouchableOpacity onPress={() => handleDelete(index)}>
@@ -1313,12 +1359,14 @@ const WorkOrderScreenTwo = ({ route }) => {
                                     {technicianType === "single-technician" && <View style={{ marginTop: spacings.xxLarge }}>
                                         <Text style={styles.label}>Vehicle Override Price</Text>
                                         <TextInput
+                                            ref={vehicleOverrideCostRef}
                                             style={[styles.input, { height: isTablet ? hp(3.5) : hp(5.5), marginTop: 5 }]}
                                             placeholder="Vehicle Override Price"
                                             value={labourCost}
                                             onChangeText={setLabourCost}
                                             keyboardType="numeric"
                                             maxLength={5}
+                                            onFocus={() => handleInputFocus('vehicleOverrideCost')}
                                         />
                                     </View>}
 
@@ -1461,6 +1509,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                     <View style={styles.sectionContainer}>
                                         <Text style={styles.label}>Notes</Text>
                                         <TextInput
+                                            ref={notesInputRef}
                                             placeholder="Write your notes here..."
                                             style={styles.notesInput}
                                             multiline={true}
@@ -1468,6 +1517,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                             textAlignVertical="top"
                                             onChangeText={(text) => setNotes(text)}
                                             value={notes}
+                                            onFocus={() => handleInputFocus('notes')}
                                         />
                                     </View>
 

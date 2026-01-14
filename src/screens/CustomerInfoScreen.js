@@ -307,7 +307,6 @@ const CustomerInfoScreen = ({ navigation }) => {
         const rawPhone = formData.phoneNumber || "";
 
         let formattedPhone = rawPhone;
-        console.log(formattedPhone);
 
         if (countryCode && rawPhone.trim() !== "" && !rawPhone.startsWith(`+${countryCode}`)) {
             // In case it's stored as "1234567890", make it "+XX-1234567890"
@@ -317,9 +316,11 @@ const CustomerInfoScreen = ({ navigation }) => {
         const customerData = {
             ...formData,
             phoneNumber: formattedPhone, // 👈 override with formatted
+            address: address || addressTextRef.current || formData.address, // 👈 use address state
             userId: String(technicianId),
             roleType: String(technicianType)
         };
+        console.log("customerDatacustomerData", customerData);
 
         const customerEditData = {
             ...customerData,
@@ -344,6 +345,8 @@ const CustomerInfoScreen = ({ navigation }) => {
                     phoneNumber: "",
                     address: "",
                 });
+                setAddress("");
+                addressTextRef.current = "";
             } else {
                 success = await syncCustomerToAPI(customerData);
             }
@@ -364,6 +367,14 @@ const CustomerInfoScreen = ({ navigation }) => {
                 // Reset phone number states after create
                 setDefaultIsoCode('US');
                 setRawNumber('');
+                setAddress("");
+                addressTextRef.current = "";
+                setFormData({
+                    fullName: "",
+                    email: "",
+                    phoneNumber: "",
+                    address: "",
+                });
             }
         }
     };
@@ -515,6 +526,8 @@ const CustomerInfoScreen = ({ navigation }) => {
                             phoneNumber: '',
                             address: '',
                         });
+                        setAddress("");
+                        addressTextRef.current = "";
                     } else {
                         navigation.goBack();
                     }
@@ -680,7 +693,9 @@ const CustomerInfoScreen = ({ navigation }) => {
                                             email: '',
                                             phoneNumber: '',
                                             address: '',
-                                        })
+                                        });
+                                        setAddress("");
+                                        addressTextRef.current = "";
                                     }}
                                     style={{
                                         position: 'absolute',
@@ -869,6 +884,8 @@ const CustomerInfoScreen = ({ navigation }) => {
                                             phoneNumber: '',
                                             address: '',
                                         });
+                                        setAddress("");
+                                        addressTextRef.current = "";
                                     }}
                                     style={{
                                         position: 'absolute',
@@ -958,7 +975,7 @@ const CustomerInfoScreen = ({ navigation }) => {
                                         ? orientation === "LANDSCAPE"
                                             ? hp(10)
                                             : hp(8)
-                                        : hp(10)
+                                        : hp(10), marginTop: spacings.large
                                 }]}>
                                     <Text style={styles.label}>Address</Text>
 
@@ -972,6 +989,7 @@ const CustomerInfoScreen = ({ navigation }) => {
                                                 const selected = data?.description || "";
                                                 addressTextRef.current = selected;
                                                 setAddress(selected);
+                                                // setFormData((prev) => ({ ...prev, address: selected }));
                                             }}
 
                                             enablePoweredByContainer={false}
@@ -987,6 +1005,7 @@ const CustomerInfoScreen = ({ navigation }) => {
                                                 onChangeText: (text) => {
                                                     addressTextRef.current = text;
                                                     setAddress(text);       // ⭐ TYPING FIX
+                                                    // setFormData((prev) => ({ ...prev, address: text }));
                                                 },
                                             }}
 
@@ -1011,7 +1030,7 @@ const CustomerInfoScreen = ({ navigation }) => {
                                                     zIndex: 999,
                                                 },
                                                 textInput: {
-                                                    height: hp(6),
+                                                    height: Platform.OS === 'android' ? isTablet ? hp(3.5) : hp(6) : isTablet ? orientation === "LANDSCAPE" ? hp(3.5) : hp(3) : hp(5),
                                                     borderWidth: 1,
                                                     borderColor: blackColor,
                                                     borderRadius: 50,

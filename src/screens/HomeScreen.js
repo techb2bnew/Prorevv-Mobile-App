@@ -912,7 +912,7 @@ const HomeScreen = ({ navigation }) => {
             <Pressable style={[styles.vinResultsContainer,
             {
               top: isTablet ?
-                Platform.OS === 'ios' ? hp(25) : hp(21) : Platform.OS === 'ios' ? hp(25.5) : hp(27.5)
+                Platform.OS === 'ios' ? orientation === "LANDSCAPE" ? hp(22.5) : hp(21) : hp(21) : Platform.OS === 'ios' ? hp(25.5) : hp(27.5)
             }]} onPress={() => {
               if (vinSearchResults && !vinSearchResults.noResult) {
                 navigation.navigate("VehicleDetailsScreen", {
