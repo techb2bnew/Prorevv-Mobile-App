@@ -23,7 +23,7 @@ import { useOrientation } from '../OrientationContext';
 
 const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween, textAlign, justifyContentCenter, justifyContentSpaceEvenly } = BaseStyle;
 
-const Reports = ({ navigation }) => {
+const Reports = ({ navigation, route }) => {
     const [search, setSearch] = useState('');
     const [jobHistoryData, setjobHistoryData] = useState([])
     const [technicianId, setTechnicianId] = useState();
@@ -48,7 +48,7 @@ const Reports = ({ navigation }) => {
     const { orientation } = useOrientation();
     const isTablet = width >= 668 && height >= 1024;
     const isIOSAndTablet = Platform.OS === "ios" && isTablet;
-    const [activeTab, setActiveTab] = useState("WorkOrders");
+    const [activeTab, setActiveTab] = useState(route?.params?.activeTab || "WorkOrders");
     const [activeStatus, setActiveStatus] = useState("InProgress");
     const [filteredJobs, setFilteredJobs] = useState([]);
     const [filteredWorkOrders, setFilteredWorkOrders] = useState([]);
@@ -201,6 +201,13 @@ const Reports = ({ navigation }) => {
 
         }, [activeTab]) // <-- include activeTab so it resets when tab changes too
     );
+
+    // Handle route params activeTab when coming back from CreateJobScreen
+    useEffect(() => {
+        if (route?.params?.activeTab && route?.params?.activeTab !== activeTab) {
+            setActiveTab(route.params.activeTab);
+        }
+    }, [route?.params?.activeTab]);
 
     // Reset dates when tab changes
     useEffect(() => {
@@ -991,11 +998,13 @@ const Reports = ({ navigation }) => {
                                                 <Text style={styles.viewText}>View</Text>
                                             </Pressable>
                                             {/* {activeStatus != 'Completed' && technicianType != 'ifs' && */}
-                                                <Pressable onPress={() => navigation.navigate("CreateJobScreen", {
-                                                    jobId: item?.id
-                                                })}>
-                                                    <Text style={styles.viewText}>Edit</Text>
-                                                </Pressable>
+                                            <Pressable onPress={() => navigation.navigate("CreateJobScreen", {
+                                                jobId: item?.id,
+                                                from: "reports",
+                                                activeTab: activeTab // Preserve current tab
+                                            })}>
+                                                <Text style={styles.viewText}>Edit</Text>
+                                            </Pressable>
                                             {/* } */}
                                         </View>
                                     </Pressable>
@@ -1050,7 +1059,7 @@ const Reports = ({ navigation }) => {
                                         {activeStatus === 'InProgress' && (
                                             <Pressable
                                                 onPress={() => toggleWorkOrderSelection(item?.id)}
-                                                style={[styles.checkbox, isSelected && styles.checkboxSelected, { position: "absolute", right: -10, top: -6, zIndex: 1000 }]}
+                                                style={[styles.checkbox, isSelected && styles.checkboxSelected, { position: "absolute", right: -5, top: -4, zIndex: 1000 }]}
                                             >
                                                 {isSelected && <AntDesign name="check" size={12} color={whiteColor} />}
                                             </Pressable>
@@ -1059,37 +1068,46 @@ const Reports = ({ navigation }) => {
                                         <Pressable
                                             onPress={() => navigation.navigate("WorkOrderScreenTwo", {
                                                 vehicleId: item.id,
+                                                from: "workOrder"
                                             })}
-                                            style={{ position: "absolute", right: activeStatus === 'InProgress' ? 25 : 2, top: -6, zIndex: 999 }}>
+                                            style={{ position: "absolute", right: activeStatus === 'InProgress' ? 26 : 4, top: -4, zIndex: 999 }}>
                                             {/* <Text style={styles.viewText}>Edit</Text> */}
-                                            <AntDesign name="edit" size={20} color={blackColor} />
+                                            <Feather name="edit-2" size={19.5} color={blackColor} />
 
                                         </Pressable>
-                                        <View style={{ width: '48%', marginBottom: 9 }}>
+
+                                        <Pressable
+                                            onPress={() => navigation.navigate("VehicleDetailsScreen", { vehicleId: item?.id, from: "report" })}
+                                            style={{ position: "absolute", right: activeStatus === 'InProgress' ? 58 : 33, top: -4, zIndex: 999 }}>
+                                            {/* <Text style={styles.viewText}>Edit</Text> */}
+                                            <Feather name="eye" size={20} color={blackColor} />
+
+                                        </Pressable>
+                                        <View style={{ width: '48%', marginVertical: spacings.normalx }}>
                                             <Text style={{ color: '#555', fontSize: 10 }}>Job Name</Text>
                                             <Text >{item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}</Text>
                                         </View>
-                                        <View style={{ width: '48%', marginBottom: 9 }}>
+                                        <View style={{ width: '48%', marginVertical: spacings.normalx }}>
                                             <Text style={{ color: '#555', fontSize: 10 }}>VIN</Text>
                                             <Text >{item?.vin}</Text>
                                         </View>
-                                        <View style={{ width: '48%', marginBottom: 9 }}>
+                                        <View style={{ width: '48%', marginVertical: spacings.normalx }}>
                                             <Text style={{ color: '#555', fontSize: 10 }}>Make</Text>
                                             <Text >{item?.make}</Text>
                                         </View>
-                                        <View style={{ width: '48%', marginBottom: 9 }}>
+                                        <View style={{ width: '48%', marginVertical: spacings.normalx }}>
                                             <Text style={{ color: '#555', fontSize: 10 }}>Model</Text>
                                             <Text >{item?.model}</Text>
                                         </View>
-                                        <View style={{ width: '48%', marginBottom: 9 }}>
+                                        <View style={{ width: '48%', marginVertical: spacings.normalx }}>
                                             <Text style={{ color: '#555', fontSize: 10 }}>Vehicle Price</Text>
                                             <Text >{item.labourCost ? "-" : item?.job?.estimatedCost ? `$${item.job.estimatedCost}` : '—'}</Text>
                                         </View>
-                                        <View style={{ width: '48%', marginBottom: 9 }}>
+                                        <View style={{ width: '48%', marginVertical: spacings.normalx }}>
                                             <Text style={{ color: '#555', fontSize: 10 }}>Override Cost</Text>
                                             <Text >{item.labourCost ? `$${item.labourCost}` : '-'}</Text>
                                         </View>
-                                        <View style={{ width: '48%', marginBottom: 9 }}>
+                                        <View style={{ width: '48%', marginVertical: spacings.normalx }}>
                                             <Text style={{ color: '#555', fontSize: 10 }}>Start Date</Text>
                                             <Text >
                                                 {item?.startDate
@@ -1101,7 +1119,7 @@ const Reports = ({ navigation }) => {
                                                     : "-"}
                                             </Text>
                                         </View>
-                                        <View style={{ width: '48%', marginBottom: 9 }}>
+                                        <View style={{ width: '48%', marginVertical: spacings.normalx }}>
                                             <Text style={{ color: '#555', fontSize: 10 }}>End Date</Text>
                                             <Text >
                                                 {item?.endDate
@@ -1113,7 +1131,7 @@ const Reports = ({ navigation }) => {
                                                     : "-"}
                                             </Text>
                                         </View>
-                                        {technicianType === "manager" && <View style={{ width: '48%', marginBottom: 9 }}>
+                                        {technicianType === "manager" && <View style={{ width: '48%', marginVertical: spacings.normalx }}>
                                             <Text style={{ color: '#555', fontSize: 10 }}>Assigned Tech</Text>
                                             <Text style={[styles.text, { width: wp(30) }]}>
                                                 {item?.assignedTechnicians?.length > 0
@@ -1123,7 +1141,7 @@ const Reports = ({ navigation }) => {
                                                     : '-'}
                                             </Text>
                                         </View>}
-                                        <View style={{ width: '48%', marginBottom: 9 }}>
+                                        <View style={{ width: '48%', marginVertical: spacings.normalx }}>
                                             <Text style={{ color: '#555', fontSize: 10 }}>Status</Text>
 
                                             <Text style={[{ fontSize: 15, fontWeight: '700', color: item?.vehicleStatus === true ? greenColor : blackColor }]}>
@@ -1260,6 +1278,7 @@ const Reports = ({ navigation }) => {
                                                     <Pressable
                                                         onPress={() => navigation.navigate("WorkOrderScreenTwo", {
                                                             vehicleId: item.id,
+                                                            from: "workOrder"
                                                         })}>
                                                         <Text style={styles.viewText}>Edit</Text>
                                                     </Pressable>

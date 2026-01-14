@@ -668,6 +668,10 @@ const GenerateInvoiceScreen = ({ navigation,
 
         // console.log("🚀 Starting auto-save for vehicles:", vehicles.length);
 
+        // Just update state to show existing rates in input fields (no auto-save to API)
+        const initialRates = {};
+        const initialSavedRates = {};
+
         // Auto-save each vehicle's existing rate one by one with faster processing
         for (const vehicle of vehicles) {
             // Check for existing rate in priority order: labourCost -> pdr -> jobEstimatedCost (from parameter or state)
@@ -679,23 +683,32 @@ const GenerateInvoiceScreen = ({ navigation,
             if (existingRate && existingRate > 0) {
                 // console.log(`💾 Auto-saving vehicle ${vehicle.id} with rate: ${existingRate}`);
 
-                // Add to auto-saving set
-                setAutoSavingVehicles(prev => new Set([...prev, vehicle.id]));
+                // Just set state, don't auto-save to API
+                initialRates[vehicle.id] = existingRate.toString();
+                initialSavedRates[vehicle.id] = existingRate.toString();
 
-                try {
-                    // Use await to ensure proper execution
-                    // handleAutoSaveInvoice will update both savedInvoiceRates and invoiceRates
-                    await handleAutoSaveInvoice(vehicle.id, existingRate.toString());
-                } catch (error) {
-                    console.error(`Error auto-saving for vehicle ${vehicle.id}:`, error);
-                }
+                // COMMENTED OUT: Auto-save removed - user will manually save
+                // Add to auto-saving set
+                // setAutoSavingVehicles(prev => new Set([...prev, vehicle.id]));
+
+                // try {
+                //     // Use await to ensure proper execution
+                //     // handleAutoSaveInvoice will update both savedInvoiceRates and invoiceRates
+                //     await handleAutoSaveInvoice(vehicle.id, existingRate.toString());
+                // } catch (error) {
+                //     console.error(`Error auto-saving for vehicle ${vehicle.id}:`, error);
+                // }
 
                 // Minimal delay for faster processing
-                await new Promise(resolve => setTimeout(resolve, 100));
+                // await new Promise(resolve => setTimeout(resolve, 100));
             } else {
                 // console.log(`⏭️ Skipping vehicle ${vehicle.id} - no valid rate found`);
             }
         }
+
+        // Update state without auto-saving to API
+        setInvoiceRates(prev => ({ ...prev, ...initialRates }));
+        setSavedInvoiceRates(prev => ({ ...prev, ...initialSavedRates }));
 
         // console.log("✅ Auto-save process completed");
     };
@@ -972,10 +985,10 @@ const GenerateInvoiceScreen = ({ navigation,
             [vehicleId]: value
         }));
 
-        // Auto-save when user changes value
-        if (value && value.trim() !== '') {
-            handleAutoSaveInvoice(vehicleId, value);
-        }
+        // Auto-save when user changes value - COMMENTED OUT: Now user will manually save
+        // if (value && value.trim() !== '') {
+        //     handleAutoSaveInvoice(vehicleId, value);
+        // }
     };
 
     const handleAutoSaveInvoice = async (vehicleId, value) => {
@@ -1152,6 +1165,7 @@ const GenerateInvoiceScreen = ({ navigation,
             Toast.show("Failed to save invoice rate.");
         }
     };
+    // console.log("filter",filteredVehicles);
 
     return (
         <KeyboardAvoidingView
@@ -1397,6 +1411,8 @@ const GenerateInvoiceScreen = ({ navigation,
                                                                 : item?.labourCost?.toString() || item?.jobEstimatedCost?.toString() || selectedJobEstimated.toString() || item?.pdr?.toString() || ''
                                                         }
                                                         onChangeText={(value) => handleInvoiceChange(item.id, value)}
+                                                        maxLength={10}
+
                                                     />
                                                     {hasUnsavedChanges(item) && (
                                                         <TouchableOpacity
@@ -1405,10 +1421,11 @@ const GenerateInvoiceScreen = ({ navigation,
                                                                 // backgroundColor: blackColor,
                                                                 paddingHorizontal: 12,
                                                                 paddingVertical: 10,
-                                                                borderRadius: 5
+                                                                borderRadius: 5,
+                                                                backgroundColor: blackColor
                                                             }}
                                                         >
-                                                            <Text style={{ color: greenColor }}>
+                                                            <Text style={{ color: whiteColor }}>
                                                                 Save
                                                             </Text>
                                                         </TouchableOpacity>
@@ -1581,6 +1598,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                                                 : item?.labourCost?.toString() || item?.jobEstimatedCost?.toString() || selectedJobEstimated.toString() || item?.pdr?.toString() || ''
                                                         }
                                                         onChangeText={(value) => handleInvoiceChange(item.id, value)}
+                                                        maxLength={10}
                                                     />
 
                                                     {hasUnsavedChanges(item) && (
@@ -1590,10 +1608,11 @@ const GenerateInvoiceScreen = ({ navigation,
                                                                 // backgroundColor: blackColor,
                                                                 paddingHorizontal: 12,
                                                                 paddingVertical: 10,
-                                                                borderRadius: 5
+                                                                borderRadius: 5,
+                                                                backgroundColor: blackColor
                                                             }}
                                                         >
-                                                            <Text style={{ color: greenColor }}>
+                                                            <Text style={{ color: whiteColor }}>
                                                                 Save
                                                             </Text>
                                                         </TouchableOpacity>

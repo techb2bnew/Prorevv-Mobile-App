@@ -928,7 +928,14 @@ const CustomerInfoScreen = ({ navigation }) => {
                                     label="Full Name"
                                     placeholder="Enter your full name"
                                     value={formData.firstName || formData.fullName}
-                                    onChangeText={(text) => handleInputChange("fullName", text)}
+                                    onChangeText={(text) => {
+                                        // Sirf alphabets + space allowed
+                                        const cleaned = text.replace(/[^a-zA-Z ]/g, "");
+                                        handleInputChange("fullName", cleaned);
+                                    }}
+                                    keyboardType="name-phone-pad"   // 🔥 This shows alphabet keyboard (numbers hidden)
+                                    textContentType="name"
+                                    autoCapitalize="words"           // Suggests alphabet-based keyboard
                                     required={true}
                                     maxLength={20}
                                 />
@@ -1030,11 +1037,11 @@ const CustomerInfoScreen = ({ navigation }) => {
                                                     zIndex: 999,
                                                 },
                                                 textInput: {
-                                                    height: Platform.OS === 'android' ? isTablet ? hp(3.5) : hp(6) : isTablet ? orientation === "LANDSCAPE" ? hp(3.5) : hp(3) : hp(5),
+                                                    height: Platform.OS === 'android' ? isTablet ? hp(6.5) : hp(9) : isTablet ? orientation === "LANDSCAPE" ? hp(6.5) : hp(8) : hp(9),
                                                     borderWidth: 1,
                                                     borderColor: blackColor,
-                                                    borderRadius: 50,
-                                                    paddingHorizontal: 16,
+                                                    borderRadius: 10,
+                                                    paddingHorizontal: 8,
                                                     paddingVertical: 12,
                                                     backgroundColor: '#fff',
                                                     textAlignVertical: 'top',

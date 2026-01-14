@@ -852,6 +852,7 @@ const VinListScreen = ({ navigation, route }) => {
                                                     onPress={() =>
                                                         navigation.navigate("WorkOrderScreenTwo", {
                                                             vehicleId: item.id,
+                                                            from: "vinList"
                                                         })
                                                     }>
                                                     <Text style={styles.viewText}>Edit</Text>
@@ -917,30 +918,40 @@ const VinListScreen = ({ navigation, route }) => {
                                     <Pressable
                                         onPress={() => navigation.navigate("WorkOrderScreenTwo", {
                                             vehicleId: item.id,
+                                            from: "vinList"
                                         })}
-                                        style={{ position: "absolute", right: -5, top: -10, zIndex: 999 }}>
+                                        style={{ position: "absolute", right: -5, top: -15, zIndex: 999, width: 40, height: 40, borderRadius: 20, justifyContent: "center", alignItems: "center" }}>
                                         {/* <Text style={styles.viewText}>Edit</Text> */}
-                                        <AntDesign name="edit" size={20} color={blackColor} />
+                                        <Feather name="edit-2" size={18} color={blackColor} />
 
                                     </Pressable>
+                                    <Pressable
+                                        onPress={() => navigation.navigate("VehicleDetailsScreen", {
+                                            vehicleId: item.id,
+                                            from: activeTab === "partnerOrder" ? "partner" : "workOrder"
+                                        })}
+                                        style={{ position: "absolute", right: 25, top: -15, zIndex: 999, width: 40, height: 40, borderRadius: 20, justifyContent: "center", alignItems: "center" }}>
+                                        {/* <Text style={styles.viewText}>Edit</Text> */}
+                                        <Feather name="eye" size={20} color={blackColor} />
+                                    </Pressable>
                                     {/* )} */}
-                                    <View style={{ width: '48%', marginBottom: 10 }}>
+                                    <View style={{ width: '48%', marginVertical: spacings.normal }}>
                                         <Text style={{ color: '#555', fontSize: 11 }}>JobName</Text>
                                         <Text>{item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}</Text>
                                     </View>
-                                    <View style={{ width: '48%', marginBottom: 10 }}>
+                                    <View style={{ width: '48%', marginVertical: spacings.normal }}>
                                         <Text style={{ color: '#555', fontSize: 11 }}>VIN</Text>
                                         <Text >{item?.vin}</Text>
                                     </View>
-                                    <View style={{ width: '48%', marginBottom: 10 }}>
+                                    <View style={{ width: '48%', marginVertical: spacings.normal }}>
                                         <Text style={{ color: '#555', fontSize: 11 }}>Make</Text>
                                         <Text >{item?.make}</Text>
                                     </View>
-                                    <View style={{ width: '48%', marginBottom: 10 }}>
+                                    <View style={{ width: '48%', marginVertical: spacings.normal }}>
                                         <Text style={{ color: '#555', fontSize: 11 }}>Model</Text>
                                         <Text >{item?.model}</Text>
                                     </View>
-                                    <View style={{ width: '48%', marginBottom: 10 }}>
+                                    <View style={{ width: '48%', marginVertical: spacings.normal }}>
                                         <Text style={{ color: '#555', fontSize: 11 }}>Start Date</Text>
                                         <Text style={[styles.tableText, { width: wp(35) }]}>
                                             {item?.startDate
@@ -952,7 +963,7 @@ const VinListScreen = ({ navigation, route }) => {
                                                 : "-"}
                                         </Text>
                                     </View>
-                                    <View style={{ width: '48%', marginBottom: 10 }}>
+                                    <View style={{ width: '48%', marginVertical: spacings.normal }}>
                                         <Text style={{ color: '#555', fontSize: 11 }}>End Date</Text>
                                         <Text style={[styles.tableText, { width: wp(35) }]}>
                                             {item?.endDate
@@ -964,7 +975,7 @@ const VinListScreen = ({ navigation, route }) => {
                                                 : "-"}
                                         </Text>
                                     </View>
-                                    {activeTab === 'partnerOrder' && (<View style={{ width: '48%', marginBottom: 10 }}>
+                                    {activeTab === 'partnerOrder' && (<View style={{ width: '48%', marginVertical: spacings.normal }}>
                                         <Text style={{ color: '#555', fontSize: 11 }}>Partner</Text>
                                         <Text >{item?.assignedTechnicians
                                             ?.filter(tech => tech?.id !== technicianId)
@@ -1136,7 +1147,8 @@ const VinListScreen = ({ navigation, route }) => {
                                 onPress={() => {
                                     // 👇 Handle YES logic here (e.g., add to list or navigate)
                                     navigation.navigate("WorkOrderScreenTwo", {
-                                        vinNumber: route?.params?.vinNumber
+                                        vinNumber: route?.params?.vinNumber,
+                                        from: "vinList"
                                     })
                                     setShowVinModal(false);
                                     setTimeout(() => {

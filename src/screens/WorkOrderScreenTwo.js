@@ -627,12 +627,21 @@ const WorkOrderScreenTwo = ({ route }) => {
             console.log("Server response:", responseJson);
             if (responseJson.status === true) {
                 if (shouldNavigate) {
-                    navigation.navigate("Home");
+                    // navigation.navigate("Home");
                     setLoaderFn(false);
                     if (route?.params?.vehicleId) {
                         Toast.show("Vehicle update successfully!");
                     }
                     Toast.show((route?.params?.vehicleId) ? "Vehicle update successfully!" : "Vehicle add successfully!");
+                    // Navigation logic
+                    if (route?.params?.vehicleId && route?.params?.from === "vinList") {
+                        // navigation.goBack();  
+                        navigation.navigate("VinListScreen");
+                    } else if (route?.params?.vehicleId && route?.params?.from === "workOrder") {
+                        navigation.navigate("ReportsScreen");
+                    } else {
+                        navigation.navigate("Home");
+                    }
                 } else {
                     resetForm();
                     // setStep(1);
@@ -972,7 +981,7 @@ const WorkOrderScreenTwo = ({ route }) => {
     const handleInputFocus = (inputName, index = null) => {
         setTimeout(() => {
             let inputRef = null;
-            
+
             if (inputName === 'notes') {
                 inputRef = notesInputRef.current;
             } else if (inputName === 'vehicleOverrideCost') {
@@ -980,7 +989,7 @@ const WorkOrderScreenTwo = ({ route }) => {
             } else if (inputName === 'workDescription' && index !== null) {
                 inputRef = workDescriptionRefs.current[index];
             }
-            
+
             if (scrollViewRef.current && inputRef) {
                 inputRef.measureLayout(
                     scrollViewRef.current,
@@ -1017,17 +1026,19 @@ const WorkOrderScreenTwo = ({ route }) => {
                 // onBack={() => navigation.navigate("WorkOrderScreen")}
                 onBack={() => {
                     if (route?.params?.jobName || route.params?.isFromScanner) {
-                        navigation.navigate("WorkOrderScreen");
+                        navigation.navigate("WorkOrderScreen", {
+                            from: "WorkOrderScreenTwo"
+                        });
                     } else {
                         navigation.goBack();
                     }
                 }}
             />
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                <ScrollView 
+                <ScrollView
                     ref={scrollViewRef}
-                    contentContainerStyle={{ flexGrow: 1, backgroundColor: whiteColor, paddingBottom: Platform.OS === "ios" ? hp(15) : 0 }} 
-                    keyboardShouldPersistTaps="handled" 
+                    contentContainerStyle={{ flexGrow: 1, backgroundColor: whiteColor, paddingBottom: Platform.OS === "ios" ? hp(15) : 0 }}
+                    keyboardShouldPersistTaps="handled"
                     showsVerticalScrollIndicator={false}
                 >
                     {step === 1 ?

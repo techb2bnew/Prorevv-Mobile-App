@@ -54,6 +54,7 @@ const SignUpScreen = ({ navigation }) => {
     const addressTextRef = useRef("");
     const scrollViewRef = useRef(null);
     const inputRefs = useRef({});
+    const errorRefs = useRef({});
 
     const [formData, setFormData] = useState({
         firstName: "",
@@ -123,7 +124,155 @@ const SignUpScreen = ({ navigation }) => {
         // }
 
         setErrors(newErrors);
+        
+        // Scroll to first error field if validation fails
+        if (Object.keys(newErrors).length > 0) {
+            scrollToFirstError(newErrors);
+        }
+        
         return Object.keys(newErrors).length === 0;
+    };
+
+    const scrollToFirstError = (errorObject) => {
+        // Priority order: firstName, lastName, email, phoneNumber, address, password, confirmPassword, secondaryEmail, secondaryPhoneNumber, apiError
+        const fieldOrder = ['firstName', 'lastName', 'email', 'phoneNumber', 'address', 'password', 'confirmPassword', 'secondaryEmail', 'secondaryPhoneNumber'];
+        
+        // Find first error field
+        let firstErrorField = fieldOrder.find(field => errorObject[field]);
+        
+        // If apiError exists and no other field error, scroll to bottom where apiError is displayed
+        if (!firstErrorField && errorObject.apiError) {
+            // Scroll to bottom where apiError is displayed (near Register button)
+            setTimeout(() => {
+                scrollViewRef.current?.scrollToEnd({ animated: true });
+            }, 100);
+            return;
+        }
+        
+        if (!firstErrorField || !scrollViewRef.current) return;
+        
+        setTimeout(() => {
+            // For regular text inputs
+            if (inputRefs.current[firstErrorField]) {
+                inputRefs.current[firstErrorField].measureLayout(
+                    scrollViewRef.current,
+                    (x, y, width, height) => {
+                        scrollViewRef.current?.scrollTo({
+                            y: Math.max(0, y - 100),
+                            animated: true,
+                        });
+                    },
+                    (error) => {
+                        // Fallback: try measure instead
+                        inputRefs.current[firstErrorField].measure((fx, fy, fwidth, fheight, fpageX, fpageY) => {
+                            scrollViewRef.current?.scrollTo({
+                                y: Math.max(0, fpageY - 150),
+                                animated: true,
+                            });
+                        });
+                    }
+                );
+            }
+            // For phone number fields - use container ref
+            else if (firstErrorField === 'phoneNumber') {
+                if (errorRefs.current.phoneNumberContainer) {
+                    errorRefs.current.phoneNumberContainer.measureLayout(
+                        scrollViewRef.current,
+                        (x, y, width, height) => {
+                            scrollViewRef.current?.scrollTo({
+                                y: Math.max(0, y - 100),
+                                animated: true,
+                            });
+                            // Focus the phone input after scrolling
+                            setTimeout(() => phoneInput.current?.focus(), 200);
+                        },
+                        () => {
+                            errorRefs.current.phoneNumberContainer.measure((fx, fy, fwidth, fheight, fpageX, fpageY) => {
+                                scrollViewRef.current?.scrollTo({
+                                    y: Math.max(0, fpageY - 150),
+                                    animated: true,
+                                });
+                                setTimeout(() => phoneInput.current?.focus(), 200);
+                            });
+                        }
+                    );
+                } else if (phoneInput.current) {
+                    phoneInput.current?.focus();
+                }
+            }
+            // For secondary phone number - use container ref
+            else if (firstErrorField === 'secondaryPhoneNumber') {
+                if (errorRefs.current.secondaryPhoneNumberContainer) {
+                    errorRefs.current.secondaryPhoneNumberContainer.measureLayout(
+                        scrollViewRef.current,
+                        (x, y, width, height) => {
+                            scrollViewRef.current?.scrollTo({
+                                y: Math.max(0, y - 100),
+                                animated: true,
+                            });
+                            setTimeout(() => secondyPhoneInput.current?.focus(), 200);
+                        },
+                        () => {
+                            errorRefs.current.secondaryPhoneNumberContainer.measure((fx, fy, fwidth, fheight, fpageX, fpageY) => {
+                                scrollViewRef.current?.scrollTo({
+                                    y: Math.max(0, fpageY - 150),
+                                    animated: true,
+                                });
+                                setTimeout(() => secondyPhoneInput.current?.focus(), 200);
+                            });
+                        }
+                    );
+                } else if (secondyPhoneInput.current) {
+                    secondyPhoneInput.current?.focus();
+                }
+            }
+            // For address (GooglePlacesAutocomplete) - use container ref
+            else if (firstErrorField === 'address') {
+                if (errorRefs.current.addressContainer) {
+                    errorRefs.current.addressContainer.measureLayout(
+                        scrollViewRef.current,
+                        (x, y, width, height) => {
+                            scrollViewRef.current?.scrollTo({
+                                y: Math.max(0, y - 100),
+                                animated: true,
+                            });
+                            setTimeout(() => googleRef.current?.focus(), 200);
+                        },
+                        () => {
+                            errorRefs.current.addressContainer.measure((fx, fy, fwidth, fheight, fpageX, fpageY) => {
+                                scrollViewRef.current?.scrollTo({
+                                    y: Math.max(0, fpageY - 150),
+                                    animated: true,
+                                });
+                                setTimeout(() => googleRef.current?.focus(), 200);
+                            });
+                        }
+                    );
+                } else if (googleRef.current) {
+                    googleRef.current?.focus();
+                }
+            }
+            // For error text views
+            else if (errorRefs.current[firstErrorField]) {
+                errorRefs.current[firstErrorField].measureLayout(
+                    scrollViewRef.current,
+                    (x, y, width, height) => {
+                        scrollViewRef.current?.scrollTo({
+                            y: Math.max(0, y - 150),
+                            animated: true,
+                        });
+                    },
+                    () => {
+                        errorRefs.current[firstErrorField].measure((fx, fy, fwidth, fheight, fpageX, fpageY) => {
+                            scrollViewRef.current?.scrollTo({
+                                y: Math.max(0, fpageY - 200),
+                                animated: true,
+                            });
+                        });
+                    }
+                );
+            }
+        }, 100);
     };
 
     const handleInputChange = (field, value) => {
@@ -524,14 +673,20 @@ const SignUpScreen = ({ navigation }) => {
 
                 const errorMsg = data.error?.toLowerCase();
 
+                const apiErrors = {};
                 if (errorMsg.includes("email already exists")) {
-                    setErrors({ email: "Email already exists" });
+                    apiErrors.email = "Email already exists";
                     // setIsSecondStep(false);
                 } else if (errorMsg.includes("phone number already exists")) {
-                    setErrors({ phoneNumber: "Phone number already exists" });
+                    apiErrors.phoneNumber = "Phone number already exists";
                     // setIsSecondStep(false);
                 } else {
-                    setErrors({ apiError: data.error || "An error occurred. Please try again." });
+                    apiErrors.apiError = data.error || "An error occurred. Please try again.";
+                }
+                setErrors(apiErrors);
+                // Scroll to first error field
+                if (Object.keys(apiErrors).length > 0) {
+                    setTimeout(() => scrollToFirstError(apiErrors), 300);
                 }
                 setIsLoading(false);
             } else {
@@ -746,7 +901,7 @@ const SignUpScreen = ({ navigation }) => {
                                         marginBottom: 5,
                                     }}
                                 />
-                                {errors.businessName && <Text style={styles.error}>{errors.businessName}</Text>}
+                                {errors.businessName && <Text ref={(ref) => (errorRefs.current.businessName = ref)} style={styles.error}>{errors.businessName}</Text>}
                                 <View style={styles.phoneContainer}>
                                     <Text style={styles.label}>
                                         Business Logo (Optional)
@@ -877,7 +1032,7 @@ const SignUpScreen = ({ navigation }) => {
                                 marginBottom: 5,
                             }}
                         />
-                        {errors.firstName && <Text style={styles.error}>{errors.firstName}</Text>}
+                        {errors.firstName && <Text ref={(ref) => (errorRefs.current.firstName = ref)} style={styles.error}>{errors.firstName}</Text>}
 
                         <CustomTextInput
                             ref={(ref) => (inputRefs.current.lastName = ref)}
@@ -895,7 +1050,7 @@ const SignUpScreen = ({ navigation }) => {
                                 marginBottom: 5,
                             }}
                         />
-                        {errors.lastName && <Text style={styles.error}>{errors.lastName}</Text>}
+                        {errors.lastName && <Text ref={(ref) => (errorRefs.current.lastName = ref)} style={styles.error}>{errors.lastName}</Text>}
 
                         <CustomTextInput
                             ref={(ref) => (inputRefs.current.email = ref)}
@@ -915,9 +1070,9 @@ const SignUpScreen = ({ navigation }) => {
                                 marginBottom: 5,
                             }}
                         />
-                        {errors.email && <Text style={styles.error}>{errors.email}</Text>}
+                        {errors.email && <Text ref={(ref) => (errorRefs.current.email = ref)} style={styles.error}>{errors.email}</Text>}
 
-                        <View style={styles.phoneContainer}>
+                        <View ref={(ref) => (errorRefs.current.phoneNumberContainer = ref)} style={styles.phoneContainer}>
                             <Text style={styles.label}>
                                 Phone Number<Text style={styles.asterisk}> *</Text>
                             </Text>
@@ -939,8 +1094,8 @@ const SignUpScreen = ({ navigation }) => {
                                 placeholder="Enter your phone number"
                             />
                         </View>
-                        {errors.phoneNumber && <Text style={styles.error}>{errors.phoneNumber}</Text>}
-                        <View style={styles.phoneContainer}>
+                        {errors.phoneNumber && <Text ref={(ref) => (errorRefs.current.phoneNumber = ref)} style={styles.error}>{errors.phoneNumber}</Text>}
+                        <View ref={(ref) => (errorRefs.current.addressContainer = ref)} style={styles.phoneContainer}>
                             <Text style={styles.label}>
                                 Address<Text style={styles.asterisk}> *</Text>
                             </Text>
@@ -1007,7 +1162,7 @@ const SignUpScreen = ({ navigation }) => {
                                 />
                             </View>
                         </View>
-                        {errors.address && <Text style={styles.error}>{errors.address}</Text>}
+                        {errors.address && <Text ref={(ref) => (errorRefs.current.address = ref)} style={styles.error}>{errors.address}</Text>}
                         <CustomTextInput
                             ref={(ref) => (inputRefs.current.secondaryEmail = ref)}
                             label="Secondary Email (Optional)"
@@ -1026,8 +1181,8 @@ const SignUpScreen = ({ navigation }) => {
                                 marginBottom: 5,
                             }}
                         />
-                        {errors.secondaryEmail && <Text style={styles.error}>{errors.secondaryEmail}</Text>}
-                        <View style={styles.phoneContainer}>
+                        {errors.secondaryEmail && <Text ref={(ref) => (errorRefs.current.secondaryEmail = ref)} style={styles.error}>{errors.secondaryEmail}</Text>}
+                        <View ref={(ref) => (errorRefs.current.secondaryPhoneNumberContainer = ref)} style={styles.phoneContainer}>
                             <Text style={styles.label}>
                                 Secondary Phone Number (Optional)
                             </Text>
@@ -1049,7 +1204,7 @@ const SignUpScreen = ({ navigation }) => {
                                 placeholder="Enter your secondary phone number"
                             />
                         </View>
-                        {errors.secondaryPhoneNumber && <Text style={styles.error}>{errors.secondaryPhoneNumber}</Text>}
+                        {errors.secondaryPhoneNumber && <Text ref={(ref) => (errorRefs.current.secondaryPhoneNumber = ref)} style={styles.error}>{errors.secondaryPhoneNumber}</Text>}
                         <View style={styles.phoneContainer}>
                             <Text style={styles.label}>
                                 Tax Forms (Optional)
@@ -1182,7 +1337,7 @@ const SignUpScreen = ({ navigation }) => {
                                 marginBottom: 5,
                             }}
                         />
-                        {errors.password && <Text style={styles.error}>{errors.password}</Text>}
+                        {errors.password && <Text ref={(ref) => (errorRefs.current.password = ref)} style={styles.error}>{errors.password}</Text>}
 
                         <CustomTextInput
                             ref={(ref) => (inputRefs.current.confirmPassword = ref)}
@@ -1205,7 +1360,7 @@ const SignUpScreen = ({ navigation }) => {
                                 marginBottom: 5,
                             }}
                         />
-                        {errors.confirmPassword && <Text style={styles.error}>{errors.confirmPassword}</Text>}
+                        {errors.confirmPassword && <Text ref={(ref) => (errorRefs.current.confirmPassword = ref)} style={styles.error}>{errors.confirmPassword}</Text>}
                         {errors.apiError && <Text style={styles.error}>{errors.apiError}</Text>}
 
                         <CustomButton title="Register" onPress={handleRegister} style={styles.button} loading={isLoading} disabled={isLoading} />

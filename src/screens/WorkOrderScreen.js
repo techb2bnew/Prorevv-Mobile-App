@@ -35,8 +35,8 @@ const WorkOrderScreen = ({ navigation, route }) => {
   const [customerDetails, setCustomerDetails] = useState(null);
   const [isCustomerLoading, setIsCustomerLoading] = useState(true);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
-  const [allJobList, setAllJobList] = useState([]); 
-  
+  const [allJobList, setAllJobList] = useState([]);
+
 
   useEffect(() => {
     const loadSelectedJob = async () => {
@@ -81,10 +81,10 @@ const WorkOrderScreen = ({ navigation, route }) => {
           setHasMore(true);
           fetchSingleCustomerDetails(parsedCustomer?.id);
           // Filter out null/undefined jobs and match customer
-          const customerJobs = allJobList.filter(job => 
-            job?.id !== null && 
-            job?.id !== undefined && 
-            job?.jobName !== null && 
+          const customerJobs = allJobList.filter(job =>
+            job?.id !== null &&
+            job?.id !== undefined &&
+            job?.jobName !== null &&
             job?.jobName !== undefined &&
             job?.customer?.fullName === parsedCustomer?.fullName
           );
@@ -130,7 +130,7 @@ const WorkOrderScreen = ({ navigation, route }) => {
         ? `${API_BASE_URL}/fetchAllTechnicianCustomer?roleType=${technicianType}&page=${page}`
         : `${API_BASE_URL}/fetchAllTechnicianCustomer?userId=${technicianId}&page=${page}`;
 
-      console.log("technicianId", technicianId,token);
+      console.log("technicianId", technicianId, token);
 
       const response = await fetch(apiUrl, {
         method: 'GET',
@@ -254,10 +254,10 @@ const WorkOrderScreen = ({ navigation, route }) => {
     await AsyncStorage.removeItem("current_Job");
     fetchSingleCustomerDetails(item.id);
     // Filter out null/undefined jobs and match customer
-    const customerJobs = allJobList.filter(job => 
-      job?.id !== null && 
-      job?.id !== undefined && 
-      job?.jobName !== null && 
+    const customerJobs = allJobList.filter(job =>
+      job?.id !== null &&
+      job?.id !== undefined &&
+      job?.jobName !== null &&
       job?.jobName !== undefined &&
       job.customer?.fullName === item.fullName
     );
@@ -270,11 +270,21 @@ const WorkOrderScreen = ({ navigation, route }) => {
     }
   };
 
-  
+
 
   return (
     <View style={{ flex: 1 }}>
-      <Header onBack={() => navigation.navigate('Home')} title={"Select Job"} hideBack={route?.params?.hideBack} />
+      <Header onBack={() => {
+        // If came from WorkOrderScreenTwo (back button), go back normally
+        // Otherwise, navigate to Home
+        if (route?.params?.from === "WorkOrderScreenTwo") {
+          navigation.navigate("Home");
+
+        } else {
+          navigation.goBack();
+
+        }
+      }} title={"Select Job"} hideBack={route?.params?.hideBack} />
       <View style={{ padding: spacings.large, backgroundColor: whiteColor, height: hp(100), width: wp(100) }}>
         <Text style={[styles.label, { fontSize: style.fontSizeLarge.fontSize, }]}>Select Customer <Text style={{ color: 'red' }}>*</Text></Text>
         <CustomerDropdown

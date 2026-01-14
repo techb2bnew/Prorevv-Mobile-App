@@ -624,9 +624,16 @@ const CreateJobScreen = ({ route }) => {
             if (response.ok) {
                 if (route?.params?.jobId || editableJobId) {
                     Toast.show("Job updated successfully");
-                    // navigation.goBack();
-                    setIsAddMode(false)
-                    setEditableJobId(null)
+                    // If came from Reports, navigate back to Reports with preserved tab
+                    if (route?.params?.from === "reports") {
+                        navigation.navigate("ReportsScreen", {
+                            activeTab: route?.params?.activeTab || "Jobs" // Preserve the tab that was active
+                        });
+                    } else {
+                        navigation.goBack();
+                    }
+                    setIsAddMode(false);
+                    setEditableJobId(null);
                 } else {
                     Toast.show("Job created successfully");
                     setIsAddMode(false)
@@ -660,8 +667,25 @@ const CreateJobScreen = ({ route }) => {
             {/* <TouchableWithoutFeedback onPress={Keyboard.dismiss}> */}
 
             <View style={{ flex: 1 }}>
-                <Header title={route?.params?.jobId || editableJobId ? "Update Job" : !isAddMode ? "Jobs" : "Create Job"}
-                    onBack={() => route?.params?.jobId || editableJobId ? (setIsAddMode(false), setEditableJobId(null)) : navigation.navigate("Home")} />
+                <Header
+                    title={route?.params?.jobId || editableJobId ? "Update Job" : !isAddMode ? "Jobs" : "Create Job"}
+                    onBack={() => {
+                        if (route?.params?.jobId || editableJobId) {
+                            // If came from Reports, navigate back to Reports
+                            if (route?.params?.from === "reports") {
+                                navigation.navigate("ReportsScreen");
+                            } else {
+                                // Otherwise, reset to job list mode
+                                setIsAddMode(false);
+                                setEditableJobId(null);
+                            }
+                        } else {
+                            // navigation.navigate("Home");
+                            navigation.goBack();
+
+                        }
+                    }}
+                />
                 {!isAddMode && <View style={{
                     flexDirection: 'row',
                     position: "absolute",
@@ -868,10 +892,18 @@ const CreateJobScreen = ({ route }) => {
                                                         setEditableJobId(item?.id)
                                                         setIsAddMode(true);
                                                     }}
-                                                    style={{ position: "absolute", right: -5, top: -10, zIndex: 999 }}>
+                                                    style={{ position: "absolute", right: -5, top: -10, zIndex: 999, width: 20, height: 40 }}>
                                                     <AntDesign name="edit" size={20} color={blackColor} />
 
                                                 </Pressable>)}
+                                                <Pressable
+                                                    onPress={() => navigation.navigate("NewJobDetailsScreen", {
+                                                        jobId: item?.id
+                                                    })}
+                                                    style={{ position: "absolute", right: 20, top: -9, zIndex: 999, width: 20, height: 40 }}>
+                                                    <Feather name="eye" size={20} color={blackColor} />
+
+                                                </Pressable>
                                                 <View style={{ width: '48%', marginBottom: 10 }}>
                                                     <Text style={{ color: '#555', fontSize: 11 }}>JobName</Text>
                                                     <Text>{item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}</Text>
