@@ -472,6 +472,14 @@ const WorkOrderScreenTwo = ({ route }) => {
 
     // Add New Row
     const addNewField = () => {
+        // Check if first field has a value
+        const firstFieldValue = jobDescription[0]?.jobDescription?.trim();
+        
+        if (!firstFieldValue || firstFieldValue === '') {
+            Toast.show("Please fill the first work description before adding more.");
+            return;
+        }
+        
         setJobDescription([...jobDescription, { jobDescription: "", cost: "" }]);
     };
 
@@ -515,50 +523,72 @@ const WorkOrderScreenTwo = ({ route }) => {
                 (carDetails.find(item => item.Variable === variableName)?.Value || "");
         };
         const formData = new FormData();
-        formData.append("jobName", selectedJobName);
-        formData.append("jobId", selectedJobId);
-        formData.append("vin", vin);
-        formData.append("vehicleId", route?.params?.vehicleId || undefined);
-        formData.append("vehicleDescriptor", getValue("Vehicle Descriptor") || vehicleDetails?.vehicleDescriptor);
-        formData.append("make", getValue("Make") || vehicleDetails?.make);
-        formData.append("manufacturerName", getValue("Manufacturer Name") || vehicleDetails?.manufacturerName);
-        formData.append("model", getValue("Model") || vehicleDetails?.model);
-        formData.append("modelYear", getValue("Model Year") || vehicleDetails?.modelYear);
-        formData.append("vehicleType", getValue("Vehicle Type") || vehicleDetails?.vehicleType);
-        formData.append("plantCountry", getValue("Plant Country") || vehicleDetails?.plantCountry);
-        formData.append("plantCompanyName", getValue("Plant Company Name") || vehicleDetails?.plantCompanyName);
-        formData.append("plantState", getValue("Plant State") || vehicleDetails?.plantState);
-        formData.append("bodyClass", getValue("Body Class") || vehicleDetails?.bodyClass);
-        formData.append("customerId", selectedCustomer);
-        formData.append("roleType", technicianType);
+        formData.append("jobName", selectedJobName || "");
+        formData.append("jobId", selectedJobId || "");
+        formData.append("vin", vin || "");
+        formData.append("vehicleId", route?.params?.vehicleId || "");
+        formData.append("vehicleDescriptor", getValue("Vehicle Descriptor") || vehicleDetails?.vehicleDescriptor || "");
+        formData.append("make", getValue("Make") || vehicleDetails?.make || "");
+        formData.append("manufacturerName", getValue("Manufacturer Name") || vehicleDetails?.manufacturerName || "");
+        formData.append("model", getValue("Model") || vehicleDetails?.model || "");
+        formData.append("modelYear", getValue("Model Year") || vehicleDetails?.modelYear || "");
+        formData.append("vehicleType", getValue("Vehicle Type") || vehicleDetails?.vehicleType || "");
+        formData.append("plantCountry", getValue("Plant Country") || vehicleDetails?.plantCountry || "");
+        formData.append("plantCompanyName", getValue("Plant Company Name") || vehicleDetails?.plantCompanyName || "");
+        formData.append("plantState", getValue("Plant State") || vehicleDetails?.plantState || "");
+        formData.append("bodyClass", getValue("Body Class") || vehicleDetails?.bodyClass || "");
+        formData.append("customerId", selectedCustomer || "");
+        formData.append("roleType", technicianType || "");
         formData.append("labourCost", labourCost || "");
         formData.append("notes", notes || " ");
-        formData.append("color", selectedColor);
+        formData.append("color", selectedColor || "");
         formData.append("createdBy", "app");
-        formData.append("estimatedBy", technicianName);
-        jobDescription.forEach((item) => {
-            formData.append("jobDescription[]", item.jobDescription);
-            // formData.append("cost", item.cost);
+        formData.append("estimatedBy", technicianName || "");
+        // Filter out empty job descriptions before appending
+        // If all are empty, send at least one empty string to avoid server error
+        const validJobDescriptions = jobDescription.filter((item) => {
+            const desc = item.jobDescription?.trim();
+            return desc && desc !== '';
         });
+        
+        // Append valid job descriptions, or send empty array if none exist
+        if (validJobDescriptions.length > 0) {
+            validJobDescriptions.forEach((item) => {
+                formData.append("jobDescription[]", item.jobDescription.trim());
+                // formData.append("cost", item.cost);
+            });
+        } else {
+            // Send at least one empty string to avoid server "undefined[0]" error
+            formData.append("jobDescription[]", "");
+        }
 
         formData.append("startDate", startDate ? startDate.toISOString() : new Date().toISOString());
 
         if (endDate) {
             formData.append("endDate", endDate.toISOString());
         }
-        selectedTechnicians.forEach((tech, index) => {
-            console.log(`Technician ${index}:`, tech); // 👈 Technician object console me print karega
-            formData.append(`technicians[${index}][id]`, tech.id);
-            formData.append(`technicians[${index}][techFlatRate]`, tech?.UserJob?.techFlatRate || tech?.VehicleTechnician?.techFlatRate || "");
-            formData.append(`technicians[${index}][rRate]`, tech?.UserJob?.rRate || tech?.VehicleTechnician?.rRate || "");
-        });
-        if (technicianType === "manager") {
+        // Ensure technicians array is always sent, even if empty
+        if (selectedTechnicians.length > 0) {
             selectedTechnicians.forEach((tech, index) => {
-                formData.append(`userId[${index}]`, tech.id);
+                console.log(`Technician ${index}:`, tech); // 👈 Technician object console me print karega
+                formData.append(`technicians[${index}][id]`, tech.id || "");
+                formData.append(`technicians[${index}][techFlatRate]`, tech?.UserJob?.techFlatRate || tech?.VehicleTechnician?.techFlatRate || "");
+                formData.append(`technicians[${index}][rRate]`, tech?.UserJob?.rRate || tech?.VehicleTechnician?.rRate || "");
             });
+        }
+        
+        if (technicianType === "manager") {
+            if (selectedTechnicians.length > 0) {
+                selectedTechnicians.forEach((tech, index) => {
+                    formData.append(`userId[${index}]`, tech.id || "");
+                });
+            } else {
+                // Send at least one empty userId for manager if no technicians selected
+                formData.append("userId[0]", "");
+            }
         } else {
-            formData.append("userId[0]", technicianId);
-            formData.append("technicianid[0]", technicianId || '');
+            formData.append("userId[0]", technicianId || "");
+            formData.append("technicianid[0]", technicianId || "");
         }
 
         if (route?.params?.vehicleId) {
@@ -1367,7 +1397,8 @@ const WorkOrderScreenTwo = ({ route }) => {
                                         </View>
                                     </View>
 
-                                    {technicianType === "single-technician" && <View style={{ marginTop: spacings.xxLarge }}>
+                                    {/* {technicianType === "single-technician" &&  */}
+                                    <View style={{ marginTop: spacings.xxLarge }}>
                                         <Text style={styles.label}>Vehicle Override Price</Text>
                                         <TextInput
                                             ref={vehicleOverrideCostRef}
@@ -1379,7 +1410,8 @@ const WorkOrderScreenTwo = ({ route }) => {
                                             maxLength={5}
                                             onFocus={() => handleInputFocus('vehicleOverrideCost')}
                                         />
-                                    </View>}
+                                    </View>
+                                    {/* } */}
 
                                     <View style={{ paddingTop: spacings.large }}>
                                         {/* Filter & Date Picker */}
@@ -1478,7 +1510,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                                 <Text style={styles.label}>Upload vehicle Image</Text>
                                                 <Text style={[styles.label, { fontSize: 10, color: grayColor }]}>(Only “jpeg , webp and png” images will be accepted)</Text>
                                             </TouchableOpacity>
-                                            <Text style={[styles.label, { fontSize: 10, color: redColor }, textAlign]}>Note: Upload an image, and I'll help! 😊</Text>
+                                            <Text style={[styles.label, { fontSize: 10, color: redColor }, textAlign]}>Note: Upload an image, and Ii wil help! 😊</Text>
                                         </>
                                     ) : (
                                         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 10 }}>

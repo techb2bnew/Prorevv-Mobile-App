@@ -19,6 +19,7 @@ import Header from '../componets/Header';
 import { API_BASE_URL } from '../constans/Constants';
 import Share from 'react-native-share';
 import { useOrientation } from '../OrientationContext';
+import Toast from 'react-native-simple-toast';
 
 
 const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween, textAlign, justifyContentCenter, justifyContentSpaceEvenly } = BaseStyle;
@@ -631,11 +632,14 @@ const Reports = ({ navigation, route }) => {
     };
 
     const handleExport = async () => {
+        console.log("Exporting work orders...", filteredWorkOrders);
+
         const exportData = filteredWorkOrders.map(item => ({
             jobName: item?.jobName ?? '',
             vin: item?.vin ?? '',
             make: item?.make ?? '',
             model: item?.model ?? '',
+            customer: item?.customer?.fullName ?? '-',
             startDate: formatDate(item?.startDate),
             endDate: formatDate(item?.endDate),
             assignedTechnicians: item?.assignedTechnicians?.length > 0
@@ -646,7 +650,7 @@ const Reports = ({ navigation, route }) => {
         }));
         const filePath = await exportToCSV(
             exportData,
-            ['jobName', 'vin', 'make', 'model', 'startDate', 'endDate', 'status', 'assignedTechnicians'],
+            ['jobName', 'customer', 'vin', 'make', 'model', 'startDate', 'endDate', 'status', 'assignedTechnicians'],
             'work_orders.csv'
         );
 
@@ -722,6 +726,12 @@ const Reports = ({ navigation, route }) => {
 
                 // Refresh the data
                 await fetchVehicalInfo(page);
+                const count = vehiclesToUpdate.length;
+                const message =
+                    count === 1
+                        ? "Work Order Completed Successfully"
+                        : `${count} Work Orders Completed Successfully`;
+                Toast.show(message);
                 setSelectedWorkOrders([]);
             } else {
                 console.log("Error", data.error);
@@ -1195,7 +1205,7 @@ const Reports = ({ navigation, route }) => {
                                 <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>Make</Text>
                                 <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(30) }]}>Model</Text>
                                 <Text style={[styles.tableHeader, styles.headerText, { width: wp(27) }]}>Vehicle Price</Text>
-                                <Text style={[styles.tableHeader, styles.headerText, { width: wp(25) }]}>Override Cost</Text>
+                                <Text style={[styles.tableHeader, styles.headerText, { width: wp(30) }]}>Override Cost</Text>
                                 {technicianType === "manager" && <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>Assigned Tech</Text>}
                                 <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>Start Date</Text>
                                 <Text style={[styles.tableHeader, { width: isTablet ? wp(18) : orientation === "LANDSCAPE" ? wp(18) : wp(35) }]}>End Date</Text>
@@ -1233,7 +1243,7 @@ const Reports = ({ navigation, route }) => {
                                                 <Text style={[styles.text, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>{item?.make || '-'}</Text>
                                                 <Text style={[styles.text, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(30) }]}>{item?.model || '-'}</Text>
                                                 <Text style={[styles.cell, { width: wp(25) }]}>{item.labourCost ? "-" : item?.job?.estimatedCost ? `$${item.job.estimatedCost}` : '—'}</Text>
-                                                <Text style={[styles.cell, { width: wp(25) }]}>{item.labourCost ? `$${item.labourCost}` : '-'}</Text>
+                                                <Text style={[styles.cell, { width: wp(29) }]}>{item.labourCost ? `$${item.labourCost}` : '-'}</Text>
                                                 {technicianType === "manager" && <Text style={[styles.text, { width: isTablet ? wp(14) : orientation === "LANDSCAPE" ? wp(14) : wp(30) }]}>
                                                     {item?.assignedTechnicians?.length > 0
                                                         ? item?.assignedTechnicians

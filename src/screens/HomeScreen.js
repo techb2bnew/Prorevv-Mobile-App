@@ -135,7 +135,7 @@ const HomeScreen = ({ navigation }) => {
             if (customers.length === 0) {
               Toast.show("You don't have any assigned job currently.");
             } else if (!currentJob) {
-              Toast.show("Please select a job from the vehicles page first.");
+              Toast.show("Please select a job from the assign jobs page first.");
             } else {
               navigation.navigate("ScannerScreen");
             }

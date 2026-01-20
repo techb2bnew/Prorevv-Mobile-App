@@ -65,9 +65,9 @@ function App(): React.JSX.Element {
     const handleOrientationBasedOnWidth = () => {
       const screenWidth = Dimensions.get('window').width;
       const widthThreshold = 500; // You can adjust this threshold as needed
-      
+
       console.log('Screen width:', screenWidth, 'Platform:', Platform.OS);
-      
+
       if (screenWidth > widthThreshold) {
         // If width is more than threshold, allow both orientations
         if (Platform.OS === 'ios') {
@@ -84,13 +84,13 @@ function App(): React.JSX.Element {
           // iOS specific: multiple attempts to lock portrait
           Orientation.lockToPortrait();
           // console.log('iOS - Width <= 500: Locked to portrait only');
-          
+
           // Additional iOS portrait enforcement
           setTimeout(() => {
             Orientation.lockToPortrait();
             // console.log('iOS - Additional portrait lock attempt');
           }, 200);
-          
+
           setTimeout(() => {
             Orientation.lockToPortrait();
             // console.log('iOS - Final portrait lock attempt');
@@ -107,7 +107,7 @@ function App(): React.JSX.Element {
       // iOS needs more aggressive handling
       const iosOrientationHandler = () => {
         handleOrientationBasedOnWidth();
-        
+
         // Additional iOS-specific orientation enforcement
         const enforceOrientation = () => {
           const currentWidth = Dimensions.get('window').width;
@@ -116,16 +116,16 @@ function App(): React.JSX.Element {
             // console.log('iOS - Enforcing portrait lock');
           }
         };
-        
+
         // Set up interval for iOS orientation enforcement
         const iosInterval = setInterval(enforceOrientation, 1000);
-        
+
         // Cleanup interval
         setTimeout(() => {
           clearInterval(iosInterval);
         }, 10000); // Stop after 10 seconds
       };
-      
+
       setTimeout(iosOrientationHandler, 100);
     } else {
       handleOrientationBasedOnWidth();
@@ -135,21 +135,21 @@ function App(): React.JSX.Element {
     const orientationListener = Orientation.addOrientationListener((orientation) => {
       const screenWidth = Dimensions.get('window').width;
       const widthThreshold = 600;
-      
+
       console.log('Orientation changed to:', orientation, 'Width:', screenWidth, 'Platform:', Platform.OS);
-      
+
       if (screenWidth <= widthThreshold && orientation !== 'PORTRAIT') {
         // If width is small and user tries to rotate, force back to portrait
         if (Platform.OS === 'ios') {
           // iOS specific: multiple immediate locks
           Orientation.lockToPortrait();
           // console.log('iOS - Immediate portrait lock');
-          
+
           setTimeout(() => {
             Orientation.lockToPortrait();
             // console.log('iOS - Delayed portrait lock');
           }, 50);
-          
+
           setTimeout(() => {
             Orientation.lockToPortrait();
             // console.log('iOS - Final delayed portrait lock');
@@ -165,9 +165,9 @@ function App(): React.JSX.Element {
     const dimensionListener = Dimensions.addEventListener('change', ({ window }) => {
       const newWidth = window.width;
       const widthThreshold = 500;
-      
+
       console.log('Screen dimensions changed, new width:', newWidth, 'Platform:', Platform.OS);
-      
+
       if (newWidth > widthThreshold) {
         if (Platform.OS === 'ios') {
           Orientation.unlockAllOrientations();
@@ -181,12 +181,12 @@ function App(): React.JSX.Element {
           // iOS multiple portrait lock attempts
           Orientation.lockToPortrait();
           // console.log('iOS - Width decreased: Locked to portrait');
-          
+
           setTimeout(() => {
             Orientation.lockToPortrait();
             // console.log('iOS - Dimension change portrait lock');
           }, 100);
-          
+
           setTimeout(() => {
             Orientation.lockToPortrait();
             // console.log('iOS - Final dimension change portrait lock');
@@ -215,17 +215,17 @@ function App(): React.JSX.Element {
       const iosOrientationEnforcer = () => {
         const screenWidth = Dimensions.get('window').width;
         // console.log('iOS - Checking width:', screenWidth);
-        
+
         if (screenWidth <= 600) {
           // Multiple iOS orientation lock methods
           Orientation.lockToPortrait();
-          
+
           // Additional iOS-specific lock
           setTimeout(() => {
             Orientation.lockToPortrait();
             // console.log('iOS - Portrait lock enforced');
           }, 100);
-          
+
           // Force orientation change
           setTimeout(() => {
             Orientation.lockToPortrait();
@@ -236,12 +236,12 @@ function App(): React.JSX.Element {
 
       // More frequent checking for iOS - every 500ms
       const iosInterval = setInterval(iosOrientationEnforcer, 500);
-      
+
       // Also add immediate enforcement on app start
       setTimeout(() => {
         iosOrientationEnforcer();
       }, 100);
-      
+
       return () => {
         clearInterval(iosInterval);
       };
@@ -276,7 +276,7 @@ function App(): React.JSX.Element {
   // Use current orientation in useEffect
   useEffect(() => {
     console.log('Orientation changed, current orientation:', currentOrientation);
-    
+
     if (currentOrientation === 'PORTRAIT') {
       // console.log('App is in PORTRAIT mode');
       // Portrait mode specific logic here
@@ -299,7 +299,7 @@ function App(): React.JSX.Element {
 
       // Run every 200ms for iOS
       const forceInterval = setInterval(forcePortraitOnIOS, 200);
-      
+
       return () => {
         clearInterval(forceInterval);
       };
@@ -670,7 +670,7 @@ function App(): React.JSX.Element {
               </NavigationContainer>
             </TabBarProvider>
           )}
-          {/* {isBiometricModalVisible && <BiometricModal isBiometricModalVisible={isBiometricModalVisible} setIsBiometricModalVisible={setIsBiometricModalVisible} />} */}
+          {/* {isBiometricModalVisible && <BiometricModal isBiometricModalVisible={isBiometricModalVisible} setIsBiometricModalVisible={setIsBiometricModalVisible} />}  */}
           <InternetToast message={toastMessage} visible={toastVisible} />
         </KeyboardAvoidingView>
       </SafeAreaView>

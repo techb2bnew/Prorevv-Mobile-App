@@ -166,7 +166,9 @@ const ProfileScreen = ({ navigation }) => {
           setEmail(profileData?.email);
           setFirstName(profileData?.firstName || '');
           setLastName(profileData?.lastName || '');
-          setAddress(profileData?.address || '');
+          setAddress(
+            (profileData?.address || '').trim().replace(/^,/, '')
+          );
           setCityValue(profileData?.city || '');
           setState(profileData?.state || '');
           setStateValue(profileData?.state || '');
@@ -249,63 +251,103 @@ const ProfileScreen = ({ navigation }) => {
       return;
     }
 
+    // const handlePhone = async () => {
+    //   try {
+    //     if (phoneNumber?.startsWith('+')) {
+    //       // Extract country code and number from format: +244-8645564321 or +244 8645564321
+    //       const match = phoneNumber.match(/^\+(\d{1,4})[- ]?(.+)$/);
+    //       if (match) {
+    //         const callingCode = `+${match[1]}`;
+    //         const numberOnly = match[2].replace(/[^0-9]/g, '').trim();
+
+    //         console.log("Primary Phone - Calling Code:", callingCode, "Number:", numberOnly);
+
+    //         // Get ISO code for the country
+    //         try {
+    //           const iso = await getCountryByCallingCode(callingCode);
+    //           if (iso) {
+    //             setDefaultIsoCode(iso);
+    //           } else {
+    //             // Fallback to US if country not found
+    //             setDefaultIsoCode('US');
+    //           }
+    //         } catch (error) {
+    //           console.log("Error getting country code:", error);
+    //           setDefaultIsoCode('US');
+    //         }
+
+    //         // Set the raw number (without country code)
+    //         setRawNumber(numberOnly);
+    //       } else {
+    //         // Fallback: try to extract just the country code
+    //         const matchedCode = phoneNumber.match(/^\+(\d{1,4})/);
+    //         const callingCode = matchedCode ? `+${matchedCode[1]}` : null;
+
+    //         if (callingCode) {
+    //           try {
+    //             const iso = await getCountryByCallingCode(callingCode);
+    //             if (iso) {
+    //               setDefaultIsoCode(iso);
+    //             } else {
+    //               setDefaultIsoCode('US');
+    //             }
+    //           } catch (error) {
+    //             console.log("Error getting country code:", error);
+    //             setDefaultIsoCode('US');
+    //           }
+    //           // Remove the calling code from phone number
+    //           const numberOnly = phoneNumber.replace(callingCode, '').replace(/[^0-9]/g, '').trim();
+    //           setRawNumber(numberOnly);
+    //         } else {
+    //           setRawNumber(phoneNumber.replace(/[^0-9]/g, ''));
+    //         }
+    //       }
+    //     } else {
+    //       // If no + prefix, set as raw number
+    //       setRawNumber(phoneNumber?.replace(/[^0-9]/g, '') || '');
+    //     }
+    //   } catch (error) {
+    //     console.log("Error parsing phone number:", error);
+    //     setRawNumber(phoneNumber?.replace(/[^0-9]/g, '') || '');
+    //   }
+    // };
     const handlePhone = async () => {
       try {
         if (phoneNumber?.startsWith('+')) {
-          // Extract country code and number from format: +244-8645564321 or +244 8645564321
-          const match = phoneNumber.match(/^\+(\d{1,4})[- ]?(.+)$/);
+          const cleaned = phoneNumber.replace(/[- ]/g, '');
+
+          // Prefer country code of length 1–3 only
+          const match = cleaned.match(/^\+(\d{1,3})(.*)$/);
+
           if (match) {
-            const callingCode = `+${match[1]}`;
-            const numberOnly = match[2].replace(/[^0-9]/g, '').trim();
+            let callingCode = `+${match[1]}`;
+            let rest = match[2];
 
-            console.log("Primary Phone - Calling Code:", callingCode, "Number:", numberOnly);
+            // USA/Canada special case → force +1
+            if (cleaned.startsWith('+1')) {
+              callingCode = '+1';
+              rest = cleaned.slice(2); // remove +1 only
+            }
 
-            // Get ISO code for the country
+            const numberOnly = rest.replace(/[^0-9]/g, '');
+
+            console.log("Calling Code:", callingCode, "Raw Number:", numberOnly);
+
             try {
               const iso = await getCountryByCallingCode(callingCode);
-              if (iso) {
-                setDefaultIsoCode(iso);
-              } else {
-                // Fallback to US if country not found
-                setDefaultIsoCode('US');
-              }
+              setDefaultIsoCode(iso || 'US');
             } catch (error) {
-              console.log("Error getting country code:", error);
               setDefaultIsoCode('US');
             }
 
-            // Set the raw number (without country code)
             setRawNumber(numberOnly);
           } else {
-            // Fallback: try to extract just the country code
-            const matchedCode = phoneNumber.match(/^\+(\d{1,4})/);
-            const callingCode = matchedCode ? `+${matchedCode[1]}` : null;
-
-            if (callingCode) {
-              try {
-                const iso = await getCountryByCallingCode(callingCode);
-                if (iso) {
-                  setDefaultIsoCode(iso);
-                } else {
-                  setDefaultIsoCode('US');
-                }
-              } catch (error) {
-                console.log("Error getting country code:", error);
-                setDefaultIsoCode('US');
-              }
-              // Remove the calling code from phone number
-              const numberOnly = phoneNumber.replace(callingCode, '').replace(/[^0-9]/g, '').trim();
-              setRawNumber(numberOnly);
-            } else {
-              setRawNumber(phoneNumber.replace(/[^0-9]/g, ''));
-            }
+            setRawNumber(cleaned.replace(/[^0-9]/g, ''));
           }
         } else {
-          // If no + prefix, set as raw number
           setRawNumber(phoneNumber?.replace(/[^0-9]/g, '') || '');
         }
       } catch (error) {
-        console.log("Error parsing phone number:", error);
         setRawNumber(phoneNumber?.replace(/[^0-9]/g, '') || '');
       }
     };
@@ -740,7 +782,7 @@ const ProfileScreen = ({ navigation }) => {
   // Keyboard event listeners
   useEffect(() => {
     if (!isEditing) return; // Only add listeners when editing
-    
+
     const keyboardDidShowListener = Keyboard.addListener(
       Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
       (e) => {
@@ -1195,20 +1237,20 @@ const ProfileScreen = ({ navigation }) => {
           </View>
         </View>
         :
-        <KeyboardAvoidingView 
-          behavior={Platform.OS === "ios" ? "padding" : undefined} 
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
           style={{ flex: 1, backgroundColor: whiteColor }}
         >
           <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
             <ScrollView
               ref={scrollViewRef}
-              contentContainerStyle={{ 
-                flexGrow: 1, 
-                marginBottom: 100, 
-                paddingBottom: Platform.OS === "android" 
-                  ? (keyboardHeight > 0 ? keyboardHeight  : orientation === "LANDSCAPE" ? hp(15) : hp(1))
-                  : (orientation === "LANDSCAPE" ? hp(15) : hp(1)), 
-                backgroundColor: whiteColor 
+              contentContainerStyle={{
+                flexGrow: 1,
+                marginBottom: 100,
+                paddingBottom: Platform.OS === "android"
+                  ? (keyboardHeight > 0 ? keyboardHeight : orientation === "LANDSCAPE" ? hp(15) : hp(1))
+                  : (orientation === "LANDSCAPE" ? hp(15) : hp(1)),
+                backgroundColor: whiteColor
               }}
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
@@ -1280,9 +1322,9 @@ const ProfileScreen = ({ navigation }) => {
                   <View style={[flexDirectionRow, justifyContentSpaceBetween, { width: "100%" }]}>
                     <View style={styles.inputGroup}>
                       <Text style={styles.label}>First Name<Text style={styles.asterisk}> *</Text></Text>
-                      <TextInput 
+                      <TextInput
                         ref={(ref) => (inputRefs.current.firstName = ref)}
-                        style={[styles.input, { width: isTablet ? wp(46) : wp(43.5), borderColor: errors.firstName ? redColor : blackColor }]} 
+                        style={[styles.input, { width: isTablet ? wp(46) : wp(43.5), borderColor: errors.firstName ? redColor : blackColor }]}
                         value={firstName}
                         onChangeText={(text) => {
                           setFirstName(text);
@@ -1298,7 +1340,7 @@ const ProfileScreen = ({ navigation }) => {
 
                     <View style={styles.inputGroup}>
                       <Text style={styles.label}>Last Name<Text style={styles.asterisk}> *</Text></Text>
-                      <TextInput 
+                      <TextInput
                         ref={(ref) => (inputRefs.current.lastName = ref)}
                         style={[styles.input, { width: isTablet ? wp(46) : wp(43.5), borderColor: errors.lastName ? redColor : blackColor }]}
                         value={lastName}
@@ -1316,7 +1358,7 @@ const ProfileScreen = ({ navigation }) => {
                   </View>
                   {roleType === "single-technician" && <View style={styles.inputGroup}>
                     <Text style={styles.label}>Business Name</Text>
-                    <TextInput 
+                    <TextInput
                       ref={(ref) => (inputRefs.current.businessName = ref)}
                       style={styles.input}
                       value={businessName}
@@ -1354,11 +1396,11 @@ const ProfileScreen = ({ navigation }) => {
                   </View>
                   <View style={[styles.inputGroup, { height: isTablet ? orientation === "LANDSCAPE" ? hp(8) : hp(5) : hp(10) }]}>
                     <Text style={styles.label}>Address</Text>
-                    <TextInput 
+                    <TextInput
                       ref={(ref) => (inputRefs.current.address = ref)}
-                      style={styles.input} 
-                      value={address} 
-                      onChangeText={setAddress} 
+                      style={styles.input}
+                      value={address}
+                      onChangeText={setAddress}
                       onFocus={() => handleInputFocus("address")}
                       placeholder="Enter Address" />
                   </View>
@@ -1471,14 +1513,14 @@ const ProfileScreen = ({ navigation }) => {
                   </View>
                   <View style={styles.inputGroup}>
                     <Text style={styles.label}>Secondary Email (Optional)</Text>
-                    <TextInput 
+                    <TextInput
                       ref={(ref) => (inputRefs.current.secondaryEmail = ref)}
-                      style={styles.input} 
-                      value={secondryEmail} 
+                      style={styles.input}
+                      value={secondryEmail}
                       onChangeText={(text) => {
                         setSecondryEmail(text);
                         setSecondaryEmailError("");
-                      }} 
+                      }}
                       onFocus={() => handleInputFocus("secondaryEmail")}
                       placeholder="Enter Secondary Email" />
                     {secondaryEmailError ? <Text style={{ color: 'red', fontSize: 12, marginTop: 4 }}>{secondaryEmailError}</Text> : null}

@@ -279,7 +279,21 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
                             : "-"
                     },
                     { label: "Status", value: vehicleDetails?.vehicleStatus === false ? "In-Progress" : "Completed" },
-                    ...(technicianType === "manager"
+                    ...(
+                        vehicleDetails?.labourCost
+                            ? [{
+                                label: "Override Cost",
+                                value: `$${vehicleDetails.labourCost}`,
+                            }]
+                            : vehicleDetails?.job?.estimatedCost
+                                ? [{
+                                    label: "Vehicle Price",
+                                    value: `$${vehicleDetails.job.estimatedCost}`,
+                                }]
+                                : []
+                    ),
+
+                    ...(technicianType === "manager" && vehicleDetails?.completedBy
                         ? [{
                             label: "Completed By",
                             value: capitalize(vehicleDetails?.completedBy),
@@ -319,7 +333,7 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
                         } else if (rRate) {
                             payInfo = `R Rate: $${rRate}`;
                         } else {
-                            payInfo = 'N/A';
+                            payInfo = '-';
                         }
 
                         return [
@@ -328,36 +342,13 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
                                 value: `${name}${techType}`,
                             },
                             {
-                                label: `Technician ${index + 1}`,
+                                label: `Pay Rate`,
                                 value: payInfo,
                             }
                         ];
                     })
                 }]
                 : []),
-
-
-            // ...(from === 'partner' && partnerTechnician
-            //     ? [{
-            //         groupTitle: "Partner Technician",
-            //         data: [
-            //             {
-            //                 label: "Partner Technician",
-            //                 value: `${capitalize(partnerTechnician.firstName)} ${capitalize(partnerTechnician.lastName)}`
-            //             },
-            //             ...(partnerTechnician.email ? [{
-            //                 label: "Partner Technician Email",
-            //                 value: partnerTechnician.email
-            //             }] : []),
-            //             ...(partnerTechnician.mobile ? [{
-            //                 label: "Partner Technician Phone",
-            //                 value: partnerTechnician.mobile,
-            //                 isPhoneNumber: true
-            //             }] : [])
-            //         ]
-            //     }]
-            //     : [])
-
         ];
     };
 

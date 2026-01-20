@@ -157,9 +157,9 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
   const renderItem = ({ item, index }) => {
 
     // Console when row renders
-    console.log("Rendering Vehicle Row:", {
-      item
-    });
+    // console.log("Rendering Vehicle Row:", {
+    //   item
+    // });
 
     return (
       <Pressable
@@ -172,7 +172,7 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
           { backgroundColor: index % 2 === 0 ? lightGrayColor : whiteColor }
         ]}
       >
-        <Text style={[styles.cell, { width: wp(40),textAlign:  'left' ,paddingLeft: spacings.small2x }]}>{item.vin || 'N/A'}</Text>
+        <Text style={[styles.cell, { width: wp(40), textAlign: 'left', paddingLeft: spacings.small2x }]}>{item.vin || 'N/A'}</Text>
         <Text style={[styles.cell, { width: wp(25), paddingLeft: spacings.small2x }]}>{item.make || '-'}</Text>
         <Text style={[styles.cell, { width: wp(22) }]}>{item.model || '-'}</Text>
         <Text style={[styles.cell, { width: wp(25) }]}>{item.modelYear || '-'}</Text>
@@ -316,12 +316,12 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
                     {jobDetails?.jobStatus ? "Complete" : "In Progress"}
                   </Text>
                 </View>
-                {/* {technicianType != 'ifs' && <View style={styles.rightCol}>
-                  <Text style={styles.label}>Job Estimated Cost</Text>
+                {technicianType === 'manager' && <View style={styles.rightCol}>
+                  <Text style={styles.label}>Price Per Vehicle</Text>
                   <Text style={styles.value}>
                     {jobDetails?.estimatedCost ? `$${jobDetails.estimatedCost}` : '—'}
                   </Text>
-                </View>} */}
+                </View>}
 
               </View>
               <View style={styles.rowItem}>

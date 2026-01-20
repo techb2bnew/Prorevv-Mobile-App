@@ -1150,7 +1150,7 @@ const CreateJobScreen = ({ route }) => {
                                         />}
 
                                         <View style={{ marginTop: spacings.xxLarge }}>
-                                            <Text style={styles.label}>Select Technicians</Text>
+                                            <Text style={styles.label}>Select Dent Technicians</Text>
                                             <View style={{
                                                 borderWidth: 1,
                                                 borderColor: blackColor,
