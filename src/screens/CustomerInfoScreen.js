@@ -945,7 +945,8 @@ const CustomerInfoScreen = ({ navigation }) => {
                                     placeholder="Enter your email"
                                     value={formData.email}
                                     onChangeText={(text) => {
-                                        const updatedText = text?.charAt(0).toLowerCase() + text.slice(1);
+                                        // const updatedText = text?.charAt(0).toLowerCase() + text.slice(1);
+                                        const updatedText = text.toLowerCase();
                                         handleInputChange("email", updatedText);
                                     }}
                                 // required={true}
@@ -965,7 +966,7 @@ const CustomerInfoScreen = ({ navigation }) => {
                                         layout="second"
                                         onChangeFormattedText={(text) => handleInputChange("phoneNumber", text)}
                                         textInputProps={{
-                                            maxLength: 15,
+                                            maxLength: 16,
                                             keyboardType: "default",
                                         }}
                                         containerStyle={styles.phoneInput}

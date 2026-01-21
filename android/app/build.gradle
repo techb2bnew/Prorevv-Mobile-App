@@ -57,7 +57,7 @@ react {
 /**
  * Set this to true to Run Proguard on Release builds to minify the Java bytecode.
  */
-def enableProguardInReleaseBuilds = false
+def enableProguardInReleaseBuilds = true
 
 /**
  * The preferred build flavor of JavaScriptCore (JSC)
@@ -93,9 +93,9 @@ android {
             keyPassword 'android'
         }
         release {
-          storeFile file('tech.keystore')
+          storeFile file('prorevv.keystore')
           storePassword '12345678'
-          keyAlias 'tech_alias'
+          keyAlias 'prorevv_key_alias'
           keyPassword '12345678'
         }
     }
@@ -107,8 +107,10 @@ android {
             // Caution! In production, you need to generate your own keystore file.
             // see https://reactnative.dev/docs/signed-apk-android.
             signingConfig signingConfigs.debug
-            signingConfig signingConfigs.release
-            minifyEnabled enableProguardInReleaseBuilds
+            // signingConfig signingConfigs.release
+            // minifyEnabled enableProguardInReleaseBuilds
+            minifyEnabled true
+            shrinkResources true
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }

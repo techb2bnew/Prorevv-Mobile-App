@@ -474,12 +474,12 @@ const WorkOrderScreenTwo = ({ route }) => {
     const addNewField = () => {
         // Check if first field has a value
         const firstFieldValue = jobDescription[0]?.jobDescription?.trim();
-        
+
         if (!firstFieldValue || firstFieldValue === '') {
             Toast.show("Please fill the first work description before adding more.");
             return;
         }
-        
+
         setJobDescription([...jobDescription, { jobDescription: "", cost: "" }]);
     };
 
@@ -550,7 +550,7 @@ const WorkOrderScreenTwo = ({ route }) => {
             const desc = item.jobDescription?.trim();
             return desc && desc !== '';
         });
-        
+
         // Append valid job descriptions, or send empty array if none exist
         if (validJobDescriptions.length > 0) {
             validJobDescriptions.forEach((item) => {
@@ -576,7 +576,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                 formData.append(`technicians[${index}][rRate]`, tech?.UserJob?.rRate || tech?.VehicleTechnician?.rRate || "");
             });
         }
-        
+
         if (technicianType === "manager") {
             if (selectedTechnicians.length > 0) {
                 selectedTechnicians.forEach((tech, index) => {
@@ -680,9 +680,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                         from: "scanNext"
                     });
 
-                    if (route?.params?.vehicleId) {
-                        Toast.show("Vehicle update successfully!");
-                    }
+            
                     Toast.show((route?.params?.vehicleId) ? "Vehicle update successfully!" : "Vehicle add successfully!");
                 }
             } else {
@@ -1398,20 +1396,21 @@ const WorkOrderScreenTwo = ({ route }) => {
                                     </View>
 
                                     {/* {technicianType === "single-technician" &&  */}
-                                    <View style={{ marginTop: spacings.xxLarge }}>
-                                        <Text style={styles.label}>Vehicle Override Price</Text>
-                                        <TextInput
-                                            ref={vehicleOverrideCostRef}
-                                            style={[styles.input, { height: isTablet ? hp(3.5) : hp(5.5), marginTop: 5 }]}
-                                            placeholder="Vehicle Override Price"
-                                            value={labourCost}
-                                            onChangeText={setLabourCost}
-                                            keyboardType="numeric"
-                                            maxLength={5}
-                                            onFocus={() => handleInputFocus('vehicleOverrideCost')}
-                                        />
-                                    </View>
-                                    {/* } */}
+                                    {technicianType != "technician" &&
+                                        <View style={{ marginTop: spacings.xxLarge }}>
+                                            <Text style={styles.label}>Vehicle Override Price</Text>
+                                            <TextInput
+                                                ref={vehicleOverrideCostRef}
+                                                style={[styles.input, { height: isTablet ? hp(3.5) : hp(5.5), marginTop: 5 }]}
+                                                placeholder="Vehicle Override Price"
+                                                value={labourCost}
+                                                onChangeText={setLabourCost}
+                                                keyboardType="numeric"
+                                                maxLength={5}
+                                                onFocus={() => handleInputFocus('vehicleOverrideCost')}
+                                            />
+                                        </View>
+                                    }
 
                                     <View style={{ paddingTop: spacings.large }}>
                                         {/* Filter & Date Picker */}

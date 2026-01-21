@@ -1151,45 +1151,50 @@ const CreateJobScreen = ({ route }) => {
 
                                         <View style={{ marginTop: spacings.xxLarge }}>
                                             <Text style={styles.label}>Select Dent Technicians</Text>
-                                            <View style={{
-                                                borderWidth: 1,
-                                                borderColor: blackColor,
-                                                borderRadius: 8,
-                                                maxHeight: hp(20),
-                                                overflow: "hidden",
-                                                // marginBottom: 16,
-                                            }}>
-                                                <FlatList
-                                                    nestedScrollEnabled={true}
-                                                    data={technicians}
-                                                    keyExtractor={(item) => item.id.toString()}
-                                                    renderItem={({ item }) => {
-                                                        const selected = isNormalTechnicianSelected(item.id);
-                                                        return (
-                                                            <TouchableOpacity
-                                                                style={[styles.techItem, flexDirectionRow, justifyContentSpaceBetween, alignItemsCenter, {
-                                                                    backgroundColor: selected ? lightBlueColor : "#fff"
-                                                                }]}
-                                                                onPress={() => toggleNormalTechnicianSelection(item)}
-                                                            >
-                                                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                                                    <Text style={{ fontSize: 16 }}>{capitalize(item.firstName)} {capitalize(item.lastName)}</Text>
-                                                                </View>
-                                                                <Icon
-                                                                    name={selected ? "checkbox-marked" : "checkbox-blank-outline"}
-                                                                    size={24}
-                                                                    color={selected ? blackColor : "#ccc"}
-                                                                    type="MaterialCommunityIcons"
-                                                                />
-                                                            </TouchableOpacity>
-                                                        );
-                                                    }}
-                                                    onEndReached={handleLoadMoreTechnicians}
-                                                    onEndReachedThreshold={0.3}
-                                                    showsVerticalScrollIndicator={false}
-                                                    ListFooterComponent={isTechnicianLoading ? <ActivityIndicator /> : null}
-                                                />
-                                            </View>
+                                            {technicians.length === 0 ? (
+                                                <Text style={{ color: blackColor, marginVertical: 8, fontSize: 14, textAlign: 'center' }}>
+                                                    No technicians available right now.
+                                                </Text>
+                                            ) : (
+                                                <View style={{
+                                                    borderWidth: 1,
+                                                    borderColor: blackColor,
+                                                    borderRadius: 8,
+                                                    maxHeight: hp(20),
+                                                    overflow: "hidden",
+                                                    // marginBottom: 16,
+                                                }}>
+                                                    <FlatList
+                                                        nestedScrollEnabled={true}
+                                                        data={technicians}
+                                                        keyExtractor={(item) => item.id.toString()}
+                                                        renderItem={({ item }) => {
+                                                            const selected = isNormalTechnicianSelected(item.id);
+                                                            return (
+                                                                <TouchableOpacity
+                                                                    style={[styles.techItem, flexDirectionRow, justifyContentSpaceBetween, alignItemsCenter, {
+                                                                        backgroundColor: selected ? lightBlueColor : "#fff"
+                                                                    }]}
+                                                                    onPress={() => toggleNormalTechnicianSelection(item)}
+                                                                >
+                                                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                                        <Text style={{ fontSize: 16 }}>{capitalize(item.firstName)} {capitalize(item.lastName)}</Text>
+                                                                    </View>
+                                                                    <Icon
+                                                                        name={selected ? "checkbox-marked" : "checkbox-blank-outline"}
+                                                                        size={24}
+                                                                        color={selected ? blackColor : "#ccc"}
+                                                                        type="MaterialCommunityIcons"
+                                                                    />
+                                                                </TouchableOpacity>
+                                                            );
+                                                        }}
+                                                        onEndReached={handleLoadMoreTechnicians}
+                                                        onEndReachedThreshold={0.3}
+                                                        showsVerticalScrollIndicator={false}
+                                                        ListFooterComponent={isTechnicianLoading ? <ActivityIndicator /> : null}
+                                                    />
+                                                </View>)}
                                             {technicianError ? (
                                                 <Text style={{ color: 'red', marginTop: 5, fontSize: 12 }}>{technicianError}</Text>
                                             ) : null}
@@ -1197,7 +1202,7 @@ const CreateJobScreen = ({ route }) => {
 
 
 
-                                        {rrTechnicians.length > 0 && <View style={{ marginTop: 5 }}>
+                                        {/* {rrTechnicians.length > 0 ? (<View style={{ marginTop: 5 }}>
                                             <Text style={styles.label}>Select R Technicians</Text>
                                             <View style={{
                                                 borderWidth: 1,
@@ -1241,7 +1246,66 @@ const CreateJobScreen = ({ route }) => {
                                             {rrTechnicianError ? (
                                                 <Text style={{ color: 'red', marginTop: 5, fontSize: 12 }}>{rrTechnicianError}</Text>
                                             ) : null}
-                                        </View>}
+                                        </View>) : (
+                                            <Text style={{ color: 'red', marginTop: 8, fontSize: 14, textAlign: 'center' }}>
+                                                No RR technicians available right now.
+                                            </Text>
+                                        )} */}
+                                        <View style={{ marginTop: 5 }}>
+                                            <Text style={styles.label}>Select R Technicians</Text>
+
+                                            <View style={{
+                                                borderWidth: 1,
+                                                borderColor: blackColor,
+                                                borderRadius: 8,
+                                                maxHeight: hp(20),
+                                                overflow: "hidden",
+                                            }}>
+                                                {rrTechnicians.length === 0 ? (
+                                                    <Text style={{ color: 'red', marginVertical: 8, fontSize: 14, textAlign: 'center' }}>
+                                                        No RR technicians available right now.
+                                                    </Text>
+                                                ) : (
+                                                    <FlatList
+                                                        nestedScrollEnabled={true}
+                                                        data={rrTechnicians}
+                                                        keyExtractor={(item) => item.id.toString()}
+                                                        renderItem={({ item }) => {
+                                                            const selected = isRrTechnicianSelected(item.id);
+                                                            return (
+                                                                <TouchableOpacity
+                                                                    style={[styles.techItem, flexDirectionRow, justifyContentSpaceBetween, alignItemsCenter, {
+                                                                        backgroundColor: selected ? lightBlueColor : "#fff"
+                                                                    }]}
+                                                                    onPress={() => toggleRrTechnicianSelection(item)}
+                                                                >
+                                                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                                        <Text style={{ fontSize: 16 }}>
+                                                                            {capitalize(item.firstName)} {capitalize(item.lastName)}
+                                                                        </Text>
+                                                                    </View>
+                                                                    <Icon
+                                                                        name={selected ? "checkbox-marked" : "checkbox-blank-outline"}
+                                                                        size={24}
+                                                                        color={selected ? blackColor : "#ccc"}
+                                                                        type="MaterialCommunityIcons"
+                                                                    />
+                                                                </TouchableOpacity>
+                                                            );
+                                                        }}
+                                                        onEndReached={handleLoadMoreTechnicians}
+                                                        onEndReachedThreshold={0.5}
+                                                        showsVerticalScrollIndicator={false}
+                                                        ListFooterComponent={isTechnicianLoading ? <ActivityIndicator /> : null}
+                                                    />
+                                                )}
+                                            </View>
+
+                                            {rrTechnicianError ? (
+                                                <Text style={{ color: blackColor, marginTop: 5, fontSize: 12 }}>{rrTechnicianError}</Text>
+                                            ) : null}
+                                        </View>
+
 
                                     </>
                                 }
@@ -1249,12 +1313,12 @@ const CreateJobScreen = ({ route }) => {
                                 <View style={{ marginTop: spacings.xxxLarge }}>
                                     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5 }}>
                                         <Text style={styles.label}>Price per vehicle($)</Text>
-                                        <TouchableOpacity
+                                        {technicianType === "single-technician" && <TouchableOpacity
                                             onPress={() => setShowPriceTooltip(true)}
                                             style={{ marginLeft: spacings.large, marginBottom: spacings.large }}
                                         >
                                             <SimpleLineIcons name="question" size={16} color={blueColor} />
-                                        </TouchableOpacity>
+                                        </TouchableOpacity>}
                                     </View>
                                     <View style={[styles.inputContainer]}>
                                         <TextInput

@@ -124,22 +124,22 @@ const SignUpScreen = ({ navigation }) => {
         // }
 
         setErrors(newErrors);
-        
+
         // Scroll to first error field if validation fails
         if (Object.keys(newErrors).length > 0) {
             scrollToFirstError(newErrors);
         }
-        
+
         return Object.keys(newErrors).length === 0;
     };
 
     const scrollToFirstError = (errorObject) => {
         // Priority order: firstName, lastName, email, phoneNumber, address, password, confirmPassword, secondaryEmail, secondaryPhoneNumber, apiError
         const fieldOrder = ['firstName', 'lastName', 'email', 'phoneNumber', 'address', 'password', 'confirmPassword', 'secondaryEmail', 'secondaryPhoneNumber'];
-        
+
         // Find first error field
         let firstErrorField = fieldOrder.find(field => errorObject[field]);
-        
+
         // If apiError exists and no other field error, scroll to bottom where apiError is displayed
         if (!firstErrorField && errorObject.apiError) {
             // Scroll to bottom where apiError is displayed (near Register button)
@@ -148,9 +148,9 @@ const SignUpScreen = ({ navigation }) => {
             }, 100);
             return;
         }
-        
+
         if (!firstErrorField || !scrollViewRef.current) return;
-        
+
         setTimeout(() => {
             // For regular text inputs
             if (inputRefs.current[firstErrorField]) {
@@ -286,16 +286,16 @@ const SignUpScreen = ({ navigation }) => {
                 // Remove all non-digit characters except keep digits for phone number
                 // First, extract the full number (remove +, spaces, dashes)
                 const digitsOnly = value.replace(/\D/g, '');
-                
+
                 // Remove country code digits from the beginning
                 const countryCodeDigits = countryCode.replace(/\D/g, '');
                 let phoneWithoutCode = digitsOnly;
-                
+
                 // If the number starts with country code, remove it
                 if (digitsOnly.startsWith(countryCodeDigits)) {
                     phoneWithoutCode = digitsOnly.substring(countryCodeDigits.length);
                 }
-                
+
                 // Remove any leading zeros or spaces
                 phoneWithoutCode = phoneWithoutCode.trim();
 
@@ -321,13 +321,13 @@ const SignUpScreen = ({ navigation }) => {
     const handleCountryChange = (field, country) => {
         const phoneInputRef = field === "phoneNumber" ? phoneInput : secondyPhoneInput;
         const currentValue = field === "phoneNumber" ? formData.phoneNumber : formData.secondaryPhoneNumber;
-        
+
         // Get the phone number without country code
         const phoneWithoutCode = currentValue.replace(/^\+\d+\s?-?\s?/, '').replace(/\D/g, '');
-        
+
         // Get new country code
         const newCountryCode = phoneInputRef.current?.getCallingCode();
-        
+
         if (newCountryCode && phoneWithoutCode) {
             const formattedPhone = `+${newCountryCode}-${phoneWithoutCode}`;
             setFormData((prev) => ({ ...prev, [field]: formattedPhone }));
@@ -371,7 +371,7 @@ const SignUpScreen = ({ navigation }) => {
                 // Check Android version - API 33+ (Android 13+) uses READ_MEDIA_IMAGES
                 const androidVersion = Platform.Version;
                 let permission;
-                
+
                 if (androidVersion >= 33) {
                     // Android 13+ (API 33+) - Try READ_MEDIA_IMAGES first
                     try {
@@ -409,9 +409,9 @@ const SignUpScreen = ({ navigation }) => {
                         buttonNegative: "Deny",
                     }
                 );
-                
+
                 console.log("Permission result:", granted);
-                
+
                 if (granted === PermissionsAndroid.RESULTS.GRANTED) {
                     return true;
                 } else if (granted === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
@@ -420,8 +420,8 @@ const SignUpScreen = ({ navigation }) => {
                         "Storage permission is required to select business logo. Please enable it from app settings.",
                         [
                             { text: "Cancel", style: "cancel" },
-                            { 
-                                text: "Open Settings", 
+                            {
+                                text: "Open Settings",
                                 onPress: async () => {
                                     try {
                                         await Linking.openSettings();
@@ -440,8 +440,8 @@ const SignUpScreen = ({ navigation }) => {
                         "Storage permission is required to select business logo. You can enable it from app settings.",
                         [
                             { text: "Cancel", style: "cancel" },
-                            { 
-                                text: "Open Settings", 
+                            {
+                                text: "Open Settings",
                                 onPress: async () => {
                                     try {
                                         await Linking.openSettings();
@@ -458,7 +458,7 @@ const SignUpScreen = ({ navigation }) => {
             } catch (err) {
                 console.warn("Permission error:", err);
                 Alert.alert(
-                    "Error", 
+                    "Error",
                     "Failed to request permission. Please try again or check app settings.",
                     [{ text: "OK" }]
                 );
@@ -538,7 +538,7 @@ const SignUpScreen = ({ navigation }) => {
         // formDataToSend.append('zipCode', formData.zipCode);
         formDataToSend.append('password', formData.password);
         formDataToSend.append('secondaryContactName', formData.secondaryPhoneNumber);
-        
+
         // Log phone numbers to verify format
         console.log("📱 Primary Phone Number:", formData.phoneNumber);
         console.log("📱 Secondary Phone Number:", formData.secondaryPhoneNumber);
@@ -630,7 +630,7 @@ const SignUpScreen = ({ navigation }) => {
                 if (!fileUri.startsWith('file://') && !fileUri.startsWith('http') && !fileUri.startsWith('content://')) {
                     fileUri = `file://${fileUri}`;
                 }
-                
+
                 console.log("Final File URI:", fileUri);
 
                 formDataToSend.append('taxForms', {
@@ -658,7 +658,7 @@ const SignUpScreen = ({ navigation }) => {
             // Check if response is JSON
             const contentType = response.headers.get("content-type");
             let data;
-            
+
             if (contentType && contentType.includes("application/json")) {
                 data = await response.json();
             } else {
@@ -847,9 +847,9 @@ const SignUpScreen = ({ navigation }) => {
                 navigation.goBack();
             }} />
 
-            <ScrollView 
+            <ScrollView
                 ref={scrollViewRef}
-                style={[styles.container, flex, { backgroundColor: blackColor }]} 
+                style={[styles.container, flex, { backgroundColor: blackColor }]}
                 showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled"
                 contentContainerStyle={{ paddingBottom: 50, backgroundColor: blackColor }}
@@ -951,8 +951,8 @@ const SignUpScreen = ({ navigation }) => {
                                                             "Storage permission is required to select business logo. Please enable it from app settings.",
                                                             [
                                                                 { text: "Cancel", style: "cancel" },
-                                                                { 
-                                                                    text: "Open Settings", 
+                                                                {
+                                                                    text: "Open Settings",
                                                                     onPress: async () => {
                                                                         try {
                                                                             await Linking.openSettings();
@@ -1058,7 +1058,8 @@ const SignUpScreen = ({ navigation }) => {
                             placeholder="Enter your email"
                             value={formData.email}
                             onChangeText={(text) => {
-                                const updatedText = text.charAt(0).toLowerCase() + text.slice(1);
+                                // const updatedText = text.charAt(0).toLowerCase() + text.slice(1);
+                                const updatedText = text.toLowerCase();
                                 handleInputChange("email", updatedText);
                             }}
                             onFocus={() => handleInputFocus("email")}
@@ -1087,7 +1088,7 @@ const SignUpScreen = ({ navigation }) => {
                                 textContainerStyle={styles.phoneText}
                                 textInputStyle={[styles.phoneTextInput, { marginBottom: isTablet ? 12 : 0 }]}
                                 textInputProps={{
-                                    maxLength: 13,
+                                    maxLength: 16,
                                     keyboardType: "default",
                                 }}
                                 flagButtonStyle={styles.flagButton}
@@ -1170,7 +1171,8 @@ const SignUpScreen = ({ navigation }) => {
                             value={formData.secondaryEmail}
                             // onChangeText={(text) => handleInputChange("secondaryEmail", text)}
                             onChangeText={(text) => {
-                                const updatedText = text.charAt(0).toLowerCase() + text.slice(1);
+                                // const updatedText = text.charAt(0).toLowerCase() + text.slice(1);
+                                const updatedText = text.toLowerCase();
                                 handleInputChange("secondaryEmail", updatedText);  // Update the form data with modified email
                             }}
                             onFocus={() => handleInputFocus("secondaryEmail")}
@@ -1194,7 +1196,7 @@ const SignUpScreen = ({ navigation }) => {
                                 onChangeFormattedText={(text) => handleInputChange("secondaryPhoneNumber", text)}
                                 onChangeCountry={(country) => handleCountryChange("secondaryPhoneNumber", country)}
                                 textInputProps={{
-                                    maxLength: 13,
+                                    maxLength: 16,
                                     keyboardType: "default",
                                 }}
                                 containerStyle={styles.phoneInput}

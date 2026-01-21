@@ -235,7 +235,9 @@ const LoginScreen = ({ navigation }) => {
                             placeholder="Enter your email"
                             value={email}
                             onChangeText={text => {
-                                const updatedText = text.charAt(0).toLowerCase() + text.slice(1);
+                                // const updatedText = text.charAt(0).toLowerCase() + text.slice(1);
+                                const updatedText = text.toLowerCase();
+
                                 setEmail(updatedText);
                                 if (emailError) {
                                     setEmailError('');

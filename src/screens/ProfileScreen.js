@@ -1388,7 +1388,7 @@ const ProfileScreen = ({ navigation }) => {
                       textInputProps={{
                         keyboardType: "default",
                         placeholder: "Enter your phone number",
-                        maxLength: 13,
+                        maxLength: 16,
                       }}
                       flagButtonStyle={styles.flagButton}
                     />
@@ -1505,7 +1505,7 @@ const ProfileScreen = ({ navigation }) => {
                       textInputProps={{
                         keyboardType: "default",
                         placeholder: "Enter Phone Number",
-                        maxLength: 13,
+                        maxLength: 16,
                       }}
                       flagButtonStyle={styles.flagButton}
                     />

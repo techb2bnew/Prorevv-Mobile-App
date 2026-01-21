@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Dimensions, KeyboardAvoidingView, Platform, SafeAreaView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { Dimensions, KeyboardAvoidingView, Platform, SafeAreaView, StyleSheet, Text, useWindowDimensions, View, AppState } from 'react-native';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from './src/utils';
 import { BaseStyle } from './src/constans/Style';
 import SplashScreen from './src/screens/SplashScreen';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, useNavigationContainerRef } from '@react-navigation/native';
 import AuthStack from './src/navigations/AuthStack';
 import MainNavigator from './src/navigations/MainNavigator';
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -33,6 +33,7 @@ function App(): React.JSX.Element {
   const [toastVisible, setToastVisible] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null); // ✅ Add userRole
   const [currentOrientation, setCurrentOrientation] = useState<string>('PORTRAIT'); // ✅ Add current orientation state
+  const navigationRef = useNavigationContainerRef(); // ✅ Navigation ref for listening to state changes
 
   const isTablet = width >= 668 && height >= 1024;
 
@@ -45,19 +46,46 @@ function App(): React.JSX.Element {
     return () => clearTimeout(timer);
   }, []);
 
-  useEffect(() => {
-    const checkAuthStatus = async () => {
-      try {
-        const token = await AsyncStorage.getItem("auth_token");
-        if (token) {
-          setIsLoggedIn(true); // User is logged in
-        }
-      } catch (error) {
-        console.error("Error checking auth token:", error);
+  // ✅ Function to check auth status
+  const checkAuthStatus = async () => {
+    try {
+      const token = await AsyncStorage.getItem("auth_token");
+      if (token) {
+        setIsLoggedIn(true); // User is logged in
+      } else {
+        setIsLoggedIn(false);
       }
-    };
+    } catch (error) {
+      console.error("Error checking auth token:", error);
+    }
+  };
 
+  useEffect(() => {
     checkAuthStatus();
+  }, []);
+
+  // ✅ Check auth status periodically to catch login immediately (especially first time login)
+  useEffect(() => {
+    if (!isLoading) {
+      const authCheckInterval = setInterval(() => {
+        checkAuthStatus();
+      }, 2000); // Check every 2 seconds to catch login immediately
+
+      return () => clearInterval(authCheckInterval);
+    }
+  }, [isLoading]);
+
+  // ✅ Listen to app state changes (when app comes to foreground)
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active') {
+        checkAuthStatus();
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
   }, []);
 
   useEffect(() => {
@@ -336,7 +364,7 @@ function App(): React.JSX.Element {
       });
 
       const textResponse = await response.text();
-      // console.log("🌐 Raw API Response:", textResponse);
+      console.log("🌐 Raw API Response:", textResponse);
       // 👇 Token expire check here
       if (textResponse.includes("Token expire")) {
         Toast.show("⚠️ Session expired. Logging out...");
@@ -665,7 +693,13 @@ function App(): React.JSX.Element {
             <SplashScreen />
           ) : (
             <TabBarProvider>
-              <NavigationContainer>
+              <NavigationContainer
+                ref={navigationRef}
+                onStateChange={() => {
+                  // ✅ Check auth status when navigation state changes
+                  checkAuthStatus();
+                }}
+              >
                 {isLoggedIn ? <MainNavigator /> : <AuthStack />}
               </NavigationContainer>
             </TabBarProvider>
