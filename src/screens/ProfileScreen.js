@@ -658,10 +658,10 @@ const ProfileScreen = ({ navigation }) => {
         // await AsyncStorage.removeItem('selectedCustomer')
         // await AsyncStorage.removeItem("current_Job");
         // await AsyncStorage.removeItem("current_customer");
-        const keyToKeep = "alreadyLaunched";
+        const keysToKeep = ["alreadyLaunched", "hasBiometricCredentials", "savedEmail", "savedPassword"]; // Keep biometric flag and saved credentials even after logout
 
         const allKeys = await AsyncStorage.getAllKeys();
-        const keysToDelete = allKeys.filter(key => key !== keyToKeep);
+        const keysToDelete = allKeys.filter(key => !keysToKeep.includes(key));
 
         await AsyncStorage.multiRemove(keysToDelete);
 

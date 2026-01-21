@@ -27,7 +27,7 @@ function App(): React.JSX.Element {
   const { width, height } = useWindowDimensions();
   const [isLoading, setIsLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isBiometricModalVisible, setIsBiometricModalVisible] = useState(false);
+  // const [isBiometricModalVisible, setIsBiometricModalVisible] = useState(false); // Removed - biometric handled in LoginScreen
   const [isConnected, setIsConnected] = useState(true);
   const [toastMessage, setToastMessage] = useState('');
   const [toastVisible, setToastVisible] = useState(false);
@@ -459,31 +459,33 @@ function App(): React.JSX.Element {
     }
   }, [isLoggedIn]);
 
-  useEffect(() => {
-    const checkFirstLaunch = async () => {
-      try {
-        const firstLoginCompleted = await AsyncStorage.getItem("firstLoginCompleted");
-        const userToken = await AsyncStorage.getItem("auth_token");
+  // ✅ Removed biometric modal trigger from App.tsx
+  // Biometric login is now handled directly in LoginScreen
+  // useEffect(() => {
+  //   const checkFirstLaunch = async () => {
+  //     try {
+  //       const firstLoginCompleted = await AsyncStorage.getItem("firstLoginCompleted");
+  //       const userToken = await AsyncStorage.getItem("auth_token");
 
-        if (firstLoginCompleted === "true" && userToken) {
-          const rnBiometrics = new ReactNativeBiometrics();
-          const { available } = await rnBiometrics.isSensorAvailable();
+  //       if (firstLoginCompleted === "true" && userToken) {
+  //         const rnBiometrics = new ReactNativeBiometrics();
+  //         const { available } = await rnBiometrics.isSensorAvailable();
 
-          if (available) {
-            setIsBiometricModalVisible(true);
-          } else {
-            console.log("Biometric authentication is not available on this device.");
-          }
-        } else {
-          await AsyncStorage.setItem("firstLoginCompleted", "true");
-        }
-      } catch (error) {
-        console.error("Error checking first launch:", error);
-      }
-    };
+  //         if (available) {
+  //           setIsBiometricModalVisible(true);
+  //         } else {
+  //           console.log("Biometric authentication is not available on this device.");
+  //         }
+  //       } else {
+  //         await AsyncStorage.setItem("firstLoginCompleted", "true");
+  //       }
+  //     } catch (error) {
+  //       console.error("Error checking first launch:", error);
+  //     }
+  //   };
 
-    checkFirstLaunch();
-  }, []);
+  //   checkFirstLaunch();
+  // }, []);
 
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {

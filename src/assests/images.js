@@ -45,6 +45,8 @@ export const CIRLE_SCANNER_IMAGE = require('./circleScanner.png');
 export const HEADER_BACKGROUND = require('./headerbackground.png');
 
 export const APP_ICON_IMAGE = require('./appicon.png');
+export const FACEID_IMAGE = require('./faceid.png');
+
 
 
 

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
     View,
     Text,
@@ -9,6 +9,7 @@ import {
     Dimensions,
     ActivityIndicator,
     Platform,
+    TextInput,
 } from "react-native";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { Feather } from "@expo/vector-icons";
@@ -31,6 +32,8 @@ const JobDropdown = ({
     disabled = false,
 }) => {
     const [visible, setVisible] = useState(false);
+    const [searchText, setSearchText] = useState('');
+    const [filteredJobs, setFilteredJobs] = useState([]);
     const selectedJob = jobs.find((j) => j.id === selectedJobId);
     const { width, height } = Dimensions.get("window");
     const isTablet = width >= 668 && height >= 1024;
@@ -39,6 +42,26 @@ const JobDropdown = ({
         setSelectedJobId(item.id);
         setVisible(false);
     };
+
+    // Filter jobs based on search text
+    useEffect(() => {
+        if (searchText.trim() === '') {
+            setFilteredJobs(jobs);
+        } else {
+            const filtered = jobs.filter(item => {
+                const jobName = getJobName(item).toLowerCase();
+                return jobName.includes(searchText.toLowerCase().trim());
+            });
+            setFilteredJobs(filtered);
+        }
+    }, [searchText, jobs, getJobName]);
+
+    // Reset search when modal closes
+    useEffect(() => {
+        if (!visible) {
+            setSearchText('');
+        }
+    }, [visible]);
 
     // Filter out "All Jobs" option to get actual jobs count
     const actualJobs = jobs.filter(job => job?.id !== 'all' && !job?.isAllOption);
@@ -111,8 +134,42 @@ const JobDropdown = ({
                             {titleText}
                         </Text>
 
+                        {/* Search Input */}
+                        <View style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            backgroundColor: '#f5f5f5',
+                            borderRadius: 10,
+                            marginHorizontal: 15,
+                            marginVertical: 10,
+                            paddingHorizontal: 10,
+                            borderWidth: 1,
+                            borderColor: grayColor,
+                        }}>
+                            <MaterialCommunityIcons name="magnify" size={20} color={grayColor} style={{ marginRight: 8 }} />
+                            <TextInput
+                                style={{
+                                    flex: 1,
+                                    fontSize: 16,
+                                    color: blackColor,
+                                    paddingVertical: 10,
+                                }}
+                                placeholder="Search job..."
+                                placeholderTextColor={grayColor}
+                                value={searchText}
+                                onChangeText={setSearchText}
+                                autoCapitalize="none"
+                                autoCorrect={false}
+                            />
+                            {searchText.length > 0 && (
+                                <Pressable onPress={() => setSearchText('')} style={{ padding: 4 }}>
+                                    <MaterialCommunityIcons name="close-circle" size={20} color={grayColor} />
+                                </Pressable>
+                            )}
+                        </View>
+
                         <FlatList
-                            data={jobs}
+                            data={filteredJobs}
                             keyExtractor={(item) => item?.id?.toString()}
                             renderItem={({ item }) => {
                                 const isSelected = item?.id === selectedJobId;
@@ -147,7 +204,7 @@ const JobDropdown = ({
                             }}
                             ListEmptyComponent={
                                 <Text style={{ textAlign: "center", color: grayColor, marginTop: 10 }}>
-                                    No jobs available
+                                    {searchText.trim() ? `No jobs found for "${searchText}"` : "No jobs available"}
                                 </Text>
                             }
                             showsVerticalScrollIndicator={false}
@@ -155,7 +212,8 @@ const JobDropdown = ({
                                 loadingMore ? <ActivityIndicator size="small" color={blueColor} /> : null
                             }
                             onEndReached={() => {
-                                if (hasMore && !loadingMore) {
+                                // Only load more if search is empty
+                                if (searchText.trim() === '' && hasMore && !loadingMore) {
                                     onEndReached(); // Call parent to fetch next page
                                 }
                             }}

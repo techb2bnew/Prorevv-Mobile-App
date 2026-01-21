@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { View, Text, FlatList, Pressable, Modal, StyleSheet, ScrollView, Dimensions, ActivityIndicator } from "react-native";
+import { View, Text, FlatList, Pressable, Modal, StyleSheet, ScrollView, Dimensions, ActivityIndicator, TextInput } from "react-native";
 import { heightPercentageToDP, widthPercentageToDP } from "../utils";
 import { blackColor, blueColor, grayColor, lightBlueColor, mediumGray, whiteColor } from "../constans/Color";
 import MaterialCommunityIcons from 'react-native-vector-icons/dist/MaterialCommunityIcons';
@@ -11,11 +11,35 @@ import { useOrientation } from "../OrientationContext";
 
 const CustomerDropdown = ({ data, selectedValue, onSelect, showIcon, rightIcon, titleText, handleLoadMore, isLoading, disabled }) => {
     const [visible, setVisible] = useState(false);
+    const [searchText, setSearchText] = useState('');
+    const [filteredData, setFilteredData] = useState([]);
     const isTablet = width >= 668 && height >= 1024;
     const userPressed = useRef(false);
     const [dropdownHeight, setDropdownHeight] = useState(0);
     const dropdownRef = useRef(null);
     const { orientation } = useOrientation();
+
+    // Filter data based on search text
+    useEffect(() => {
+        if (searchText.trim() === '') {
+            setFilteredData(data);
+        } else {
+            const filtered = data.filter(item => {
+                const customerName = item.isAllOption 
+                    ? 'All Customers' 
+                    : `${item.fullName || ''}`.toLowerCase();
+                return customerName.includes(searchText.toLowerCase().trim());
+            });
+            setFilteredData(filtered);
+        }
+    }, [searchText, data]);
+
+    // Reset search when modal closes
+    useEffect(() => {
+        if (!visible) {
+            setSearchText('');
+        }
+    }, [visible]);
 
     const handleOpenDropdown = () => {
         userPressed.current = true;
@@ -78,8 +102,28 @@ const CustomerDropdown = ({ data, selectedValue, onSelect, showIcon, rightIcon, 
                     }}
                 >
                     <Text style={styles.modalTitle}>{titleText || "Select Customer"}</Text>
+                    
+                    {/* Search Input */}
+                    <View style={styles.searchContainer}>
+                        <MaterialCommunityIcons name="magnify" size={20} color={grayColor} style={styles.searchIcon} />
+                        <TextInput
+                            style={styles.searchInput}
+                            placeholder="Search customer..."
+                            placeholderTextColor={grayColor}
+                            value={searchText}
+                            onChangeText={setSearchText}
+                            autoCapitalize="none"
+                            autoCorrect={false}
+                        />
+                        {searchText.length > 0 && (
+                            <Pressable onPress={() => setSearchText('')} style={styles.clearButton}>
+                                <MaterialCommunityIcons name="close-circle" size={20} color={grayColor} />
+                            </Pressable>
+                        )}
+                    </View>
+
                     <FlatList
-                        data={data}
+                        data={filteredData}
                         keyExtractor={(item) => item.id.toString()}
                         renderItem={({ item }) => {
                             const isSelected = selectedValue?.id === item.id;
@@ -107,13 +151,20 @@ const CustomerDropdown = ({ data, selectedValue, onSelect, showIcon, rightIcon, 
                             );
                         }}
                         ListEmptyComponent={
-                            <Text style={styles.emptyText}>No customers available</Text>
+                            <Text style={styles.emptyText}>
+                                {searchText.trim() ? `No customers found for "${searchText}"` : "No customers available"}
+                            </Text>
                         }
                         showsVerticalScrollIndicator={true}
                         ListFooterComponent={
                             isLoading ? <ActivityIndicator size="large" color={blueColor} /> : null
                         }
-                        onEndReached={handleLoadMore}
+                        onEndReached={() => {
+                            // Only load more if search is empty
+                            if (searchText.trim() === '' && handleLoadMore) {
+                                handleLoadMore();
+                            }
+                        }}
                         onEndReachedThreshold={0.5}
                         nestedScrollEnabled={true}
                     />
@@ -166,6 +217,29 @@ const styles = StyleSheet.create({
         fontSize: 18,
         paddingVertical: 8,
         color: blackColor,
+    },
+    searchContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#f5f5f5',
+        borderRadius: 10,
+        marginHorizontal: 15,
+        marginVertical: 10,
+        paddingHorizontal: 10,
+        borderWidth: 1,
+        borderColor: grayColor,
+    },
+    searchIcon: {
+        marginRight: 8,
+    },
+    searchInput: {
+        flex: 1,
+        fontSize: 16,
+        color: blackColor,
+        paddingVertical: 10,
+    },
+    clearButton: {
+        padding: 4,
     },
     item: {
         padding: 12,
