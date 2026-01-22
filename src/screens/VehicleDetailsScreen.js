@@ -321,34 +321,49 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
                     groupTitle: "Assigned Technicians",
                     data: vehicleDetails.assignedTechnicians.flatMap((tech, index) => {
                         const name = `${capitalize(tech.firstName)} ${capitalize(tech.lastName)}`;
-                        const techTypeRaw = tech?.techType?.toLowerCase();
-                        const shouldShowType = techTypeRaw?.includes('r') || techTypeRaw?.includes('rb');
+                        const techTypeRaw = tech?.techType?.toLowerCase() || '';
+
+                        // Technician Title Logic
+                        let techTitle = "Technician";
+                        if (techTypeRaw.includes("r") || techTypeRaw.includes("rr") || techTypeRaw.includes("rb")) {
+                            techTitle = "RR/I/R Tech";
+                        } else if (techTypeRaw.includes("tech")) {
+                            techTitle = "Dent Tech";
+                        } else {
+                            techTitle = "Other Tech";
+                        }
+
+                        // Original Bracket Type Only for R/RB
+                        const shouldShowType = techTypeRaw.includes('r') || techTypeRaw.includes('rb');
                         const techType = shouldShowType ? ` (${tech.techType?.toUpperCase()})` : '';
+
                         const flatRate = tech?.VehicleTechnician?.techFlatRate;
                         const rRate = tech?.VehicleTechnician?.rRate;
 
                         let payInfo = '';
                         if (flatRate) {
-                            payInfo = `Flat Rate: $${flatRate}`;
+                            payInfo = `$${flatRate}`;
                         } else if (rRate) {
-                            payInfo = `R Rate: $${rRate}`;
+                            payInfo = `$${rRate}`;
                         } else {
                             payInfo = '-';
                         }
 
                         return [
                             {
-                                label: `Technician ${index + 1}`,
-                                value: `${name}${techType}`,
+                                label: `${techTitle} `,
+                                value: `${name}`,
                             },
                             {
-                                label: `Pay Rate`,
+                                label: `${techTitle} Pay`,
                                 value: payInfo,
                             }
                         ];
                     })
                 }]
-                : []),
+                : []
+            )
+
         ];
     };
 

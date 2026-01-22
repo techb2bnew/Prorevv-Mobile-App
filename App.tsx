@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Dimensions, KeyboardAvoidingView, Platform, SafeAreaView, StyleSheet, Text, useWindowDimensions, View, AppState } from 'react-native';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from './src/utils';
 import { BaseStyle } from './src/constans/Style';
@@ -21,6 +21,7 @@ const { flex, alignItemsCenter, alignJustifyCenter } = BaseStyle;
 import Orientation from 'react-native-orientation-locker';
 import { NativeModules } from 'react-native';
 import { API_BASE_URL } from './src/constans/Constants';
+import crashlytics from '@react-native-firebase/crashlytics';
 
 
 function App(): React.JSX.Element {
@@ -34,8 +35,63 @@ function App(): React.JSX.Element {
   const [userRole, setUserRole] = useState<string | null>(null); // ✅ Add userRole
   const [currentOrientation, setCurrentOrientation] = useState<string>('PORTRAIT'); // ✅ Add current orientation state
   const navigationRef = useNavigationContainerRef(); // ✅ Navigation ref for listening to state changes
+  const [userData, setUserData] = useState<any>(null); // ✅ User data for Crashlytics
 
   const isTablet = width >= 668 && height >= 1024;
+
+  // Initialize Crashlytics
+  useEffect(() => {
+    const initializeCrashlytics = async () => {
+      try {
+        // Enable crash collection
+        await crashlytics().setCrashlyticsCollectionEnabled(true);
+        console.log('✅ [CRASHLYTICS] Crashlytics initialized');
+      } catch (error) {
+        console.error('❌ [CRASHLYTICS] Error initializing Crashlytics:', error);
+      }
+    };
+    initializeCrashlytics();
+  }, []);
+
+  // Set user identification when user logs in
+  useEffect(() => {
+    console.log('User data changed for Crashlytics:', userData);
+    if (userData && userData.id) {
+      try {
+        crashlytics().setUserId(userData.id.toString());
+        if (userData.email) {
+          crashlytics().setAttribute('user_email', userData.email);
+        }
+        console.log('✅ [CRASHLYTICS] User identification set:', userData.email || userData.id);
+      } catch (error) {
+        console.error('❌ [CRASHLYTICS] Error setting user identification:', error);
+      }
+    } else {
+      // Clear user identification on logout
+      try {
+        crashlytics().setUserId('');
+        crashlytics().setAttribute('user_email', '');
+      } catch (error) {
+        console.error('❌ [CRASHLYTICS] Error clearing user identification:', error);
+      }
+    }
+  }, [userData]);
+
+  // Track current screen name for crash reports
+  const handleNavigationStateChange = useCallback(() => {
+    try {
+      if (navigationRef && navigationRef.isReady()) {
+        const currentRoute = navigationRef.getCurrentRoute();
+        if (currentRoute) {
+          const screenName = currentRoute.name || 'Unknown';
+          crashlytics().setAttribute('current_screen', screenName);
+          console.log('📍 [CRASHLYTICS] Screen tracked:', screenName);
+        }
+      }
+    } catch (error) {
+      console.error('❌ [CRASHLYTICS] Error tracking screen:', error);
+    }
+  }, [navigationRef]);
 
   useEffect(() => {
     // Simulate a splash screen timeout
@@ -52,8 +108,15 @@ function App(): React.JSX.Element {
       const token = await AsyncStorage.getItem("auth_token");
       if (token) {
         setIsLoggedIn(true); // User is logged in
+        // Fetch user data for Crashlytics
+        const storedData = await AsyncStorage.getItem('userDeatils');
+        if (storedData) {
+          const parsedData = JSON.parse(storedData);
+          setUserData(parsedData);
+        }
       } else {
         setIsLoggedIn(false);
+        setUserData(null);
       }
     } catch (error) {
       console.error("Error checking auth token:", error);
@@ -700,6 +763,8 @@ function App(): React.JSX.Element {
                 onStateChange={() => {
                   // ✅ Check auth status when navigation state changes
                   checkAuthStatus();
+                  // ✅ Track screen for Crashlytics
+                  handleNavigationStateChange();
                 }}
               >
                 {isLoggedIn ? <MainNavigator /> : <AuthStack />}

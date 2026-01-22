@@ -1132,7 +1132,7 @@ const CreateJobScreen = ({ route }) => {
                                 {technicianType === "manager" &&
                                     <>
                                         <CustomTextInput
-                                            label="Tech Pay rate($)"
+                                            label="Dent Tech Pay rate($)"
                                             placeholder="Enter Tech Pay rate"
                                             value={simpleFlatRate}
                                             onChangeText={(text) => setSimpleFlatRate(text)}
@@ -1141,8 +1141,8 @@ const CreateJobScreen = ({ route }) => {
                                         />
 
                                         {rrTechnicians.length > 0 && <CustomTextInput
-                                            label="R/I/R($)"
-                                            placeholder="Enter R/I/R"
+                                            label="RR/I/R Pay rate($)"
+                                            placeholder="Enter RR/I/R"
                                             value={rirValue}
                                             onChangeText={(text) => setRirValue(text)}
                                             keyboardType="numeric"
@@ -1152,9 +1152,17 @@ const CreateJobScreen = ({ route }) => {
                                         <View style={{ marginTop: spacings.xxLarge }}>
                                             <Text style={styles.label}>Select Dent Technicians</Text>
                                             {technicians.length === 0 ? (
-                                                <Text style={{ color: blackColor, marginVertical: 8, fontSize: 14, textAlign: 'center' }}>
-                                                    No technicians available right now.
-                                                </Text>
+                                                <View style={{
+                                                    borderWidth: 1,
+                                                    borderColor: blackColor,
+                                                    borderRadius: 8,
+                                                    maxHeight: hp(20),
+                                                    overflow: "hidden",
+                                                }}>
+                                                    <Text style={{ color: blackColor, marginVertical: 8, fontSize: 14, textAlign: 'center' }}>
+                                                        No technicians available right now.
+                                                    </Text>
+                                                </View>
                                             ) : (
                                                 <View style={{
                                                     borderWidth: 1,
@@ -1252,7 +1260,7 @@ const CreateJobScreen = ({ route }) => {
                                             </Text>
                                         )} */}
                                         <View style={{ marginTop: 5 }}>
-                                            <Text style={styles.label}>Select R Technicians</Text>
+                                            <Text style={styles.label}>Select RR/I/R Technicians</Text>
 
                                             <View style={{
                                                 borderWidth: 1,
@@ -1262,7 +1270,7 @@ const CreateJobScreen = ({ route }) => {
                                                 overflow: "hidden",
                                             }}>
                                                 {rrTechnicians.length === 0 ? (
-                                                    <Text style={{ color: 'red', marginVertical: 8, fontSize: 14, textAlign: 'center' }}>
+                                                    <Text style={{ color: blackColor, marginVertical: 8, fontSize: 14, textAlign: 'center' }}>
                                                         No RR technicians available right now.
                                                     </Text>
                                                 ) : (

@@ -27,6 +27,7 @@ import Header from '../componets/Header';
 import { useEditing, useTabBar } from '../TabBarContext';
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import { useOrientation } from '../OrientationContext';
+// import crashlytics from '@react-native-firebase/crashlytics';
 
 
 const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween, textAlign, justifyContentCenter } = BaseStyle;
@@ -1214,6 +1215,40 @@ const ProfileScreen = ({ navigation }) => {
                   </View>
                 </TouchableOpacity>
               </View>
+
+              {/* TEST CRASH BUTTON - FOR TESTING ONLY - COMMENT OUT IN PRODUCTION */}
+              {/* <View style={[styles.userdetailsBox, alignJustifyCenter, { backgroundColor: redColor, marginTop: 10 }]}>
+                <TouchableOpacity 
+                  style={[{ width: wp(100), height: 'auto', paddingLeft: spacings.xLarge }, flexDirectionRow]} 
+                  onPress={async () => {
+                    try {
+                      // Set user details before crash for testing
+                      const storedData = await AsyncStorage.getItem('userDeatils');
+                      if (storedData) {
+                        console.log(" Setting Crashlytics user data for test crash  ",storedData);
+
+                        const userData = JSON.parse(storedData);
+                        await crashlytics().setUserId(userData.id?.toString() || 'test_user');
+                        await crashlytics().setAttribute('user_email', userData.email || 'test@example.com');
+                        await crashlytics().setAttribute('current_screen', 'ProfileScreen');
+                        await crashlytics().log('Test crash triggered from ProfileScreen');
+                      }
+                      // Force crash for testing
+                      crashlytics().crash();
+                    } catch (error) {
+                      console.error('Error triggering test crash:', error);
+                    }
+                  }}
+                >
+                  <View style={{ padding: spacings.xLarge }}>
+                    <MaterialIcons name="bug-report" size={25} color={whiteColor} />
+                  </View>
+                  <View style={{ paddingVertical: spacings.xLarge }}>
+                    <Text style={[styles.text, { fontSize: style.fontSizeNormal1x.fontSize, paddingTop: 3, fontWeight: style.fontWeightThin1x.fontWeight, color: whiteColor }]}>Test Crash (Testing Only)</Text>
+                  </View>
+                </TouchableOpacity>
+              </View> */}
+              {/* END TEST CRASH BUTTON */}
 
               {/* Modals */}
               <ConfirmationModal

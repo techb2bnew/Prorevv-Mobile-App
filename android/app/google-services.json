@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "748825379256",
+    "project_id": "porevv-520e0",
+    "storage_bucket": "porevv-520e0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:748825379256:android:70a76e0da0280304180f4d",
+        "android_client_info": {
+          "package_name": "com.trt"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyArvpzTnLVD9B_z9tp00p-UW9T-h2Btnx8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -172,12 +172,12 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
           { backgroundColor: index % 2 === 0 ? lightGrayColor : whiteColor }
         ]}
       >
-        <Text style={[styles.cell, { width: wp(40), textAlign: 'left', paddingLeft: spacings.small2x }]}>{item.vin || 'N/A'}</Text>
+        <Text style={[styles.cell, { width: wp(45), textAlign: 'left', paddingLeft: spacings.small2x }]}>{item.vin || 'N/A'}</Text>
         <Text style={[styles.cell, { width: wp(25), paddingLeft: spacings.small2x }]}>{item.make || '-'}</Text>
         <Text style={[styles.cell, { width: wp(22) }]}>{item.model || '-'}</Text>
         <Text style={[styles.cell, { width: wp(25) }]}>{item.modelYear || '-'}</Text>
         <Text style={[styles.cell, { width: wp(25) }]}>{item.labourCost ? "-" : jobDetails?.estimatedCost ? `$${jobDetails.estimatedCost}` : '—'}</Text>
-        <Text style={[styles.cell, { width: wp(25) }]}>{item.labourCost ? `$${item.labourCost}` : '-'}</Text>
+        <Text style={[styles.cell, { width: wp(29) }]}>{item.labourCost ? `$${item.labourCost}` : '-'}</Text>
 
         <Text style={[
           styles.cell,
@@ -246,9 +246,15 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
                     <Text style={styles.value}>{customerJobs?.email || "-"}</Text>
                   </View>
                 </View>
+                <View style={styles.rowItem}>
                 <View style={styles.leftCol}>
                   <Text style={styles.label}>Customer Phone</Text>
                   <Text style={styles.value}>{customerJobs?.phoneNumber || "-"}</Text>
+                </View>
+                <View style={styles.rightCol}>
+                  <Text style={styles.label}>Customer Address</Text>
+                  <Text style={styles.value}>{customerJobs?.address || "-"}</Text>
+                </View>
                 </View>
               </View>
 
@@ -360,7 +366,7 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
                 <View >
                   <Text style={[styles.label, { marginBottom: 6 }]}>Assigned Technicians</Text>
 
-                  {jobDetails.technicians.flatMap((tech, index) => {
+                  {/* {jobDetails.technicians.flatMap((tech, index) => {
                     const name = `${capitalize(tech.firstName)} ${capitalize(tech.lastName)}`;
                     const techTypeRaw = tech?.techType?.toLowerCase() || '';
                     const showType = techTypeRaw.includes('r') || techTypeRaw.includes('rb');
@@ -371,9 +377,9 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
 
                     let payInfo = '';
                     if (flatRate) {
-                      payInfo = `Flat Rate: $${flatRate}`;
+                      payInfo = `$${flatRate}`;
                     } else if (rRate) {
-                      payInfo = `R Rate: $${rRate}`;
+                      payInfo = `$${rRate}`;
                     } else {
                       payInfo = 'N/A';
                     }
@@ -381,16 +387,61 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
                     return [
                       <View style={[styles.rowItem]}>
                         <View key={`tech-name-${index}`} style={[{ marginBottom: 4 }, styles.leftCol]}>
-                          <Text style={styles.label}>{`Technician ${index + 1}`}</Text>
+                          <Text style={styles.label}>{`Technician`}</Text>
                           <Text style={styles.value}>{`${name}${techType}`}</Text>
                         </View>,
                         <View key={`tech-pay-${index}`} style={[{ marginBottom: 10 }, styles.rightCol]}>
-                          <Text style={styles.label}>{`Technician ${index + 1} (Pay Info)`}</Text>
+                          <Text style={styles.label}>{`Technician (Pay Info)`}</Text>
+                          <Text style={styles.value}>{payInfo}</Text>
+                        </View>
+                      </View>
+                    ];
+                  })} */}
+                  {jobDetails.technicians.flatMap((tech, index) => {
+                    const name = `${capitalize(tech.firstName)} ${capitalize(tech.lastName)}`;
+                    const techTypeRaw = tech?.techType?.toLowerCase() || '';
+
+                    // --- Technician Title Logic ---
+                    let techTitle = "Technician";
+
+                    if (techTypeRaw.includes("r") || techTypeRaw.includes("rr") || techTypeRaw.includes("rb")) {
+                      techTitle = "RR/I/R Tech";
+                    } else if (techTypeRaw.includes("tech")) {
+                      techTitle = "Dent Tech";
+                    } else {
+                      techTitle = "Other Tech";
+                    }
+
+                    // Show original tech type in brackets only if it contains R or RB
+                    const showType = techTypeRaw.includes('r') || techTypeRaw.includes('rb');
+                    const techType = showType ? ` (${tech.techType.toUpperCase()})` : '';
+
+                    const flatRate = tech?.UserJob?.techFlatRate;
+                    const rRate = tech?.UserJob?.rRate;
+
+                    let payInfo = '';
+                    if (flatRate) {
+                      payInfo = `$${flatRate}`;
+                    } else if (rRate) {
+                      payInfo = `$${rRate}`;
+                    } else {
+                      payInfo = 'N/A';
+                    }
+
+                    return [
+                      <View style={[styles.rowItem]}>
+                        <View key={`tech-name-${index}`} style={[{ marginBottom: 4 }, styles.leftCol]}>
+                          <Text style={styles.label}>{techTitle}</Text>
+                          <Text style={styles.value}>{`${name}`}</Text>
+                        </View>
+                        <View key={`tech-pay-${index}`} style={[{ marginBottom: 10 }, styles.rightCol]}>
+                          <Text style={styles.label}>{`${techTitle} Pay`}</Text>
                           <Text style={styles.value}>{payInfo}</Text>
                         </View>
                       </View>
                     ];
                   })}
+
                 </View>
               )}
             </View>
@@ -402,19 +453,19 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
                 <View>
                   {/* Header Row */}
                   <View style={[styles.row, styles.headerRow]}>
-                    <Text style={[styles.cell, styles.headerText, { width: wp(40), textAlign: "left", paddingLeft: spacings.large }]}>VIN</Text>
+                    <Text style={[styles.cell, styles.headerText, { width: wp(45), textAlign: "left", paddingLeft: spacings.large }]}>VIN</Text>
                     <Text style={[styles.cell, styles.headerText, { width: wp(25) }]}>Make</Text>
                     <Text style={[styles.cell, styles.headerText, { width: wp(22) }]}>Model</Text>
                     <Text style={[styles.cell, styles.headerText, { width: wp(25) }]}>Year</Text>
                     <Text style={[styles.cell, styles.headerText, { width: wp(27) }]}>Vehicle Price</Text>
-                    <Text style={[styles.cell, styles.headerText, { width: wp(25) }]}>Override Cost</Text>
+                    <Text style={[styles.cell, styles.headerText, { width: wp(29) }]}>Override Cost</Text>
                     <Text style={[styles.cell, styles.headerText, { width: wp(35) }]}>Status</Text>
                     <Text style={[styles.cell, styles.headerText, { width: wp(20), textAlign: orientation === "LANDSCAPE" ? 'left' : 'center', marginLeft: orientation === "LANDSCAPE" ? wp(3) : 0 }]}>Action</Text>
                   </View>
 
                   {/* List */}
                   <FlatList
-                    data={jobDetails?.vehicles.reverse() || []}
+                    data={jobDetails?.vehicles || []}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={renderItem}
                     ItemSeparatorComponent={() => <View style={styles.separator} />}

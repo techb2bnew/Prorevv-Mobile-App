@@ -781,7 +781,7 @@ const VinListScreen = ({ navigation, route }) => {
 
                         <View style={{ width: "100%" }}>
                             <FlatList
-                                data={finalVehicleList?.reverse()}
+                                data={finalVehicleList}
                                 keyExtractor={(item, index) => index.toString()}
                                 showsVerticalScrollIndicator={false}
                                 refreshing={refreshing}
@@ -890,7 +890,7 @@ const VinListScreen = ({ navigation, route }) => {
 
                 {viewType === "grid" && <View style={{ width: "100%" }}>
                     <FlatList
-                        data={finalVehicleList?.reverse()}
+                        data={finalVehicleList}
                         keyExtractor={(item, index) => index.toString()}
                         showsVerticalScrollIndicator={false}
                         contentContainerStyle={{ paddingVertical: 10 }}

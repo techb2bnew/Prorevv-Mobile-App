@@ -739,6 +739,29 @@ const WorkOrderScreenTwo = ({ route }) => {
         }));
     };
 
+    // Calculate height when jobDescription loads in edit mode
+    useEffect(() => {
+        if (jobDescription && jobDescription.length > 0) {
+            jobDescription.forEach((item, index) => {
+                if (item.jobDescription && item.jobDescription.trim() !== '') {
+                    // Estimate height based on text length
+                    const textLength = item.jobDescription.length;
+                    const estimatedHeight = Math.max(
+                        isTablet ? hp(4) : hp(5),
+                        Math.min(
+                            (textLength / 30) * (isTablet ? hp(1.2) : hp(1.5)) + (isTablet ? hp(2) : hp(2.5)),
+                            isTablet ? hp(15) : hp(20)
+                        )
+                    );
+                    setTextInputHeights(prev => ({
+                        ...prev,
+                        [index]: estimatedHeight
+                    }));
+                }
+            });
+        }
+    }, [jobDescription?.length]);
+
     const capitalize = (str) => {
         return str ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase() : "";
     };
@@ -833,7 +856,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                     setTechnicians(data?.vehicle?.vehicle?.assignedTechnicians);
                     setSelectedTechnicians(data?.vehicle?.vehicle?.assignedTechnicians);
                     setSelectedCustomer(data?.vehicle?.vehicle.customerId)
-                    setNotes(data?.vehicle?.vehicle?.notes)
+                    setNotes(data?.vehicle?.vehicle?.notes || "")
                     if (data?.vehicle?.vehicle?.images?.length > 0) {
                         setImageUris(data.vehicle.vehicle.images);
                     }
@@ -1329,12 +1352,13 @@ const WorkOrderScreenTwo = ({ route }) => {
                                                                 ref={(ref) => (workDescriptionRefs.current[index] = ref)}
                                                                 style={[styles.input, {
                                                                     width: "100%",
-                                                                    height: textInputHeights[index] || (isTablet ? hp(8) : hp(10)),
-                                                                    minHeight: hp(8),
+                                                                    height: textInputHeights[index] || (isTablet ? hp(4) : hp(5)),
+                                                                    minHeight: isTablet ? hp(4) : hp(5),
+                                                                    maxHeight: isTablet ? hp(15) : hp(10),
                                                                     textAlignVertical: "top",
-                                                                    paddingHorizontal: 20,
-                                                                    paddingTop: 12,
-                                                                    paddingBottom: 12,
+                                                                    paddingHorizontal: 12,
+                                                                    paddingTop: 8,
+                                                                    paddingBottom: 8,
                                                                 }]}
                                                                 placeholder="Enter work description"
                                                                 value={item.jobDescription}
@@ -1553,12 +1577,13 @@ const WorkOrderScreenTwo = ({ route }) => {
                                         <TextInput
                                             ref={notesInputRef}
                                             placeholder="Write your notes here..."
+                                            placeholderTextColor={mediumGray}
                                             style={styles.notesInput}
                                             multiline={true}
                                             numberOfLines={4}
                                             textAlignVertical="top"
                                             onChangeText={(text) => setNotes(text)}
-                                            value={notes}
+                                            value={notes && notes.trim() !== "" ? notes : undefined}
                                             onFocus={() => handleInputFocus('notes')}
                                         />
                                     </View>
@@ -1594,6 +1619,11 @@ const WorkOrderScreenTwo = ({ route }) => {
                                                                     },
                                                                 ]}
                                                             >
+                                                                {/* Title above name */}
+                                                                <Text style={{ fontSize: 12, fontWeight: 'bold', color: blackColor, marginBottom: 4 }}>
+                                                                    {item.techType?.toLowerCase() === 'technician' ? 'Dent Tech' : 'RR/I/R Tech'}
+                                                                </Text>
+                                                                
                                                                 {/* Top row: name and checkbox */}
                                                                 <View style={[flexDirectionRow, justifyContentSpaceBetween, alignItemsCenter]}>
                                                                     <Text style={{ fontSize: 16, flex: 1 }}>
@@ -1613,7 +1643,7 @@ const WorkOrderScreenTwo = ({ route }) => {
 
                                                                 {item.techType?.toLowerCase() === 'technician' && (
                                                                     <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10, justifyContent: "space-between" }}>
-                                                                        <Text style={{ fontSize: 14, marginRight: 8 }}>Flat Rate:</Text>
+                                                                        <Text style={{ fontSize: 14, marginRight: 8 }}>Rate:</Text>
                                                                         <TextInput
                                                                             value={(userJob.techFlatRate ?? '0').toString()}
                                                                             keyboardType="numeric"
@@ -1632,7 +1662,7 @@ const WorkOrderScreenTwo = ({ route }) => {
 
                                                                 {item.techType?.toLowerCase() !== 'technician' && (
                                                                     <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10, justifyContent: "space-between" }}>
-                                                                        <Text style={{ fontSize: 14, marginRight: 8 }}>R Rate:</Text>
+                                                                        <Text style={{ fontSize: 14, marginRight: 8 }}>Rate:</Text>
                                                                         <TextInput
                                                                             value={(userJob.rRate ?? '0').toString()}
                                                                             keyboardType="numeric"
