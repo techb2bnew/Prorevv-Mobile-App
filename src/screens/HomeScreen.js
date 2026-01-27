@@ -259,7 +259,7 @@ const HomeScreen = ({ navigation }) => {
       console.log("technicianType", technicianType, "technicianId", technicianId);
 
       if (technicianType === "manager") {
-        apiUrl = `https://techrepairtracker.base2brand.com/api/deshboradCount?page=1&roleType=${technicianType}&limit=10`;
+        apiUrl = `${API_BASE_URL}/deshboradCount?page=1&roleType=${technicianType}&limit=10`;
         fetchOptions = {
           method: "POST",
           headers: {
