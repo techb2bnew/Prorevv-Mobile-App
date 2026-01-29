@@ -11,7 +11,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 
 // const LICENSE = 't0104HAEAAHnkipevQ7nbqRETi/D3IBgFzyPBzKTpUMI6mdI1X8qE2N4Lk3Ss8P45mbE8M4T1LsEjYexiXT8H58OZPeJg0ck8BhjqZteaJm3wRp/cVHte1Tm+6Z0i+O+Uf52RNGZTHBJnOtc=;t0109HAEAAKy8sMF0BJ13Hx/FS8NVevExxUSUaMrYvO120w2tlfniJvq8csa/uPaDjz21w2cmqG4PEPHbTJt1VdEpZwxcLkIDYgC4DDDF5n1NRRvc0Sv2Hz6fVw2OZ0anyLx3yp/OnDRXUzkBHMg64w==';
-const LICENSE = 't0104HAEAAG7Dm4Jh1NwYjEncE1DwQ3PoLN8IGycyCDZYryphPYFWpnrP1k0QClW8V7xicZuouoY1Tws36ry55YNMpTeLlCEYBgh1s2dNrgO+6MhL9We24VgzO8VE/HYqrs7s7gnTDXGhObw=;t0108HAEAAFPKsrZ27uslPcr2wdyQOHBDc6EGjtH5bSaSp8NEtcRQ9KWp/dI0WLG9Nu0aAf0FsoA6E/18gSqVAQeI1SECiZYdEBPAMMCSm/e1hHb4R0fsN1yfWYfjntkpJuKxU3531ogomD5/QDnK';
+const LICENSE = "t0105HAEAAIpnVSOFO9T+7CjQpSZ8UwDYJar+lpFw+mMsIc4CSImfJ/yUKSP0bTDKtWTiRCxNiNtXl/8m8fAnLxVPJW9L6B7QDbDUzZ41bNrhi/a8VHuWcnfMGZ0i8t8pn50xr8orfgH5bTql;t0109HAEAADym4Ba4lFuMbBibBRZjWnA0nyE2NAkxq7HefdYCVXGwuLn8zB26O40N65EORC7Qky3fITbbNf8wo6/nQTEeWPQHxA1gGGCKzfuaqlb4R0fsN5yfpTYcz9ydovDeKX86S8tqGT8A9rU6pA==";
 
 const ScannerScreen = ({ navigation, route }) => {
   const fromScreen = route?.params?.from;
