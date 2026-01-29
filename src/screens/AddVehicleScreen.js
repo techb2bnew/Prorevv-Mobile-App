@@ -22,6 +22,7 @@ import Ionicons from 'react-native-vector-icons/dist/Ionicons';
 const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween, textAlign } = BaseStyle;
 
 const AddVehicleScreen = ({ route }) => {
+   
     const { width, height } = Dimensions.get("window");
     const isTablet = width >= 668 && height >= 1024;
     const navigation = useNavigation();
