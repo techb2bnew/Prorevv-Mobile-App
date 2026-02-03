@@ -866,7 +866,7 @@ const HomeScreen = ({ navigation }) => {
               )
             )}
           </View>
-          <Text style={{ color: whiteColor, fontWeight: style.fontWeightThin1x.fontWeight, textAlign: "center", fontSize: style.fontSizeLarge1x.fontSize, paddingTop: spacings.large }}>Prorevv</Text>
+          <Text style={{ color: whiteColor, fontWeight: style.fontWeightThin1x.fontWeight, textAlign: "center", fontSize: style.fontSizeLarge1x.fontSize, paddingTop: spacings.large }}>ProRevv</Text>
 
           {isSearching && (
             <View style={styles.searchContainer}>

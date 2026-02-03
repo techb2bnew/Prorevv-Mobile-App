@@ -355,7 +355,7 @@ const InvoiceHistoryScreen = ({ navigation,
                             <Text style={[styles.tableHeader, { width: isTablet ? wp(20) : orientation === "LANDSCAPE" ? wp(20) : wp(40) }]}>Add Paid Date</Text>
                             <Text style={[styles.tableHeader, { width: isTablet ? wp(20) : orientation === "LANDSCAPE" ? wp(20) : wp(25) }]}>Action</Text>
 
-                            <Text style={[styles.tableHeader, { paddingRight: isTablet ? 30 : 0, width: isIOSAndTablet ? wp(8) : orientation === "LANDSCAPE" ? wp(8) : wp(30) }]}>Status</Text>
+                            {/* <Text style={[styles.tableHeader, { paddingRight: isTablet ? 30 : 0, width: isIOSAndTablet ? wp(8) : orientation === "LANDSCAPE" ? wp(8) : wp(30) }]}>Status</Text> */}
 
                         </View>
 
@@ -493,7 +493,7 @@ const InvoiceHistoryScreen = ({ navigation,
                                                 )}
                                             </TouchableOpacity>
 
-                                            <View style={[getStatusStyle(item?.status), alignJustifyCenter, { height: isTablet ? hp(2) : hp(4) }]}>
+                                            {/* <View style={[getStatusStyle(item?.status), alignJustifyCenter, { height: isTablet ? hp(2) : hp(4) }]}>
                                                 <Text
                                                     style={{
                                                         color: item?.status
@@ -506,7 +506,7 @@ const InvoiceHistoryScreen = ({ navigation,
                                                     }}>
                                                     {item?.status ? getStatusText(item?.status) : "-"}
                                                 </Text>
-                                            </View>
+                                            </View> */}
                                         </Pressable>
                                     );
                                 }}
@@ -688,7 +688,7 @@ const InvoiceHistoryScreen = ({ navigation,
                                             )}
                                         </View>
 
-                                        <View style={[{ width: '48%', marginBottom: 9 }]}>
+                                        {/* <View style={[{ width: '48%', marginBottom: 9 }]}>
                                             <Text style={{ color: '#555', fontSize: 10 }}>Status</Text>
                                             <Text
                                                 style={{
@@ -699,7 +699,7 @@ const InvoiceHistoryScreen = ({ navigation,
                                                 }}>
                                                 {getStatusText(item?.status)}
                                             </Text>
-                                        </View>
+                                        </View> */}
                                     </View>
 
                                 </Pressable>

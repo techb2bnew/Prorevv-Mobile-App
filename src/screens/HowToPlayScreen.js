@@ -45,7 +45,7 @@ const HowToPlayScreen = () => {
         {
             title: 'Access the Dashboard',
             description: [
-                'Upon logging in, you will see the Prorevv Dashboard.',
+                'Upon logging in, you will see the ProRevv Dashboard.',
                 'From here, you can manage customer information, register new jobs,register new Vehicle and track job history.'
             ],
             // gif: HOME_SCREEN_IMAGE

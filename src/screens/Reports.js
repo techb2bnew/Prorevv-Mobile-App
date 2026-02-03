@@ -522,15 +522,12 @@ const Reports = ({ navigation, route }) => {
     }, []);
 
     useEffect(() => {
-        const filteredJob = filterByStatus(jobsRawData, activeStatus, 'Jobs');
-        const filteredWork = filterByStatus(workOrdersRawData, activeStatus, 'WorkOrders');
-        const customerFiltered = filterByStatus(customerJobs, activeStatus, 'Customers');
+        const filteredJob = activeTab === 'Jobs' ? jobsRawData : filterByStatus(jobsRawData, activeStatus, 'Jobs');
+        const filteredWork = activeTab === 'WorkOrders' ? workOrdersRawData : filterByStatus(workOrdersRawData, activeStatus, 'WorkOrders');
         setFilteredJobs(filteredJob);
         setFilteredWorkOrders(filteredWork);
-
         setFilteredCustomer(customerJobs);
-
-    }, [activeStatus, jobsRawData, workOrdersRawData, customerJobs]);
+    }, [activeStatus, jobsRawData, workOrdersRawData, customerJobs, activeTab]);
 
     const getStatusStyle = (status) => {
         if (status === true || status === "completed") return [styles.statusPill, styles.statusCompleted];
@@ -543,8 +540,8 @@ const Reports = ({ navigation, route }) => {
     };
 
     useEffect(() => {
-        const jobFiltered = filterByStatus(jobsRawData, activeStatus, 'Jobs');
-        const workOrderFiltered = filterByStatus(workOrdersRawData, activeStatus, 'WorkOrders');
+        const jobFiltered = activeTab === 'Jobs' ? jobsRawData : filterByStatus(jobsRawData, activeStatus, 'Jobs');
+        const workOrderFiltered = activeTab === 'WorkOrders' ? workOrdersRawData : filterByStatus(workOrdersRawData, activeStatus, 'WorkOrders');
         // const customerFiltered = filterByStatus(customerJobs, activeStatus, 'Customers');
 
         const searchLower = search.toLowerCase();
@@ -565,7 +562,7 @@ const Reports = ({ navigation, route }) => {
         setFilteredJobs(filteredJob);
         setFilteredWorkOrders(filteredWork);
         setFilteredCustomer(filteredCustomer);
-    }, [activeStatus, jobsRawData, workOrdersRawData, search, customerJobs]);
+    }, [activeStatus, jobsRawData, workOrdersRawData, search, customerJobs, activeTab]);
 
     // Clear selected work orders when switching tabs or status
     // useEffect(() => {
@@ -748,12 +745,11 @@ const Reports = ({ navigation, route }) => {
     };
 
     const handleSelectAllWorkOrders = () => {
-        if (selectedWorkOrders.length === filteredWorkOrders.length) {
-            // If all are selected, deselect all
+        const inProgressWorkOrders = filteredWorkOrders.filter(item => item?.vehicleStatus === false || item?.vehicleStatus === 'inprogress');
+        if (selectedWorkOrders.length === inProgressWorkOrders.length && inProgressWorkOrders.length > 0) {
             setSelectedWorkOrders([]);
         } else {
-            // Select all work orders
-            setSelectedWorkOrders(filteredWorkOrders.map(item => item?.id));
+            setSelectedWorkOrders(inProgressWorkOrders.map(item => item?.id));
         }
     };
 
@@ -907,12 +903,12 @@ const Reports = ({ navigation, route }) => {
                         <Text style={[styles.tabText, activeTab === 'Customers' && styles.activeTabText]}>Customers</Text>
                     </TouchableOpacity>}
                 </View>
-                {/* Status Filters */}
+                {/* Status Filters - hide for Work Orders (all data shown together) */}
                 <View style={[styles.statusFilterContainer, { justifyContent: 'space-between' }]}>
                     <View style={{ flexDirection: 'row', gap: 10 }}>
                         {['Completed', 'InProgress'].map(status => {
-                            if (activeTab === "Customers") {
-                                return
+                            if (activeTab === "WorkOrders" || activeTab === "Jobs" || activeTab === "Customers") {
+                                return null;
                             }
                             const dataList = activeTab === "Jobs" ? jobsRawData : activeTab === "Customers" ? customerJobs : workOrdersRawData;
                             const count = filterByStatus(dataList, status, activeTab).length;
@@ -936,8 +932,8 @@ const Reports = ({ navigation, route }) => {
                         })}
                     </View>
 
-                    {/* Select All / Deselect All Button */}
-                    {activeTab === 'WorkOrders' && activeStatus === 'InProgress' && selectedWorkOrders.length > 0 && (
+                    {/* Select All / Deselect All Button - only for in-progress items when any selected */}
+                    {activeTab === 'WorkOrders' && selectedWorkOrders.length > 0 && (
                         <TouchableOpacity
                             onPress={handleSelectAllWorkOrders}
                             style={{
@@ -950,9 +946,10 @@ const Reports = ({ navigation, route }) => {
                             }}
                         >
                             <Text style={{ color: whiteColor, fontWeight: style.fontWeightThin.fontWeight, fontSize: isTablet ? style.fontSizeMedium.fontSize : style.fontSizeSmall1x.fontSize }}>
-                                {selectedWorkOrders.length === filteredWorkOrders.length && filteredWorkOrders.length > 0
-                                    ? 'Deselect All'
-                                    : 'Select All'}
+                                {(() => {
+                                    const inProgress = filteredWorkOrders.filter(item => item?.vehicleStatus === false || item?.vehicleStatus === 'inprogress');
+                                    return selectedWorkOrders.length === inProgress.length && inProgress.length > 0 ? 'Deselect All' : 'Select All';
+                                })()}
                             </Text>
                         </TouchableOpacity>
                     )}
@@ -1065,22 +1062,22 @@ const Reports = ({ navigation, route }) => {
                                 }}
                                     onPress={() => navigation.navigate("VehicleDetailsScreen", { vehicleId: item?.id, from: "report" })}>
                                     <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-                                        {/* Selection Checkbox - Only show for InProgress */}
-                                        {activeStatus === 'InProgress' && (
+                                        {/* Selection Checkbox - Only for in-progress work orders */}
+                                        {/* {(item?.vehicleStatus === false || item?.vehicleStatus === 'inprogress') && (
                                             <Pressable
                                                 onPress={() => toggleWorkOrderSelection(item?.id)}
                                                 style={[styles.checkbox, isSelected && styles.checkboxSelected, { position: "absolute", right: -5, top: -4, zIndex: 1000 }]}
                                             >
                                                 {isSelected && <AntDesign name="check" size={12} color={whiteColor} />}
                                             </Pressable>
-                                        )}
+                                        )} */}
 
                                         <Pressable
                                             onPress={() => navigation.navigate("WorkOrderScreenTwo", {
                                                 vehicleId: item.id,
                                                 from: "workOrder"
                                             })}
-                                            style={{ position: "absolute", right: activeStatus === 'InProgress' ? 26 : 4, top: -4, zIndex: 999 }}>
+                                            style={{ position: "absolute", right: (item?.vehicleStatus === false || item?.vehicleStatus === 'inprogress') ? 4 : 4, top: -4, zIndex: 999 }}>
                                             {/* <Text style={styles.viewText}>Edit</Text> */}
                                             <Feather name="edit-2" size={19.5} color={blackColor} />
 
@@ -1088,7 +1085,7 @@ const Reports = ({ navigation, route }) => {
 
                                         <Pressable
                                             onPress={() => navigation.navigate("VehicleDetailsScreen", { vehicleId: item?.id, from: "report" })}
-                                            style={{ position: "absolute", right: activeStatus === 'InProgress' ? 58 : 33, top: -4, zIndex: 999 }}>
+                                            style={{ position: "absolute", right: (item?.vehicleStatus === false || item?.vehicleStatus === 'inprogress') ? 33 : 33, top: -4, zIndex: 999 }}>
                                             {/* <Text style={styles.viewText}>Edit</Text> */}
                                             <Feather name="eye" size={20} color={blackColor} />
 
@@ -1151,13 +1148,13 @@ const Reports = ({ navigation, route }) => {
                                                     : '-'}
                                             </Text>
                                         </View>}
-                                        <View style={{ width: '48%', marginVertical: spacings.normalx }}>
+                                        {/* <View style={{ width: '48%', marginVertical: spacings.normalx }}>
                                             <Text style={{ color: '#555', fontSize: 10 }}>Status</Text>
 
                                             <Text style={[{ fontSize: 15, fontWeight: '700', color: item?.vehicleStatus === true ? greenColor : blackColor }]}>
                                                 {getStatusText(item?.vehicleStatus)}
                                             </Text>
-                                        </View>
+                                        </View> */}
                                     </View>
 
                                 </Pressable>
@@ -1196,10 +1193,8 @@ const Reports = ({ navigation, route }) => {
                         <View>
                             {/* Header Row */}
                             <View style={[styles.tableHeaderRow, { backgroundColor: blackColor }]}>
-                                {/* Checkbox column - only show for InProgress */}
-                                {activeStatus === 'InProgress' && (
-                                    <Text style={[styles.tableHeader, { width: isTablet ? wp(13) : orientation === "LANDSCAPE" ? wp(8) : wp(15), alignItems: 'center' }]}>Select</Text>
-                                )}
+                                {/* Checkbox column - for in-progress work orders */}
+                                {/* <Text style={[styles.tableHeader, { width: isTablet ? wp(13) : orientation === "LANDSCAPE" ? wp(8) : wp(15), alignItems: 'center' }]}>Select</Text> */}
                                 <Text style={[styles.tableHeader, { width: isTablet ? wp(13) : orientation === "LANDSCAPE" ? wp(13) : wp(30) }]}>Job Name</Text>
                                 <Text style={[styles.tableHeader, { width: isTablet ? wp(25) : orientation === "LANDSCAPE" ? wp(25) : wp(55) }]}>VIN</Text>
                                 <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>Make</Text>
@@ -1210,7 +1205,7 @@ const Reports = ({ navigation, route }) => {
                                 <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>Start Date</Text>
                                 <Text style={[styles.tableHeader, { width: isTablet ? wp(18) : orientation === "LANDSCAPE" ? wp(18) : wp(35) }]}>End Date</Text>
                                 {/* <Text style={[styles.tableHeader, { width: wp(30) }]}>Cost Estimate</Text> */}
-                                <Text style={[styles.tableHeader, { paddingRight: isTablet ? 30 : 0, width: isIOSAndTablet ? wp(10) : isTablet ? wp(20) : orientation === "LANDSCAPE" ? wp(20) : wp(35) }]}>Status</Text>
+                                {/* <Text style={[styles.tableHeader, { paddingRight: isTablet ? 30 : 0, width: isIOSAndTablet ? wp(10) : isTablet ? wp(20) : orientation === "LANDSCAPE" ? wp(20) : wp(35) }]}>Status</Text> */}
                                 <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35), }]}>Action</Text>
                             </View>
 
@@ -1229,16 +1224,18 @@ const Reports = ({ navigation, route }) => {
                                         const isSelected = selectedWorkOrders.includes(item?.id);
                                         return (
                                             <Pressable key={index.toString()} style={[styles.listItem, rowStyle, { flexDirection: 'row', alignItems: "center" }]} onPress={() => navigation.navigate("VehicleDetailsScreen", { vehicleId: item?.id, from: "report" })}>
-                                                {/* Selection Checkbox - Only show for InProgress */}
-                                                {activeStatus === 'InProgress' && (
+                                                {/* Selection Checkbox - Only for in-progress work orders */}
+                                                {/* {(item?.vehicleStatus === false || item?.vehicleStatus === 'inprogress') ? (
                                                     <Pressable
                                                         onPress={() => toggleWorkOrderSelection(item?.id)}
                                                         style={[styles.checkbox, isSelected && styles.checkboxSelected, { marginRight: isTablet ? wp(10) : orientation === "LANDSCAPE" ? wp(6) : wp(10) }]}
                                                     >
                                                         {isSelected && <AntDesign name="check" size={12} color={whiteColor} />}
                                                     </Pressable>
-                                                )}
-                                                <Text style={[styles.text, { width: isTablet ? wp(13) : orientation === "LANDSCAPE" ? wp(13) : wp(30), paddingLeft: spacings.small }]}>{item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}</Text>
+                                                ) : (
+                                                    <View style={{ width: isTablet ? wp(13) : orientation === "LANDSCAPE" ? wp(8) : wp(4), marginRight: isTablet ? wp(10) : orientation === "LANDSCAPE" ? wp(6) : wp(10) }} />
+                                                )} */}
+                                                <Text style={[styles.text, { width: isTablet ? wp(13) : orientation === "LANDSCAPE" ? wp(13) : wp(28), paddingLeft: spacings.small }]}>{item?.jobName?.charAt(0).toUpperCase() + item?.jobName?.slice(1)}</Text>
                                                 <Text style={[styles.text, { width: isTablet ? wp(25) : orientation === "LANDSCAPE" ? wp(25) : wp(57) }]}>{item?.vin || '-'}</Text>
                                                 <Text style={[styles.text, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>{item?.make || '-'}</Text>
                                                 <Text style={[styles.text, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(30) }]}>{item?.model || '-'}</Text>
@@ -1265,7 +1262,7 @@ const Reports = ({ navigation, route }) => {
                                                         year: "numeric",
                                                     })
                                                     : "-"}</Text>
-                                                <View style={[getStatusStyle(item?.vehicleStatus), alignJustifyCenter, { height: isTablet ? hp(2) : hp(4) }]}>
+                                                {/* <View style={[getStatusStyle(item?.vehicleStatus), alignJustifyCenter, { height: isTablet ? hp(2) : hp(4) }]}>
                                                     <Text
                                                         style={{
                                                             color: getStatusText(item?.vehicleStatus) === "Complete" ?
@@ -1275,9 +1272,9 @@ const Reports = ({ navigation, route }) => {
                                                         }}>
                                                         {getStatusText(item?.vehicleStatus)}
                                                     </Text>
-                                                </View>
+                                                </View> */}
 
-                                                <View style={{ flexDirection: "row", alignItems: "center", marginLeft: isTablet ? 0 : wp(10), width: isIOSAndTablet ? wp(10) : isTablet ? wp(30) : orientation === "LANDSCAPE" ? wp(20) : wp(20), justifyContent: "center" }} >
+                                                <View style={{ flexDirection: "row", alignItems: "center", marginLeft: isTablet ? 0 : wp(1), width: isIOSAndTablet ? wp(10) : isTablet ? wp(30) : orientation === "LANDSCAPE" ? wp(20) : wp(20), justifyContent: "center" }} >
                                                     <Pressable onPress={() => navigation.navigate("VehicleDetailsScreen", {
                                                         vehicleId: item.id,
                                                         from: activeTab === "partnerOrder" ? "partner" : "workOrder"
@@ -1325,8 +1322,8 @@ const Reports = ({ navigation, route }) => {
                 </View>
             ) : null}
 
-            {/* Bottom Buttons for Work Orders - Only show for InProgress work orders */}
-            {activeTab === 'WorkOrders' && activeStatus === 'InProgress' && selectedWorkOrders.length > 0 && (
+            {/* Bottom Buttons for Work Orders - when any in-progress work orders selected */}
+            {activeTab === 'WorkOrders' && selectedWorkOrders.length > 0 && (
                 <View style={[styles.completeButtonContainer]}>
                     <TouchableOpacity
                         style={[

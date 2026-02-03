@@ -6,7 +6,7 @@ import { blackColor, lightBlueColor, lightGrayColor } from '../constans/Color';
 import { heightPercentageToDP } from '../utils';
 import { spacings, style } from '../constans/Fonts';
 
-const Header = ({ title, onBack, hideBack = false }) => {
+const Header = ({ title, onBack, hideBack = false, leftContent, rightContent }) => {
     const navigation = useNavigation();
     const handleBack = () => {
         if (onBack) {
@@ -25,14 +25,16 @@ const Header = ({ title, onBack, hideBack = false }) => {
             <TouchableOpacity onPress={handleBack} style={styles.backButton}>
                 <Ionicons name="arrow-back" size={28} color="white" />
             </TouchableOpacity>
+            {leftContent ? <View style={styles.leftContent}>{leftContent}</View> : null}
             <Text
-                style={styles.headerTitle}
+                style={[styles.headerTitle, !rightContent ? {} : { flex: 1 }]}
                 onPress={handleBack}
                 numberOfLines={1}
                 ellipsizeMode="tail"
             >
                 {getLimitedText(title)}
             </Text>
+            {rightContent ? <View style={styles.rightContent}>{rightContent}</View> : null}
         </View>
     );
 };
@@ -49,6 +51,12 @@ const styles = {
     },
     backButton: {
         padding: 10,
+    },
+    leftContent: {
+        marginLeft: 4,
+    },
+    rightContent: {
+        marginRight: 8,
     },
     headerTitle: {
         fontSize: 18,

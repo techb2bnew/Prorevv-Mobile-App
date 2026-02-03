@@ -454,7 +454,7 @@ const LoginScreen = ({ navigation }) => {
                     : */}
                         {/* <> */}
                         <Text style={styles.title}>Welcome Back!</Text>
-                        {/* <Text style={{ marginVertical: spacings.small }}>Join our Prorevv</Text> */}
+                        {/* <Text style={{ marginVertical: spacings.small }}>Join our ProRevv</Text> */}
                         {/* </> */}
                         {/* } */}
                     </View>

@@ -447,7 +447,7 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
                             ))
                         )}
                     </View>
-
+                    {/* 
                     {!loading && vehicleDetails?.vehicleStatus === false && (
                         <Pressable
                             style={[styles.completeButton, alignItemsCenter]}
@@ -455,7 +455,8 @@ const VehicleDetailsScreen = ({ navigation, route }) => {
                         >
                             <Text style={styles.completeButtonText}>Complete This Work Order</Text>
                         </Pressable>
-                    )}
+                    )} */}
+
                     <ConfirmationModal
                         visible={confirmationModalVisible}
                         onClose={() => setConfirmationModalVisible(false)}

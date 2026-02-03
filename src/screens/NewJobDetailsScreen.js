@@ -32,6 +32,7 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
   const isIOsAndTablet = Platform.OS === "ios" && isTablet;
   const [customerJobs, setCustomerJobs] = useState([]);
   const [selectedJob, setSelectedJob] = useState(null);
+  const [viewType, setViewType] = useState('list'); // 'list' | 'grid'
 
   useFocusEffect(
     useCallback(() => {
@@ -155,18 +156,9 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
   };
 
   const renderItem = ({ item, index }) => {
-
-    // Console when row renders
-    // console.log("Rendering Vehicle Row:", {
-    //   item
-    // });
-
     return (
       <Pressable
-        onPress={() => {
-          console.log("Pressed Vehicle:", { id: item.id, vin: item.vin });
-          navigation.navigate('VehicleDetailsScreen', { vehicleId: item.id });
-        }}
+        onPress={() => navigation.navigate('VehicleDetailsScreen', { vehicleId: item.id })}
         style={[
           styles.row,
           { backgroundColor: index % 2 === 0 ? lightGrayColor : whiteColor }
@@ -178,19 +170,11 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
         <Text style={[styles.cell, { width: wp(25) }]}>{item.modelYear || '-'}</Text>
         <Text style={[styles.cell, { width: wp(25) }]}>{item.labourCost ? "-" : jobDetails?.estimatedCost ? `$${jobDetails.estimatedCost}` : '—'}</Text>
         <Text style={[styles.cell, { width: wp(29) }]}>{item.labourCost ? `$${item.labourCost}` : '-'}</Text>
-
-        <Text style={[
-          styles.cell,
-          { color: item.vehicleStatus ? 'green' : blackColor, width: wp(35) }
-        ]}>
+        {/* <Text style={[styles.cell, { color: item.vehicleStatus ? 'green' : blackColor, width: wp(35) }]}>
           {item.vehicleStatus ? 'Complete' : 'In Progress'}
-        </Text>
-
+        </Text> */}
         <Pressable
-          onPress={() => {
-            console.log("View Button Clicked:", { id: item.id, vin: item.vin });
-            navigation.navigate("VehicleDetailsScreen", { vehicleId: item.id });
-          }}
+          onPress={() => navigation.navigate("VehicleDetailsScreen", { vehicleId: item.id })}
           style={{ width: wp(20), alignItems: 'center' }}
         >
           <Text style={styles.viewText}>View</Text>
@@ -198,6 +182,62 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
       </Pressable>
     );
   };
+
+  const renderGridItem = ({ item, index }) => (
+    <Pressable
+      onPress={() => navigation.navigate('VehicleDetailsScreen', { vehicleId: item.id })}
+      style={[
+        styles.gridCard,
+        { backgroundColor: index % 2 === 0 ? lightGrayColor : whiteColor }
+      ]}
+    >
+      {/* Job label on card - so it's clear this work order belongs to this job */}
+      <View style={styles.gridRow}>
+        <View style={styles.gridField}>
+          <Text style={styles.gridLabel}>VIN</Text>
+          <Text style={styles.gridValue}>{item.vin || 'N/A'}</Text>
+        </View>
+        <View style={styles.gridField}>
+          <Text style={styles.gridLabel}>Make</Text>
+          <Text style={styles.gridValue}>{item.make || '-'}</Text>
+        </View>
+      </View>
+      <View style={styles.gridRow}>
+        <View style={styles.gridField}>
+          <Text style={styles.gridLabel}>Model</Text>
+          <Text style={styles.gridValue}>{item.model || '-'}</Text>
+        </View>
+        <View style={styles.gridField}>
+          <Text style={styles.gridLabel}>Year</Text>
+          <Text style={styles.gridValue}>{item.modelYear || '-'}</Text>
+        </View>
+      </View>
+      <View style={styles.gridRow}>
+        <View style={styles.gridField}>
+          <Text style={styles.gridLabel}>Vehicle Price</Text>
+          <Text style={styles.gridValue}>{item.labourCost ? "-" : jobDetails?.estimatedCost ? `$${jobDetails.estimatedCost}` : '—'}</Text>
+        </View>
+        <View style={styles.gridField}>
+          <Text style={styles.gridLabel}>Override Cost</Text>
+          <Text style={styles.gridValue}>{item.labourCost ? `$${item.labourCost}` : '-'}</Text>
+        </View>
+      </View>
+      <View style={[styles.gridRow, { marginBottom: 0 }]}>
+        {/* <View style={styles.gridField}>
+          <Text style={styles.gridLabel}>Status</Text>
+          <Text style={[styles.gridValue, { color: item.vehicleStatus ? greenColor : blackColor, fontWeight: '600' }]}>
+            {item.vehicleStatus ? 'Complete' : 'In Progress'}
+          </Text>
+        </View> */}
+        {/* <Pressable
+          onPress={() => navigation.navigate("VehicleDetailsScreen", { vehicleId: item.id })}
+          style={styles.gridViewButton}
+        >
+          <Text style={styles.viewText}>View</Text>
+        </Pressable> */}
+      </View>
+    </Pressable>
+  );
 
 
   return (
@@ -211,6 +251,24 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
               (selectedJob?.jobName || jobDetails?.jobName).slice(1)
               : "Job Details"
             )
+        }
+        rightContent={
+          jobDetails?.vehicles?.length > 0 && !(customerId && !selectedJob) ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <TouchableOpacity
+                onPress={() => setViewType('list')}
+                style={[styles.headerViewToggleBtn, viewType === 'list' && styles.headerViewToggleActive]}
+              >
+                <Ionicons name="list" size={22} color={viewType === 'list' ? blackColor : whiteColor} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setViewType('grid')}
+                style={[styles.headerViewToggleBtn, viewType === 'grid' && styles.headerViewToggleActive]}
+              >
+                <Ionicons name="grid-sharp" size={22} color={viewType === 'grid' ? blackColor : whiteColor} />
+              </TouchableOpacity>
+            </View>
+          ) : null
         }
       />
       {loading ? (
@@ -449,30 +507,50 @@ const NewJobDetailsScreen = ({ navigation, route }) => {
 
           {jobDetails?.vehicles?.length > 0 ? (
             <>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <View>
-                  {/* Header Row */}
-                  <View style={[styles.row, styles.headerRow]}>
-                    <Text style={[styles.cell, styles.headerText, { width: wp(45), textAlign: "left", paddingLeft: spacings.large }]}>VIN</Text>
-                    <Text style={[styles.cell, styles.headerText, { width: wp(25) }]}>Make</Text>
-                    <Text style={[styles.cell, styles.headerText, { width: wp(22) }]}>Model</Text>
-                    <Text style={[styles.cell, styles.headerText, { width: wp(25) }]}>Year</Text>
-                    <Text style={[styles.cell, styles.headerText, { width: wp(27) }]}>Vehicle Price</Text>
-                    <Text style={[styles.cell, styles.headerText, { width: wp(29) }]}>Override Cost</Text>
-                    <Text style={[styles.cell, styles.headerText, { width: wp(35) }]}>Status</Text>
-                    <Text style={[styles.cell, styles.headerText, { width: wp(20), textAlign: orientation === "LANDSCAPE" ? 'left' : 'center', marginLeft: orientation === "LANDSCAPE" ? wp(3) : 0 }]}>Action</Text>
-                  </View>
+              {/* Section: Work Orders in this Job - clear separation */}
+              <View style={styles.workOrderSectionHeader}>
+                <Text style={styles.workOrderSectionTitle}>
+                  Work Orders in this Job
+                </Text>
+                {/* <Text style={styles.workOrderSectionCount}>
+                  {jobDetails.vehicles.length} vehicle{jobDetails.vehicles.length !== 1 ? 's' : ''}
+                </Text> */}
+              </View>
 
-                  {/* List */}
-                  <FlatList
-                    data={jobDetails?.vehicles || []}
-                    keyExtractor={(item) => item.id.toString()}
-                    renderItem={renderItem}
-                    ItemSeparatorComponent={() => <View style={styles.separator} />}
-                    scrollEnabled={false}
-                  />
-                </View>
-              </ScrollView>
+              {viewType === 'list' ? (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  <View>
+                    <View style={[styles.row, styles.headerRow]}>
+                      <Text style={[styles.cell, styles.headerText, { width: wp(45), textAlign: "left", paddingLeft: spacings.large }]}>VIN</Text>
+                      <Text style={[styles.cell, styles.headerText, { width: wp(25) }]}>Make</Text>
+                      <Text style={[styles.cell, styles.headerText, { width: wp(22) }]}>Model</Text>
+                      <Text style={[styles.cell, styles.headerText, { width: wp(25) }]}>Year</Text>
+                      <Text style={[styles.cell, styles.headerText, { width: wp(27) }]}>Vehicle Price</Text>
+                      <Text style={[styles.cell, styles.headerText, { width: wp(29) }]}>Override Cost</Text>
+                      {/* <Text style={[styles.cell, styles.headerText, { width: wp(35) }]}>Status</Text> */}
+                      <Text style={[styles.cell, styles.headerText, { width: wp(20), textAlign: orientation === "LANDSCAPE" ? 'left' : 'center', marginLeft: orientation === "LANDSCAPE" ? wp(3) : 0 }]}>Action</Text>
+                    </View>
+                    <FlatList
+                      data={jobDetails?.vehicles || []}
+                      keyExtractor={(item) => item.id.toString()}
+                      renderItem={renderItem}
+                      ItemSeparatorComponent={() => <View style={styles.separator} />}
+                      scrollEnabled={false}
+                    />
+                  </View>
+                </ScrollView>
+              ) : (
+                <FlatList
+                  data={jobDetails?.vehicles || []}
+                  keyExtractor={(item) => item.id.toString()}
+                  renderItem={renderGridItem}
+                  numColumns={isTablet ? 2 : 1}
+                  key={isTablet ? 'grid-2' : 'grid-1'}
+                  contentContainerStyle={styles.gridListContent}
+                  columnWrapperStyle={isTablet ? styles.gridColumnWrapper : undefined}
+                  ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+                />
+              )}
             </>
           ) : (
             // 👉 Show this when vehicle list is empty
@@ -538,6 +616,45 @@ const styles = StyleSheet.create({
     color: blackColor,
   },
 
+  workOrderSectionHeader: {
+    marginHorizontal: 10,
+    marginTop: 16,
+    marginBottom: 12,
+    // paddingBottom: 10,
+    // borderBottomWidth: 2,
+    // borderBottomColor: blackColor,
+  },
+  workOrderSectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: blackColor,
+  },
+  workOrderSectionCount: {
+    fontSize: 13,
+    color: grayColor,
+    marginTop: 2,
+  },
+  gridJobLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+  },
+  gridJobLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: grayColor,
+    marginRight: 6,
+  },
+  gridJobName: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: blackColor,
+    flex: 1,
+  },
+
   card: {
     backgroundColor: lightGrayColor,
     padding: 10,
@@ -589,5 +706,66 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 4,
     borderRadius: 2,
+  },
+  viewToggleBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: blackColor,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  viewToggleActive: {
+    backgroundColor: blackColor,
+  },
+  headerViewToggleBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: whiteColor,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerViewToggleActive: {
+    backgroundColor: whiteColor,
+  },
+  gridListContent: {
+    paddingHorizontal: 10,
+    paddingBottom: 20,
+  },
+  gridColumnWrapper: {
+    justifyContent: 'space-between',
+    marginBottom: 10,
+    gap: 10,
+  },
+  gridCard: {
+    flex: 1,
+    padding: 12,
+    marginHorizontal: 5,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: blackColor,
+  },
+  gridRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  gridField: {
+    width: '48%',
+  },
+  gridLabel: {
+    fontSize: 11,
+    color: '#555',
+    marginBottom: 2,
+  },
+  gridValue: {
+    fontSize: style.fontSizeNormal.fontSize,
+    color: blackColor,
+  },
+  gridViewButton: {
+    alignSelf: 'flex-end',
   },
 })

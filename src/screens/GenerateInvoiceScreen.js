@@ -814,7 +814,7 @@ const GenerateInvoiceScreen = ({ navigation,
                 const email = "";
                 const subject = "Invoice for Your Work Order";
 
-                const bodyText = `Dear Customer,\n\nPlease find your invoice here:\n${invoiceUrl}\n\nThank you for choosing our services. If you have any questions or need further assistance, feel free to reach out.\n\nThank you for your trust,\nProrevv`;
+                const bodyText = `Dear Customer,\n\nPlease find your invoice here:\n${invoiceUrl}\n\nThank you for choosing our services. If you have any questions or need further assistance, feel free to reach out.\n\nThank you for your trust,\ProRevv`;
 
                 const body = encodeURIComponent(bodyText);
                 const url = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${body}`;
@@ -1342,7 +1342,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                 <Text style={[styles.tableHeader, { width: isTablet ? wp(15) : orientation === "LANDSCAPE" ? wp(15) : wp(35) }]}>End Date</Text>
                                 <Text style={[styles.tableHeader, { width: isIOSAndTablet ? wp(35) : isTablet ? wp(42) : orientation === "LANDSCAPE" ? wp(35) : wp(55) }]}>Invoice Rate($)</Text>
                                 {/* <Text style={[styles.tableHeader, { width: isIOSAndTablet ? wp(20) : isTablet ? wp(20) : orientation === "LANDSCAPE" ? wp(15) : wp(35), }]}>W O Status</Text> */}
-                                <Text style={[styles.tableHeader, { width: isIOSAndTablet ? wp(20) : isTablet ? wp(20) : orientation === "LANDSCAPE" ? wp(20) : wp(35) }]}>Invoice Status</Text>
+                                {/* <Text style={[styles.tableHeader, { width: isIOSAndTablet ? wp(20) : isTablet ? wp(20) : orientation === "LANDSCAPE" ? wp(20) : wp(35) }]}>Invoice Status</Text> */}
                             </View>
 
                             {/* Data Rows with vertical scroll */}
@@ -1444,14 +1444,14 @@ const GenerateInvoiceScreen = ({ navigation,
                                                 </View> */}
 
                                                 {/* Invoice Status */}
-                                                <View style={[getStatusStyle(item?.generatedInvoiceStatus, "invoice"), alignJustifyCenter, { height: isTablet ? hp(2) : hp(4), marginLeft: isTablet ? wp(10) : wp(10) }]}>
+                                                {/* <View style={[getStatusStyle(item?.generatedInvoiceStatus, "invoice"), alignJustifyCenter, { height: isTablet ? hp(2) : hp(4), marginLeft: isTablet ? wp(10) : wp(10) }]}>
                                                     <Text
                                                         style={{
                                                             color: getStatusText(item?.generatedInvoiceStatus, "invoice") === "Generated" ? greenColor : goldColor
                                                         }}>
                                                         {getStatusText(item?.generatedInvoiceStatus, "invoice")}
                                                     </Text>
-                                                </View>
+                                                </View> */}
 
                                             </Pressable>
                                         );
@@ -1633,7 +1633,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                                 </Text>
                                             </View> */}
 
-                                            <View style={[{ width: '48%', marginBottom: 9 }]}>
+                                            {/* <View style={[{ width: '48%', marginBottom: 9 }]}>
                                                 <Text style={{ color: '#555', fontSize: 10 }}>Incoice Status</Text>
                                                 <Text
                                                     style={{
@@ -1644,7 +1644,7 @@ const GenerateInvoiceScreen = ({ navigation,
                                                     }}>
                                                     {getStatusText(item?.generatedInvoiceStatus, "invoice")}
                                                 </Text>
-                                            </View>
+                                            </View> */}
                                         </View>
 
                                     </Pressable>
