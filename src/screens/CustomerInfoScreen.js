@@ -17,7 +17,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/dist/MaterialCommu
 import Toast from 'react-native-simple-toast';
 import NetInfo from "@react-native-community/netinfo";
 import Header from "../componets/Header";
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect, CommonActions } from "@react-navigation/native";
 import { launchCamera, launchImageLibrary } from "react-native-image-picker";
 import { Image as ImageCompressor } from 'react-native-compressor';
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
@@ -25,7 +25,7 @@ import { useOrientation } from "../OrientationContext";
 
 const { flex, alignItemsCenter, alignJustifyCenter, resizeModeContain, flexDirectionRow, justifyContentSpaceBetween, textAlign } = BaseStyle;
 
-const CustomerInfoScreen = ({ navigation }) => {
+const CustomerInfoScreen = ({ navigation, route }) => {
     const phoneInput = useRef(null);
     const [errors, setErrors] = useState({});
     const [technicianId, setTechnicianId] = useState();
@@ -50,6 +50,7 @@ const CustomerInfoScreen = ({ navigation }) => {
     const [defaultIsoCode, setDefaultIsoCode] = useState('US');
     const [address, setAddress] = useState("");
     const [rawNumber, setRawNumber] = useState('');
+    const [hasHandledInvoiceParams, setHasHandledInvoiceParams] = useState(false);
 
     const [formData, setFormData] = useState({
         fullName: "",
@@ -133,6 +134,34 @@ const CustomerInfoScreen = ({ navigation }) => {
         }
 
         return { isoCode: 'US', rawNumber: phoneNumber.replace(/[^0-9]/g, '') };
+    };
+
+    const openCustomerEditForm = (item) => {
+        if (!item) return;
+
+        setIsEditMode(true);
+        setIsAddMode(true);
+        setErrors({});
+        setCustomerId(item?.id);
+
+        // Extract phone number parts synchronously
+        const phoneParts = extractPhoneNumberParts(item.phoneNumber || '');
+        setDefaultIsoCode(phoneParts.isoCode);
+        setRawNumber(phoneParts.rawNumber);
+
+        // Set form data
+        setFormData({
+            fullName: item.fullName || '',
+            email: item.email || '',
+            phoneNumber: item.phoneNumber || '',
+            address: item.address || '',
+        });
+
+        setTimeout(() => {
+            if (googleRef?.current?.setAddressText) {
+                googleRef.current.setAddressText(item.address || '');
+            }
+        }, 100);
     };
 
     // Refine country code asynchronously if not in common codes (optional enhancement)
@@ -330,9 +359,32 @@ const CustomerInfoScreen = ({ navigation }) => {
         setLocalLoading(true);
         let success = false;
 
+        // Store these values before API call to check navigation after
+        const shouldReturnToInvoice = route?.params?.from === "invoice" && route?.params?.returnToInvoice;
+        const wasEditMode = isEditMode;
+
         if (isConnected) {
             if (isEditMode) {
                 success = await syncCustomerEditToAPI(customerEditData);
+            } else {
+                success = await syncCustomerToAPI(customerData);
+            }
+        } else {
+            success = await saveCustomerOffline(customerData);
+        }
+
+        setLocalLoading(false);
+
+        if (success) {
+            // If we came from Invoice and should return, navigation already happened in syncCustomerEditToAPI
+            // So don't reset form or show toast here - return early
+            if (shouldReturnToInvoice && wasEditMode) {
+                console.log("Returning early - navigation already handled");
+                return; // Navigation already handled in syncCustomerEditToAPI
+            }
+
+            // Reset form states only if not navigating away
+            if (wasEditMode) {
                 setIsAddMode(false);
                 setIsEditMode(false);
                 setErrors({});
@@ -347,20 +399,12 @@ const CustomerInfoScreen = ({ navigation }) => {
                 });
                 setAddress("");
                 addressTextRef.current = "";
-            } else {
-                success = await syncCustomerToAPI(customerData);
             }
-        } else {
-            success = await saveCustomerOffline(customerData);
-        }
 
-        setLocalLoading(false);
-
-        if (success) {
-            Toast.show("Successfully created a new customer!");
+            Toast.show(wasEditMode ? "Customer updated successfully!" : "Successfully created a new customer!");
             if (nextAction === "AddVehicleScreen") {
                 navigation.navigate("AddVehicle");
-            } else {
+            } else if (!wasEditMode) {
                 setIsAddMode(false);
                 setIsEditMode(false);
                 setErrors({});
@@ -448,8 +492,6 @@ const CustomerInfoScreen = ({ navigation }) => {
     };
 
     const syncCustomerEditToAPI = async (customerData) => {
-        console.log("customerData::::::", customerData);
-
         try {
             const token = await AsyncStorage.getItem("auth_token");
             if (!token) {
@@ -468,14 +510,42 @@ const CustomerInfoScreen = ({ navigation }) => {
                     }
                 }
             );
+            console.log("response?.data?.message", response?.data?.message);
+            console.log("route?.params?.from", route?.params?.from);
 
-            if (response?.data?.message === "Customer created successfully") {
+            // Check for success (either "created successfully" or "updated successfully" or any success response)
+            const successMessage = response?.data?.message?.toLowerCase() || "";
+            const isSuccess = successMessage.includes("successfully") ||
+                response?.data?.success === true ||
+                response?.status === 200;
+
+            if (isSuccess) {
                 const customerId = response?.data?.customer?.id;
-                await AsyncStorage.setItem("current_customer_id", customerId.toString());
-                console.log("Customer ID saved in AsyncStorage:", customerId);
-                return true;
+                if (customerId) {
+                    await AsyncStorage.setItem("current_customer_id", customerId.toString());
+                    console.log("Customer ID saved in AsyncStorage:", customerId);
+                }
 
+                // If navigated from Invoice, go back to Invoice tab's GenerateInvoiceScreen
+                if (route?.params?.from === "invoice" && route?.params?.returnToInvoice) {
+                    console.log("Navigating back to Invoice stack...");
+                    // Get parent navigator (Tab Navigator) to navigate across ta
+                    // Fallback: use CommonActions
+                    navigation.dispatch(
+                        CommonActions.navigate({
+                            name: "Invoice",
+                            params: {
+                                screen: "CombinedInvoiceScreen",
+                            },
+                        })
+                    );
+                    setIsEditMode(false)
+                }
+
+                return true;
             }
+
+            return false;
         } catch (error) {
             console.error("API request failed:", error.response ? error.response.data.error : error.message);
             const errorMsg = (error.response ? error.response.data.error : error.message)?.toLowerCase();
@@ -497,6 +567,30 @@ const CustomerInfoScreen = ({ navigation }) => {
     const capitalize = (str) => {
         return str ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase() : "";
     };
+
+    // If navigated from Invoice (GenerateInvoiceScreen) to add/edit customer email,
+    // automatically open the edit form for the passed customerId once customers are loaded.
+    useEffect(() => {
+        if (hasHandledInvoiceParams) return;
+
+        const fromInvoice = route?.params?.from === "invoice";
+        if (!fromInvoice) return;
+
+        if (!customers || customers.length === 0) return;
+
+        const targetId = route?.params?.editCustomerId;
+        if (targetId) {
+            const targetCustomer = customers.find(c => c.id === targetId);
+            if (targetCustomer) {
+                openCustomerEditForm(targetCustomer);
+                setHasHandledInvoiceParams(true);
+                return;
+            }
+        }
+
+        // If we reached here, we at least mark that we've handled the params
+        setHasHandledInvoiceParams(true);
+    }, [route?.params, customers, hasHandledInvoiceParams]);
 
     return (
         <View style={{ flex: 1, backgroundColor: whiteColor }}>
@@ -596,60 +690,13 @@ const CustomerInfoScreen = ({ navigation }) => {
                                                     { backgroundColor: index % 2 === 0 ? lightGrayColor : whiteColor }
 
                                                 ]}
-                                                    onPress={() => {
-                                                        setIsEditMode(true);
-                                                        setIsAddMode(true);
-                                                        setErrors({});
-                                                        setCustomerId(item?.id);
-
-                                                        // Extract phone number parts synchronously
-                                                        const phoneParts = extractPhoneNumberParts(item.phoneNumber || '');
-                                                        setDefaultIsoCode(phoneParts.isoCode);
-                                                        setRawNumber(phoneParts.rawNumber);
-
-                                                        // Set form data
-                                                        setFormData({
-                                                            fullName: item.fullName || '',
-                                                            email: item.email || '',
-                                                            phoneNumber: item.phoneNumber || '',
-                                                            address: item.address || '',
-                                                        });
-                                                        setTimeout(() => {
-                                                            if (googleRef?.current?.setAddressText) {
-                                                                googleRef.current.setAddressText(item.address || '');
-                                                            }
-                                                        }, 100);
-                                                    }}>
+                                                    onPress={() => openCustomerEditForm(item)}>
                                                     <Text style={[styles.tableText, { width: isTablet ? wp(20) : orientation === "LANDSCAPE" ? wp(20) : wp(40) }]}>{capitalize(item.fullName) || '—'}</Text>
                                                     <Text style={[styles.tableText, { width: isTablet ? wp(20) : orientation === "LANDSCAPE" ? wp(20) : wp(40) }]}>{item.phoneNumber || '—'}</Text>
                                                     <Text style={[styles.tableText, { width: isTablet ? wp(25) : orientation === "LANDSCAPE" ? wp(20) : wp(60) }]}>{item.email || '—'}</Text>
                                                     <Text style={[styles.tableText, { width: isTablet ? orientation === "LANDSCAPE" ? wp(26) : wp(40) : orientation === "LANDSCAPE" ? wp(30) : wp(70) }]}>{item.address || '—'}</Text>
                                                     <TouchableOpacity
-                                                        onPress={() => {
-                                                            setIsEditMode(true);
-                                                            setIsAddMode(true);
-                                                            setErrors({});
-                                                            setCustomerId(item?.id);
-
-                                                            // Extract phone number parts synchronously
-                                                            const phoneParts = extractPhoneNumberParts(item.phoneNumber || '');
-                                                            setDefaultIsoCode(phoneParts.isoCode);
-                                                            setRawNumber(phoneParts.rawNumber);
-
-                                                            // Set form data
-                                                            setFormData({
-                                                                fullName: item.fullName || '',
-                                                                email: item.email || '',
-                                                                phoneNumber: item.phoneNumber || '',
-                                                                address: item.address || '',
-                                                            });
-                                                            setTimeout(() => {
-                                                                if (googleRef?.current?.setAddressText) {
-                                                                    googleRef.current.setAddressText(item.address || '');
-                                                                }
-                                                            }, 100);
-                                                        }}
-
+                                                        onPress={() => openCustomerEditForm(item)}
                                                     >
                                                         <Text style={[styles.tableText, { width: isTablet ? orientation === "LANDSCAPE" ? wp(8) : wp(20) : orientation === "LANDSCAPE" ? wp(20) : wp(20), marginLeft: 50 }]}>Edit</Text>
                                                     </TouchableOpacity>
@@ -746,30 +793,7 @@ const CustomerInfoScreen = ({ navigation }) => {
                                                     }
                                                 })
                                             }}
-                                                onPress={() => {
-                                                    setIsEditMode(true);
-                                                    setIsAddMode(true);
-                                                    setErrors({});
-                                                    setCustomerId(item?.id);
-
-                                                    // Extract phone number parts synchronously
-                                                    const phoneParts = extractPhoneNumberParts(item.phoneNumber || '');
-                                                    setDefaultIsoCode(phoneParts.isoCode);
-                                                    setRawNumber(phoneParts.rawNumber);
-
-                                                    // Set form data
-                                                    setFormData({
-                                                        fullName: item.fullName || '',
-                                                        email: item.email || '',
-                                                        phoneNumber: item.phoneNumber || '',
-                                                        address: item.address || '',
-                                                    });
-                                                    setTimeout(() => {
-                                                        if (googleRef?.current?.setAddressText) {
-                                                            googleRef.current.setAddressText(item.address || '');
-                                                        }
-                                                    }, 100);
-                                                }}>
+                                                onPress={() => openCustomerEditForm(item)}>
                                                 {/* Header */}
                                                 <View style={{
                                                     backgroundColor: blackColor,
@@ -796,31 +820,7 @@ const CustomerInfoScreen = ({ navigation }) => {
                                                         <Text style={{ color: whiteColor, fontSize: style.fontSizeMedium.fontSize, fontWeight: style.fontWeightThin1x.fontWeight }}>{capitalize(item.fullName)}</Text>
                                                     </View>
                                                     <TouchableOpacity
-                                                        onPress={() => {
-                                                            setIsEditMode(true);
-                                                            setIsAddMode(true);
-                                                            setErrors({});
-                                                            setCustomerId(item?.id);
-
-                                                            // Extract phone number parts synchronously
-                                                            const phoneParts = extractPhoneNumberParts(item.phoneNumber || '');
-                                                            setDefaultIsoCode(phoneParts.isoCode);
-                                                            setRawNumber(phoneParts.rawNumber);
-
-                                                            // Set form data
-                                                            setFormData({
-                                                                fullName: item.fullName || '',
-                                                                email: item.email || '',
-                                                                phoneNumber: item.phoneNumber || '',
-                                                                address: item.address || '',
-                                                            });
-                                                            setTimeout(() => {
-                                                                if (googleRef?.current?.setAddressText) {
-                                                                    googleRef.current.setAddressText(item.address || '');
-                                                                }
-                                                            }, 100);
-                                                        }}
-
+                                                        onPress={() => openCustomerEditForm(item)}
                                                     >
                                                         <AntDesign name="edit" style={[styles.tableText, { width: wp(20), marginLeft: 40 }]} size={25} color={whiteColor} />
                                                         {/* <Text style={[styles.tableText, { width: wp(20), marginLeft: 40, color: whiteColor }]}>Edit</Text> */}

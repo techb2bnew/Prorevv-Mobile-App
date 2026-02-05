@@ -1447,8 +1447,7 @@ const WorkOrderScreenTwo = ({ route }) => {
                                             </View>
                                         </View>
 
-                                        {console.log("🚀 Rendering StartDate:", startDate)}
-                                        {console.log("🚀 Rendering EndDate:", endDate)}
+
                                         <View style={[styles.datePickerContainer, { marginBottom: 15, color: blackColor }]}>
                                             <Pressable
                                                 // onPress={() => setIsStartPickerOpen(true)} 

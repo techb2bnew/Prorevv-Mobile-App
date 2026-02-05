@@ -1,4 +1,4 @@
-import { Image, StyleSheet, Text, TouchableOpacity, View, Pressable, FlatList, ImageBackground, Platform, Dimensions, Alert, ToastAndroid, TextInput, ScrollView } from 'react-native'
+import { Image, StyleSheet, Text, TouchableOpacity, View, Pressable, FlatList, ImageBackground, Platform, Dimensions, Alert, ToastAndroid, TextInput, ScrollView, Modal } from 'react-native'
 import LinearGradient from 'react-native-linear-gradient'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { blackColor, blueColor, ExtraExtralightOrangeColor, grayColor, lightBlueColor, lightGrayColor, lightOrangeColor, orangeColor, redColor, whiteColor } from '../constans/Color';
@@ -43,6 +43,34 @@ const HomeScreen = ({ navigation }) => {
   const { orientation } = useOrientation();
   const [selectedCard, setSelectedCard] = useState(null);
 
+  const [alertModalVisible, setAlertModalVisible] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertRedirectText, setAlertRedirectText] = useState('');
+  const [alertRedirectAction, setAlertRedirectAction] = useState(null);
+
+  const showAlertModal = (message, redirectText, onRedirect) => {
+    setAlertMessage(message);
+    setAlertRedirectText(redirectText);
+    setAlertRedirectAction(() => onRedirect);
+    setAlertModalVisible(true);
+  };
+
+  const closeAlertModal = () => {
+    setAlertModalVisible(false);
+    setAlertMessage('');
+    setAlertRedirectText('');
+    setAlertRedirectAction(null);
+  };
+
+  const handleAlertRedirect = () => {
+    const fn = alertRedirectAction;
+    closeAlertModal();
+    if (typeof fn === 'function') {
+      const navFn = fn();
+      if (typeof navFn === 'function') navFn();
+    }
+  };
+
   const cardData = [
     {
       name: technicianType === "ifs" ? "View Jobs" : "Add Customer",
@@ -75,9 +103,9 @@ const HomeScreen = ({ navigation }) => {
           try {
             const currentJob = await AsyncStorage.getItem("current_Job");
             if (ifscustomers.length === 0) {
-              Toast.show("You don't have any assigned job currently.");
+              showAlertModal("You don't have any assigned job currently.", "View Jobs", () => navigation.navigate("WorkOrderScreen"));
             } else if (!currentJob) {
-              Toast.show("Please select a job from the jobs page first.");
+              showAlertModal("Please select a job from the jobs page first.", "View Jobs", () => navigation.navigate("WorkOrderScreen"));
             } else {
               navigation.navigate("ScannerScreen");
             }
@@ -86,10 +114,9 @@ const HomeScreen = ({ navigation }) => {
           }
         } else {
           if (customers.length === 0) {
-            Toast.show("You don't have any Customer Please first add a customer before creating a job.");
+            showAlertModal("You don't have any Customer. Please first add a customer before creating a job.", "Add Customer", () => navigation.navigate("CustomerInfo"));
           } else {
             navigation.navigate("CreateJobScreen")
-
           }
         }
       },
@@ -108,10 +135,9 @@ const HomeScreen = ({ navigation }) => {
           navigation.navigate("VinListScreen")
         } else {
           if (customers.length === 0) {
-            Toast.show("You don't have any Customer Please first add a customer before add a vehicle.");
+            showAlertModal("You don't have any Customer. Please first add a customer before adding a vehicle.", "Add Customer", () => navigation.navigate("CustomerInfo"));
           } else {
             navigation.navigate("WorkOrderScreen");
-
           }
         }
       },
@@ -133,9 +159,9 @@ const HomeScreen = ({ navigation }) => {
           try {
             const currentJob = await AsyncStorage.getItem("current_Job");
             if (customers.length === 0) {
-              Toast.show("You don't have any assigned job currently.");
+              showAlertModal("You don't have any customer. Please add a customer first.", "Add Customer", () => navigation.navigate("CustomerInfo"));
             } else if (!currentJob) {
-              Toast.show("Please select a job from the assign jobs page first.");
+              showAlertModal("Please select a job from the assign jobs page first.", "Assign Jobs", () => navigation.navigate("WorkOrderScreen"));
             } else {
               navigation.navigate("ScannerScreen");
             }
@@ -1046,6 +1072,30 @@ const HomeScreen = ({ navigation }) => {
           scrollEnabled={false}
         />
       </ScrollView>
+
+      <Modal
+        visible={alertModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={closeAlertModal}
+      >
+        <Pressable style={styles.alertModalOverlay} onPress={closeAlertModal}>
+          <Pressable style={styles.alertModalBox} onPress={(e) => e.stopPropagation()}>
+            <View style={styles.alertModalIconWrap}>
+              <Feather name="info" size={24} color="#5a5a5a" />
+            </View>
+            <Text style={styles.alertModalMessage}>{alertMessage}</Text>
+            <View style={styles.alertModalButtons}>
+              <TouchableOpacity activeOpacity={0.8} style={[styles.alertModalBtn, styles.alertModalBtnClose]} onPress={closeAlertModal}>
+                <Text style={styles.alertModalBtnCloseText}>Close</Text>
+              </TouchableOpacity>
+              <TouchableOpacity activeOpacity={0.8} style={[styles.alertModalBtn, styles.alertModalBtnRedirect]} onPress={handleAlertRedirect}>
+                <Text style={styles.alertModalBtnRedirectText}>{alertRedirectText}</Text>
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   )
 }
@@ -1258,5 +1308,72 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#f2f2f2',
     marginTop: 4,
+  },
+  alertModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  alertModalBox: {
+    backgroundColor: '#fafafa',
+    borderRadius: 16,
+    paddingVertical: 24,
+    paddingHorizontal: 20,
+    width: '100%',
+    maxWidth: 320,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  alertModalIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#e8e8e8',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  alertModalMessage: {
+    fontSize: 15,
+    color: '#333',
+    marginBottom: 22,
+    lineHeight: 22,
+    textAlign: 'center',
+    paddingHorizontal: 4,
+  },
+  alertModalButtons: {
+    flexDirection: 'row',
+    gap: 10,
+    width: '100%',
+    justifyContent: 'center',
+  },
+  alertModalBtn: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    minWidth: 100,
+    alignItems: 'center',
+  },
+  alertModalBtnClose: {
+    backgroundColor: '#e0e0e0',
+  },
+  alertModalBtnRedirect: {
+    backgroundColor: '#222',
+  },
+  alertModalBtnCloseText: {
+    fontSize: 15,
+    color: '#444',
+    fontWeight: '500',
+  },
+  alertModalBtnRedirectText: {
+    fontSize: 15,
+    color: whiteColor,
+    fontWeight: '500',
   },
 });

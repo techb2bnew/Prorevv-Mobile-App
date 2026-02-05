@@ -45,7 +45,7 @@ function App(): React.JSX.Element {
       try {
         // Enable crash collection
         await crashlytics().setCrashlyticsCollectionEnabled(true);
-        console.log('✅ [CRASHLYTICS] Crashlytics initialized');
+        // console.log('✅ [CRASHLYTICS] Crashlytics initialized');
       } catch (error) {
         console.error('❌ [CRASHLYTICS] Error initializing Crashlytics:', error);
       }
@@ -62,7 +62,7 @@ function App(): React.JSX.Element {
         if (userData.email) {
           crashlytics().setAttribute('user_email', userData.email);
         }
-        console.log('✅ [CRASHLYTICS] User identification set:', userData.email || userData.id);
+        // console.log('✅ [CRASHLYTICS] User identification set:', userData.email || userData.id);
       } catch (error) {
         console.error('❌ [CRASHLYTICS] Error setting user identification:', error);
       }
@@ -427,7 +427,7 @@ function App(): React.JSX.Element {
       });
 
       const textResponse = await response.text();
-      console.log("🌐 Raw API Response:", textResponse);
+      // console.log("🌐 Raw API Response:", textResponse);
       // 👇 Token expire check here
       if (textResponse.includes("Token expire")) {
         Toast.show("⚠️ Session expired. Logging out...");

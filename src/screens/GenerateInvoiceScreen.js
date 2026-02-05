@@ -71,6 +71,9 @@ const GenerateInvoiceScreen = ({ navigation,
     const [selectAll, setSelectAll] = useState(false);
     const [autoSavingVehicles, setAutoSavingVehicles] = useState(new Set()); // Track which vehicles are being auto-saved
     const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
+    const [emailMissingModalVisible, setEmailMissingModalVisible] = useState(false);
+    const [emailMissingMessage, setEmailMissingMessage] = useState('');
+    const [emailMissingCustomerIds, setEmailMissingCustomerIds] = useState([]);
 
     // useFocusEffect(
     //     useCallback(() => {
@@ -808,43 +811,115 @@ const GenerateInvoiceScreen = ({ navigation,
                 }
             );
 
+            //             if (response.status === 200 || response.status === 201) {
+            //                 const invoiceData = response?.data?.invoice;
+
+            //                 const invoiceUrl = invoiceData?.invoiceUrl;
+            //                 const invoiceNumber = invoiceData?.invoiceNumber || "N/A";
+
+            //                 const customerName = invoiceData?.customer?.fullName || "Customer";
+            //                 const customerEmail = invoiceData?.customer?.email || "";
+
+            //                 const subject = "Invoice Generated – Prorevv";
+
+            //                 const bodyText = `Dear ${customerName},
+
+            // We’re writing to inform you that your invoice has been generated successfully. Please find the invoice details below for your reference.
+
+            // Invoice Details
+            // Invoice Number: ${invoiceNumber}
+
+            // Download Invoice PDF:
+            // ${invoiceUrl}
+
+            // If you have any questions regarding this invoice or need further assistance, feel free to reach out to our support team.
+
+            // Thank you for choosing Prorevv.
+
+            // Best regards,
+            // Prorevv Team
+
+            // © 2026 Prorevv. All rights reserved.`;
+
+            //                 const body = encodeURIComponent(bodyText);
+            //                 const url = `mailto:${customerEmail}?subject=${encodeURIComponent(subject)}&body=${body}`;
+
+            //                 setSelectedVehicles([]);
+            //                 fetchJobData(selectedJobId);
+
+            //                 if (Platform.OS === 'android') {
+            //                     try {
+            //                         await Linking.openURL(url);
+            //                     } catch (error) {
+            //                         const gmailIntent = `intent://mail/#Intent;action=android.intent.action.SENDTO;data=mailto:${customerEmail};package=com.google.android.gm;end`;
+            //                         try {
+            //                             await Linking.openURL(gmailIntent);
+            //                         } catch (err) {
+            //                             Alert.alert("Could not open Gmail", "Please check your email app.");
+            //                         }
+            //                     }
+            //                 } else {
+            //                     const canOpen = await Linking.canOpenURL(url);
+            //                     if (canOpen) {
+            //                         Linking.openURL(url);
+            //                     } else {
+            //                         Alert.alert("No mail app found", "Please install or configure a mail app.");
+            //                     }
+            //                 }
+            //             }
             if (response.status === 200 || response.status === 201) {
-                const invoiceUrl = response?.data?.invoice?.invoiceUrl;
-                // console.log("✅ Invoice Generated:", response?.data);
-                const email = "";
-                const subject = "Invoice for Your Work Order";
+                const invoiceData = response?.data?.invoice;
 
-                const bodyText = `Dear Customer,\n\nPlease find your invoice here:\n${invoiceUrl}\n\nThank you for choosing our services. If you have any questions or need further assistance, feel free to reach out.\n\nThank you for your trust,\ProRevv`;
+                const invoiceNumber = invoiceData?.invoiceNumber || "N/A";
+                const customerName = invoiceData?.customer?.fullName || "Customer";
+                const customerEmail = invoiceData?.customer?.email || "";
 
-                const body = encodeURIComponent(bodyText);
-                const url = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${body}`;
+                // Optional: log for debug
+                console.log("Invoice generated for:", customerName, customerEmail, invoiceNumber);
+
                 setSelectedVehicles([]);
                 fetchJobData(selectedJobId);
-                if (Platform.OS === 'android') {
-                    try {
-                        await Linking.openURL(url);
-                    } catch (error) {
-                        // fallback to Gmail
-                        const gmailIntent = `intent://mail/#Intent;action=android.intent.action.SENDTO;data=mailto:${email};package=com.google.android.gm;end`;
-                        try {
-                            await Linking.openURL(gmailIntent);
-                        } catch (err) {
-                            Alert.alert("Could not open Gmail", "Please check your email app.");
-                        }
-                    }
-                } else {
-                    const canOpen = await Linking.canOpenURL(url);
-                    if (canOpen) {
-                        Linking.openURL(url);
-                    } else {
-                        Alert.alert("No mail app found", "Please install or configure a mail app.");
-                    }
-                }
-            } else {
+                Toast.show("Invoice has been sent successfully to the customer’s email.")
+                // Alert.alert(
+                //     "Success",
+                //     "Invoice has been sent successfully to the customer’s email."
+                // );
+            }
+            else {
                 console.log("❌ Failed:", response.data);
             }
         } catch (error) {
+            const apiError = error?.response?.data?.error || error?.message;
             console.error("Invoice Error:", error?.response || error?.message);
+
+            // Handle missing customer email error with guided flow
+            if (typeof apiError === 'string' && apiError.toLowerCase().includes('customer email is missing')) {
+                // Try to extract customerId(s) from error message
+                let ids = [];
+                const match = apiError.match(/customerId\(s\):\\s*([0-9, ]+)/i);
+                if (match && match[1]) {
+                    ids = match[1]
+                        .split(',')
+                        .map((s) => s.trim())
+                        .filter(Boolean)
+                        .map((id) => Number(id))
+                        .filter((id) => !Number.isNaN(id));
+                } else {
+                    // Fallback: derive ids from current selected vehicles
+                    const derivedIds = Array.from(
+                        new Set((selectedVehicles || []).map((v) => v?.customerId).filter(Boolean))
+                    );
+                    ids = derivedIds;
+                }
+
+                setEmailMissingCustomerIds(ids);
+                setEmailMissingMessage(
+                    "Customer email is missing. Please add an email address before creating the invoice."
+                );
+                setEmailMissingModalVisible(true);
+            } else {
+                Toast.show(apiError || "Something went wrong while generating invoice.");
+            }
         } finally {
             setLoading(false); // Stop loader
         }
@@ -1967,6 +2042,78 @@ const GenerateInvoiceScreen = ({ navigation,
                 />
 
             </ScrollView>
+
+            {/* Modal: Customer email missing */}
+            <Modal
+                visible={emailMissingModalVisible}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setEmailMissingModalVisible(false)}
+            >
+                <Pressable
+                    style={styles.emailModalOverlay}
+                    onPress={() => setEmailMissingModalVisible(false)}
+                >
+                    <Pressable
+                        style={styles.emailModalBox}
+                        onPress={(e) => e.stopPropagation()}
+                    >
+                        <View style={styles.emailModalIconWrap}>
+                            <Feather name="alert-circle" size={24} color="#5a5a5a" />
+                        </View>
+                        <Text style={styles.emailModalTitle}>Customer email required</Text>
+                        <Text style={styles.emailModalMessage}>{emailMissingMessage}</Text>
+                        <View style={styles.emailModalButtons}>
+                            <TouchableOpacity
+                                activeOpacity={0.8}
+                                style={[styles.emailModalBtn, styles.emailModalBtnSecondary]}
+                                onPress={() => setEmailMissingModalVisible(false)}
+                            >
+                                <Text style={styles.emailModalBtnSecondaryText}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                activeOpacity={0.8}
+                                style={[styles.emailModalBtn, styles.emailModalBtnPrimary]}
+                                onPress={() => {
+                                    setEmailMissingModalVisible(false);
+                                    const firstId = emailMissingCustomerIds && emailMissingCustomerIds.length > 0
+                                        ? emailMissingCustomerIds[0]
+                                        : null;
+                                    if (firstId) {
+                                        navigation.navigate("Home", {
+                                            screen: "CustomerInfo",
+                                            params: {
+                                                from: "invoice",
+                                                editCustomerId: firstId,
+                                                returnToInvoice: true,
+                                            },
+                                        });
+                                    } else if (customerDetails?.id && !customerDetails?.isAllOption) {
+                                        navigation.navigate("Home", {
+                                            screen: "CustomerInfo",
+                                            params: {
+                                                from: "invoice",
+                                                editCustomerId: customerDetails.id,
+                                                returnToInvoice: true,
+                                            },
+                                        });
+                                    } else {
+                                        navigation.navigate("Home", {
+                                            screen: "CustomerInfo",
+                                            params: {
+                                                from: "invoice",
+                                                returnToInvoice: true,
+                                            },
+                                        });
+                                    }
+                                }}
+                            >
+                                <Text style={styles.emailModalBtnPrimaryText}>Add Customer Email</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </Pressable>
+                </Pressable>
+            </Modal>
         </KeyboardAvoidingView>
     );
 };
@@ -2076,4 +2223,77 @@ const styles = StyleSheet.create({
     },
     statusCompleted: { backgroundColor: '#C8F8D6', borderWidth: 1, borderColor: greenColor, },
     statusInProgress: { backgroundColor: '#FFEFC3', borderWidth: 1, borderColor: blackColor },
+    emailModalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.4)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 24,
+    },
+    emailModalBox: {
+        backgroundColor: '#fafafa',
+        borderRadius: 16,
+        paddingVertical: 24,
+        paddingHorizontal: 20,
+        width: '100%',
+        maxWidth: 320,
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+        elevation: 8,
+    },
+    emailModalIconWrap: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: '#e8e8e8',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 14,
+    },
+    emailModalTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: blackColor,
+        marginBottom: 8,
+    },
+    emailModalMessage: {
+        fontSize: 14,
+        color: '#333',
+        marginBottom: 18,
+        lineHeight: 20,
+        textAlign: 'center',
+        paddingHorizontal: 4,
+    },
+    emailModalButtons: {
+        flexDirection: 'row',
+        gap: 10,
+        width: '100%',
+        justifyContent: 'center',
+    },
+    emailModalBtn: {
+        paddingVertical: 11,
+        paddingHorizontal: 20,
+        borderRadius: 10,
+        minWidth: 110,
+        alignItems: 'center',
+    },
+    emailModalBtnSecondary: {
+        backgroundColor: '#e0e0e0',
+    },
+    emailModalBtnPrimary: {
+        backgroundColor: blackColor,
+    },
+    emailModalBtnSecondaryText: {
+        fontSize: 14,
+        color: '#444',
+        fontWeight: '500',
+    },
+    emailModalBtnPrimaryText: {
+        fontSize: 14,
+        color: whiteColor,
+        fontWeight: '500',
+    },
 });

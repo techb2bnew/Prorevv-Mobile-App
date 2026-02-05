@@ -8,7 +8,7 @@ import {
     Dimensions,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, CommonActions } from '@react-navigation/native';
 import { blueColor, whiteColor, blackColor, lightBlueColor, grayColor } from '../constans/Color';
 import InvoiceHistoryScreen from './InvoiceHistoryScreen';
 import GenerateInvoiceScreen from './GenerateInvoiceScreen';
@@ -65,7 +65,38 @@ const CombinedInvoiceScreen = () => {
     return (
         <View style={{ flex: 1 }}>
             {/* Header */}
-            <Header title={"Invoice"} />
+            <Header
+                title={"Invoice"}
+                onBack={() => {
+                    console.log("Back button pressed in CombinedInvoiceScreen");
+
+
+                    console.log("Parent not found, trying direct navigation...");
+                    // Try direct navigation as fallback
+                    try {
+                        navigation.navigate("Home", {
+                            screen: "Home",
+                        });
+                    } catch (error) {
+                        console.log("Direct navigation error:", error);
+                        // Final fallback: use CommonActions with reset
+                        navigation.dispatch(
+                            CommonActions.reset({
+                                index: 0,
+                                routes: [
+                                    {
+                                        name: "Home",
+                                        state: {
+                                            routes: [{ name: "Home" }],
+                                        },
+                                    },
+                                ],
+                            })
+                        );
+                    }
+
+                }}
+            />
 
             {/* Dynamic Buttons */}
             {renderActionBar()}

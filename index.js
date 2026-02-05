@@ -35,7 +35,7 @@ const errorHandler = (error, isFatal) => {
 try {
   if (global.ErrorUtils && global.ErrorUtils.setGlobalHandler) {
     global.ErrorUtils.setGlobalHandler(errorHandler);
-    console.log('✅ [CRASHLYTICS] Global error handler set');
+    // console.log('✅ [CRASHLYTICS] Global error handler set');
   } else {
     console.warn('⚠️ [CRASHLYTICS] ErrorUtils not available, skipping global error handler');
   }
